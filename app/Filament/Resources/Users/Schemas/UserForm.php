@@ -198,21 +198,38 @@ class UserForm
                         $schemaComponents = [];
 
                         foreach ($modules as $module) {
-                            // Checkbox modul utama bertindak sebagai switch reaktif
-                            $schemaComponents[] = Checkbox::make('aims_module_checked_' . $module->id)
-                                ->label(strtoupper($module->name))
-                                ->reactive()
-                                ->inlineLabel(false);
-
-                            if (!$module->roles->isEmpty()) {
-                                // CheckboxList untuk role di modul tersebut, reaktif terhadap status checkbox modul utama
-                                $schemaComponents[] = CheckboxList::make('aims_role_ids_' . $module->id)
-                                    ->label('Select Roles')
-                                    ->relationship('documentRoles', 'name')
-                                    ->options($module->roles->pluck('name', 'id'))
-                                    ->columns(2)
-                                    ->visible(fn (callable $get) => (bool) $get('aims_module_checked_' . $module->id));
-                            }
+                             // Checkbox modul utama bertindak sebagai switch reaktif
+                             $schemaComponents[] = Checkbox::make('aims_module_checked_' . $module->id)
+                                 ->label(strtoupper($module->name))
+                                 ->reactive()
+                                 ->afterStateHydrated(function ($state, $set, $record) use ($module) {
+                                     if ($record) {
+                                         // Jika user memiliki role pada modul ini, centang modulnya
+                                         $hasRoleInModule = $record->documentRoles()->where('module_id', $module->id)->exists();
+                                         $set('aims_module_checked_' . $module->id, $hasRoleInModule);
+                                     }
+                                 })
+                                 ->inlineLabel(false);
+ 
+                             if (!$module->roles->isEmpty()) {
+                                 // CheckboxList untuk role di modul tersebut, reaktif terhadap status checkbox modul utama
+                                 $schemaComponents[] = CheckboxList::make('aims_role_ids_' . $module->id)
+                                     ->label('Select Roles')
+                                     ->relationship('documentRoles', 'name')
+                                     ->options($module->roles->pluck('name', 'id'))
+                                     ->columns(2)
+                                     ->afterStateHydrated(function ($state, $set, $record) use ($module) {
+                                         if ($record) {
+                                             // Isi state dengan array ID role user yang sesuai dengan modul ini
+                                             $assignedRoles = $record->documentRoles()
+                                                 ->where('module_id', $module->id)
+                                                 ->pluck('aims_roles.id')
+                                                 ->toArray();
+                                             $set('aims_role_ids_' . $module->id, $assignedRoles);
+                                         }
+                                     })
+                                     ->visible(fn (callable $get) => (bool) $get('aims_module_checked_' . $module->id));
+                             }
                         }
 
                         return $schemaComponents;
