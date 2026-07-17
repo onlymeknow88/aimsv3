@@ -16,6 +16,8 @@ class Document extends Model
         'department_id',
         'department_code_id',
         'mapping_id',
+        'module_id',
+        'category_id',
         'area_manager_id',
         'user_id',
         'created_by',

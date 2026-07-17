@@ -19,7 +19,7 @@ class DocumentApiController extends Controller
     public function index(Request $request)
     {
         $status = $request->input('status');
-        
+
         $query = Document::with(['company', 'department', 'owner', 'mapping.category.module', 'attachments'])
             ->latest();
 
@@ -100,7 +100,7 @@ class DocumentApiController extends Controller
             if ($request->has('invited_emails')) {
                 $invitedEmails = $request->input('invited_emails', []);
                 foreach ($invitedEmails as $email) {
-                    if (!empty($email)) {
+                    if (! empty($email)) {
                         DB::table('document_system_invited_people')->insert([
                             'id' => Str::uuid()->toString(),
                             'document_id' => $doc->id,
@@ -119,9 +119,11 @@ class DocumentApiController extends Controller
             }
 
             DB::commit();
+
             return ResponseFormatter::success($doc, 'Document created successfully');
         } catch (\Throwable $e) {
             DB::rollBack();
+
             return ResponseFormatter::error($e->getMessage(), 'Failed to create document', 500);
         }
     }
@@ -192,7 +194,7 @@ class DocumentApiController extends Controller
                 DB::table('document_system_invited_people')->where('document_id', $doc->id)->delete();
                 $invitedEmails = $request->input('invited_emails', []);
                 foreach ($invitedEmails as $email) {
-                    if (!empty($email)) {
+                    if (! empty($email)) {
                         DB::table('document_system_invited_people')->insert([
                             'id' => Str::uuid()->toString(),
                             'document_id' => $doc->id,
@@ -206,9 +208,11 @@ class DocumentApiController extends Controller
             }
 
             DB::commit();
+
             return ResponseFormatter::success($doc, 'Document updated successfully');
         } catch (\Throwable $e) {
             DB::rollBack();
+
             return ResponseFormatter::error($e->getMessage(), 'Failed to update document', 500);
         }
     }
@@ -229,9 +233,10 @@ class DocumentApiController extends Controller
             return [
                 'id' => $doc->id,
                 'full_code' => "{$doc->prefix_code}{$doc->sop_number}",
-                'title' => $doc->title
+                'title' => $doc->title,
             ];
         });
+
         return ResponseFormatter::success($list, 'Active SOPs retrieved successfully');
     }
 
@@ -306,12 +311,12 @@ class DocumentApiController extends Controller
 
         // Log activity
         DB::table('document_system_activities')->insert([
-            'id'          => \Illuminate\Support\Str::uuid(),
+            'id' => Str::uuid(),
             'document_id' => $doc->id,
-            'user_id'     => $userId,
-            'activity'    => "Dokumen disetujui (Level {$request->level}): {$request->notes}",
-            'created_at'  => now(),
-            'updated_at'  => now(),
+            'user_id' => $userId,
+            'activity' => "Dokumen disetujui (Level {$request->level}): {$request->notes}",
+            'created_at' => now(),
+            'updated_at' => now(),
         ]);
 
         return ResponseFormatter::success($doc, 'Dokumen berhasil disetujui.');
@@ -330,18 +335,24 @@ class DocumentApiController extends Controller
         $userId = $user ? $user->id : null;
 
         $doc = Document::findOrFail($id);
-        $doc->update(['status' => '1']); // Back to Draft
+
+        // Kembalikan ke status ON_REVISION (4) atau ke DRAFT (2) tergantung kondisi
+        // Jika sedang di tahap review (1), kembalikan ke DRAFT (2)
+        // Jika sudah di tahap approval lanjut (3 atau 6), kembalikan ke ON_REVISION (4)
+        $currentStatus = (int) $doc->status;
+        $newStatus = in_array($currentStatus, [3, 6]) ? '4' : '2';
+        $doc->update(['status' => $newStatus]);
 
         DB::table('document_system_activities')->insert([
-            'id'          => \Illuminate\Support\Str::uuid(),
+            'id' => Str::uuid(),
             'document_id' => $doc->id,
-            'user_id'     => $userId,
-            'activity'    => "Dokumen ditolak: {$request->reason}",
-            'created_at'  => now(),
-            'updated_at'  => now(),
+            'user_id' => $userId,
+            'activity' => "Dokumen direturn: {$request->reason}",
+            'created_at' => now(),
+            'updated_at' => now(),
         ]);
 
-        return ResponseFormatter::success($doc, 'Dokumen berhasil ditolak dan dikembalikan ke draft.');
+        return ResponseFormatter::success($doc, 'Dokumen berhasil dikembalikan ke draft.');
     }
 
     /**

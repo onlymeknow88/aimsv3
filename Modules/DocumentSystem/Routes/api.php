@@ -9,14 +9,14 @@ Route::prefix('document-system')->group(function () {
     // Document API Actions
     Route::get('/documents', [DocumentApiController::class, 'index']);
     Route::post('/documents', [DocumentApiController::class, 'store']);
-    Route::post('/documents/{id}', [DocumentApiController::class, 'update']);
-    Route::get('/documents/{id}', [DocumentApiController::class, 'show']);
-    Route::get('/active-sops', [DocumentApiController::class, 'getActiveSops']);
-    Route::get('/generate-number', [DocumentApiController::class, 'generateNumber']);
     Route::post('/documents/approve/{id}', [DocumentApiController::class, 'approve']);
     Route::post('/documents/reject/{id}', [DocumentApiController::class, 'reject']);
+    Route::post('/documents/{id}', [DocumentApiController::class, 'update']);
+    Route::get('/documents/{id}', [DocumentApiController::class, 'show']);
 
     // Permission API Actions
+    Route::get('/active-sops', [DocumentApiController::class, 'getActiveSops']);
+    Route::get('/generate-number', [DocumentApiController::class, 'generateNumber']);
     Route::post('/permissions', [PermissionApiController::class, 'updatePermissions']);
 
     // Master Data API Actions
