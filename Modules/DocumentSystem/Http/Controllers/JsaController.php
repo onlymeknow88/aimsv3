@@ -2,9 +2,9 @@
 
 namespace Modules\DocumentSystem\Http\Controllers;
 
+use App\Helpers\ResponseFormatter;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Inertia\Inertia;
 use Modules\DocumentSystem\Entities\JsaDocument;
 use Modules\DocumentSystem\Entities\JsaDocumentActivity;
 use Modules\DocumentSystem\Entities\JsaDocumentPeople;
@@ -20,9 +20,7 @@ class JsaController extends Controller
             ->latest()
             ->get();
 
-        return Inertia::render('DocumentSystem/Jsa/Index', [
-            'documents' => $documents,
-        ]);
+        return ResponseFormatter::success($documents, 'JSA documents retrieved successfully');
     }
 
     /**
@@ -36,15 +34,18 @@ class JsaController extends Controller
             'location'    => 'required|string',
         ]);
 
+        $user = auth()->user() ?? auth('admin')->user() ?? auth('web')->user();
+        $userId = $user ? $user->id : null;
+
         $doc = JsaDocument::create([
             'title'      => $request->title,
             'work_type'  => $request->work_type,
             'location'   => $request->location,
             'status'     => '1', // Draft
-            'created_by' => auth()->id(),
+            'created_by' => $userId,
         ]);
 
-        return back()->with('success', 'JSA berhasil dibuat.');
+        return ResponseFormatter::success($doc, 'JSA berhasil dibuat.');
     }
 
     /**
@@ -55,7 +56,7 @@ class JsaController extends Controller
         $doc = JsaDocument::findOrFail($id);
         $doc->update($request->only(['title', 'work_type', 'location', 'status']));
 
-        return back()->with('success', 'JSA berhasil diperbarui.');
+        return ResponseFormatter::success($doc, 'JSA berhasil diperbarui.');
     }
 
     /**
@@ -63,9 +64,10 @@ class JsaController extends Controller
      */
     public function destroy(string $id)
     {
-        JsaDocument::findOrFail($id)->delete();
+        $doc = JsaDocument::findOrFail($id);
+        $doc->delete();
 
-        return back()->with('success', 'JSA berhasil dihapus.');
+        return ResponseFormatter::success(null, 'JSA berhasil dihapus.');
     }
 }
 

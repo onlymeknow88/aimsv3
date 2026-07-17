@@ -99,8 +99,8 @@ export default function Create({ document = null }) {
                                 <label style={{ fontSize: '10.5px', fontWeight: 700, color: 'var(--text-secondary)', display: 'block', marginBottom: '6px' }}>JENIS UPLOAD</label>
                                 <select value={uploadType} onChange={e => setUploadType(e.target.value)} style={{ width: '100%', padding: '8px 12px', border: '1px solid var(--border-color)', borderRadius: '6px', fontSize: '11px' }}>
                                     <option value="">Select Jenis Upload</option>
-                                    <option value="document">📄 Dokumen (PDF/Word)</option>
-                                    <option value="record">🎥 Rekaman</option>
+                                    <option value="document">Dokumen</option>
+                                    <option value="record">Rekaman</option>
                                 </select>
                             </div>
                             <div>
@@ -193,23 +193,23 @@ export default function Create({ document = null }) {
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                             <div style={{ display: 'grid', gridTemplateColumns: '200px 1fr', alignItems: 'center', gap: '16px' }}>
                                 <label style={{ fontSize: '11px', fontWeight: 600, color: '#475569' }}>Title</label>
-                                <input 
-                                    value={title} 
-                                    onChange={e => setTitle(e.target.value)} 
-                                    required 
-                                    placeholder="Document title" 
-                                    style={{ width: '100%', padding: '8px 12px', border: '1px solid var(--border-color)', borderRadius: '6px', fontSize: '11px' }} 
+                                <input
+                                    value={title}
+                                    onChange={e => setTitle(e.target.value)}
+                                    required
+                                    placeholder="Document title"
+                                    style={{ width: '100%', padding: '8px 12px', border: '1px solid var(--border-color)', borderRadius: '6px', fontSize: '11px' }}
                                 />
                             </div>
 
                             <div style={{ display: 'grid', gridTemplateColumns: '200px 1fr', alignItems: 'center', gap: '16px' }}>
                                 <label style={{ fontSize: '11px', fontWeight: 600, color: '#475569' }}>Date of Create Document</label>
-                                <input 
+                                <input
                                     type="date"
-                                    value={docCreated} 
-                                    onChange={e => setDocCreated(e.target.value)} 
-                                    required 
-                                    style={{ width: '100%', padding: '8px 12px', border: '1px solid var(--border-color)', borderRadius: '6px', fontSize: '11px' }} 
+                                    value={docCreated}
+                                    onChange={e => setDocCreated(e.target.value)}
+                                    required
+                                    style={{ width: '100%', padding: '8px 12px', border: '1px solid var(--border-color)', borderRadius: '6px', fontSize: '11px' }}
                                 />
                             </div>
                         </div>

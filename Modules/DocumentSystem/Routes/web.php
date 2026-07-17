@@ -3,7 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use Modules\DocumentSystem\Http\Controllers\DocumentSystemController;
 
-Route::middleware('web')->prefix('document-system')->group(function () {
+Route::middleware(['web', 'auth'])->prefix('document-system')->group(function () {
     Route::get('/', [DocumentSystemController::class, 'index'])->name('doc.dashboard');
     Route::get('/active', [DocumentSystemController::class, 'activeDocument'])->name('doc.active');
     Route::get('/active/create', [DocumentSystemController::class, 'create'])->name('doc.active.create');

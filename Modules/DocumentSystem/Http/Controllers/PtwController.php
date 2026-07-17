@@ -2,9 +2,9 @@
 
 namespace Modules\DocumentSystem\Http\Controllers;
 
+use App\Helpers\ResponseFormatter;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Inertia\Inertia;
 use Modules\DocumentSystem\Entities\PtwDocument;
 use Modules\DocumentSystem\Entities\PtwDocumentActivity;
 use Modules\DocumentSystem\Entities\PtwDocumentPeople;
@@ -20,9 +20,7 @@ class PtwController extends Controller
             ->latest()
             ->get();
 
-        return Inertia::render('DocumentSystem/Ptw/Index', [
-            'documents' => $documents,
-        ]);
+        return ResponseFormatter::success($documents, 'PTW documents retrieved successfully');
     }
 
     /**
@@ -38,6 +36,9 @@ class PtwController extends Controller
             'end_date'    => 'required|date|after_or_equal:start_date',
         ]);
 
+        $user = auth()->user() ?? auth('admin')->user() ?? auth('web')->user();
+        $userId = $user ? $user->id : null;
+
         $doc = PtwDocument::create([
             'title'       => $request->title,
             'permit_type' => $request->permit_type,
@@ -45,10 +46,10 @@ class PtwController extends Controller
             'start_date'  => $request->start_date,
             'end_date'    => $request->end_date,
             'status'      => '1', // Draft
-            'created_by'  => auth()->id(),
+            'created_by'  => $userId,
         ]);
 
-        return back()->with('success', 'PTW berhasil dibuat.');
+        return ResponseFormatter::success($doc, 'PTW berhasil dibuat.');
     }
 
     /**
@@ -59,7 +60,7 @@ class PtwController extends Controller
         $doc = PtwDocument::findOrFail($id);
         $doc->update($request->only(['title', 'permit_type', 'location', 'start_date', 'end_date', 'status']));
 
-        return back()->with('success', 'PTW berhasil diperbarui.');
+        return ResponseFormatter::success($doc, 'PTW berhasil diperbarui.');
     }
 
     /**
@@ -67,9 +68,10 @@ class PtwController extends Controller
      */
     public function destroy(string $id)
     {
-        PtwDocument::findOrFail($id)->delete();
+        $doc = PtwDocument::findOrFail($id);
+        $doc->delete();
 
-        return back()->with('success', 'PTW berhasil dihapus.');
+        return ResponseFormatter::success(null, 'PTW berhasil dihapus.');
     }
 }
 

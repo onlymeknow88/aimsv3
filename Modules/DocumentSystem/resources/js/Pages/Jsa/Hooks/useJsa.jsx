@@ -1,12 +1,13 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import axios from 'axios';
-import { router } from '@inertiajs/react';
 
 export default function useJsa() {
     const [formModalOpen, setFormModalOpen] = useState(false);
     const [drawerOpen, setDrawerOpen] = useState(false);
     const [selectedJsa, setSelectedJsa] = useState(null);
     const [loading, setLoading] = useState(false);
+    const [docs, setDocs] = useState([]);
+    const [fetching, setFetching] = useState(true);
 
     const openForm = useCallback(() => setFormModalOpen(true), []);
     const closeForm = useCallback(() => setFormModalOpen(false), []);
@@ -14,21 +15,35 @@ export default function useJsa() {
     const openDrawer = useCallback((jsa) => { setSelectedJsa(jsa); setDrawerOpen(true); }, []);
     const closeDrawer = useCallback(() => { setDrawerOpen(false); setSelectedJsa(null); }, []);
 
+    const fetchDocuments = useCallback(() => {
+        setFetching(true);
+        axios.get('/api/document-system/jsa')
+            .then(res => {
+                setDocs(res.data?.result || []);
+            })
+            .catch(err => console.error("Error fetching JSA documents", err))
+            .finally(() => setFetching(false));
+    }, []);
+
+    useEffect(() => {
+        fetchDocuments();
+    }, [fetchDocuments]);
+
     const createJsa = useCallback(async (data) => {
         setLoading(true);
         try {
             await axios.post('/api/document-system/jsa', data);
             closeForm();
-            router.reload();
+            fetchDocuments();
         } catch (err) {
             console.error('Create JSA failed', err);
         } finally {
             setLoading(false);
         }
-    }, [closeForm]);
+    }, [closeForm, fetchDocuments]);
 
     return {
-        formModalOpen, drawerOpen, selectedJsa, loading,
+        formModalOpen, drawerOpen, selectedJsa, loading, docs, fetching,
         openForm, closeForm, openDrawer, closeDrawer, createJsa,
     };
 }

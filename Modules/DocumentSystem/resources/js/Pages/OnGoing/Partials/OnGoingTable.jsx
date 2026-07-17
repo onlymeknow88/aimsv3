@@ -3,10 +3,10 @@ import { Clock } from 'lucide-react';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
 import { Checkbox } from '@/components/ui/checkbox';
 
-export default function OnGoingTable({ 
-    documents, 
-    onViewDetail, 
-    selectedIds = [], 
+export default function OnGoingTable({
+    documents,
+    onViewDetail,
+    selectedIds = [],
     onSelectionChange,
     visibleColumns = {
         'Company': true,
@@ -57,7 +57,7 @@ export default function OnGoingTable({
                             onCheckedChange={handleSelectAll}
                         />
                     </TableHead>
-                    {['Company', 'Department', 'PIC', 'Modul', 'Category', 'Level', 'Mapping', 'No. Dokumen', 'Judul', 'Status', 'Aksi'].map(h => (
+                    {['No. Dokumen', 'Company', 'Department', 'PIC', 'Modul', 'Category', 'Level', 'Mapping', 'Judul', 'Status'].map(h => (
                         visibleColumns[h] && <TableHead key={h} style={{ fontWeight: 700, color: 'var(--text-secondary)' }}>{h}</TableHead>
                     ))}
                 </TableRow>
@@ -85,6 +85,13 @@ export default function OnGoingTable({
                                     onCheckedChange={(checked) => handleSelectRow(doc.id, checked)}
                                 />
                             </TableCell>
+                            {visibleColumns['No. Dokumen'] && (
+                                <TableCell style={{ fontWeight: 700 }}>
+                                    <a href={`/document-system/active/detail/${doc.id}`} style={{ color: 'var(--primary)', textDecoration: 'none' }}>
+                                        {doc.document_number || '-'}
+                                    </a>
+                                </TableCell>
+                            )}
                             {visibleColumns['Company'] && <TableCell>{getCompanyCode(doc)}</TableCell>}
                             {visibleColumns['Department'] && <TableCell>{doc.department?.name || '-'}</TableCell>}
                             {visibleColumns['PIC'] && <TableCell>{doc.owner?.name || '-'}</TableCell>}
@@ -107,22 +114,8 @@ export default function OnGoingTable({
                                     {doc.mapping?.name || '-'}
                                 </TableCell>
                             )}
-                            {visibleColumns['No. Dokumen'] && (
-                                <TableCell style={{ fontWeight: 700 }}>
-                                    <a href={`/document-system/active/detail/${doc.id}`} style={{ color: 'var(--primary)', textDecoration: 'none' }}>
-                                        {doc.document_number || '-'}
-                                    </a>
-                                </TableCell>
-                            )}
                             {visibleColumns['Judul'] && <TableCell style={{ fontWeight: 600 }}>{doc.title}</TableCell>}
                             {visibleColumns['Status'] && <TableCell><span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--accent)' }}>ONGOING</span></TableCell>}
-                            {visibleColumns['Aksi'] && (
-                                <TableCell>
-                                    <button onClick={() => onViewDetail(doc)} style={{ border: '1px solid var(--border-color)', background: '#fff', borderRadius: '4px', padding: '4px 10px', cursor: 'pointer', fontSize: '10px', fontWeight: 600 }}>
-                                        Detail
-                                    </button>
-                                </TableCell>
-                            )}
                         </TableRow>
                     ))
                 )}

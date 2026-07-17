@@ -2,9 +2,29 @@ import React from 'react';
 import { Head } from '@inertiajs/react';
 import { ArrowLeft, User, Building, MapPin, Calendar, Layers, Eye, Download, Info, Users, Clock, Edit } from 'lucide-react';
 import StatusTimeline from '../OnGoing/Partials/Components/StatusTimeline';
+import useDetail from './Hooks/useDetail';
 
-export default function Detail({ document }) {
-    if (!document) return null;
+export default function Detail({ id }) {
+    const {
+        document,
+        loadingData,
+        notes,
+        setNotes,
+        loading,
+        isRejectModalOpen,
+        setIsRejectModalOpen,
+        handleApprove,
+        handleReject,
+        showApproval
+    } = useDetail(id);
+
+    if (loadingData || !document) {
+        return (
+            <div style={{ backgroundColor: 'var(--bg-color)', minHeight: '100vh', padding: '40px 20px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <p style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Loading document details...</p>
+            </div>
+        );
+    }
 
     const getInitials = (name) => {
         return name ? name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : '?';
@@ -15,10 +35,16 @@ export default function Detail({ document }) {
     };
 
     const getStatusColors = (status) => {
-        switch (status) {
+        const s = status ? String(status) : '2';
+        switch (s) {
+            case '1': return { bg: 'rgba(255, 140, 36, 0.08)', text: 'var(--accent)', name: 'WAITING REVIEW' };
+            case '2': return { bg: 'rgba(45, 127, 249, 0.08)', text: 'var(--info)', name: 'DRAFT' };
+            case '3': return { bg: 'rgba(255, 140, 36, 0.08)', text: 'var(--accent)', name: 'ROOTING APPROVAL' };
+            case '4': return { bg: 'rgba(239, 68, 68, 0.08)', text: 'var(--danger)', name: 'REVISION' };
             case '5': return { bg: 'rgba(47, 191, 113, 0.08)', text: 'var(--success)', name: 'ACTIVE' };
-            case '7': return { bg: 'rgba(244, 67, 54, 0.08)', text: 'var(--danger)', name: 'EXPIRED' };
-            case '2': return { bg: 'rgba(255, 140, 36, 0.08)', text: 'var(--accent)', name: 'REVIEW' };
+            case '6': return { bg: 'rgba(255, 140, 36, 0.08)', text: 'var(--accent)', name: 'PREPARE APPROVAL' };
+            case '7': return { bg: 'rgba(239, 68, 68, 0.08)', text: 'var(--danger)', name: 'EXPIRED' };
+            case '8': return { bg: 'rgba(239, 68, 68, 0.08)', text: 'var(--danger)', name: 'OBSOLETE' };
             default: return { bg: 'rgba(45, 127, 249, 0.08)', text: 'var(--info)', name: 'DRAFT' };
         }
     };
@@ -49,7 +75,7 @@ export default function Detail({ document }) {
                 }}>
                     <ArrowLeft size={16} /> Kembali ke Active Document
                 </a>
-                
+
                 <a href={`/document-system/active/edit/${document.id}`} style={{
                     display: 'inline-flex',
                     alignItems: 'center',
@@ -73,7 +99,7 @@ export default function Detail({ document }) {
                 gap: '24px',
                 alignItems: 'start'
             }}>
-                
+
                 {/* LEFT SIDEBAR: Metadata Owner */}
                 <aside style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                     <div style={{
@@ -84,7 +110,7 @@ export default function Detail({ document }) {
                         boxShadow: 'var(--shadow-sm)'
                     }}>
                         <h4 style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px', marginBottom: '12px', textTransform: 'uppercase' }}>Owner Info</h4>
-                        
+
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '12px' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                                 <div style={{
@@ -194,7 +220,7 @@ export default function Detail({ document }) {
                         boxShadow: 'var(--shadow-sm)'
                     }}>
                         <h4 style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '12px' }}>Deskripsi Dokumen</h4>
-                        <div 
+                        <div
                             style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: '1.6' }}
                             dangerouslySetInnerHTML={{ __html: document.description || 'Tidak ada deskripsi.' }}
                         />
@@ -244,7 +270,88 @@ export default function Detail({ document }) {
                             </div>
                         </div>
                     )}
+                    {/* Document Action (Approval) */}
+                    {showApproval && (
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '16px' }}>
+                            <button
+                                onClick={() => setIsRejectModalOpen(true)}
+                                disabled={loading}
+                                style={{ border: '1px solid var(--danger)', color: 'var(--danger)', background: '#fff', borderRadius: '6px', padding: '8px 16px', cursor: 'pointer', fontSize: '11px', fontWeight: 700 }}
+                            >
+                                Reject & Return
+                            </button>
+                            <button
+                                onClick={handleApprove}
+                                disabled={loading}
+                                style={{ border: 'none', color: '#fff', backgroundColor: 'var(--primary)', borderRadius: '6px', padding: '8px 16px', cursor: 'pointer', fontSize: '11px', fontWeight: 700 }}
+                            >
+                                {String(document.status) === '1' ? 'Approve & Rooting' : 'Approve & Publish'}
+                            </button>
+                        </div>
+                    )}
                 </main>
+
+                {/* Modal Reject & Return */}
+                {isRejectModalOpen && (
+                    <div style={{
+                        position: 'fixed',
+                        top: 0, left: 0, right: 0, bottom: 0,
+                        backgroundColor: 'rgba(15, 23, 42, 0.4)',
+                        backdropFilter: 'blur(4px)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        zIndex: 9999
+                    }}>
+                        <div style={{
+                            backgroundColor: 'var(--card-bg)',
+                            border: '1px solid var(--border-color)',
+                            borderRadius: '16px',
+                            padding: '28px',
+                            width: '90%',
+                            maxWidth: '520px',
+                            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
+                        }}>
+                            <h3 style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '8px' }}>
+                                Reject & Return Revision
+                            </h3>
+                            <p style={{ fontSize: '11.5px', color: 'var(--text-secondary)', marginBottom: '16px', lineHeight: '1.5' }}>
+                                Dokumen akan ditolak dan dikembalikan ke pembuat (Draft). Silakan berikan alasan atau catatan revisi di bawah ini.
+                            </p>
+                            <div style={{ marginBottom: '20px' }}>
+                                <label style={{ fontSize: '10px', fontWeight: 700, color: 'var(--text-secondary)', display: 'block', marginBottom: '6px', textTransform: 'uppercase' }}>
+                                    Alasan Return / Catatan Revisi <span style={{ color: 'var(--danger)' }}>*</span>
+                                </label>
+                                <textarea
+                                    value={notes}
+                                    onChange={e => setNotes(e.target.value)}
+                                    placeholder="Tulis alasan revisi/return secara detail..."
+                                    style={{ width: '100%', minHeight: '120px', padding: '10px 12px', border: '1px solid var(--border-color)', borderRadius: '8px', fontSize: '11.5px', outline: 'none' }}
+                                    required
+                                />
+                            </div>
+                            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+                                <button
+                                    onClick={() => {
+                                        setIsRejectModalOpen(false);
+                                        setNotes('');
+                                    }}
+                                    disabled={loading}
+                                    style={{ border: '1px solid var(--border-color)', color: 'var(--text-secondary)', background: '#fff', borderRadius: '6px', padding: '8px 16px', cursor: 'pointer', fontSize: '11px', fontWeight: 700 }}
+                                >
+                                    Batal
+                                </button>
+                                <button
+                                    onClick={handleReject}
+                                    disabled={loading}
+                                    style={{ border: 'none', color: '#fff', backgroundColor: 'var(--danger)', borderRadius: '6px', padding: '8px 16px', cursor: 'pointer', fontSize: '11px', fontWeight: 700 }}
+                                >
+                                    Return
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 {/* RIGHT SIDEBAR: Progress Alur Timeline */}
                 <aside style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -267,7 +374,7 @@ export default function Detail({ document }) {
                         boxShadow: 'var(--shadow-sm)'
                     }}>
                         <h4 style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px', marginBottom: '12px', textTransform: 'uppercase' }}>Aktivitas Dokumen</h4>
-                        
+
                         {document.activities && document.activities.length > 0 ? (
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                                 {document.activities.map(act => (

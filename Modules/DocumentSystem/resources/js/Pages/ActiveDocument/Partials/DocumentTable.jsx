@@ -127,18 +127,28 @@ export default function DocumentTable({ documents, onPreview, onDownload, select
             id: 'status',
             header: 'Status',
             cell: info => {
-                const status = info.getValue()?.toUpperCase() || 'ACTIVE';
-                const isObsolete = status === 'OBSOLETE';
+                const s = info.getValue() ? String(info.getValue()) : '5';
+                const statusNames = {
+                    '1': { text: 'WAITING REVIEW', color: 'var(--accent)', bg: 'rgba(255, 140, 36, 0.08)' },
+                    '2': { text: 'DRAFT', color: 'var(--info)', bg: 'rgba(45, 127, 249, 0.08)' },
+                    '3': { text: 'ROOTING APPROVAL', color: 'var(--accent)', bg: 'rgba(255, 140, 36, 0.08)' },
+                    '4': { text: 'REVISION', color: 'var(--danger)', bg: 'rgba(239, 68, 68, 0.08)' },
+                    '5': { text: 'ACTIVE', color: 'var(--success)', bg: 'rgba(34, 197, 94, 0.08)' },
+                    '6': { text: 'PREPARE APPROVAL', color: 'var(--accent)', bg: 'rgba(255, 140, 36, 0.08)' },
+                    '7': { text: 'EXPIRED', color: 'var(--danger)', bg: 'rgba(239, 68, 68, 0.08)' },
+                    '8': { text: 'OBSOLETE', color: 'var(--danger)', bg: 'rgba(239, 68, 68, 0.08)' }
+                };
+                const config = statusNames[s] || { text: 'ACTIVE', color: 'var(--success)', bg: 'rgba(34, 197, 94, 0.08)' };
                 return (
                     <span style={{
                         fontSize: '10px',
                         fontWeight: 700,
-                        color: isObsolete ? 'var(--danger)' : 'var(--success)',
-                        backgroundColor: isObsolete ? 'rgba(239, 68, 68, 0.08)' : 'rgba(34, 197, 94, 0.08)',
+                        color: config.color,
+                        backgroundColor: config.bg,
                         padding: '2px 8px',
                         borderRadius: '10px'
                     }}>
-                        {status}
+                        {config.text}
                     </span>
                 );
             }

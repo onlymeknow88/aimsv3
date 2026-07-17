@@ -74,11 +74,8 @@ class DocumentSystemController extends Controller
      */
     public function detail($id)
     {
-        $document = Document::with(['company', 'department', 'owner', 'creator', 'mapping.category.module', 'attachments', 'invitedPeople', 'activities.user'])
-            ->findOrFail($id);
-
         return inertia('DocumentSystem/Maker/Detail', [
-            'document' => $document
+            'id' => $id
         ]);
     }
 
@@ -137,10 +134,8 @@ class DocumentSystemController extends Controller
      */
     public function jsa()
     {
-        $documents = JsaDocument::latest()->get();
-
         return inertia('DocumentSystem/Jsa/Index', [
-            'documents' => $documents
+            'documents' => []
         ]);
     }
 
@@ -149,10 +144,8 @@ class DocumentSystemController extends Controller
      */
     public function ptw()
     {
-        $documents = PtwDocument::latest()->get();
-
         return inertia('DocumentSystem/Ptw/Index', [
-            'documents' => $documents
+            'documents' => []
         ]);
     }
 

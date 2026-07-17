@@ -7,8 +7,8 @@ import PtwFormModal from './Partials/PtwFormModal';
 import PtwDetailDrawer from './Partials/PtwDetailDrawer';
 import PermitTypeBadge from './Partials/Components/PermitTypeBadge';
 
-export default function Index({ documents = [] }) {
-    const { formModalOpen, drawerOpen, selectedPtw, loading, openForm, closeForm, openDrawer, closeDrawer, createPtw } = usePtw();
+export default function Index() {
+    const { formModalOpen, drawerOpen, selectedPtw, loading, openForm, closeForm, openDrawer, closeDrawer, createPtw, docs, fetching } = usePtw();
 
     return (
         <DocumentSystemLayout>
@@ -23,7 +23,11 @@ export default function Index({ documents = [] }) {
                 </button>
             </div>
 
-            {documents.length === 0 ? (
+            {fetching ? (
+                <div style={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '40px 24px', textAlign: 'center' }}>
+                    <p style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Loading PTW data...</p>
+                </div>
+            ) : docs.length === 0 ? (
                 <div style={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '40px 24px', textAlign: 'center' }}>
                     <Activity size={48} style={{ margin: '0 auto 16px', color: '#06B6D4', opacity: 0.5, display: 'block' }} />
                     <h3 style={{ fontSize: '14px', fontWeight: 700, marginBottom: '8px' }}>Belum Ada PTW</h3>
@@ -40,7 +44,7 @@ export default function Index({ documents = [] }) {
                             </tr>
                         </thead>
                         <tbody>
-                            {documents.map(doc => (
+                            {docs.map(doc => (
                                 <tr key={doc.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
                                     <td style={{ padding: '14px 16px', fontWeight: 600 }}>{doc.title}</td>
                                     <td style={{ padding: '14px 16px' }}><PermitTypeBadge type={doc.permit_type} /></td>

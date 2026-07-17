@@ -10,11 +10,12 @@ const steps = [
 ];
 
 const statusToStep = {
-    '1': 0,
-    '2': 1,
-    '3': 2,
-    '5': 4,
-    '6': 4,
+    '2': 0, // DRAFT -> "Draft Dibuat"
+    '1': 1, // WAITING_REVIEW -> "Tahap Review"
+    '3': 2, // ROOTING_REVIEW -> "Approval CRS (L1)"
+    '6': 3, // PREPARE_ROOTING_REVIEW -> "Approval PJA (L2)"
+    '5': 4, // ACTIVE -> "Dokumen Aktif"
+    '4': 1, // ON_REVISION -> "Tahap Review"
 };
 
 export default function StatusTimeline({ status }) {

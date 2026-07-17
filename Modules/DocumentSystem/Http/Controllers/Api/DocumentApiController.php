@@ -282,4 +282,91 @@ class DocumentApiController extends Controller
             'full_number' => "{$prefixCodeToSearch}{$nextCode}",
         ], 'Next sequence number generated successfully');
     }
+
+    /**
+     * Approve a document via API
+     */
+    public function approve(Request $request, string $id)
+    {
+        $request->validate([
+            'level' => 'required|in:1,2',
+            'notes' => 'nullable|string',
+        ]);
+
+        $user = auth()->user() ?? auth('admin')->user() ?? auth('web')->user();
+        $userId = $user ? $user->id : null;
+
+        $doc = Document::findOrFail($id);
+
+        if ($request->level == 1) {
+            $doc->update(['status' => '3', 'approved_by_crs' => $userId, 'approved_at_crs' => now()]);
+        } else {
+            $doc->update(['status' => '5', 'approved_by_pja' => $userId, 'approved_at_pja' => now()]); // Active
+        }
+
+        // Log activity
+        DB::table('document_system_activities')->insert([
+            'id'          => \Illuminate\Support\Str::uuid(),
+            'document_id' => $doc->id,
+            'user_id'     => $userId,
+            'activity'    => "Dokumen disetujui (Level {$request->level}): {$request->notes}",
+            'created_at'  => now(),
+            'updated_at'  => now(),
+        ]);
+
+        return ResponseFormatter::success($doc, 'Dokumen berhasil disetujui.');
+    }
+
+    /**
+     * Reject a document via API
+     */
+    public function reject(Request $request, string $id)
+    {
+        $request->validate([
+            'reason' => 'required|string',
+        ]);
+
+        $user = auth()->user() ?? auth('admin')->user() ?? auth('web')->user();
+        $userId = $user ? $user->id : null;
+
+        $doc = Document::findOrFail($id);
+        $doc->update(['status' => '1']); // Back to Draft
+
+        DB::table('document_system_activities')->insert([
+            'id'          => \Illuminate\Support\Str::uuid(),
+            'document_id' => $doc->id,
+            'user_id'     => $userId,
+            'activity'    => "Dokumen ditolak: {$request->reason}",
+            'created_at'  => now(),
+            'updated_at'  => now(),
+        ]);
+
+        return ResponseFormatter::success($doc, 'Dokumen berhasil ditolak dan dikembalikan ke draft.');
+    }
+
+    /**
+     * Show document details and approval privileges via API.
+     */
+    public function show(string $id)
+    {
+        $document = Document::with(['company', 'department', 'owner', 'creator', 'mapping.category.module', 'attachments', 'invitedPeople', 'activities.user'])
+            ->findOrFail($id);
+
+        $user = auth()->user() ?? auth('admin')->user() ?? auth('web')->user();
+        $userRoles = $user ? \DB::table('aims_user_roles')
+            ->join('aims_roles', 'aims_user_roles.role_id', '=', 'aims_roles.id')
+            ->where('aims_user_roles.user_id', $user->id)
+            ->pluck('aims_roles.slug')
+            ->toArray() : [];
+        $isSuperAdmin = ($user && $user->role === 'super_admin') || in_array('super_admin', $userRoles);
+
+        $canApproveL1 = $isSuperAdmin || in_array('approval_crs', $userRoles);
+        $canApproveL2 = $isSuperAdmin || in_array('approval_pja', $userRoles);
+
+        return ResponseFormatter::success([
+            'document' => $document,
+            'canApproveL1' => $canApproveL1,
+            'canApproveL2' => $canApproveL2,
+        ], 'Document retrieved successfully');
+    }
 }
