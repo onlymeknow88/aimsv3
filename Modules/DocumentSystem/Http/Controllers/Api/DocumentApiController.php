@@ -68,7 +68,7 @@ class DocumentApiController extends Controller
                 'category_id' => $request->input('category_id'),
                 'mapping_id' => $request->input('mapping_id'),
                 'upload_type' => $request->input('upload_type'),
-                'status' => $request->input('status', '1'), // 1 = Draft, 2 = Waiting Review
+                'status' => $request->input('status', '2'), // 2 = Draft, 1 = Waiting Review
                 'revision' => '0',
                 'doc_created' => $request->input('doc_created', now()),
             ]);
@@ -108,7 +108,7 @@ class DocumentApiController extends Controller
      */
     public function getActiveSops(Request $request)
     {
-        $query = Document::query()->where('document_level', 'SOP')->where('status', '3'); // Approved/Active status
+        $query = Document::query()->where('document_level', 'SOP')->where('status', '5'); // Approved/Active status
         if ($request->has('company_id') && $request->has('department_id')) {
             $dept = Department::find($request->department_id);
             if ($dept) {

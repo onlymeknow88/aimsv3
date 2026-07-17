@@ -15,7 +15,7 @@ export default function OnGoingTable({ documents, onViewDetail }) {
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11px' }}>
             <thead>
                 <tr style={{ borderBottom: '1px solid var(--border-color)', backgroundColor: '#fafbfc' }}>
-                    {['No. Dokumen', 'Judul', 'Level', 'Status', 'Aksi'].map(h => (
+                    {['Company', 'Department', 'PIC', 'Modul', 'Category', 'Level', 'Mapping', 'No. Dokumen', 'Judul', 'Status', 'Aksi'].map(h => (
                         <th key={h} style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 700, color: 'var(--text-secondary)' }}>{h}</th>
                     ))}
                 </tr>
@@ -23,9 +23,15 @@ export default function OnGoingTable({ documents, onViewDetail }) {
             <tbody>
                 {documents.map(doc => (
                     <tr key={doc.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                        <td style={{ padding: '14px 16px' }}>{doc.department?.company?.company_name || '-'}</td>
+                        <td style={{ padding: '14px 16px' }}>{doc.department?.name || '-'}</td>
+                        <td style={{ padding: '14px 16px' }}>{doc.owner?.name || '-'}</td>
+                        <td style={{ padding: '14px 16px' }}>{doc.mapping?.category?.module?.name || '-'}</td>
+                        <td style={{ padding: '14px 16px' }}>{doc.mapping?.category?.name || '-'}</td>
+                        <td style={{ padding: '14px 16px' }}><span style={{ fontSize: '9px', fontWeight: 700, backgroundColor: '#f1f5f9', padding: '2px 8px', borderRadius: '4px' }}>{doc.document_level}</span></td>
+                        <td style={{ padding: '14px 16px' }}>{doc.mapping?.name || '-'}</td>
                         <td style={{ padding: '14px 16px', fontWeight: 700, color: 'var(--primary)' }}>{doc.document_number || '-'}</td>
                         <td style={{ padding: '14px 16px', fontWeight: 600 }}>{doc.title}</td>
-                        <td style={{ padding: '14px 16px' }}><span style={{ fontSize: '9px', fontWeight: 700, backgroundColor: '#f1f5f9', padding: '2px 8px', borderRadius: '4px' }}>{doc.document_level}</span></td>
                         <td style={{ padding: '14px 16px' }}><span style={{ fontSize: '9px', fontWeight: 700, color: 'var(--accent)' }}>ONGOING</span></td>
                         <td style={{ padding: '14px 16px' }}>
                             <button onClick={() => onViewDetail(doc)} style={{ border: '1px solid var(--border-color)', background: '#fff', borderRadius: '4px', padding: '4px 10px', cursor: 'pointer', fontSize: '10px', fontWeight: 600 }}>

@@ -129,7 +129,7 @@ export default function useMaker() {
             formData.append('title', title);
             formData.append('description', description);
             formData.append('doc_created', docCreated);
-            formData.append('status', statusType === 'draft' ? '1' : '2'); // 1 = Draft, 2 = Waiting Review
+            formData.append('status', statusType === 'draft' ? '2' : '1'); // 2 = Draft, 1 = Waiting Review
 
             if (documentLevel === 'SOP') {
                 formData.append('sop_number', sopNumber);
@@ -151,7 +151,7 @@ export default function useMaker() {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
 
-            window.location.href = '/document-system/maker';
+            window.location.href = '/document-system/active';
         } catch (err) {
             console.error('Submit document failed', err);
         } finally {

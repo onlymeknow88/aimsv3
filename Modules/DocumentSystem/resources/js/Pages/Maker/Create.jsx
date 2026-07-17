@@ -36,7 +36,7 @@ export default function Create() {
 
             {/* Header Navigation */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px', borderBottom: '1px solid var(--border-color)', paddingBottom: '12px', maxWidth: '800px', margin: '0 auto 24px auto' }}>
-                <a href="/document-system/maker" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', color: 'var(--primary)', fontWeight: 700, textDecoration: 'none', fontSize: '12px' }}>
+                <a href="/document-system/active" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', color: 'var(--primary)', fontWeight: 700, textDecoration: 'none', fontSize: '12px' }}>
                     <ArrowLeft size={16} /> Kembali ke Active Document
                 </a>
                 <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Siklus Pembuatan Dokumen Baru</span>

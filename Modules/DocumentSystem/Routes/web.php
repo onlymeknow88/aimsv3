@@ -6,8 +6,13 @@ use Modules\DocumentSystem\Http\Controllers\DocumentSystemController;
 Route::middleware('web')->prefix('document-system')->group(function () {
     Route::get('/', [DocumentSystemController::class, 'index'])->name('doc.dashboard');
     Route::get('/active', [DocumentSystemController::class, 'activeDocument'])->name('doc.active');
-    Route::get('/maker', [DocumentSystemController::class, 'maker'])->name('doc.maker');
-    Route::get('/maker/create', [DocumentSystemController::class, 'create'])->name('doc.maker.create');
+    Route::get('/active/create', [DocumentSystemController::class, 'create'])->name('doc.active.create');
+    Route::get('/maker', function () {
+        return redirect()->route('doc.active');
+    })->name('doc.maker');
+    Route::get('/maker/create', function () {
+        return redirect()->route('doc.active.create');
+    })->name('doc.maker.create');
     Route::get('/ongoing', [DocumentSystemController::class, 'ongoing'])->name('doc.ongoing');
     Route::get('/draft', [DocumentSystemController::class, 'draft'])->name('doc.draft');
     Route::get('/obsolete', [DocumentSystemController::class, 'obsolete'])->name('doc.obsolete');

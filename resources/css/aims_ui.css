@@ -46,7 +46,7 @@ body {
     background-color: var(--bg-color);
     color: var(--text-primary);
     font-family: var(--font-sans);
-    font-size: 12px;
+    font-size: 14px;
     line-height: 1.5;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -92,7 +92,7 @@ input, textarea, select {
     padding: 8px 16px;
     border-radius: 6px;
     font-weight: 600;
-    font-size: 11px;
+    font-size: 13px;
     cursor: pointer;
     transition: background-color 0.2s ease, transform 0.1s ease;
 }
@@ -113,7 +113,7 @@ input, textarea, select {
     padding: 8px 16px;
     border-radius: 6px;
     font-weight: 600;
-    font-size: 11px;
+    font-size: 13px;
     cursor: pointer;
     transition: border-color 0.2s ease, color 0.2s ease;
 }
@@ -136,7 +136,7 @@ input, textarea, select {
     padding: 8px 12px;
     border: 1px solid var(--border-color);
     border-radius: 6px;
-    font-size: 11px;
+    font-size: 13px;
     font-family: inherit;
     outline: none;
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
@@ -152,7 +152,7 @@ input, textarea, select {
 .badge {
     display: inline-flex;
     align-items: center;
-    font-size: 9px;
+    font-size: 11px;
     font-weight: 800;
     padding: 2px 8px;
     border-radius: 10px;

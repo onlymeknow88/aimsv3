@@ -5,14 +5,29 @@ import { Eye, Download, FileText } from 'lucide-react';
 export default function DocumentTable({ documents, onPreview, onDownload }) {
     const columns = useMemo(() => [
         {
-            accessorKey: 'document_number',
-            header: 'No. Dokumen',
-            cell: info => <span style={{ fontWeight: 700, color: 'var(--primary)', fontSize: '11px' }}>{info.getValue() || '-'}</span>
+            id: 'company',
+            header: 'Company',
+            cell: ({ row }) => <span style={{ fontSize: '11px' }}>{row.original.department?.company?.company_name || '-'}</span>
         },
         {
-            accessorKey: 'title',
-            header: 'Judul Dokumen',
-            cell: info => <span style={{ fontWeight: 600, fontSize: '11px' }}>{info.getValue()}</span>
+            id: 'department',
+            header: 'Department',
+            cell: ({ row }) => <span style={{ fontSize: '11px' }}>{row.original.department?.name || '-'}</span>
+        },
+        {
+            id: 'pic',
+            header: 'PIC',
+            cell: ({ row }) => <span style={{ fontSize: '11px' }}>{row.original.owner?.name || '-'}</span>
+        },
+        {
+            id: 'module',
+            header: 'Modul',
+            cell: ({ row }) => <span style={{ fontSize: '11px' }}>{row.original.mapping?.category?.module?.name || '-'}</span>
+        },
+        {
+            id: 'category',
+            header: 'Category',
+            cell: ({ row }) => <span style={{ fontSize: '11px' }}>{row.original.mapping?.category?.name || '-'}</span>
         },
         {
             accessorKey: 'document_level',
@@ -24,9 +39,54 @@ export default function DocumentTable({ documents, onPreview, onDownload }) {
             )
         },
         {
+            id: 'mapping',
+            header: 'Mapping',
+            cell: ({ row }) => <span style={{ fontSize: '11px' }}>{row.original.mapping?.name || '-'}</span>
+        },
+        {
+            accessorKey: 'document_number',
+            header: 'No. Dokumen',
+            cell: info => <span style={{ fontWeight: 700, color: 'var(--primary)', fontSize: '11px' }}>{info.getValue() || '-'}</span>
+        },
+        {
+            accessorKey: 'title',
+            header: 'Judul Dokumen',
+            cell: info => (
+                <div>
+                    <span style={{ fontWeight: 600, fontSize: '11px', display: 'block' }}>{info.getValue()}</span>
+                    {info.row.original.description && (
+                        <span style={{ fontSize: '10px', color: 'var(--text-secondary)', display: 'block', marginTop: '2px' }}>{info.row.original.description}</span>
+                    )}
+                </div>
+            )
+        },
+        {
             accessorKey: 'revision',
             header: 'Rev',
             cell: info => <span style={{ fontSize: '11px' }}>Rev {info.getValue() || 0}</span>
+        },
+        {
+            accessorKey: 'status',
+            header: 'Status',
+            cell: info => {
+                const status = info.getValue();
+                const colors = status === '5' ? { bg: 'rgba(47, 191, 113, 0.08)', text: 'var(--success)', name: 'ACTIVE' }
+                             : status === '7' ? { bg: 'rgba(244, 67, 54, 0.08)', text: 'var(--danger)', name: 'EXPIRED' }
+                             : status === '2' ? { bg: 'rgba(255, 140, 36, 0.08)', text: 'var(--accent)', name: 'REVIEW' }
+                             : { bg: 'rgba(45, 127, 249, 0.08)', text: 'var(--info)', name: 'DRAFT' };
+                return (
+                    <span style={{
+                        fontSize: '9px',
+                        fontWeight: 800,
+                        backgroundColor: colors.bg,
+                        color: colors.text,
+                        padding: '2px 8px',
+                        borderRadius: '10px'
+                    }}>
+                        {colors.name}
+                    </span>
+                );
+            }
         },
         {
             id: 'actions',
@@ -79,7 +139,7 @@ export default function DocumentTable({ documents, onPreview, onDownload }) {
                     ))
                 ) : (
                     <tr>
-                        <td colSpan={5} style={{ padding: '32px', textAlign: 'center', color: 'var(--text-muted)' }}>
+                        <td colSpan={columns.length} style={{ padding: '32px', textAlign: 'center', color: 'var(--text-muted)' }}>
                             Belum ada dokumen aktif.
                         </td>
                     </tr>

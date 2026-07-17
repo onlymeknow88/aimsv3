@@ -21,7 +21,7 @@ class DocumentController extends Controller
     public function maker(Request $request)
     {
         $documents = Document::with(['activity', 'attachments', 'invitedPeople'])
-            ->whereIn('status', ['1', '2', '4', '5']) // draft, ongoing, expired, active
+            ->whereIn('status', ['5', '7']) // active, expired
             ->latest()
             ->get();
 
@@ -35,7 +35,7 @@ class DocumentController extends Controller
      */
     public function activeDocument(Request $request)
     {
-        $documents = Document::where('status', '5') // Active
+        $documents = Document::whereIn('status', ['5', '7']) // Active, Expired
             ->with(['attachments'])
             ->latest()
             ->get();
@@ -50,7 +50,7 @@ class DocumentController extends Controller
      */
     public function ongoing(Request $request)
     {
-        $documents = Document::where('status', '2') // Ongoing
+        $documents = Document::whereIn('status', ['1', '3', '4', '6']) // waiting review, rooting review, on revision, preparing
             ->with(['activity', 'invitedPeople'])
             ->latest()
             ->get();
@@ -65,7 +65,7 @@ class DocumentController extends Controller
      */
     public function draft(Request $request)
     {
-        $documents = Document::where('status', '1') // Draft
+        $documents = Document::where('status', '2') // Draft
             ->latest()
             ->get();
 
@@ -79,7 +79,7 @@ class DocumentController extends Controller
      */
     public function obsolete(Request $request)
     {
-        $documents = Document::where('status', '6') // Obsolete
+        $documents = Document::where('status', '8') // Obsolete
             ->latest()
             ->get();
 
@@ -108,7 +108,7 @@ class DocumentController extends Controller
             'description'     => $request->description,
             'prefix_code'     => "{$company}-{$request->department}-{$request->document_level}",
             'document_number' => $docNumber,
-            'status'          => '1', // Draft
+            'status'          => '2', // Draft
             'revision'        => '0',
             'doc_created'     => now(),
         ]);

@@ -20,10 +20,10 @@ class DocumentSystemController extends Controller
     public function index()
     {
         $stats = [
-            'active_docs'   => Document::where('status', '5')->count(),
-            'ongoing_docs'  => Document::where('status', '2')->count(),
-            'draft_docs'    => Document::where('status', '1')->count(),
-            'obsolete_docs' => Document::where('status', '6')->count(),
+            'active_docs'   => Document::whereIn('status', ['5', '7'])->count(),
+            'ongoing_docs'  => Document::whereIn('status', ['1', '3', '4', '6'])->count(),
+            'draft_docs'    => Document::where('status', '2')->count(),
+            'obsolete_docs' => Document::where('status', '8')->count(),
             'jsa_active'    => JsaDocument::where('status', '5')->count(),
             'ptw_active'    => PtwDocument::where('status', '5')->count(),
         ];
@@ -38,7 +38,8 @@ class DocumentSystemController extends Controller
      */
     public function maker()
     {
-        $documents = Document::whereIn('status', ['1', '2', '4', '5'])
+        $documents = Document::whereIn('status', ['5', '7'])
+            ->with(['department.company', 'owner', 'mapping.category.module', 'attachments'])
             ->latest()
             ->get();
 
@@ -60,8 +61,8 @@ class DocumentSystemController extends Controller
      */
     public function activeDocument()
     {
-        $documents = Document::where('status', '5')
-            ->with(['attachments'])
+        $documents = Document::whereIn('status', ['5', '7'])
+            ->with(['department.company', 'owner', 'mapping.category.module', 'attachments'])
             ->latest()
             ->get();
 
@@ -75,8 +76,8 @@ class DocumentSystemController extends Controller
      */
     public function ongoing()
     {
-        $documents = Document::where('status', '2')
-            ->with(['invitedPeople'])
+        $documents = Document::whereIn('status', ['1', '3', '4', '6'])
+            ->with(['department.company', 'owner', 'mapping.category.module', 'attachments', 'invitedPeople'])
             ->latest()
             ->get();
 
@@ -90,7 +91,8 @@ class DocumentSystemController extends Controller
      */
     public function draft()
     {
-        $documents = Document::where('status', '1')
+        $documents = Document::where('status', '2')
+            ->with(['department.company', 'owner', 'mapping.category.module', 'attachments'])
             ->latest()
             ->get();
 
@@ -104,7 +106,8 @@ class DocumentSystemController extends Controller
      */
     public function obsolete()
     {
-        $documents = Document::where('status', '6')
+        $documents = Document::where('status', '8')
+            ->with(['department.company', 'owner', 'mapping.category.module', 'attachments'])
             ->latest()
             ->get();
 
@@ -118,7 +121,8 @@ class DocumentSystemController extends Controller
      */
     public function approval()
     {
-        $documents = Document::whereIn('status', ['2', '3'])
+        $documents = Document::whereIn('status', ['1', '3', '4'])
+            ->with(['department.company', 'owner', 'mapping.category.module', 'attachments'])
             ->latest()
             ->get();
 

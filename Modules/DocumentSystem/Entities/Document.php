@@ -80,4 +80,9 @@ class Document extends Model
     {
         return $this->belongsTo(\App\Models\User::class, 'created_by');
     }
+
+    public function department()
+    {
+        return $this->belongsTo(\App\Models\Department::class, 'department_id');
+    }
 }
