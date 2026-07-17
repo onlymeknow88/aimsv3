@@ -80,20 +80,39 @@ export default function Detail({ id }) {
                     <ArrowLeft size={16} /> Kembali ke Active Document
                 </a>
 
-                <a href={`/document-system/active/edit/${document.id}`} style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    backgroundColor: 'var(--primary)',
-                    color: '#fff',
-                    borderRadius: '6px',
-                    padding: '6px 14px',
-                    fontSize: '11px',
-                    fontWeight: 700,
-                    textDecoration: 'none'
-                }}>
-                    <Edit size={12} /> Edit Dokumen
-                </a>
+                {['2', '1', '3', '4', '6'].includes(String(document.status)) && (
+                    <a href={`/document-system/active/edit/${document.id}`} style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        backgroundColor: 'var(--primary)',
+                        color: '#fff',
+                        borderRadius: '6px',
+                        padding: '6px 14px',
+                        fontSize: '11px',
+                        fontWeight: 700,
+                        textDecoration: 'none'
+                    }}>
+                        <Edit size={12} /> Edit Dokumen
+                    </a>
+                )}
+
+                {['5', '7'].includes(String(document.status)) && !document.is_obsolate && (
+                    <a href={`/document-system/active/edit/${document.id}`} style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        backgroundColor: 'var(--primary)',
+                        color: '#fff',
+                        borderRadius: '6px',
+                        padding: '6px 14px',
+                        fontSize: '11px',
+                        fontWeight: 700,
+                        textDecoration: 'none'
+                    }}>
+                        <Edit size={12} /> Update Document (Revisi)
+                    </a>
+                )}
             </div>
 
             {/* 3-Column Grid Layout */}

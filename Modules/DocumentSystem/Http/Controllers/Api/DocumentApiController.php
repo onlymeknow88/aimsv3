@@ -23,7 +23,6 @@ class DocumentApiController extends Controller
         $status = $request->input('status');
 
         $query = Document::with(['company', 'department', 'areaManager.user', 'owner', 'mapping.category.module', 'attachments'])
-            ->where('is_obsolate', false)
             ->latest();
 
         if ($status) {
@@ -32,6 +31,11 @@ class DocumentApiController extends Controller
             } else {
                 $query->where('status', $status);
             }
+        }
+
+        // Only exclude obsolete documents if status 8 is not explicitly requested
+        if ($status !== '8' && !str_contains($status ?? '', '8')) {
+            $query->where('is_obsolate', false);
         }
 
         $documents = $query->get();

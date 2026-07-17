@@ -35,8 +35,10 @@ export default function Index() {
         'Category': true,
         'Level': true,
         'Mapping': true,
-        'Judul': true,
-        'Status': true
+        'Judul Dokumen': true,
+        'Rev': true,
+        'Status': true,
+        'Aksi': true
     });
 
     const toggleColumn = (col) => {

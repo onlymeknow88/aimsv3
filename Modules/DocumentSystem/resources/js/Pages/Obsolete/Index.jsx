@@ -28,10 +28,17 @@ export default function Index() {
 
     const [visibleColumns, setVisibleColumns] = useState({
         'No. Dokumen': true,
-        'Judul': true,
+        'Company': true,
+        'Department': true,
+        'PIC': true,
+        'Modul': true,
+        'Category': true,
         'Level': true,
-        'Revision': true,
-        'Status': true
+        'Mapping': true,
+        'Judul Dokumen': true,
+        'Rev': true,
+        'Status': true,
+        'Aksi': true
     });
 
     const toggleColumn = (col) => {

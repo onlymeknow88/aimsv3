@@ -157,7 +157,10 @@ class DocumentSystemService
             }
 
             // Mark the old active/expired document as obsolete
-            $document->update(['is_obsolate' => true]);
+            $document->update([
+                'is_obsolate' => true,
+                'status' => '8'
+            ]);
         }
 
         return $newDoc;

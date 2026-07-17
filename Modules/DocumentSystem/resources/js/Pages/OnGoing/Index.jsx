@@ -30,6 +30,7 @@ export default function Index() {
     } = useOnGoing();
 
     const [visibleColumns, setVisibleColumns] = useState({
+        'No. Dokumen': true,
         'Company': true,
         'Department': true,
         'PIC': true,
@@ -37,8 +38,8 @@ export default function Index() {
         'Category': true,
         'Level': true,
         'Mapping': true,
-        'No. Dokumen': true,
-        'Judul': true,
+        'Judul Dokumen': true,
+        'Rev': true,
         'Status': true,
         'Aksi': true
     });
