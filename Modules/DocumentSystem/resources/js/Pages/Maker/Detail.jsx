@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Head } from '@inertiajs/react';
 import { ArrowLeft, User, Building, MapPin, Calendar, Layers, Eye, Download, Info, Users, Clock, Edit } from 'lucide-react';
 import StatusTimeline from '../OnGoing/Partials/Components/StatusTimeline';
 import useDetail from './Hooks/useDetail';
+import BlobPreviewModal from './Partials/Components/BlobPreviewModal';
 
 export default function Detail({ id }) {
+    const [previewAttachment, setPreviewAttachment] = useState(null);
     const {
         document,
         loadingData,
@@ -261,7 +263,13 @@ export default function Detail({ id }) {
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                 {document.attachments.map(att => (
                                     <div key={att.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px', border: '1px solid var(--border-color)', borderRadius: '8px', backgroundColor: '#fafbfc' }}>
-                                        <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-primary)' }}>{att.file_name}</span>
+                                        <span 
+                                            onClick={() => setPreviewAttachment(att)}
+                                            style={{ fontSize: '12px', fontWeight: 600, color: 'var(--primary)', cursor: 'pointer', textDecoration: 'underline' }}
+                                            title="Klik untuk preview lampiran"
+                                        >
+                                            {att.file_name || (att.path ? att.path.split('/').pop() : 'Unnamed File')}
+                                        </span>
                                         <a href={`/api/document-system/attachments/${att.id}/download`} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', textDecoration: 'none', fontSize: '11px', fontWeight: 700, color: 'var(--primary)' }}>
                                             <Download size={12} /> Download
                                         </a>
@@ -396,6 +404,13 @@ export default function Detail({ id }) {
                 </aside>
 
             </div>
+
+            {previewAttachment && (
+                <BlobPreviewModal
+                    attachment={previewAttachment}
+                    onClose={() => setPreviewAttachment(null)}
+                />
+            )}
         </div>
     );
 }

@@ -79,6 +79,19 @@ export default function useDetail(id) {
         (canApproveL2 && (String(document.status) === '3' || String(document.status) === '6')) // level 2 and rooting or prepare rooting
     ) : false;
 
+    const handleDeleteAttachment = useCallback((attachmentId) => {
+        if (!window.confirm('Apakah Anda yakin ingin menghapus lampiran ini?')) return;
+        
+        axios.delete(`/api/document-system/attachments/${attachmentId}`)
+            .then(() => {
+                fetchDocumentDetails();
+            })
+            .catch(err => {
+                alert('Gagal menghapus lampiran.');
+                console.error(err);
+            });
+    }, [fetchDocumentDetails]);
+
     return {
         document,
         canApproveL1,
@@ -91,6 +104,7 @@ export default function useDetail(id) {
         setIsRejectModalOpen,
         handleApprove,
         handleReject,
-        showApproval
+        showApproval,
+        handleDeleteAttachment
     };
 }

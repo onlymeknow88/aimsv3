@@ -10,6 +10,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Modules\DocumentSystem\Entities\Document;
+use Modules\DocumentSystem\Entities\Attachment;
+use Modules\DocumentSystem\Services\DocumentSystemService;
 
 class DocumentApiController extends Controller
 {
@@ -20,7 +22,7 @@ class DocumentApiController extends Controller
     {
         $status = $request->input('status');
 
-        $query = Document::with(['company', 'department', 'owner', 'mapping.category.module', 'attachments'])
+        $query = Document::with(['company', 'department', 'areaManager.user', 'owner', 'mapping.category.module', 'attachments'])
             ->latest();
 
         if ($status) {
@@ -115,7 +117,22 @@ class DocumentApiController extends Controller
 
             // Save uploaded files attachment
             if ($request->hasFile('files')) {
-                // Handle file attachments upload here...
+                $service = app(DocumentSystemService::class);
+                foreach ($request->file('files') as $file) {
+                    $uploadResult = $service->uploadAttachment($file);
+                    if ($uploadResult) {
+                        Attachment::create([
+                            'document_id' => $doc->id,
+                            'file_name' => $file->getClientOriginalName(),
+                            'file_type' => strtolower($file->getClientOriginalExtension()),
+                            'file_size' => $file->getSize(),
+                            'path' => $uploadResult['fileBlobPathName'],
+                            'blob_url' => $uploadResult['fileBlobUrl'],
+                            'blob_respon' => json_encode($uploadResult['blobResponse']),
+                            'status' => 1,
+                        ]);
+                    }
+                }
             }
 
             DB::commit();
@@ -207,6 +224,26 @@ class DocumentApiController extends Controller
                 }
             }
 
+            // Save uploaded files attachment
+            if ($request->hasFile('files')) {
+                $service = app(DocumentSystemService::class);
+                foreach ($request->file('files') as $file) {
+                    $uploadResult = $service->uploadAttachment($file);
+                    if ($uploadResult) {
+                        Attachment::create([
+                            'document_id' => $doc->id,
+                            'file_name' => $file->getClientOriginalName(),
+                            'file_type' => strtolower($file->getClientOriginalExtension()),
+                            'file_size' => $file->getSize(),
+                            'path' => $uploadResult['fileBlobPathName'],
+                            'blob_url' => $uploadResult['fileBlobUrl'],
+                            'blob_respon' => json_encode($uploadResult['blobResponse']),
+                            'status' => 1,
+                        ]);
+                    }
+                }
+            }
+
             DB::commit();
 
             return ResponseFormatter::success($doc, 'Document updated successfully');
@@ -229,11 +266,13 @@ class DocumentApiController extends Controller
                 $query->where('department_id', $dept->id);
             }
         }
-        $list = $query->select('id', 'prefix_code', 'sop_number', 'title')->get()->map(function ($doc) {
+        $list = $query->select('id', 'prefix_code', 'sop_number', 'document_number', 'title')->get()->map(function ($doc) {
             return [
-                'id' => $doc->id,
-                'full_code' => "{$doc->prefix_code}{$doc->sop_number}",
-                'title' => $doc->title,
+                'id'              => $doc->id,
+                'full_code'       => "{$doc->prefix_code}{$doc->sop_number}",
+                'document_number' => $doc->document_number,
+                'sop_number'      => $doc->sop_number,
+                'title'           => $doc->title,
             ];
         });
 
@@ -307,6 +346,14 @@ class DocumentApiController extends Controller
             $doc->update(['status' => '3', 'approved_by_crs' => $userId, 'approved_at_crs' => now()]);
         } else {
             $doc->update(['status' => '5', 'approved_by_pja' => $userId, 'approved_at_pja' => now()]); // Active
+
+            // On final approval: rename all attachments with FINAL_ prefix on blob storage
+            try {
+                $service = new \Modules\DocumentSystem\Services\DocumentSystemService();
+                $service->renameToBlobFinal($doc);
+            } catch (\Exception $e) {
+                \Log::error('Failed to rename blobs to FINAL_ on final approval: ' . $e->getMessage());
+            }
         }
 
         // Log activity
@@ -360,7 +407,7 @@ class DocumentApiController extends Controller
      */
     public function show(string $id)
     {
-        $document = Document::with(['company', 'department', 'owner', 'creator', 'mapping.category.module', 'attachments', 'invitedPeople', 'activities.user'])
+        $document = Document::with(['company', 'department', 'areaManager.user', 'owner', 'creator', 'mapping.category.module', 'attachments', 'invitedPeople', 'activities.user'])
             ->findOrFail($id);
 
         $user = auth()->user() ?? auth('admin')->user() ?? auth('web')->user();
@@ -379,5 +426,40 @@ class DocumentApiController extends Controller
             'canApproveL1' => $canApproveL1,
             'canApproveL2' => $canApproveL2,
         ], 'Document retrieved successfully');
+    }
+
+    /**
+     * Delete attachment via API.
+     */
+    public function deleteAttachment(string $id)
+    {
+        $attachment = Attachment::findOrFail($id);
+        $attachment->delete();
+
+        return ResponseFormatter::success(null, 'Lampiran berhasil dihapus.');
+    }
+
+    /**
+     * Delete (soft-delete or hard-delete) one or more documents.
+     */
+    public function destroy(Request $request)
+    {
+        $request->validate([
+            'ids'   => 'required|array|min:1',
+            'ids.*' => 'string',
+        ]);
+
+        $deleted = 0;
+        foreach ($request->ids as $id) {
+            $doc = Document::find($id);
+            if ($doc) {
+                // Also delete related attachments records
+                \Modules\DocumentSystem\Entities\Attachment::where('document_id', $doc->id)->delete();
+                $doc->delete();
+                $deleted++;
+            }
+        }
+
+        return ResponseFormatter::success(['deleted' => $deleted], "{$deleted} dokumen berhasil dihapus.");
     }
 }

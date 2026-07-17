@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use Modules\DocumentSystem\Http\Controllers\Api\DocumentApiController;
 use Modules\DocumentSystem\Http\Controllers\Api\PermissionApiController;
 use Modules\DocumentSystem\Http\Controllers\Api\MasterDataApiController;
+use Modules\DocumentSystem\Http\Controllers\GeneralController;
 
 Route::prefix('document-system')->group(function () {
     // Document API Actions
@@ -13,6 +14,11 @@ Route::prefix('document-system')->group(function () {
     Route::post('/documents/reject/{id}', [DocumentApiController::class, 'reject']);
     Route::post('/documents/{id}', [DocumentApiController::class, 'update']);
     Route::get('/documents/{id}', [DocumentApiController::class, 'show']);
+    Route::delete('/documents', [DocumentApiController::class, 'destroy']);
+    Route::delete('/attachments/{id}', [DocumentApiController::class, 'deleteAttachment']);
+    Route::get('/attachments/{id}/preview', [GeneralController::class, 'previewAttachment']);
+    Route::get('/attachments/{id}/download', [GeneralController::class, 'downloadAttachment']);
+    Route::get('/attachments/{id}/sas-url', [GeneralController::class, 'sasUrl']);
 
     // Permission API Actions
     Route::get('/active-sops', [DocumentApiController::class, 'getActiveSops']);

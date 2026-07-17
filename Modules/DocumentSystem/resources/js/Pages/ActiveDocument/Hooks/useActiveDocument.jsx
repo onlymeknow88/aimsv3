@@ -54,15 +54,20 @@ export default function useActiveDocument() {
     }, [selectedIds]);
 
     const handleDelete = useCallback(async () => {
-        if (confirm(`Apakah Anda yakin ingin menghapus ${selectedIds.length} dokumen terpilih?`)) {
-            try {
-                // Perform delete or bulk delete API call here if needed
-                console.log("Delete documents:", selectedIds);
-            } catch (err) {
-                console.error("Delete failed", err);
-            }
+        if (selectedIds.length === 0) return;
+        if (!confirm(`Apakah Anda yakin ingin menghapus ${selectedIds.length} dokumen terpilih? Tindakan ini tidak dapat dibatalkan.`)) return;
+
+        try {
+            await axios.delete('/api/document-system/documents', {
+                data: { ids: selectedIds }
+            });
+            setSelectedIds([]);
+            fetchDocuments();
+        } catch (err) {
+            console.error('Delete failed', err);
+            alert('Gagal menghapus dokumen. Silakan coba lagi.');
         }
-    }, [selectedIds]);
+    }, [selectedIds, fetchDocuments]);
 
     return { 
         search, 

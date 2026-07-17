@@ -1,13 +1,29 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Head } from '@inertiajs/react';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, X } from 'lucide-react';
+import axios from 'axios';
 import InvitedPeopleInput from './Partials/Components/InvitedPeopleInput';
 import FileDropzone from './Partials/Components/FileDropzone';
 import SearchableSelect from './Partials/Components/SearchableSelect';
 import SummernoteEditor from './Partials/Components/SummernoteEditor';
 import useMaker from './Hooks/useMaker';
+import BlobPreviewModal from './Partials/Components/BlobPreviewModal';
 
 export default function Create({ document = null }) {
+    const [existingAttachments, setExistingAttachments] = useState(document?.attachments || []);
+    const [previewAttachment, setPreviewAttachment] = useState(null);
+
+    const handleDeleteAttachment = async (attId) => {
+        if (!window.confirm('Apakah Anda yakin ingin menghapus lampiran ini?')) return;
+        try {
+            await axios.delete(`/api/document-system/attachments/${attId}`);
+            setExistingAttachments(prev => prev.filter(att => att.id !== attId));
+        } catch (err) {
+            console.error('Failed to delete attachment', err);
+            alert('Gagal menghapus lampiran.');
+        }
+    };
+
     const {
         loading,
         companies, departments, pjs, modules, categories, mappings, activeSops,
@@ -136,10 +152,18 @@ export default function Create({ document = null }) {
                                             <option value="">Choose document</option>
                                             {activeSops.map(sopItem => (
                                                 <option key={sopItem.id} value={sopItem.id}>
-                                                    {sopItem.full_code} {sopItem.title}
+                                                    {sopItem.document_number || sopItem.full_code} — {sopItem.title}
                                                 </option>
                                             ))}
                                         </select>
+                                        {parentDocumentId && activeSops.find(s => s.id === parentDocumentId) && (
+                                            <div style={{ marginTop: '6px', padding: '6px 10px', backgroundColor: 'rgba(21, 59, 115, 0.04)', border: '1px solid rgba(21, 59, 115, 0.12)', borderRadius: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                <span style={{ fontSize: '10px', fontWeight: 700, color: 'var(--text-secondary)' }}>Document No:</span>
+                                                <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--primary)' }}>
+                                                    {activeSops.find(s => s.id === parentDocumentId)?.document_number || activeSops.find(s => s.id === parentDocumentId)?.full_code}
+                                                </span>
+                                            </div>
+                                        )}
                                     </div>
 
                                     <div style={{ backgroundColor: '#f8fafc', padding: '16px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
@@ -245,8 +269,48 @@ export default function Create({ document = null }) {
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                             <FileDropzone onFileDrop={setFiles} />
                             {files.length > 0 && (
-                                <div style={{ marginTop: '8px', fontSize: '10.5px', color: 'var(--success)' }}>
-                                    ✓ {files.length} file dipilih: {files.map(f => f.name).join(', ')}
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '8px' }}>
+                                    <label style={{ fontSize: '10.5px', fontWeight: 700, color: 'var(--text-secondary)' }}>FILE YANG AKAN DI-UPLOAD</label>
+                                    {files.map((file, idx) => (
+                                        <div key={idx} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', border: '1px dashed var(--success)', borderRadius: '6px', backgroundColor: 'rgba(47, 191, 113, 0.03)' }}>
+                                            <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--success)' }}>
+                                                ✓ {file.name}
+                                            </span>
+                                            <button 
+                                                type="button" 
+                                                onClick={() => setFiles(prev => prev.filter((_, i) => i !== idx))}
+                                                style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--danger)', padding: '4px' }}
+                                                title="Batalkan Upload"
+                                            >
+                                                <X size={14} />
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+
+                            {existingAttachments.length > 0 && (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '12px' }}>
+                                    <label style={{ fontSize: '10.5px', fontWeight: 700, color: 'var(--text-secondary)' }}>FILE LAMPIRAN SAAT INI</label>
+                                    {existingAttachments.map(att => (
+                                        <div key={att.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', border: '1px solid var(--border-color)', borderRadius: '6px', backgroundColor: '#f8fafc' }}>
+                                            <span
+                                                onClick={() => setPreviewAttachment(att)}
+                                                style={{ fontSize: '11px', fontWeight: 600, color: 'var(--primary)', cursor: 'pointer', textDecoration: 'underline' }}
+                                                title="Klik untuk preview lampiran"
+                                            >
+                                                {att.file_name || (att.path ? att.path.split('/').pop() : 'Unnamed File')}
+                                            </span>
+                                            <button 
+                                                type="button" 
+                                                onClick={() => handleDeleteAttachment(att.id)}
+                                                style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--danger)', padding: '4px' }}
+                                                title="Hapus Lampiran"
+                                            >
+                                                <X size={14} />
+                                            </button>
+                                        </div>
+                                    ))}
                                 </div>
                             )}
                         </div>
@@ -267,6 +331,13 @@ export default function Create({ document = null }) {
 
                 </div>
             </div>
+
+            {previewAttachment && (
+                <BlobPreviewModal
+                    attachment={previewAttachment}
+                    onClose={() => setPreviewAttachment(null)}
+                />
+            )}
         </div>
     );
 }

@@ -84,6 +84,11 @@ class Document extends Model
         return $this->belongsTo(\App\Models\User::class, 'created_by');
     }
 
+    public function areaManager()
+    {
+        return $this->belongsTo(\App\Models\AreaManager::class, 'area_manager_id');
+    }
+
     public function department()
     {
         return $this->belongsTo(\App\Models\Department::class, 'department_id');

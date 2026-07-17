@@ -1,9 +1,11 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import axios from 'axios';
 
 export default function useMaker(document = null) {
     const [loading, setLoading] = useState(false);
-    const [isFirstLoad, setIsFirstLoad] = useState(true);
+    // Use a ref for tracking initial load to avoid stale closures and race conditions
+    const isFirstLoad = useRef(true);
+    const isCategoryFirstLoad = useRef(true);
 
     // Master data lists from API
     const [companies, setCompanies] = useState([]);
@@ -63,15 +65,20 @@ export default function useMaker(document = null) {
                 const list = res.data?.result || [];
                 const data = list.map(c => ({ id: c.id, name: c.index ? `${c.index}. ${c.name}` : c.name }));
                 setCategories(data);
-                if (isFirstLoad && document && document.category_id) {
+                // On first load when editing, restore the saved category; otherwise reset
+                if (isFirstLoad.current && document?.category_id) {
                     setCategory(document.category_id);
-                } else {
+                } else if (!isFirstLoad.current) {
                     setCategory('');
                     setMapping('');
                 }
             });
         } else {
             setCategories([]);
+            if (!isFirstLoad.current) {
+                setCategory('');
+                setMapping('');
+            }
         }
     }, [module]);
 
@@ -82,15 +89,24 @@ export default function useMaker(document = null) {
                 const list = res.data?.result || [];
                 const data = list.map(m => ({ id: m.id, name: m.index ? `${m.index}. ${m.name}` : m.name }));
                 setMappings(data);
-                if (isFirstLoad && document && document.mapping_id) {
+                // On first load when editing, restore the saved mapping; otherwise reset
+                if (isCategoryFirstLoad.current && document?.mapping_id) {
                     setMapping(document.mapping_id);
-                    setIsFirstLoad(false);
-                } else {
+                } else if (!isCategoryFirstLoad.current) {
                     setMapping('');
                 }
+                // Mark first loads complete
+                isFirstLoad.current = false;
+                isCategoryFirstLoad.current = false;
             });
         } else {
             setMappings([]);
+            // Mark first load complete even if no category (user cleared it)
+            if (!isCategoryFirstLoad.current) {
+                setMapping('');
+            }
+            isFirstLoad.current = false;
+            isCategoryFirstLoad.current = false;
         }
     }, [category]);
 

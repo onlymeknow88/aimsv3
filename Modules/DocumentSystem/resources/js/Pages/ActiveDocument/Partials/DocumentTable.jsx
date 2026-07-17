@@ -1,10 +1,12 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useReactTable, getCoreRowModel, getFilteredRowModel, getPaginationRowModel, flexRender } from '@tanstack/react-table';
-import { Eye, Download, FileText } from 'lucide-react';
+import { FileText } from 'lucide-react';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
 import { Checkbox } from '@/components/ui/checkbox';
+import BlobPreviewModal from '../../Maker/Partials/Components/BlobPreviewModal';
 
-export default function DocumentTable({ documents, onPreview, onDownload, selectedIds = [], onSelectionChange, visibleColumns, loading = false }) {
+export default function DocumentTable({ documents, selectedIds = [], onSelectionChange, visibleColumns, loading = false }) {
+    const [previewAttachment, setPreviewAttachment] = useState(null);
     const getCompanyCode = (doc) => {
         return doc.company?.company_name || doc.company?.document_code || '-';
     };
@@ -46,7 +48,7 @@ export default function DocumentTable({ documents, onPreview, onDownload, select
         {
             id: 'company',
             header: 'Company',
-            cell: ({ row }) => <span style={{ fontSize: '12px' }}>{getCompanyCode(row.original)}</span>
+            cell: ({ row }) => <span style={{ fontSize: '12px' ,fontWeight: 700 }}>   <a href={`/document-system/active/detail/${row.original.id}`} style={{ color: 'var(--primary)', textDecoration: 'none' }}>{getCompanyCode(row.original)}</a></span>
         },
         {
             id: 'department',
@@ -56,7 +58,7 @@ export default function DocumentTable({ documents, onPreview, onDownload, select
         {
             id: 'pic',
             header: 'PIC',
-            cell: ({ row }) => <span style={{ fontSize: '12px' }}>{row.original.owner?.name || '-'}</span>
+            cell: ({ row }) => <span style={{ fontSize: '12px' }}>{row.original.area_manager?.user?.name || '-'}</span>
         },
         {
             id: 'module',
@@ -81,7 +83,7 @@ export default function DocumentTable({ documents, onPreview, onDownload, select
         {
             accessorKey: 'document_level',
             id: 'document_level',
-            header: 'Level',
+            header: 'Document Type',
             cell: info => (
                 <span style={{ fontSize: '11px', fontWeight: 700, backgroundColor: '#f1f5f9', padding: '2px 8px', borderRadius: '4px', color: 'var(--text-secondary)' }}>
                     {info.getValue()}
@@ -103,10 +105,8 @@ export default function DocumentTable({ documents, onPreview, onDownload, select
             id: 'document_number',
             header: 'No. Dokumen',
             cell: ({ row }) => (
-                <span style={{ fontWeight: 700 }}>
-                    <a href={`/document-system/active/detail/${row.original.id}`} style={{ color: 'var(--primary)', textDecoration: 'none' }}>
+                <span >
                         {row.original.document_number}
-                    </a>
                 </span>
             )
         },
@@ -154,20 +154,49 @@ export default function DocumentTable({ documents, onPreview, onDownload, select
             }
         },
         {
-            id: 'actions',
-            header: 'Aksi',
-            cell: ({ row }) => (
-                <div style={{ display: 'flex', gap: '6px' }}>
-                    <button onClick={() => onPreview(row.original)} style={{ border: '1px solid var(--border-color)', background: '#fff', borderRadius: '4px', padding: '4px 8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '10px', fontWeight: 600 }}>
-                        <Eye size={12} /> Preview
-                    </button>
-                    <button onClick={() => onDownload(row.original)} style={{ border: 'none', background: 'var(--primary)', color: '#fff', borderRadius: '4px', padding: '4px 8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '10px', fontWeight: 600 }}>
-                        <Download size={12} /> Download
-                    </button>
-                </div>
-            )
+            id: 'attachment',
+            header: 'Attachment',
+            cell: ({ row }) => {
+                const finalAttachments = (row.original.attachments || []).filter(
+                    att => att.file_name && att.file_name.startsWith('FINAL_')
+                );
+
+                if (finalAttachments.length === 0) {
+                    return <span style={{ color: 'var(--text-muted)', fontSize: '11px' }}>—</span>;
+                }
+
+                return (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        {finalAttachments.map(att => (
+                            <span
+                                key={att.id}
+                                onClick={() => setPreviewAttachment(att)}
+                                style={{
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '4px',
+                                    fontSize: '11px',
+                                    fontWeight: 600,
+                                    color: 'var(--primary)',
+                                    textDecoration: 'underline',
+                                    textDecorationStyle: 'dotted',
+                                    cursor: 'pointer',
+                                    maxWidth: '200px',
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis',
+                                    whiteSpace: 'nowrap'
+                                }}
+                                title={`Klik untuk preview: ${att.file_name}`}
+                            >
+                                <FileText size={11} style={{ flexShrink: 0 }} />
+                                {att.file_name}
+                            </span>
+                        ))}
+                    </div>
+                );
+            }
         }
-    ], [onPreview, onDownload, selectedIds, isAllSelected]);
+    ], [selectedIds, isAllSelected, previewAttachment]);
 
     const columnVisibility = useMemo(() => {
         if (!visibleColumns) return {};
@@ -201,7 +230,7 @@ export default function DocumentTable({ documents, onPreview, onDownload, select
 
     const visibleColsCount = table.getVisibleFlatColumns().length;
 
-    return (
+    return (<>
         <Table style={{ fontSize: '12px' }}>
             <TableHeader>
                 {table.getHeaderGroups().map(hg => (
@@ -240,5 +269,12 @@ export default function DocumentTable({ documents, onPreview, onDownload, select
                 )}
             </TableBody>
         </Table>
-    );
+
+        {previewAttachment && (
+            <BlobPreviewModal
+                attachment={previewAttachment}
+                onClose={() => setPreviewAttachment(null)}
+            />
+        )}
+    </>);
 }

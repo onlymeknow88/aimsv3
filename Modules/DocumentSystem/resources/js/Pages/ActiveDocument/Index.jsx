@@ -215,8 +215,6 @@ export default function Index() {
             <div style={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--border-color)', borderRadius: '12px', overflow: 'hidden', boxShadow: 'var(--shadow-sm)' }}>
                 <DocumentTable
                     documents={filtered}
-                    onPreview={openPreview}
-                    onDownload={(doc) => downloadFile(doc.attachments?.[0]?.id, doc.title)}
                     selectedIds={selectedIds}
                     onSelectionChange={setSelectedIds}
                     visibleColumns={visibleColumns}

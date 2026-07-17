@@ -3,7 +3,10 @@
 namespace Modules\DocumentSystem\Services;
 
 use Modules\DocumentSystem\Entities\Document;
+use Modules\DocumentSystem\Entities\Attachment;
 use Illuminate\Support\Facades\Storage;
+use GuzzleHttp\Client;
+use Illuminate\Support\Facades\Log;
 
 class DocumentSystemService
 {
@@ -28,6 +31,89 @@ class DocumentSystemService
             return null;
         }
 
-        return Storage::disk('public')->putFile($path, $file);
+        $filename = $file->getClientOriginalName();
+        $filePathTemp = $file->getRealPath();
+
+        $result = uploadToBlobStorage($filename, $filePathTemp, $path);
+        
+        if (is_array($result) && !empty($result['fileBlobPathName'])) {
+            return $result;
+        }
+
+        return null;
+    }
+
+    /**
+     * Rename all attachments of a document to have FINAL_ prefix.
+     * Downloads each file from blob, re-uploads with FINAL_ prefix, updates the database record.
+     */
+    public function renameToBlobFinal(Document $document): void
+    {
+        $attachments = Attachment::where('document_id', $document->id)->get();
+
+        foreach ($attachments as $attachment) {
+            $currentFileName = $attachment->file_name ?? '';
+
+            // Skip if already prefixed
+            if (str_starts_with($currentFileName, 'FINAL_')) {
+                continue;
+            }
+
+            $newFileName = 'FINAL_' . $currentFileName;
+            $currentPath = $attachment->path ?? '';
+
+            if (!$currentPath) {
+                continue;
+            }
+
+            try {
+                // Get the SAS URL for the current file to download it
+                $sas = GetBlobSasUri('aims-cntr', $currentPath);
+                $sasUrl = is_array($sas)
+                    ? ($sas['blobUriSas'] ?? $sas['sasUri'] ?? $sas['url'] ?? $sas['blobUri'] ?? null)
+                    : $sas;
+
+                if (!$sasUrl) {
+                    Log::warning("renameToBlobFinal: No SAS URL for attachment {$attachment->id}");
+                    continue;
+                }
+
+                // Download file content from blob
+                $client = new Client();
+                $response = $client->get($sasUrl);
+                $fileContent = $response->getBody()->getContents();
+
+                // Store temporarily
+                $tmpPath = sys_get_temp_dir() . '/' . $newFileName;
+                file_put_contents($tmpPath, $fileContent);
+
+                // Determine the directory path (strip existing filename from the path)
+                $directoryPath = ltrim(dirname($currentPath), '/');
+
+                // Re-upload with the new FINAL_ filename
+                $uploadResult = uploadToBlobStorage($newFileName, $tmpPath, $directoryPath);
+
+                // Clean temp file
+                @unlink($tmpPath);
+
+                if (!$uploadResult || empty($uploadResult['fileBlobPathName'])) {
+                    Log::warning("renameToBlobFinal: Upload failed for attachment {$attachment->id}");
+                    continue;
+                }
+
+                // Update the attachment record
+                $attachment->update([
+                    'file_name' => $newFileName,
+                    'path'      => $uploadResult['fileBlobPathName'],
+                    'blob_url'  => $uploadResult['fileBlobUrl'] ?? $attachment->blob_url,
+                    'blob_respon' => json_encode($uploadResult['blobResponse'] ?? []),
+                ]);
+
+                Log::info("renameToBlobFinal: Renamed attachment {$attachment->id} to {$newFileName}");
+
+            } catch (\Exception $e) {
+                Log::error("renameToBlobFinal: Error processing attachment {$attachment->id}: " . $e->getMessage());
+            }
+        }
     }
 }
