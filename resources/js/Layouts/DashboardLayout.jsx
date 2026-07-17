@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
-import { Link } from '@inertiajs/react';
-import { 
-    LayoutDashboard, Calendar, FileText, ShieldAlert, UserCheck, 
-    Search, Bell, LogOut, ChevronDown, RefreshCw, Layers, CheckSquare, 
-    Menu, X, Landmark, HeartPulse, HardHat, ShieldCheck, Activity
+import { Link, usePage } from '@inertiajs/react';
+import {
+    LayoutDashboard, Calendar, FileText, ShieldAlert, UserCheck,
+    Search, Bell, LogOut, ChevronDown, RefreshCw, Layers, CheckSquare,
+    Menu, X, Landmark, HeartPulse, HardHat, ShieldCheck, Activity, LogIn
 } from 'lucide-react';
 
 export default function DashboardLayout({ children }) {
+    const { auth } = usePage().props;
     const [sidebarOpen, setSidebarOpen] = useState(true);
     const [department, setDepartment] = useState('');
     const [location, setLocation] = useState('');
@@ -23,24 +24,31 @@ export default function DashboardLayout({ children }) {
     const navigationItems = [
         { name: 'Dashboard', icon: LayoutDashboard, href: '/', active: currentPath === '/' },
         { name: 'Calendar of Event (CoE)', icon: Calendar, href: '#', active: false },
-        { name: 'Document System', icon: FileText, href: '/document-system', active: currentPath.startsWith('/document-system') },
-        { name: 'Safety Accountability Program (SAP)', icon: ShieldAlert, href: '#', active: false },
-        { name: 'Field Leadership', icon: UserCheck, href: '#', active: false },
-        { name: 'Inspection / KPLH', icon: Search, href: '#', active: false },
-        { name: 'Audit', icon: ShieldCheck, href: '#', active: false },
-        { name: 'Management Risk (IBPR & Bowtie)', icon: ShieldAlert, href: '#', active: false },
-        { name: 'Compliance Regulation (KPP)', icon: Layers, href: '#', active: false },
-        { name: 'Medical Check Up (MCU)', icon: HeartPulse, href: '#', active: false },
-        { name: 'Contractor Safety Management (CSMS)', icon: Landmark, href: '#', active: false },
-        { name: 'Safety Operation (KO)', icon: HardHat, href: '#', active: false },
-        { name: 'PICA', icon: CheckSquare, href: '#', active: false },
+        { name: 'Document System', icon: FileText, href: '/document-system', active: currentPath.startsWith('/document-system'), moduleSlug: 'document-system' },
+        { name: 'Safety Accountability Program (SAP)', icon: ShieldAlert, href: '#', active: false, moduleSlug: 'sap' },
+        { name: 'Field Leadership', icon: UserCheck, href: '#', active: false, moduleSlug: 'field-leadership' },
+        { name: 'Inspection / KPLH', icon: Search, href: '#', active: false, moduleSlug: 'inspection' },
+        { name: 'Audit', icon: ShieldCheck, href: '#', active: false, moduleSlug: 'audit' },
+        { name: 'Management Risk (IBPR & Bowtie)', icon: ShieldAlert, href: '#', active: false, moduleSlug: 'management-risk' },
+        { name: 'Compliance Regulation (KPP)', icon: Layers, href: '#', active: false, moduleSlug: 'compliance' },
+        { name: 'Medical Check Up (MCU)', icon: HeartPulse, href: '#', active: false, moduleSlug: 'mcu' },
+        { name: 'Contractor Safety Management (CSMS)', icon: Landmark, href: '#', active: false, moduleSlug: 'csms' },
+        { name: 'Safety Operation (KO)', icon: HardHat, href: '#', active: false, moduleSlug: 'safety-operation' },
+        { name: 'PICA', icon: CheckSquare, href: '#', active: false, moduleSlug: 'pica' },
     ];
+
+    const allowedModules = auth?.modules || [];
+    const visibleNavigationItems = navigationItems.filter(item => {
+        if (!item.moduleSlug) return true;
+        if (allowedModules.includes('*')) return true;
+        return allowedModules.includes(item.moduleSlug);
+    });
 
     return (
         <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: 'var(--bg-color)', position: 'relative' }}>
-            
+
             {/* Sidebar Toggle Button for Mobile */}
-            <button 
+            <button
                 onClick={() => setSidebarOpen(!sidebarOpen)}
                 style={{
                     position: 'fixed',
@@ -65,7 +73,8 @@ export default function DashboardLayout({ children }) {
             </button>
 
             {/* CSS Styling Override for Responsiveness */}
-            <style dangerouslySetInnerHTML={{__html: `
+            <style dangerouslySetInnerHTML={{
+                __html: `
                 @media (max-width: 1024px) {
                     .sidebar-container {
                         transform: translateX(${sidebarOpen ? '0' : '-280px'});
@@ -83,7 +92,7 @@ export default function DashboardLayout({ children }) {
             `}} />
 
             {/* Sidebar Panel */}
-            <div 
+            <div
                 className="sidebar-container"
                 style={{
                     width: '280px',
@@ -101,10 +110,10 @@ export default function DashboardLayout({ children }) {
                 }}
             >
                 {/* Logo Area */}
-                <div style={{ 
-                    padding: '24px 20px', 
-                    display: 'flex', 
-                    alignItems: 'center', 
+                <div style={{
+                    padding: '24px 20px',
+                    display: 'flex',
+                    alignItems: 'center',
                     gap: '12px',
                     borderBottom: '1px solid rgba(255, 255, 255, 0.05)'
                 }}>
@@ -132,11 +141,11 @@ export default function DashboardLayout({ children }) {
                 {/* Navigation Menu */}
                 <div style={{ flex: 1, padding: '16px 8px', overflowY: 'auto' }}>
                     <ul style={{ listStyle: 'none' }}>
-                        {navigationItems.map((item, index) => {
+                        {visibleNavigationItems.map((item, index) => {
                             const IconComponent = item.icon;
                             return (
                                 <li key={index} style={{ marginBottom: '4px' }}>
-                                    <a 
+                                    <a
                                         href={item.href}
                                         style={{
                                             display: 'flex',
@@ -160,7 +169,8 @@ export default function DashboardLayout({ children }) {
                             );
                         })}
                     </ul>
-                    <style dangerouslySetInnerHTML={{__html: `
+                    <style dangerouslySetInnerHTML={{
+                        __html: `
                         .hover-link:hover {
                             background-color: rgba(255,255,255,0.03) !important;
                             color: #fff !important;
@@ -169,15 +179,15 @@ export default function DashboardLayout({ children }) {
                 </div>
 
                 {/* Filter Panel at Bottom of Sidebar */}
-                <div style={{ 
-                    padding: '20px', 
+                <div style={{
+                    padding: '20px',
                     borderTop: '1px solid rgba(255, 255, 255, 0.05)',
                     backgroundColor: 'rgba(0,0,0,0.15)'
                 }}>
                     <h4 style={{ color: '#fff', fontSize: '11px', fontWeight: 600, marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Filter Tampilan</h4>
-                    
+
                     <div style={{ marginBottom: '10px', position: 'relative' }}>
-                        <select 
+                        <select
                             value={department}
                             onChange={(e) => setDepartment(e.target.value)}
                             style={{
@@ -202,7 +212,7 @@ export default function DashboardLayout({ children }) {
                     </div>
 
                     <div style={{ marginBottom: '10px', position: 'relative' }}>
-                        <select 
+                        <select
                             value={location}
                             onChange={(e) => setLocation(e.target.value)}
                             style={{
@@ -227,7 +237,7 @@ export default function DashboardLayout({ children }) {
                     </div>
 
                     <div style={{ marginBottom: '14px', position: 'relative' }}>
-                        <select 
+                        <select
                             value={period}
                             onChange={(e) => setPeriod(e.target.value)}
                             style={{
@@ -249,7 +259,7 @@ export default function DashboardLayout({ children }) {
                         <ChevronDown size={12} style={{ position: 'absolute', right: '12px', top: '11px', pointerEvents: 'none', color: 'rgba(255,255,255,0.4)' }} />
                     </div>
 
-                    <button 
+                    <button
                         onClick={handleResetFilter}
                         style={{
                             width: '100%',
@@ -277,12 +287,12 @@ export default function DashboardLayout({ children }) {
             </div>
 
             {/* Main Area */}
-            <div 
+            <div
                 className="main-content-container"
-                style={{ 
-                    flex: 1, 
-                    display: 'flex', 
-                    flexDirection: 'column', 
+                style={{
+                    flex: 1,
+                    display: 'flex',
+                    flexDirection: 'column',
                     minWidth: 0,
                     transition: 'margin-left 0.3s ease'
                 }}
@@ -327,30 +337,79 @@ export default function DashboardLayout({ children }) {
                             }}>
                                 7
                             </span>
-                        </div>
-
-                        {/* User Profile */}
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', borderLeft: '1px solid var(--border-color)', paddingLeft: '20px' }}>
-                            <div style={{
-                                width: '36px',
-                                height: '36px',
-                                borderRadius: '50%',
-                                backgroundColor: 'var(--primary)',
-                                color: '#fff',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                fontWeight: 'bold',
-                                fontSize: '14px',
-                                boxShadow: '0 2px 5px rgba(21, 59, 115, 0.2)'
-                            }}>
-                                AD
+                        </div>                        {/* User Profile / Login Action */}
+                        {auth?.user ? (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', borderLeft: '1px solid var(--border-color)', paddingLeft: '20px' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                    <div style={{
+                                        width: '36px',
+                                        height: '36px',
+                                        borderRadius: '50%',
+                                        backgroundColor: 'var(--primary)',
+                                        color: '#fff',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        fontWeight: 'bold',
+                                        fontSize: '14px',
+                                        boxShadow: '0 2px 5px rgba(21, 59, 115, 0.2)'
+                                    }}>
+                                        {auth.user.name ? auth.user.name.substring(0, 2).toUpperCase() : 'US'}
+                                    </div>
+                                    <div>
+                                        <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-primary)', display: 'block' }}>{auth.user.name}</span>
+                                        <span style={{ fontSize: '10px', color: 'var(--text-muted)', display: 'block' }}>{auth.user.email}</span>
+                                    </div>
+                                </div>
+                                <Link 
+                                    href={route('logout')} 
+                                    method="post" 
+                                    as="button"
+                                    style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '6px',
+                                        padding: '6px 12px',
+                                        borderRadius: '6px',
+                                        border: '1px solid var(--border-color)',
+                                        backgroundColor: 'transparent',
+                                        fontSize: '11px',
+                                        fontWeight: 600,
+                                        color: 'var(--danger)',
+                                        cursor: 'pointer',
+                                        transition: 'all 0.2s'
+                                    }}
+                                >
+                                    <LogOut size={12} />
+                                    Logout
+                                </Link>
                             </div>
-                            <div>
-                                <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-primary)', display: 'block' }}>Hello, Admin</span>
-                                <span style={{ fontSize: '10px', color: 'var(--text-muted)', display: 'block' }}>Public Access</span>
+                        ) : (
+                            <div style={{ borderLeft: '1px solid var(--border-color)', paddingLeft: '20px' }}>
+                                <Link 
+                                    href="/login" 
+                                    style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '8px',
+                                        padding: '8px 18px',
+                                        borderRadius: '8px',
+                                        backgroundColor: 'var(--primary)',
+                                        color: '#fff',
+                                        fontSize: '11.5px',
+                                        fontWeight: 700,
+                                        textDecoration: 'none',
+                                        boxShadow: '0 4px 10px rgba(21, 59, 115, 0.2)',
+                                        transition: 'all 0.2s'
+                                    }}
+                                    onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'var(--primary-hover)'; }}
+                                    onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'var(--primary)'; }}
+                                >
+                                    <LogIn size={14} />
+                                    Log In
+                                </Link>
                             </div>
-                        </div>
+                        )}
                     </div>
                 </header>
 

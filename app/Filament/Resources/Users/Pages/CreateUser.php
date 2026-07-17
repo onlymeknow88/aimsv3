@@ -11,10 +11,20 @@ class CreateUser extends CreateRecord
 
     protected function afterCreate(): void
     {
-        $roleId = $this->data['aims_role_id'] ?? null;
-        if ($roleId) {
-            $this->record->documentRoles()->sync([$roleId]);
+        // Sync all checked roles from the dynamic aims_role_ids_{module_id} fields only if the module itself is checked
+        $allSelectedRoles = [];
+        $modules = \App\Models\AimsModule::all();
+        foreach ($modules as $module) {
+            $isModuleChecked = !empty($this->data['aims_module_checked_' . $module->id]);
+            if ($isModuleChecked) {
+                $rolesForModule = $this->data['aims_role_ids_' . $module->id] ?? [];
+                if (is_array($rolesForModule)) {
+                    $allSelectedRoles = array_merge($allSelectedRoles, $rolesForModule);
+                }
+            }
         }
+        
+        $this->record->documentRoles()->sync($allSelectedRoles);
 
         if (!empty($this->data['is_employee'])) {
             \App\Models\Employee::create([
@@ -22,8 +32,8 @@ class CreateUser extends CreateRecord
                 'department_id' => $this->data['department_id'] ?? null,
                 'company_id' => $this->data['employee_company_id'] ?? null,
                 'number' => $this->data['employee_number'] ?? null,
-                'id_number' => $this->data['employee_id_number'],
-                'name' => $this->data['employee_name'],
+                'id_number' => $this->data['employee_id_number'] ?? '',
+                'name' => $this->data['employee_name'] ?? $this->record->name,
                 'date_of_birth' => $this->data['employee_date_of_birth'] ?? null,
                 'gender' => $this->data['employee_gender'] ?? null,
                 'address' => $this->data['employee_address'] ?? '',

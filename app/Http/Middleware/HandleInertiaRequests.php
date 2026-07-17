@@ -29,10 +29,30 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        $user = $request->user();
+        $allowedModules = [];
+
+        if ($user) {
+            if (isset($user->role) && $user->role === 'super_admin') {
+                $allowedModules = ['*'];
+            } else {
+                $allowedModules = \DB::table('aims_user_roles')
+                    ->join('aims_roles', 'aims_user_roles.role_id', '=', 'aims_roles.id')
+                    ->join('aims_modules', 'aims_roles.module_id', '=', 'aims_modules.id')
+                    ->join('aims_permissions', 'aims_roles.id', '=', 'aims_permissions.role_id')
+                    ->where('aims_user_roles.user_id', $user->id)
+                    ->where('aims_permissions.can_view', 1)
+                    ->distinct()
+                    ->pluck('aims_modules.slug')
+                    ->toArray();
+            }
+        }
+
         return [
             ...parent::share($request),
             'auth' => [
-                'user' => $request->user(),
+                'user' => $user,
+                'modules' => $allowedModules,
             ],
         ];
     }

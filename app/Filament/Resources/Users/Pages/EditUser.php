@@ -23,12 +23,6 @@ class EditUser extends EditRecord
 
     protected function mutateRecordDataBeforeFill(array $data): array
     {
-        $role = $this->record->documentRoles()->first();
-        if ($role) {
-            $data['aims_module_id'] = $role->module_id;
-            $data['aims_role_id'] = $role->id;
-        }
-
         $employee = $this->record->employee;
         if ($employee) {
             $data['is_employee'] = true;
@@ -46,17 +40,34 @@ class EditUser extends EditRecord
             $data['is_employee'] = false;
         }
 
+        // Pre-fill the selected role ids for each dynamic module field group
+        $assignedRoles = $this->record->documentRoles->pluck('id')->toArray();
+        $assignedModuleIds = $this->record->documentRoles->pluck('module_id')->unique()->toArray();
+        $modules = \App\Models\AimsModule::all();
+        foreach ($modules as $module) {
+            $data['aims_role_ids_' . $module->id] = $assignedRoles;
+            $data['aims_module_checked_' . $module->id] = in_array($module->id, $assignedModuleIds);
+        }
+
         return $data;
     }
 
     protected function afterSave(): void
     {
-        $roleId = $this->data['aims_role_id'] ?? null;
-        if ($roleId) {
-            $this->record->documentRoles()->sync([$roleId]);
-        } else {
-            $this->record->documentRoles()->detach();
+        // Gather checked roles from all dynamic aims_role_ids_{module_id} fields only if the module itself is checked
+        $allSelectedRoles = [];
+        $modules = \App\Models\AimsModule::all();
+        foreach ($modules as $module) {
+            $isModuleChecked = !empty($this->data['aims_module_checked_' . $module->id]);
+            if ($isModuleChecked) {
+                $rolesForModule = $this->data['aims_role_ids_' . $module->id] ?? [];
+                if (is_array($rolesForModule)) {
+                    $allSelectedRoles = array_merge($allSelectedRoles, $rolesForModule);
+                }
+            }
         }
+        
+        $this->record->documentRoles()->sync($allSelectedRoles);
 
         if (!empty($this->data['is_employee'])) {
             \App\Models\Employee::updateOrCreate(
@@ -65,8 +76,8 @@ class EditUser extends EditRecord
                     'department_id' => $this->data['department_id'] ?? null,
                     'company_id' => $this->data['employee_company_id'] ?? null,
                     'number' => $this->data['employee_number'] ?? null,
-                    'id_number' => $this->data['employee_id_number'],
-                    'name' => $this->data['employee_name'],
+                    'id_number' => $this->data['employee_id_number'] ?? '',
+                    'name' => $this->data['employee_name'] ?? $this->record->name,
                     'date_of_birth' => $this->data['employee_date_of_birth'] ?? null,
                     'gender' => $this->data['employee_gender'] ?? null,
                     'address' => $this->data['employee_address'] ?? '',

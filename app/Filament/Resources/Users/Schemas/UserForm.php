@@ -10,6 +10,9 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
+use Filament\Forms\Components\CheckboxList;
+use Filament\Forms\Components\Checkbox;
+use Filament\Forms\Components\Placeholder;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
@@ -53,7 +56,13 @@ class UserForm
                         Toggle::make('is_employee')
                             ->label('Create Employee Data')
                             ->reactive()
+                            ->dehydrated(true)
                             ->default(false)
+                            ->afterStateHydrated(function ($set, $record) {
+                                if ($record && $record->employee) {
+                                    $set('is_employee', true);
+                                }
+                            })
                             ->inlineLabel(),
                     ]),
 
@@ -66,20 +75,44 @@ class UserForm
                         TextInput::make('employee_number')
                             ->label('Employee Number')
                             ->required(fn (callable $get) => (bool) $get('is_employee'))
+                            ->dehydrated(true)
+                            ->afterStateHydrated(function ($state, $set, $record) {
+                                if ($record && $record->employee) {
+                                    $set('employee_number', $record->employee->number);
+                                }
+                            })
                             ->maxLength(255),
 
                         TextInput::make('employee_name')
                             ->label('Name')
                             ->required(fn (callable $get) => (bool) $get('is_employee'))
+                            ->dehydrated(true)
+                            ->afterStateHydrated(function ($state, $set, $record) {
+                                if ($record && $record->employee) {
+                                    $set('employee_name', $record->employee->name);
+                                }
+                            })
                             ->maxLength(255),
 
                         TextInput::make('employee_id_number')
                             ->label('Id number')
                             ->required(fn (callable $get) => (bool) $get('is_employee'))
+                            ->dehydrated(true)
+                            ->afterStateHydrated(function ($state, $set, $record) {
+                                if ($record && $record->employee) {
+                                    $set('employee_id_number', $record->employee->id_number);
+                                }
+                            })
                             ->maxLength(255),
 
                         DatePicker::make('employee_date_of_birth')
                             ->label('Date of birth')
+                            ->dehydrated(true)
+                            ->afterStateHydrated(function ($state, $set, $record) {
+                                if ($record && $record->employee) {
+                                    $set('employee_date_of_birth', $record->employee->date_of_birth);
+                                }
+                            })
                             ->nullable(),
 
                         Select::make('employee_gender')
@@ -89,14 +122,32 @@ class UserForm
                                 'Perempuan' => 'Perempuan',
                             ])
                             ->required(fn (callable $get) => (bool) $get('is_employee'))
+                            ->dehydrated(true)
+                            ->afterStateHydrated(function ($state, $set, $record) {
+                                if ($record && $record->employee) {
+                                    $set('employee_gender', $record->employee->gender);
+                                }
+                            })
                             ->nullable(),
 
                         TextInput::make('employee_position')
                             ->label('Position')
+                            ->dehydrated(true)
+                            ->afterStateHydrated(function ($state, $set, $record) {
+                                if ($record && $record->employee) {
+                                    $set('employee_position', $record->employee->position);
+                                }
+                            })
                             ->maxLength(255),
 
                         TextInput::make('employee_grade')
                             ->label('Grade')
+                            ->dehydrated(true)
+                            ->afterStateHydrated(function ($state, $set, $record) {
+                                if ($record && $record->employee) {
+                                    $set('employee_grade', $record->employee->grade);
+                                }
+                            })
                             ->maxLength(255),
 
                         Select::make('employee_status')
@@ -106,41 +157,66 @@ class UserForm
                                 'Inactive' => 'Inactive',
                                 'Candidate' => 'Candidate',
                             ])
+                            ->dehydrated(true)
+                            ->afterStateHydrated(function ($state, $set, $record) {
+                                if ($record && $record->employee) {
+                                    $set('employee_status', $record->employee->employee_status);
+                                }
+                            })
                             ->nullable(),
 
                         Select::make('employee_company_id')
                             ->label('Company')
                             ->options(Company::pluck('company_name', 'id'))
+                            ->dehydrated(true)
+                            ->afterStateHydrated(function ($state, $set, $record) {
+                                if ($record && $record->employee) {
+                                    $set('employee_company_id', $record->employee->company_id);
+                                }
+                            })
                             ->nullable(),
 
                         Textarea::make('employee_address')
                             ->label('Address')
+                            ->dehydrated(true)
+                            ->afterStateHydrated(function ($state, $set, $record) {
+                                if ($record && $record->employee) {
+                                    $set('employee_address', $record->employee->address);
+                                }
+                            })
                             ->nullable(),
                     ]),
 
-                // AIMS Module Role Section (diatur ke full-width)
-                Section::make('AIMS Module Role')
+                // AIMS Module Roles Section (Collapsible layout)
+                Section::make('AIMS Module Roles')
                     ->columnSpan('full')
+                    ->collapsible()
+                    ->collapsed(true) // Collapsed secara default
                     ->inlineLabel()
-                    ->schema([
-                        Select::make('aims_module_id')
-                            ->label('Select Module')
-                            ->options(AimsModule::pluck('name', 'id'))
-                            ->reactive()
-                            ->afterStateUpdated(fn (callable $set) => $set('aims_role_id', null)),
+                    ->schema(function() {
+                        $modules = AimsModule::with('roles')->get();
+                        $schemaComponents = [];
 
-                        Select::make('aims_role_id')
-                            ->label('Select Role')
-                            ->options(function (callable $get) {
-                                $moduleId = $get('aims_module_id');
-                                if (! $moduleId) {
-                                    return [];
-                                }
+                        foreach ($modules as $module) {
+                            // Checkbox modul utama bertindak sebagai switch reaktif
+                            $schemaComponents[] = Checkbox::make('aims_module_checked_' . $module->id)
+                                ->label(strtoupper($module->name))
+                                ->reactive()
+                                ->inlineLabel(false);
 
-                                return AimsRole::where('module_id', $moduleId)->pluck('name', 'id');
-                            })
-                            ->visible(fn (callable $get) => filled($get('aims_module_id'))),
-                    ]),
+                            if (!$module->roles->isEmpty()) {
+                                // CheckboxList untuk role di modul tersebut, reaktif terhadap status checkbox modul utama
+                                $schemaComponents[] = CheckboxList::make('aims_role_ids_' . $module->id)
+                                    ->label('Select Roles')
+                                    ->relationship('documentRoles', 'name')
+                                    ->options($module->roles->pluck('name', 'id'))
+                                    ->columns(2)
+                                    ->visible(fn (callable $get) => (bool) $get('aims_module_checked_' . $module->id));
+                            }
+                        }
+
+                        return $schemaComponents;
+                    }),
             ]);
     }
 }

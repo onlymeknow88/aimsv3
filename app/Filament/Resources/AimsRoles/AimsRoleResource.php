@@ -1,20 +1,18 @@
 <?php
 
-namespace App\Filament\Resources\DocumentSystemRoles;
+namespace App\Filament\Resources\AimsRoles;
 
-use App\Filament\Resources\DocumentSystemRoles\Pages\CreateDocumentSystemRole;
-use App\Filament\Resources\DocumentSystemRoles\Pages\EditDocumentSystemRole;
-use App\Filament\Resources\DocumentSystemRoles\Pages\ListDocumentSystemRoles;
-use App\Filament\Resources\DocumentSystemRoles\Schemas\DocumentSystemRoleForm;
-use App\Filament\Resources\DocumentSystemRoles\Tables\DocumentSystemRolesTable;
+use App\Filament\Resources\AimsRoles\Pages\CreateAimsRole;
+use App\Filament\Resources\AimsRoles\Pages\EditAimsRole;
+use App\Filament\Resources\AimsRoles\Pages\ListAimsRoles;
+use App\Filament\Resources\AimsRoles\Schemas\AimsRoleForm;
+use App\Filament\Resources\AimsRoles\Tables\AimsRolesTable;
 use App\Models\AimsRole;
-use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
-use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 
-class DocumentSystemRoleResource extends Resource
+class AimsRoleResource extends Resource
 {
     protected static ?string $model = AimsRole::class;
 
@@ -42,12 +40,12 @@ class DocumentSystemRoleResource extends Resource
 
     public static function form(Schema $schema): Schema
     {
-        return DocumentSystemRoleForm::configure($schema);
+        return AimsRoleForm::configure($schema);
     }
 
     public static function table(Table $table): Table
     {
-        return DocumentSystemRolesTable::configure($table);
+        return AimsRolesTable::configure($table);
     }
 
     public static function getRelations(): array
@@ -60,9 +58,9 @@ class DocumentSystemRoleResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => ListDocumentSystemRoles::route('/'),
-            'create' => CreateDocumentSystemRole::route('/create'),
-            'edit' => EditDocumentSystemRole::route('/{record}/edit'),
+            'index' => ListAimsRoles::route('/'),
+            'create' => CreateAimsRole::route('/create'),
+            'edit' => EditAimsRole::route('/{record}/edit'),
         ];
     }
 }
