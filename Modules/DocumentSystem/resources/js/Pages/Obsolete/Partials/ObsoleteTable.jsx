@@ -1,7 +1,25 @@
 import React from 'react';
 import { Trash2 } from 'lucide-react';
 
-export default function ObsoleteTable({ documents }) {
+export default function ObsoleteTable({ documents, selectedIds = [], onSelectionChange }) {
+    const isAllSelected = documents.length > 0 && selectedIds.length === documents.length;
+
+    const handleSelectAll = (e) => {
+        if (e.target.checked) {
+            onSelectionChange(documents.map(d => d.id));
+        } else {
+            onSelectionChange([]);
+        }
+    };
+
+    const handleSelectRow = (id, checked) => {
+        if (checked) {
+            onSelectionChange([...selectedIds, id]);
+        } else {
+            onSelectionChange(selectedIds.filter(x => x !== id));
+        }
+    };
+
     if (!documents?.length) {
         return (
             <div style={{ padding: '40px 24px', textAlign: 'center', color: 'var(--text-muted)' }}>
@@ -15,6 +33,14 @@ export default function ObsoleteTable({ documents }) {
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11px' }}>
             <thead>
                 <tr style={{ borderBottom: '1px solid var(--border-color)', backgroundColor: '#fafbfc' }}>
+                    <th style={{ padding: '12px 16px', width: '40px' }}>
+                        <input
+                            type="checkbox"
+                            checked={isAllSelected}
+                            onChange={handleSelectAll}
+                            style={{ cursor: 'pointer' }}
+                        />
+                    </th>
                     {['No. Dokumen', 'Judul', 'Level', 'Revisi', 'Status'].map(h => (
                         <th key={h} style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 700, color: 'var(--text-secondary)' }}>{h}</th>
                     ))}
@@ -23,6 +49,14 @@ export default function ObsoleteTable({ documents }) {
             <tbody>
                 {documents.map(doc => (
                     <tr key={doc.id} style={{ borderBottom: '1px solid #f1f5f9', opacity: 0.7 }}>
+                        <td style={{ padding: '14px 16px', width: '40px' }}>
+                            <input
+                                type="checkbox"
+                                checked={selectedIds.includes(doc.id)}
+                                onChange={(e) => handleSelectRow(doc.id, e.target.checked)}
+                                style={{ cursor: 'pointer' }}
+                            />
+                        </td>
                         <td style={{ padding: '14px 16px', fontWeight: 700, color: 'var(--text-muted)' }}>{doc.document_number}</td>
                         <td style={{ padding: '14px 16px', fontWeight: 600 }}>{doc.title}</td>
                         <td style={{ padding: '14px 16px' }}><span style={{ fontSize: '9px', fontWeight: 700, backgroundColor: '#f1f5f9', padding: '2px 8px', borderRadius: '4px' }}>{doc.document_level}</span></td>

@@ -2,12 +2,53 @@ import React, { useMemo } from 'react';
 import { useReactTable, getCoreRowModel, getFilteredRowModel, getPaginationRowModel, flexRender } from '@tanstack/react-table';
 import { Eye, Download, FileText } from 'lucide-react';
 
-export default function DocumentTable({ documents, onPreview, onDownload }) {
+export default function DocumentTable({ documents, onPreview, onDownload, selectedIds = [], onSelectionChange }) {
+    const getCompanyCode = (doc) => {
+        return doc.company?.company_name || doc.company?.document_code || '-';
+    };
+
+    const isAllSelected = documents.length > 0 && selectedIds.length === documents.length;
+
+    const handleSelectAll = (e) => {
+        if (e.target.checked) {
+            onSelectionChange(documents.map(d => d.id));
+        } else {
+            onSelectionChange([]);
+        }
+    };
+
+    const handleSelectRow = (id, checked) => {
+        if (checked) {
+            onSelectionChange([...selectedIds, id]);
+        } else {
+            onSelectionChange(selectedIds.filter(x => x !== id));
+        }
+    };
+
     const columns = useMemo(() => [
+        {
+            id: 'select',
+            header: () => (
+                <input
+                    type="checkbox"
+                    checked={isAllSelected}
+                    onChange={handleSelectAll}
+                    style={{ cursor: 'pointer' }}
+                />
+            ),
+            cell: ({ row }) => (
+                <input
+                    type="checkbox"
+                    checked={selectedIds.includes(row.original.id)}
+                    onChange={(e) => handleSelectRow(row.original.id, e.target.checked)}
+                    style={{ cursor: 'pointer' }}
+                />
+            )
+        },
         {
             id: 'company',
             header: 'Company',
-            cell: ({ row }) => <span style={{ fontSize: '11px' }}>{row.original.department?.company?.company_name || '-'}</span>
+            cell: ({ row }) => <span style={{ fontSize: '11px' }}>{getCompanyCode(row.original)}</span>
         },
         {
             id: 'department',

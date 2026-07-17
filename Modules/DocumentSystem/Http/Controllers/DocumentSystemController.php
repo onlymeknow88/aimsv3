@@ -39,7 +39,7 @@ class DocumentSystemController extends Controller
     public function maker()
     {
         $documents = Document::whereIn('status', ['5', '7'])
-            ->with(['department.company', 'owner', 'mapping.category.module', 'attachments'])
+            ->with(['company', 'department', 'owner', 'mapping.category.module', 'attachments'])
             ->latest()
             ->get();
 
@@ -61,13 +61,8 @@ class DocumentSystemController extends Controller
      */
     public function activeDocument()
     {
-        $documents = Document::whereIn('status', ['5', '7'])
-            ->with(['department.company', 'owner', 'mapping.category.module', 'attachments'])
-            ->latest()
-            ->get();
-
         return inertia('DocumentSystem/ActiveDocument/Index', [
-            'documents' => $documents
+            'documents' => []
         ]);
     }
 
@@ -76,13 +71,8 @@ class DocumentSystemController extends Controller
      */
     public function ongoing()
     {
-        $documents = Document::whereIn('status', ['1', '3', '4', '6'])
-            ->with(['department.company', 'owner', 'mapping.category.module', 'attachments', 'invitedPeople'])
-            ->latest()
-            ->get();
-
         return inertia('DocumentSystem/OnGoing/Index', [
-            'documents' => $documents
+            'documents' => []
         ]);
     }
 
@@ -91,13 +81,8 @@ class DocumentSystemController extends Controller
      */
     public function draft()
     {
-        $documents = Document::where('status', '2')
-            ->with(['department.company', 'owner', 'mapping.category.module', 'attachments'])
-            ->latest()
-            ->get();
-
         return inertia('DocumentSystem/Draft/Index', [
-            'documents' => $documents
+            'documents' => []
         ]);
     }
 
@@ -106,13 +91,8 @@ class DocumentSystemController extends Controller
      */
     public function obsolete()
     {
-        $documents = Document::where('status', '8')
-            ->with(['department.company', 'owner', 'mapping.category.module', 'attachments'])
-            ->latest()
-            ->get();
-
         return inertia('DocumentSystem/Obsolete/Index', [
-            'documents' => $documents
+            'documents' => []
         ]);
     }
 
@@ -121,13 +101,8 @@ class DocumentSystemController extends Controller
      */
     public function approval()
     {
-        $documents = Document::whereIn('status', ['1', '3', '4'])
-            ->with(['department.company', 'owner', 'mapping.category.module', 'attachments'])
-            ->latest()
-            ->get();
-
         return inertia('DocumentSystem/Approval/Index', [
-            'documents' => $documents
+            'documents' => []
         ]);
     }
 

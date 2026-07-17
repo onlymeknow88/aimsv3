@@ -14,6 +14,29 @@ use Modules\DocumentSystem\Entities\Document;
 class DocumentApiController extends Controller
 {
     /**
+     * Get documents list.
+     */
+    public function index(Request $request)
+    {
+        $status = $request->input('status');
+        
+        $query = Document::with(['company', 'department', 'owner', 'mapping.category.module', 'attachments'])
+            ->latest();
+
+        if ($status) {
+            if (str_contains($status, ',')) {
+                $query->whereIn('status', explode(',', $status));
+            } else {
+                $query->where('status', $status);
+            }
+        }
+
+        $documents = $query->get();
+
+        return ResponseFormatter::success($documents, 'Documents retrieved successfully');
+    }
+
+    /**
      * Store a newly created safety document.
      */
     public function store(Request $request)

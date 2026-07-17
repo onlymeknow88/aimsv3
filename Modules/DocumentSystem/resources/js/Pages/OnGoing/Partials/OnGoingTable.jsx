@@ -1,7 +1,29 @@
 import React from 'react';
 import { Clock } from 'lucide-react';
 
-export default function OnGoingTable({ documents, onViewDetail }) {
+export default function OnGoingTable({ documents, onViewDetail, selectedIds = [], onSelectionChange }) {
+    const getCompanyCode = (doc) => {
+        return doc.company?.company_name || doc.company?.document_code || '-';
+    };
+
+    const isAllSelected = documents.length > 0 && selectedIds.length === documents.length;
+
+    const handleSelectAll = (e) => {
+        if (e.target.checked) {
+            onSelectionChange(documents.map(d => d.id));
+        } else {
+            onSelectionChange([]);
+        }
+    };
+
+    const handleSelectRow = (id, checked) => {
+        if (checked) {
+            onSelectionChange([...selectedIds, id]);
+        } else {
+            onSelectionChange(selectedIds.filter(x => x !== id));
+        }
+    };
+
     if (!documents?.length) {
         return (
             <div style={{ padding: '40px 24px', textAlign: 'center', color: 'var(--text-muted)' }}>
@@ -15,6 +37,14 @@ export default function OnGoingTable({ documents, onViewDetail }) {
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11px' }}>
             <thead>
                 <tr style={{ borderBottom: '1px solid var(--border-color)', backgroundColor: '#fafbfc' }}>
+                    <th style={{ padding: '12px 16px', width: '40px' }}>
+                        <input
+                            type="checkbox"
+                            checked={isAllSelected}
+                            onChange={handleSelectAll}
+                            style={{ cursor: 'pointer' }}
+                        />
+                    </th>
                     {['Company', 'Department', 'PIC', 'Modul', 'Category', 'Level', 'Mapping', 'No. Dokumen', 'Judul', 'Status', 'Aksi'].map(h => (
                         <th key={h} style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 700, color: 'var(--text-secondary)' }}>{h}</th>
                     ))}
@@ -23,7 +53,15 @@ export default function OnGoingTable({ documents, onViewDetail }) {
             <tbody>
                 {documents.map(doc => (
                     <tr key={doc.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                        <td style={{ padding: '14px 16px' }}>{doc.department?.company?.company_name || '-'}</td>
+                        <td style={{ padding: '14px 16px', width: '40px' }}>
+                            <input
+                                type="checkbox"
+                                checked={selectedIds.includes(doc.id)}
+                                onChange={(e) => handleSelectRow(doc.id, e.target.checked)}
+                                style={{ cursor: 'pointer' }}
+                            />
+                        </td>
+                        <td style={{ padding: '14px 16px' }}>{getCompanyCode(doc)}</td>
                         <td style={{ padding: '14px 16px' }}>{doc.department?.name || '-'}</td>
                         <td style={{ padding: '14px 16px' }}>{doc.owner?.name || '-'}</td>
                         <td style={{ padding: '14px 16px' }}>{doc.mapping?.category?.module?.name || '-'}</td>

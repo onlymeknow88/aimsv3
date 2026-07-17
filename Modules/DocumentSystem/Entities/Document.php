@@ -12,6 +12,7 @@ class Document extends Model
     protected $table = 'document_system_documents';
 
     protected $fillable = [
+        'company_id',
         'department_id',
         'department_code_id',
         'mapping_id',
@@ -84,5 +85,10 @@ class Document extends Model
     public function department()
     {
         return $this->belongsTo(\App\Models\Department::class, 'department_id');
+    }
+
+    public function company()
+    {
+        return $this->belongsTo(\App\Models\Company::class, 'company_id');
     }
 }

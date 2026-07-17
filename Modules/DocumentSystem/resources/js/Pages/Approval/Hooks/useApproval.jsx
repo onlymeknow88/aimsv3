@@ -1,13 +1,30 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import axios from 'axios';
-import { router } from '@inertiajs/react';
 
 export default function useApproval() {
+    const [search, setSearch] = useState('');
+    const [docs, setDocs] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [actionLoading, setActionLoading] = useState(false);
+    const [selectedIds, setSelectedIds] = useState([]);
     const [drawerOpen, setDrawerOpen] = useState(false);
     const [approveModalOpen, setApproveModalOpen] = useState(false);
     const [rejectModalOpen, setRejectModalOpen] = useState(false);
     const [selectedDoc, setSelectedDoc] = useState(null);
-    const [loading, setLoading] = useState(false);
+
+    const fetchDocuments = useCallback(() => {
+        setLoading(true);
+        axios.get('/api/document-system/documents?status=1,3,4')
+            .then(res => {
+                setDocs(res.data?.result || []);
+            })
+            .catch(err => console.error("Error fetching approval documents", err))
+            .finally(() => setLoading(false));
+    }, []);
+
+    useEffect(() => {
+        fetchDocuments();
+    }, [fetchDocuments]);
 
     const openDrawer = useCallback((doc) => { setSelectedDoc(doc); setDrawerOpen(true); }, []);
     const closeDrawer = useCallback(() => { setDrawerOpen(false); setSelectedDoc(null); }, []);
@@ -19,34 +36,50 @@ export default function useApproval() {
     const closeReject = useCallback(() => { setRejectModalOpen(false); setSelectedDoc(null); }, []);
 
     const approveDocument = useCallback(async (id, level, notes) => {
-        setLoading(true);
+        setActionLoading(true);
         try {
             await axios.post(`/document-system/approval/${id}/approve`, { level, notes });
             closeApprove();
-            router.reload();
+            fetchDocuments();
         } catch (err) {
             console.error('Approve failed', err);
         } finally {
-            setLoading(false);
+            setActionLoading(false);
         }
-    }, [closeApprove]);
+    }, [closeApprove, fetchDocuments]);
 
     const rejectDocument = useCallback(async (id, reason) => {
-        setLoading(true);
+        setActionLoading(true);
         try {
             await axios.post(`/document-system/approval/${id}/reject`, { reason });
             closeReject();
-            router.reload();
+            fetchDocuments();
         } catch (err) {
             console.error('Reject failed', err);
         } finally {
-            setLoading(false);
+            setActionLoading(false);
         }
-    }, [closeReject]);
+    }, [closeReject, fetchDocuments]);
 
     return {
-        drawerOpen, approveModalOpen, rejectModalOpen, selectedDoc, loading,
-        openDrawer, closeDrawer, openApprove, closeApprove, openReject, closeReject,
-        approveDocument, rejectDocument,
+        search,
+        setSearch,
+        docs,
+        loading,
+        actionLoading,
+        selectedIds,
+        setSelectedIds,
+        drawerOpen,
+        approveModalOpen,
+        rejectModalOpen,
+        selectedDoc,
+        openDrawer,
+        closeDrawer,
+        openApprove,
+        closeApprove,
+        openReject,
+        closeReject,
+        approveDocument,
+        rejectDocument,
     };
 }
