@@ -57,6 +57,32 @@ class DocumentSystemController extends Controller
     }
 
     /**
+     * Edit document form page.
+     */
+    public function edit($id)
+    {
+        $document = Document::with(['company', 'department', 'owner', 'mapping.category.module', 'attachments', 'invitedPeople'])
+            ->findOrFail($id);
+
+        return inertia('DocumentSystem/Maker/Create', [
+            'document' => $document
+        ]);
+    }
+
+    /**
+     * View document detail page.
+     */
+    public function detail($id)
+    {
+        $document = Document::with(['company', 'department', 'owner', 'creator', 'mapping.category.module', 'attachments', 'invitedPeople', 'activities.user'])
+            ->findOrFail($id);
+
+        return inertia('DocumentSystem/Maker/Detail', [
+            'document' => $document
+        ]);
+    }
+
+    /**
      * Active Documents browser.
      */
     public function activeDocument()

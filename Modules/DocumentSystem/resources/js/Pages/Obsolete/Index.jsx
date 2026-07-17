@@ -1,9 +1,18 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Head } from '@inertiajs/react';
 import DocumentSystemLayout from '@DS/Layouts/DocumentSystemLayout';
-import { Search, Plus, Edit, Trash2, X } from 'lucide-react';
+import { Search, Plus, Edit, Trash2, X, SlidersHorizontal } from 'lucide-react';
 import useObsolete from './Hooks/useObsolete';
 import ObsoleteTable from './Partials/ObsoleteTable';
+import {
+    DropdownMenu,
+    DropdownMenuTrigger,
+    DropdownMenuContent,
+    DropdownMenuCheckboxItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuGroup,
+} from '@/components/ui/dropdown-menu';
 
 export default function Index() {
     const { 
@@ -16,6 +25,21 @@ export default function Index() {
         handleEdit, 
         handleDelete 
     } = useObsolete();
+
+    const [visibleColumns, setVisibleColumns] = useState({
+        'No. Dokumen': true,
+        'Judul': true,
+        'Level': true,
+        'Revision': true,
+        'Status': true
+    });
+
+    const toggleColumn = (col) => {
+        setVisibleColumns(prev => ({
+            ...prev,
+            [col]: !prev[col]
+        }));
+    };
 
     const filtered = docs.filter(d =>
         d.title?.toLowerCase().includes(search.toLowerCase()) ||
@@ -114,21 +138,56 @@ export default function Index() {
                             style={{ width: '100%', padding: '8px 12px 8px 36px', border: '1px solid var(--border-color)', borderRadius: '6px', fontSize: '11px', outline: 'none' }}
                         />
                     </div>
+
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <button style={{
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '6px',
+                                    backgroundColor: '#fff',
+                                    border: '1px solid var(--border-color)',
+                                    borderRadius: '6px',
+                                    padding: '8px 12px',
+                                    fontSize: '11px',
+                                    fontWeight: 600,
+                                    color: 'var(--text-primary)',
+                                    cursor: 'pointer'
+                                }}>
+                                    <SlidersHorizontal size={14} /> Columns
+                                </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-48 bg-white border border-gray-200 shadow-lg rounded-md p-1">
+                                <DropdownMenuGroup>
+                                    <DropdownMenuLabel className="text-xs font-bold text-gray-500" style={{ padding: '8px 12px' }}>Toggle Columns</DropdownMenuLabel>
+                                </DropdownMenuGroup>
+                                <DropdownMenuSeparator className="my-1 border-t border-gray-100" />
+                                {Object.keys(visibleColumns).map(col => (
+                                    <DropdownMenuCheckboxItem
+                                        key={col}
+                                        checked={visibleColumns[col]}
+                                        onCheckedChange={() => toggleColumn(col)}
+                                        className="text-xs text-gray-700 hover:bg-gray-50 rounded flex items-center gap-2"
+                                        style={{ padding: '8px 12px', cursor: 'pointer' }}
+                                    >
+                                        {col}
+                                    </DropdownMenuCheckboxItem>
+                                ))}
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </div>
                 </div>
             )}
 
             <div style={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--border-color)', borderRadius: '12px', overflow: 'hidden', boxShadow: 'var(--shadow-sm)' }}>
-                {loading ? (
-                    <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-secondary)', fontSize: '11px' }}>
-                        Memuat data dokumen usang...
-                    </div>
-                ) : (
-                    <ObsoleteTable 
-                        documents={filtered} 
-                        selectedIds={selectedIds}
-                        onSelectionChange={setSelectedIds}
-                    />
-                )}
+                <ObsoleteTable 
+                    documents={filtered} 
+                    selectedIds={selectedIds}
+                    onSelectionChange={setSelectedIds}
+                    visibleColumns={visibleColumns}
+                    loading={loading}
+                />
             </div>
         </DocumentSystemLayout>
     );

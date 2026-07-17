@@ -7,6 +7,8 @@ Route::middleware('web')->prefix('document-system')->group(function () {
     Route::get('/', [DocumentSystemController::class, 'index'])->name('doc.dashboard');
     Route::get('/active', [DocumentSystemController::class, 'activeDocument'])->name('doc.active');
     Route::get('/active/create', [DocumentSystemController::class, 'create'])->name('doc.active.create');
+    Route::get('/active/edit/{id}', [DocumentSystemController::class, 'edit'])->name('doc.active.edit');
+    Route::get('/active/detail/{id}', [DocumentSystemController::class, 'detail'])->name('doc.active.detail');
     Route::get('/maker', function () {
         return redirect()->route('doc.active');
     })->name('doc.maker');

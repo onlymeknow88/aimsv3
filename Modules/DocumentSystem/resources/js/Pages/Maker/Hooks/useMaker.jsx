@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 
-export default function useMaker() {
+export default function useMaker(document = null) {
     const [loading, setLoading] = useState(false);
+    const [isFirstLoad, setIsFirstLoad] = useState(true);
 
     // Master data lists from API
     const [companies, setCompanies] = useState([]);
@@ -13,25 +14,25 @@ export default function useMaker() {
     const [mappings, setMappings] = useState([]);
 
     // Form States
-    const [company, setCompany] = useState('');
-    const [department, setDepartment] = useState('');
-    const [pj, setPj] = useState('');
-    const [module, setModule] = useState('');
-    const [category, setCategory] = useState('');
-    const [mapping, setMapping] = useState('');
+    const [company, setCompany] = useState(document?.company_id || '');
+    const [department, setDepartment] = useState(document?.department_id || '');
+    const [pj, setPj] = useState(document?.area_manager_id || '');
+    const [module, setModule] = useState(document?.module_id || '');
+    const [category, setCategory] = useState(document?.category_id || '');
+    const [mapping, setMapping] = useState(document?.mapping_id || '');
 
-    const [uploadType, setUploadType] = useState('');
-    const [documentLevel, setDocumentLevel] = useState('');
-    const [sopNumber, setSopNumber] = useState('');
-    const [winNumber, setWinNumber] = useState('');
+    const [uploadType, setUploadType] = useState(document?.upload_type || '');
+    const [documentLevel, setDocumentLevel] = useState(document?.document_level || '');
+    const [sopNumber, setSopNumber] = useState(document?.sop_number || '');
+    const [winNumber, setWinNumber] = useState(document?.sop_add_win || '');
     const [formNumber, setFormNumber] = useState('');
-    const [title, setTitle] = useState('');
-    const [description, setDescription] = useState('');
-    const [invitedEmails, setInvitedEmails] = useState([]);
+    const [title, setTitle] = useState(document?.title || '');
+    const [description, setDescription] = useState(document?.description || '');
+    const [invitedEmails, setInvitedEmails] = useState(document?.invited_people?.map(p => p.email) || []);
     const [files, setFiles] = useState([]);
     const [activeSops, setActiveSops] = useState([]);
-    const [parentDocumentId, setParentDocumentId] = useState('');
-    const [docCreated, setDocCreated] = useState(new Date().toISOString().split('T')[0]);
+    const [parentDocumentId, setParentDocumentId] = useState(document?.parent_document || '');
+    const [docCreated, setDocCreated] = useState(document?.doc_created ? document.doc_created.split('T')[0] : new Date().toISOString().split('T')[0]);
 
     // Fetch initial companies, departments, modules, and pjs (global fetch)
     useEffect(() => {
@@ -62,8 +63,12 @@ export default function useMaker() {
                 const list = res.data?.result || [];
                 const data = list.map(c => ({ id: c.id, name: c.index ? `${c.index}. ${c.name}` : c.name }));
                 setCategories(data);
-                setCategory('');
-                setMapping('');
+                if (isFirstLoad && document && document.category_id) {
+                    setCategory(document.category_id);
+                } else {
+                    setCategory('');
+                    setMapping('');
+                }
             });
         } else {
             setCategories([]);
@@ -77,7 +82,12 @@ export default function useMaker() {
                 const list = res.data?.result || [];
                 const data = list.map(m => ({ id: m.id, name: m.index ? `${m.index}. ${m.name}` : m.name }));
                 setMappings(data);
-                setMapping('');
+                if (isFirstLoad && document && document.mapping_id) {
+                    setMapping(document.mapping_id);
+                    setIsFirstLoad(false);
+                } else {
+                    setMapping('');
+                }
             });
         } else {
             setMappings([]);
@@ -95,9 +105,9 @@ export default function useMaker() {
         }
     }, [company, department]);
 
-    // Fetch autonumber suggestion whenever Company, Department, or Document Level changes
+    // Fetch autonumber suggestion whenever Company, Department, or Document Level changes (only if creating a new one)
     useEffect(() => {
-        if (company && department && documentLevel) {
+        if (!document && company && department && documentLevel) {
             axios.get(`/api/document-system/generate-number?company_id=${company}&department_id=${department}&level=${documentLevel}`)
                 .then(res => {
                     const data = res.data?.result;
@@ -112,7 +122,7 @@ export default function useMaker() {
                 })
                 .catch(err => console.error("Error generating next number", err));
         }
-    }, [company, department, documentLevel]);
+    }, [company, department, documentLevel, document]);
 
     const handleSave = useCallback(async (statusType) => {
         setLoading(true);
@@ -147,7 +157,11 @@ export default function useMaker() {
                 formData.append(`files[${index}]`, file);
             });
 
-            await axios.post('/api/document-system/documents', formData, {
+            const url = document?.id 
+                ? `/api/document-system/documents/${document.id}` 
+                : '/api/document-system/documents';
+
+            await axios.post(url, formData, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
 
@@ -157,7 +171,7 @@ export default function useMaker() {
         } finally {
             setLoading(false);
         }
-    }, [company, department, pj, module, category, mapping, uploadType, documentLevel, title, description, docCreated, sopNumber, winNumber, parentDocumentId, invitedEmails, files]);
+    }, [company, department, pj, module, category, mapping, uploadType, documentLevel, title, description, docCreated, sopNumber, winNumber, parentDocumentId, invitedEmails, files, document]);
 
     return {
         loading,

@@ -9,6 +9,7 @@ Route::prefix('document-system')->group(function () {
     // Document API Actions
     Route::get('/documents', [DocumentApiController::class, 'index']);
     Route::post('/documents', [DocumentApiController::class, 'store']);
+    Route::post('/documents/{id}', [DocumentApiController::class, 'update']);
     Route::get('/active-sops', [DocumentApiController::class, 'getActiveSops']);
     Route::get('/generate-number', [DocumentApiController::class, 'generateNumber']);
 

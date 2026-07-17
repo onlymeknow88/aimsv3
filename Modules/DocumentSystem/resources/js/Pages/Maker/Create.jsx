@@ -7,7 +7,7 @@ import SearchableSelect from './Partials/Components/SearchableSelect';
 import SummernoteEditor from './Partials/Components/SummernoteEditor';
 import useMaker from './Hooks/useMaker';
 
-export default function Create() {
+export default function Create({ document = null }) {
     const {
         loading,
         companies, departments, pjs, modules, categories, mappings, activeSops,
@@ -28,18 +28,20 @@ export default function Create() {
         parentDocumentId, setParentDocumentId,
         docCreated, setDocCreated,
         handleSave
-    } = useMaker();
+    } = useMaker(document);
+
+    const isEdit = !!document;
 
     return (
         <div style={{ backgroundColor: 'var(--bg-color)', minHeight: '100vh', padding: '40px 20px' }}>
-            <Head title="Create New Document" />
+            <Head title={isEdit ? "Edit Document" : "Create New Document"} />
 
             {/* Header Navigation */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px', borderBottom: '1px solid var(--border-color)', paddingBottom: '12px', maxWidth: '800px', margin: '0 auto 24px auto' }}>
                 <a href="/document-system/active" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', color: 'var(--primary)', fontWeight: 700, textDecoration: 'none', fontSize: '12px' }}>
                     <ArrowLeft size={16} /> Kembali ke Active Document
                 </a>
-                <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Siklus Pembuatan Dokumen Baru</span>
+                <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{isEdit ? "Siklus Pembaharuan Dokumen" : "Siklus Pembuatan Dokumen Baru"}</span>
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'center' }}>
@@ -252,14 +254,14 @@ export default function Create() {
 
                     {/* Submit Section */}
                     <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '24px', display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
-                        <a href="/document-system/maker" style={{ padding: '10px 20px', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-secondary)', textDecoration: 'none', fontSize: '11px', fontWeight: 600 }}>
+                        <a href="/document-system/active" style={{ padding: '10px 20px', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-secondary)', textDecoration: 'none', fontSize: '11px', fontWeight: 600 }}>
                             Cancel
                         </a>
                         <button onClick={() => handleSave('draft')} disabled={loading || !title} style={{ padding: '10px 20px', border: '1px solid var(--primary)', background: '#fff', color: 'var(--primary)', borderRadius: '8px', fontSize: '11px', fontWeight: 700, cursor: 'pointer' }}>
-                            Save as Draft
+                            {isEdit ? "Update Draft" : "Save as Draft"}
                         </button>
                         <button onClick={() => handleSave('review')} disabled={loading || !title} style={{ padding: '10px 24px', border: 'none', background: 'var(--primary)', color: '#fff', borderRadius: '8px', fontSize: '11px', fontWeight: 700, cursor: 'pointer' }}>
-                            Submit for Review
+                            {isEdit ? "Update & Submit" : "Submit for Review"}
                         </button>
                     </div>
 

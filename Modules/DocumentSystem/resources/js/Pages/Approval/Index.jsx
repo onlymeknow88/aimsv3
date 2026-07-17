@@ -6,6 +6,8 @@ import ApprovalDetailDrawer from './Partials/ApprovalDetailDrawer';
 import ApproveModal from './Partials/ApproveModal';
 import RejectModal from './Partials/RejectModal';
 import { CheckSquare, Search, Edit, Trash2, X } from 'lucide-react';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
+import { Checkbox } from '@/components/ui/checkbox';
 
 export default function Index() {
     const {
@@ -39,8 +41,8 @@ export default function Index() {
 
     const isAllSelected = filtered.length > 0 && selectedIds.length === filtered.length;
 
-    const handleSelectAll = (e) => {
-        if (e.target.checked) {
+    const handleSelectAll = (checked) => {
+        if (checked) {
             setSelectedIds(filtered.map(d => d.id));
         } else {
             setSelectedIds([]);
@@ -162,46 +164,42 @@ export default function Index() {
                 </div>
             ) : (
                 <div style={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--border-color)', borderRadius: '12px', overflow: 'hidden', boxShadow: 'var(--shadow-sm)' }}>
-                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11px' }}>
-                        <thead>
-                            <tr style={{ borderBottom: '1px solid var(--border-color)', backgroundColor: '#fafbfc' }}>
-                                <th style={{ padding: '12px 16px', width: '40px' }}>
-                                    <input
-                                        type="checkbox"
+                    <Table style={{ fontSize: '12px' }}>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead style={{ width: '40px' }}>
+                                    <Checkbox
                                         checked={isAllSelected}
-                                        onChange={handleSelectAll}
-                                        style={{ cursor: 'pointer' }}
+                                        onCheckedChange={handleSelectAll}
                                     />
-                                </th>
+                                </TableHead>
                                 {['No. Dokumen', 'Judul', 'Aksi'].map(h => (
-                                    <th key={h} style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 700, color: 'var(--text-secondary)' }}>{h}</th>
+                                    <TableHead key={h} style={{ fontWeight: 700, color: 'var(--text-secondary)' }}>{h}</TableHead>
                                 ))}
-                            </tr>
-                        </thead>
-                        <tbody>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
                             {filtered.map(doc => (
-                                <tr key={doc.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                                    <td style={{ padding: '14px 16px', width: '40px' }}>
-                                        <input
-                                            type="checkbox"
+                                <TableRow key={doc.id}>
+                                    <TableCell style={{ width: '40px' }}>
+                                        <Checkbox
                                             checked={selectedIds.includes(doc.id)}
-                                            onChange={(e) => handleSelectRow(doc.id, e.target.checked)}
-                                            style={{ cursor: 'pointer' }}
+                                            onCheckedChange={(checked) => handleSelectRow(doc.id, checked)}
                                         />
-                                    </td>
-                                    <td style={{ padding: '14px 16px', fontWeight: 700, color: 'var(--primary)' }}>{doc.document_number}</td>
-                                    <td style={{ padding: '14px 16px', fontWeight: 600 }}>{doc.title}</td>
-                                    <td style={{ padding: '14px 16px' }}>
+                                    </TableCell>
+                                    <TableCell style={{ fontWeight: 700, color: 'var(--primary)' }}>{doc.document_number}</TableCell>
+                                    <TableCell style={{ fontWeight: 600 }}>{doc.title}</TableCell>
+                                    <TableCell>
                                         <div style={{ display: 'flex', gap: '8px' }}>
                                             <button onClick={() => openDrawer(doc)} style={{ border: '1px solid var(--border-color)', background: '#fff', borderRadius: '4px', padding: '4px 10px', cursor: 'pointer', fontSize: '10px' }}>Detail</button>
                                             <button onClick={() => openApprove(doc)} style={{ border: 'none', background: 'var(--success)', color: '#fff', borderRadius: '4px', padding: '4px 12px', cursor: 'pointer', fontSize: '10px', fontWeight: 700 }}>Setuju</button>
                                             <button onClick={() => openReject(doc)} style={{ border: 'none', background: 'var(--danger)', color: '#fff', borderRadius: '4px', padding: '4px 12px', cursor: 'pointer', fontSize: '10px', fontWeight: 700 }}>Tolak</button>
                                         </div>
-                                    </td>
-                                </tr>
+                                    </TableCell>
+                                </TableRow>
                             ))}
-                        </tbody>
-                    </table>
+                        </TableBody>
+                    </Table>
                 </div>
             )}
 

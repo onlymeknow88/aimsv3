@@ -1,16 +1,18 @@
 import React, { useMemo } from 'react';
 import { useReactTable, getCoreRowModel, getFilteredRowModel, getPaginationRowModel, flexRender } from '@tanstack/react-table';
 import { Eye, Download, FileText } from 'lucide-react';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
+import { Checkbox } from '@/components/ui/checkbox';
 
-export default function DocumentTable({ documents, onPreview, onDownload, selectedIds = [], onSelectionChange }) {
+export default function DocumentTable({ documents, onPreview, onDownload, selectedIds = [], onSelectionChange, visibleColumns, loading = false }) {
     const getCompanyCode = (doc) => {
         return doc.company?.company_name || doc.company?.document_code || '-';
     };
 
     const isAllSelected = documents.length > 0 && selectedIds.length === documents.length;
 
-    const handleSelectAll = (e) => {
-        if (e.target.checked) {
+    const handleSelectAll = (checked) => {
+        if (checked) {
             onSelectionChange(documents.map(d => d.id));
         } else {
             onSelectionChange([]);
@@ -29,52 +31,59 @@ export default function DocumentTable({ documents, onPreview, onDownload, select
         {
             id: 'select',
             header: () => (
-                <input
-                    type="checkbox"
+                <Checkbox
                     checked={isAllSelected}
-                    onChange={handleSelectAll}
-                    style={{ cursor: 'pointer' }}
+                    onCheckedChange={handleSelectAll}
                 />
             ),
             cell: ({ row }) => (
-                <input
-                    type="checkbox"
+                <Checkbox
                     checked={selectedIds.includes(row.original.id)}
-                    onChange={(e) => handleSelectRow(row.original.id, e.target.checked)}
-                    style={{ cursor: 'pointer' }}
+                    onCheckedChange={(checked) => handleSelectRow(row.original.id, checked)}
                 />
             )
         },
         {
             id: 'company',
             header: 'Company',
-            cell: ({ row }) => <span style={{ fontSize: '11px' }}>{getCompanyCode(row.original)}</span>
+            cell: ({ row }) => <span style={{ fontSize: '12px' }}>{getCompanyCode(row.original)}</span>
         },
         {
             id: 'department',
             header: 'Department',
-            cell: ({ row }) => <span style={{ fontSize: '11px' }}>{row.original.department?.name || '-'}</span>
+            cell: ({ row }) => <span style={{ fontSize: '12px' }}>{row.original.department?.name || '-'}</span>
         },
         {
             id: 'pic',
             header: 'PIC',
-            cell: ({ row }) => <span style={{ fontSize: '11px' }}>{row.original.owner?.name || '-'}</span>
+            cell: ({ row }) => <span style={{ fontSize: '12px' }}>{row.original.owner?.name || '-'}</span>
         },
         {
             id: 'module',
             header: 'Modul',
-            cell: ({ row }) => <span style={{ fontSize: '11px' }}>{row.original.mapping?.category?.module?.name || '-'}</span>
+            cell: ({ row }) => (
+                <span style={{ fontSize: '12px' }}>
+                    {row.original.mapping?.category?.module?.index ? `${row.original.mapping.category.module.index}. ` : ''}
+                    {row.original.mapping?.category?.module?.name || '-'}
+                </span>
+            )
         },
         {
             id: 'category',
             header: 'Category',
-            cell: ({ row }) => <span style={{ fontSize: '11px' }}>{row.original.mapping?.category?.name || '-'}</span>
+            cell: ({ row }) => (
+                <span style={{ fontSize: '12px' }}>
+                    {row.original.mapping?.category?.index ? `${row.original.mapping.category.index}. ` : ''}
+                    {row.original.mapping?.category?.name || '-'}
+                </span>
+            )
         },
         {
             accessorKey: 'document_level',
+            id: 'document_level',
             header: 'Level',
             cell: info => (
-                <span style={{ fontSize: '9px', fontWeight: 700, backgroundColor: '#f1f5f9', padding: '2px 8px', borderRadius: '4px', color: 'var(--text-secondary)' }}>
+                <span style={{ fontSize: '11px', fontWeight: 700, backgroundColor: '#f1f5f9', padding: '2px 8px', borderRadius: '4px', color: 'var(--text-secondary)' }}>
                     {info.getValue()}
                 </span>
             )
@@ -82,49 +91,54 @@ export default function DocumentTable({ documents, onPreview, onDownload, select
         {
             id: 'mapping',
             header: 'Mapping',
-            cell: ({ row }) => <span style={{ fontSize: '11px' }}>{row.original.mapping?.name || '-'}</span>
-        },
-        {
-            accessorKey: 'document_number',
-            header: 'No. Dokumen',
-            cell: info => <span style={{ fontWeight: 700, color: 'var(--primary)', fontSize: '11px' }}>{info.getValue() || '-'}</span>
-        },
-        {
-            accessorKey: 'title',
-            header: 'Judul Dokumen',
-            cell: info => (
-                <div>
-                    <span style={{ fontWeight: 600, fontSize: '11px', display: 'block' }}>{info.getValue()}</span>
-                    {info.row.original.description && (
-                        <span style={{ fontSize: '10px', color: 'var(--text-secondary)', display: 'block', marginTop: '2px' }}>{info.row.original.description}</span>
-                    )}
-                </div>
+            cell: ({ row }) => (
+                <span style={{ fontSize: '12px' }}>
+                    {row.original.mapping?.index ? `${row.original.mapping.index}. ` : ''}
+                    {row.original.mapping?.name || '-'}
+                </span>
             )
         },
         {
+            accessorKey: 'document_number',
+            id: 'document_number',
+            header: 'No. Dokumen',
+            cell: ({ row }) => (
+                <span style={{ fontWeight: 700 }}>
+                    <a href={`/document-system/active/detail/${row.original.id}`} style={{ color: 'var(--primary)', textDecoration: 'none' }}>
+                        {row.original.document_number}
+                    </a>
+                </span>
+            )
+        },
+        {
+            accessorKey: 'title',
+            id: 'title',
+            header: 'Judul Dokumen',
+            cell: info => <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{info.getValue()}</span>
+        },
+        {
             accessorKey: 'revision',
+            id: 'revision',
             header: 'Rev',
-            cell: info => <span style={{ fontSize: '11px' }}>Rev {info.getValue() || 0}</span>
+            cell: info => <span style={{ color: 'var(--text-secondary)' }}>Rev {info.getValue() || 0}</span>
         },
         {
             accessorKey: 'status',
+            id: 'status',
             header: 'Status',
             cell: info => {
-                const status = info.getValue();
-                const colors = status === '5' ? { bg: 'rgba(47, 191, 113, 0.08)', text: 'var(--success)', name: 'ACTIVE' }
-                             : status === '7' ? { bg: 'rgba(244, 67, 54, 0.08)', text: 'var(--danger)', name: 'EXPIRED' }
-                             : status === '2' ? { bg: 'rgba(255, 140, 36, 0.08)', text: 'var(--accent)', name: 'REVIEW' }
-                             : { bg: 'rgba(45, 127, 249, 0.08)', text: 'var(--info)', name: 'DRAFT' };
+                const status = info.getValue()?.toUpperCase() || 'ACTIVE';
+                const isObsolete = status === 'OBSOLETE';
                 return (
                     <span style={{
-                        fontSize: '9px',
-                        fontWeight: 800,
-                        backgroundColor: colors.bg,
-                        color: colors.text,
+                        fontSize: '10px',
+                        fontWeight: 700,
+                        color: isObsolete ? 'var(--danger)' : 'var(--success)',
+                        backgroundColor: isObsolete ? 'rgba(239, 68, 68, 0.08)' : 'rgba(34, 197, 94, 0.08)',
                         padding: '2px 8px',
                         borderRadius: '10px'
                     }}>
-                        {colors.name}
+                        {status}
                     </span>
                 );
             }
@@ -133,7 +147,7 @@ export default function DocumentTable({ documents, onPreview, onDownload, select
             id: 'actions',
             header: 'Aksi',
             cell: ({ row }) => (
-                <div style={{ display: 'flex', gap: '8px' }}>
+                <div style={{ display: 'flex', gap: '6px' }}>
                     <button onClick={() => onPreview(row.original)} style={{ border: '1px solid var(--border-color)', background: '#fff', borderRadius: '4px', padding: '4px 8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '10px', fontWeight: 600 }}>
                         <Eye size={12} /> Preview
                     </button>
@@ -143,49 +157,78 @@ export default function DocumentTable({ documents, onPreview, onDownload, select
                 </div>
             )
         }
-    ], [onPreview, onDownload]);
+    ], [onPreview, onDownload, selectedIds, isAllSelected]);
+
+    const columnVisibility = useMemo(() => {
+        if (!visibleColumns) return {};
+        return {
+            'company': visibleColumns['Company'] ?? true,
+            'department': visibleColumns['Department'] ?? true,
+            'pic': visibleColumns['PIC'] ?? true,
+            'module': visibleColumns['Modul'] ?? true,
+            'category': visibleColumns['Category'] ?? true,
+            'document_level': visibleColumns['Level'] ?? true,
+            'mapping': visibleColumns['Mapping'] ?? true,
+            'document_number': visibleColumns['No. Dokumen'] ?? true,
+            'title': visibleColumns['Judul Dokumen'] ?? true,
+            'revision': visibleColumns['Rev'] ?? true,
+            'status': visibleColumns['Status'] ?? true,
+            'actions': visibleColumns['Aksi'] ?? true,
+        };
+    }, [visibleColumns]);
 
     const table = useReactTable({
         data: documents,
         columns,
+        state: {
+            columnVisibility,
+        },
         getCoreRowModel: getCoreRowModel(),
         getFilteredRowModel: getFilteredRowModel(),
         getPaginationRowModel: getPaginationRowModel(),
         initialState: { pagination: { pageSize: 10 } }
     });
 
+    const visibleColsCount = table.getVisibleFlatColumns().length;
+
     return (
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11px' }}>
-            <thead>
+        <Table style={{ fontSize: '12px' }}>
+            <TableHeader>
                 {table.getHeaderGroups().map(hg => (
-                    <tr key={hg.id} style={{ borderBottom: '1px solid var(--border-color)', backgroundColor: '#fafbfc' }}>
+                    <TableRow key={hg.id}>
                         {hg.headers.map(h => (
-                            <th key={h.id} style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 700, color: 'var(--text-secondary)' }}>
+                            <TableHead key={h.id} style={{ fontWeight: 700, color: 'var(--text-secondary)' }}>
                                 {flexRender(h.column.columnDef.header, h.getContext())}
-                            </th>
+                            </TableHead>
                         ))}
-                    </tr>
+                    </TableRow>
                 ))}
-            </thead>
-            <tbody>
-                {table.getRowModel().rows.length > 0 ? (
+            </TableHeader>
+            <TableBody>
+                {loading ? (
+                    <TableRow>
+                        <TableCell colSpan={visibleColsCount} style={{ textAlign: 'center', padding: '40px 24px', color: 'var(--text-secondary)' }}>
+                            Memuat data dokumen keselamatan...
+                        </TableCell>
+                    </TableRow>
+                ) : table.getRowModel().rows.length > 0 ? (
                     table.getRowModel().rows.map(row => (
-                        <tr key={row.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                        <TableRow key={row.id}>
                             {row.getVisibleCells().map(cell => (
-                                <td key={cell.id} style={{ padding: '14px 16px' }}>
+                                <TableCell key={cell.id}>
                                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                                </td>
+                                </TableCell>
                             ))}
-                        </tr>
+                        </TableRow>
                     ))
                 ) : (
-                    <tr>
-                        <td colSpan={columns.length} style={{ padding: '32px', textAlign: 'center', color: 'var(--text-muted)' }}>
+                    <TableRow>
+                        <TableCell colSpan={visibleColsCount} style={{ padding: '32px', textAlign: 'center', color: 'var(--text-muted)' }}>
                             Belum ada dokumen aktif.
-                        </td>
-                    </tr>
+                        </TableCell>
+                    </TableRow>
                 )}
-            </tbody>
-        </table>
+            </TableBody>
+        </Table>
     );
 }

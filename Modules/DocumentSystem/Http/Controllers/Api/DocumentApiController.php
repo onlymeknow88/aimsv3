@@ -127,6 +127,93 @@ class DocumentApiController extends Controller
     }
 
     /**
+     * Update an existing safety document.
+     */
+    public function update(Request $request, $id)
+    {
+        $doc = Document::findOrFail($id);
+
+        $request->validate([
+            'title' => 'required|string',
+            'document_level' => 'required|string',
+            'company_id' => 'required',
+            'department_id' => 'required',
+        ]);
+
+        $companyId = $request->input('company_id');
+        $departmentId = $request->input('department_id');
+        $level = $request->input('document_level');
+
+        $comp = Company::find($companyId);
+        $companyCode = $comp ? ($comp->document_code ?: 'MAC') : 'MAC';
+
+        $dept = Department::find($departmentId);
+        $deptCode = $dept ? ($dept->document_code ?: $dept->code ?: 'MIS') : 'MIS';
+
+        // Format prefix code
+        if ($level === 'WIN') {
+            $prefix = "WIN-{$companyCode}-{$deptCode}-";
+            $sopNum = $request->input('sop_number', '');
+            if ($sopNum) {
+                $prefix = "WIN-{$companyCode}-{$deptCode}-{$sopNum}-";
+            }
+            $runningNumber = $request->input('sop_add_win', '001');
+            $docNumber = "{$prefix}{$runningNumber}";
+        } else {
+            $prefix = "{$companyCode}-{$deptCode}-";
+            $runningNumber = $request->input('sop_number', '001');
+            $docNumber = "{$prefix}{$runningNumber}";
+        }
+
+        DB::beginTransaction();
+        try {
+            $doc->update([
+                'title' => $request->title,
+                'document_level' => $level,
+                'description' => $request->description,
+                'prefix_code' => $prefix,
+                'document_number' => $docNumber,
+                'sop_number' => $request->input('sop_number'),
+                'sop_add_win' => $request->input('sop_add_win'),
+                'parent_document' => $request->input('parent_document'),
+                'company_id' => $companyId,
+                'department_id' => $departmentId,
+                'area_manager_id' => $request->input('area_manager_id'),
+                'module_id' => $request->input('module_id'),
+                'category_id' => $request->input('category_id'),
+                'mapping_id' => $request->input('mapping_id'),
+                'upload_type' => $request->input('upload_type'),
+                'status' => $request->input('status', $doc->status),
+                'doc_created' => $request->input('doc_created', $doc->doc_created),
+            ]);
+
+            // Save invited reviewers
+            if ($request->has('invited_emails')) {
+                DB::table('document_system_invited_people')->where('document_id', $doc->id)->delete();
+                $invitedEmails = $request->input('invited_emails', []);
+                foreach ($invitedEmails as $email) {
+                    if (!empty($email)) {
+                        DB::table('document_system_invited_people')->insert([
+                            'id' => Str::uuid()->toString(),
+                            'document_id' => $doc->id,
+                            'email' => $email,
+                            'status' => 0, // Pending
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                        ]);
+                    }
+                }
+            }
+
+            DB::commit();
+            return ResponseFormatter::success($doc, 'Document updated successfully');
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            return ResponseFormatter::error($e->getMessage(), 'Failed to update document', 500);
+        }
+    }
+
+    /**
      * Fetch active SOPs.
      */
     public function getActiveSops(Request $request)
