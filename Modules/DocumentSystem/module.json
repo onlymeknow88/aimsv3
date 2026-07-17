@@ -1,0 +1,11 @@
+{
+    "name": "DocumentSystem",
+    "alias": "documentsystem",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\DocumentSystem\\Providers\\DocumentSystemServiceProvider"
+    ],
+    "files": []
+}
