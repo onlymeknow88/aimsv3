@@ -39,6 +39,7 @@ class DocumentSystemController extends Controller
     public function maker()
     {
         $documents = Document::whereIn('status', ['5', '7'])
+            ->where('is_obsolate', false)
             ->with(['company', 'department', 'owner', 'mapping.category.module', 'attachments'])
             ->latest()
             ->get();
@@ -63,6 +64,12 @@ class DocumentSystemController extends Controller
     {
         $document = Document::with(['company', 'department', 'owner', 'mapping.category.module', 'attachments', 'invitedPeople'])
             ->findOrFail($id);
+
+        if (in_array((string) $document->status, ['5', '7'])) {
+            $service = new \Modules\DocumentSystem\Services\DocumentSystemService();
+            $newDoc = $service->replicate($document);
+            return redirect()->route('doc.active.edit', $newDoc->id);
+        }
 
         return inertia('DocumentSystem/Maker/Create', [
             'document' => $document

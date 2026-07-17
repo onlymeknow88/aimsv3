@@ -23,6 +23,7 @@ class DocumentApiController extends Controller
         $status = $request->input('status');
 
         $query = Document::with(['company', 'department', 'areaManager.user', 'owner', 'mapping.category.module', 'attachments'])
+            ->where('is_obsolate', false)
             ->latest();
 
         if ($status) {

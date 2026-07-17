@@ -116,4 +116,50 @@ class DocumentSystemService
             }
         }
     }
+
+    /**
+     * Replicate/clone an active/expired document to create a new draft revision.
+     */
+    public function replicate(Document $document): Document
+    {
+        $currentRevision = $document->revision ?? 0;
+
+        $newDoc = $document->replicate();
+        $newDoc->doc_created = now();
+        $newDoc->status = '2'; // Draft
+        $newDoc->related_document_id = $document->id;
+        $newDoc->revision = (int) $currentRevision + 1;
+        $newDoc->is_obsolate = false;
+
+        if ($newDoc->save()) {
+            // Replicate invited people
+            $invited = \DB::table('document_system_invited_people')
+                ->where('document_id', $document->id)
+                ->get();
+            foreach ($invited as $person) {
+                \DB::table('document_system_invited_people')->insert([
+                    'id' => \Illuminate\Support\Str::uuid()->toString(),
+                    'document_id' => $newDoc->id,
+                    'user_id' => $person->user_id,
+                    'email' => $person->email,
+                    'status' => 0,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+
+            // Replicate attachments
+            $attachments = Attachment::where('document_id', $document->id)->get();
+            foreach ($attachments as $attachment) {
+                $newAtt = $attachment->replicate();
+                $newAtt->document_id = $newDoc->id;
+                $newAtt->save();
+            }
+
+            // Mark the old active/expired document as obsolete
+            $document->update(['is_obsolate' => true]);
+        }
+
+        return $newDoc;
+    }
 }

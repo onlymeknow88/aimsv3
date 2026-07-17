@@ -36,6 +36,7 @@ class DocumentController extends Controller
     public function activeDocument(Request $request)
     {
         $documents = Document::whereIn('status', ['5', '7']) // Active, Expired
+            ->where('is_obsolate', false)
             ->with(['attachments'])
             ->latest()
             ->get();
