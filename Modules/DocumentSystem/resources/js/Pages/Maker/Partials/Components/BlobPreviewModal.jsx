@@ -4,9 +4,12 @@ import { X, Download, FileText } from 'lucide-react';
 export default function BlobPreviewModal({ attachment, onClose }) {
     if (!attachment) return null;
 
-    const previewUrl = `/api/document-system/attachments/${attachment.id}/preview`;
-    const isImage = ['png', 'jpg', 'jpeg', 'gif'].includes(attachment.file_type?.toLowerCase());
-    const isPdf = attachment.file_type?.toLowerCase() === 'pdf';
+    const isActivity = attachment.type === 'activity';
+    const previewUrl = `/api/document-system/attachments/${attachment.id}/preview${isActivity ? '?type=activity' : ''}`;
+    const downloadUrl = `/api/document-system/attachments/${attachment.id}/download${isActivity ? '?type=activity' : ''}`;
+    const fileExtension = (attachment.file_type || (attachment.name ? attachment.name.split('.').pop() : '') || '').toLowerCase();
+    const isImage = ['png', 'jpg', 'jpeg', 'gif'].includes(fileExtension);
+    const isPdf = fileExtension === 'pdf';
 
     return (
         <div style={{
@@ -117,7 +120,7 @@ export default function BlobPreviewModal({ attachment, onClose }) {
                                 Format file ({attachment.file_type || 'unknown'}) tidak mendukung pratinjau langsung. Silakan download untuk membukanya.
                             </p>
                             <a
-                                href={`/api/document-system/attachments/${attachment.id}/download`}
+                                href={downloadUrl}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 style={{
@@ -149,7 +152,7 @@ export default function BlobPreviewModal({ attachment, onClose }) {
                         backgroundColor: '#fff'
                     }}>
                         <a
-                            href={`/api/document-system/attachments/${attachment.id}/download`}
+                            href={downloadUrl}
                             target="_blank"
                             rel="noopener noreferrer"
                             style={{

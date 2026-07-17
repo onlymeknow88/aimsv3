@@ -13,10 +13,10 @@ createInertiaApp({
     resolve: (name) => {
         if (name.startsWith('DocumentSystem/')) {
             const page = name.replace('DocumentSystem/', '');
-            return resolvePageComponent(
-                `/Modules/DocumentSystem/resources/js/Pages/${page}.jsx`,
-                import.meta.glob('/Modules/DocumentSystem/resources/js/Pages/**/*.jsx')
-            );
+            const targetPath = `../../Modules/DocumentSystem/resources/js/Pages/${page}.jsx`;
+            const glob = import.meta.glob('../../Modules/DocumentSystem/resources/js/Pages/**/*.jsx');
+            console.log('Resolving DocumentSystem Page:', { name, page, targetPath, availableKeys: Object.keys(glob) });
+            return resolvePageComponent(targetPath, glob);
         }
         return resolvePageComponent(
             `./Pages/${name}.jsx`,

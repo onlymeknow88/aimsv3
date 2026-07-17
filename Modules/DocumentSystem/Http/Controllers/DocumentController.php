@@ -99,8 +99,11 @@ class DocumentController extends Controller
             'department' => 'required|string',
         ]);
 
-        $company = $request->input('company', 'PAMA');
+        $company = $request->input('company');
         $docNumber = $this->service->generateDocumentNumber($company, $request->department, $request->document_level);
+
+        $user = auth()->user() ?? auth('admin')->user() ?? auth('web')->user();
+        $userId = $user ? $user->id : null;
 
         $doc = Document::create([
             'title'           => $request->title,
@@ -108,6 +111,8 @@ class DocumentController extends Controller
             'description'     => $request->description,
             'prefix_code'     => "{$company}-{$request->department}-{$request->document_level}",
             'document_number' => $docNumber,
+            'user_id'         => $userId,
+            'created_by'      => $userId,
             'status'          => '2', // Draft
             'revision'        => '0',
             'doc_created'     => now(),

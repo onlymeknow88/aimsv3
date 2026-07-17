@@ -6,7 +6,7 @@ use Modules\DocumentSystem\Http\Controllers\Api\PermissionApiController;
 use Modules\DocumentSystem\Http\Controllers\Api\MasterDataApiController;
 use Modules\DocumentSystem\Http\Controllers\GeneralController;
 
-Route::prefix('document-system')->group(function () {
+Route::middleware(['web'])->prefix('document-system')->group(function () {
     // Document API Actions
     Route::get('/documents', [DocumentApiController::class, 'index']);
     Route::post('/documents', [DocumentApiController::class, 'store']);

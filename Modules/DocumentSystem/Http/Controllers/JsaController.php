@@ -42,6 +42,7 @@ class JsaController extends Controller
             'work_type'  => $request->work_type,
             'location'   => $request->location,
             'status'     => '1', // Draft
+            'user_id'    => $userId,
             'created_by' => $userId,
         ]);
 
@@ -54,7 +55,17 @@ class JsaController extends Controller
     public function update(Request $request, string $id)
     {
         $doc = JsaDocument::findOrFail($id);
-        $doc->update($request->only(['title', 'work_type', 'location', 'status']));
+
+        $user = $request->user() ?? auth()->user() ?? auth('admin')->user() ?? auth('web')->user();
+        $userId = $user ? $user->id : null;
+
+        $doc->update(array_merge(
+            $request->only(['title', 'work_type', 'location', 'status']),
+            [
+                'user_id' => $doc->user_id ?? $userId,
+                'created_by' => $doc->created_by ?? $userId,
+            ]
+        ));
 
         return ResponseFormatter::success($doc, 'JSA berhasil diperbarui.');
     }

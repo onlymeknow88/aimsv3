@@ -46,6 +46,7 @@ class PtwController extends Controller
             'start_date'  => $request->start_date,
             'end_date'    => $request->end_date,
             'status'      => '1', // Draft
+            'user_id'     => $userId,
             'created_by'  => $userId,
         ]);
 
@@ -58,7 +59,17 @@ class PtwController extends Controller
     public function update(Request $request, string $id)
     {
         $doc = PtwDocument::findOrFail($id);
-        $doc->update($request->only(['title', 'permit_type', 'location', 'start_date', 'end_date', 'status']));
+
+        $user = $request->user() ?? auth()->user() ?? auth('admin')->user() ?? auth('web')->user();
+        $userId = $user ? $user->id : null;
+
+        $doc->update(array_merge(
+            $request->only(['title', 'permit_type', 'location', 'start_date', 'end_date', 'status']),
+            [
+                'user_id' => $doc->user_id ?? $userId,
+                'created_by' => $doc->created_by ?? $userId,
+            ]
+        ));
 
         return ResponseFormatter::success($doc, 'PTW berhasil diperbarui.');
     }

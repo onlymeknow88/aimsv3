@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Head } from '@inertiajs/react';
-import { ArrowLeft, User, Building, MapPin, Calendar, Layers, Eye, Download, Info, Users, Clock, Edit } from 'lucide-react';
+import { ArrowLeft, User, Building, MapPin, Calendar, Layers, Eye, Download, Info, Users, Clock, Edit, FileText } from 'lucide-react';
 import StatusTimeline from '../OnGoing/Partials/Components/StatusTimeline';
 import useDetail from './Hooks/useDetail';
 import BlobPreviewModal from './Partials/Components/BlobPreviewModal';
@@ -15,6 +15,8 @@ export default function Detail({ id }) {
         loading,
         isRejectModalOpen,
         setIsRejectModalOpen,
+        rejectFiles,
+        setRejectFiles,
         handleApprove,
         handleReject,
         showApproval
@@ -326,7 +328,7 @@ export default function Detail({ id }) {
                             <p style={{ fontSize: '11.5px', color: 'var(--text-secondary)', marginBottom: '16px', lineHeight: '1.5' }}>
                                 Dokumen akan ditolak dan dikembalikan ke pembuat (Draft). Silakan berikan alasan atau catatan revisi di bawah ini.
                             </p>
-                            <div style={{ marginBottom: '20px' }}>
+                             <div style={{ marginBottom: '20px' }}>
                                 <label style={{ fontSize: '10px', fontWeight: 700, color: 'var(--text-secondary)', display: 'block', marginBottom: '6px', textTransform: 'uppercase' }}>
                                     Alasan Return / Catatan Revisi <span style={{ color: 'var(--danger)' }}>*</span>
                                 </label>
@@ -338,11 +340,57 @@ export default function Detail({ id }) {
                                     required
                                 />
                             </div>
+
+                            {/* File Upload Evidence */}
+                            <div style={{ marginBottom: '20px' }}>
+                                <label style={{ fontSize: '10px', fontWeight: 700, color: 'var(--text-secondary)', display: 'block', marginBottom: '6px', textTransform: 'uppercase' }}>
+                                    Lampiran Bukti / Evidence (Optional)
+                                </label>
+                                <div style={{ border: '2px dashed var(--border-color)', borderRadius: '8px', padding: '16px', textAlign: 'center', backgroundColor: '#f8fafc' }}>
+                                    <input
+                                        type="file"
+                                        multiple
+                                        id="reject-files-input"
+                                        onChange={e => {
+                                            const newFiles = Array.from(e.target.files || []);
+                                            setRejectFiles(prev => [...prev, ...newFiles]);
+                                        }}
+                                        style={{ display: 'none' }}
+                                    />
+                                    <label htmlFor="reject-files-input" style={{ cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
+                                        <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--primary)', textDecoration: 'underline' }}>
+                                            Pilih File Evidence
+                                        </span>
+                                        <span style={{ fontSize: '9px', color: 'var(--text-secondary)' }}>
+                                            PDF, Gambar, Excel, dll.
+                                        </span>
+                                    </label>
+                                </div>
+                                {rejectFiles.length > 0 && (
+                                    <div style={{ marginTop: '10px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                        {rejectFiles.map((file, idx) => (
+                                            <div key={idx} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#fff', border: '1px solid var(--border-color)', borderRadius: '4px', padding: '4px 8px', fontSize: '10px' }}>
+                                                <span style={{ fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '350px' }}>
+                                                    {file.name}
+                                                </span>
+                                                <button
+                                                    onClick={() => setRejectFiles(prev => prev.filter((_, i) => i !== idx))}
+                                                    style={{ border: 'none', background: 'none', color: 'var(--danger)', cursor: 'pointer', fontSize: '10px', fontWeight: 700 }}
+                                                >
+                                                    Hapus
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+
                             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
                                 <button
                                     onClick={() => {
                                         setIsRejectModalOpen(false);
                                         setNotes('');
+                                        setRejectFiles([]);
                                     }}
                                     disabled={loading}
                                     style={{ border: '1px solid var(--border-color)', color: 'var(--text-secondary)', background: '#fff', borderRadius: '6px', padding: '8px 16px', cursor: 'pointer', fontSize: '11px', fontWeight: 700 }}
@@ -352,9 +400,19 @@ export default function Detail({ id }) {
                                 <button
                                     onClick={handleReject}
                                     disabled={loading}
-                                    style={{ border: 'none', color: '#fff', backgroundColor: 'var(--danger)', borderRadius: '6px', padding: '8px 16px', cursor: 'pointer', fontSize: '11px', fontWeight: 700 }}
+                                    style={{ border: 'none', color: '#fff', backgroundColor: 'var(--danger)', borderRadius: '6px', padding: '8px 16px', cursor: loading ? 'not-allowed' : 'pointer', fontSize: '11px', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '6px' }}
                                 >
-                                    Return
+                                    {loading ? (
+                                        <>
+                                            <svg style={{ animation: 'spin 1s linear infinite', width: '12px', height: '12px', color: '#fff' }} fill="none" viewBox="0 0 24 24">
+                                                <circle style={{ opacity: 0.25 }} cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                                <path style={{ opacity: 0.75 }} fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                                            </svg>
+                                            <span>Processing...</span>
+                                        </>
+                                    ) : (
+                                        'Return'
+                                    )}
                                 </button>
                             </div>
                         </div>
@@ -389,6 +447,20 @@ export default function Detail({ id }) {
                                     <div key={act.id} style={{ borderBottom: '1px solid #f8fafc', paddingBottom: '8px', fontSize: '11px' }}>
                                         <div style={{ fontWeight: 700, color: 'var(--text-primary)' }}>{act.user?.name || 'System'}</div>
                                         <div style={{ color: 'var(--text-secondary)', marginTop: '2px' }}>{act.activity}</div>
+                                        {act.attachments && act.attachments.length > 0 && (
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '6px', borderLeft: '2px solid var(--border-color)', paddingLeft: '8px' }}>
+                                                {act.attachments.map(file => (
+                                                    <span
+                                                        key={file.id}
+                                                        onClick={() => setPreviewAttachment({ ...file, id: file.id, file_name: file.name, type: 'activity' })}
+                                                        style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--primary)', textDecoration: 'underline', textDecorationStyle: 'dotted', cursor: 'pointer', fontSize: '10px' }}
+                                                    >
+                                                        <FileText size={10} />
+                                                        {file.name}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        )}
                                         <div style={{ fontSize: '9px', color: 'var(--text-muted)', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
                                             <Clock size={10} /> {new Date(act.created_at).toLocaleString('id-ID', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: 'short' })}
                                         </div>

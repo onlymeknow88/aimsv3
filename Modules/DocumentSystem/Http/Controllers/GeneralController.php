@@ -12,9 +12,28 @@ class GeneralController extends Controller
     /**
      * Preview or stream attachment file
      */
-    public function previewAttachment(string $id)
+    /**
+     * Preview or stream attachment file
+     */
+    public function previewAttachment(string $id, Request $request)
     {
-        $attachment = Attachment::findOrFail($id);
+        $type = $request->query('type', 'document');
+        if ($type === 'activity') {
+            $attachment = \Modules\DocumentSystem\Entities\ActivityAttachment::findOrFail($id);
+            $fileName = $attachment->name;
+            $mimeType = 'application/octet-stream';
+            $ext = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
+            if ($ext === 'pdf') {
+                $mimeType = 'application/pdf';
+            } elseif (in_array($ext, ['png', 'jpg', 'jpeg', 'gif', 'webp'])) {
+                $mimeType = 'image/' . ($ext === 'jpg' ? 'jpeg' : $ext);
+            }
+        } else {
+            $attachment = Attachment::findOrFail($id);
+            $fileName = $attachment->file_name;
+            $mimeType = $attachment->mime_type ?? 'application/octet-stream';
+        }
+
         $localPath = Storage::disk('public')->path($attachment->path ?? '');
 
         if (!$attachment->path || !file_exists($localPath)) {
@@ -26,8 +45,8 @@ class GeneralController extends Controller
                         $client = new \GuzzleHttp\Client();
                         $response = $client->get($url);
                         return response($response->getBody()->getContents(), 200, [
-                            'Content-Type' => $attachment->mime_type ?? 'application/octet-stream',
-                            'Content-Disposition' => 'inline; filename="' . $attachment->file_name . '"',
+                            'Content-Type' => $mimeType,
+                            'Content-Disposition' => 'inline; filename="' . $fileName . '"',
                         ]);
                     } catch (\Exception $e) {
                         \Log::error('Error streaming blob preview: ' . $e->getMessage());
@@ -38,17 +57,25 @@ class GeneralController extends Controller
         }
 
         return response()->file($localPath, [
-            'Content-Type' => $attachment->mime_type ?? 'application/octet-stream',
-            'Content-Disposition' => 'inline; filename="' . $attachment->file_name . '"',
+            'Content-Type' => $mimeType,
+            'Content-Disposition' => 'inline; filename="' . $fileName . '"',
         ]);
     }
 
     /**
      * Download attachment file
      */
-    public function downloadAttachment(string $id)
+    public function downloadAttachment(string $id, Request $request)
     {
-        $attachment = Attachment::findOrFail($id);
+        $type = $request->query('type', 'document');
+        if ($type === 'activity') {
+            $attachment = \Modules\DocumentSystem\Entities\ActivityAttachment::findOrFail($id);
+            $fileName = $attachment->name;
+        } else {
+            $attachment = Attachment::findOrFail($id);
+            $fileName = $attachment->file_name;
+        }
+
         $localPath = Storage::disk('public')->path($attachment->path ?? '');
 
         if (!$attachment->path || !file_exists($localPath)) {
@@ -62,7 +89,7 @@ class GeneralController extends Controller
             abort(404, 'File tidak ditemukan.');
         }
 
-        return response()->download($localPath, $attachment->file_name);
+        return response()->download($localPath, $fileName);
     }
 
     /**
@@ -70,7 +97,13 @@ class GeneralController extends Controller
      */
     public function sasUrl(Request $request, string $id)
     {
-        $attachment = Attachment::findOrFail($id);
+        $type = $request->query('type', 'document');
+        if ($type === 'activity') {
+            $attachment = \Modules\DocumentSystem\Entities\ActivityAttachment::findOrFail($id);
+        } else {
+            $attachment = Attachment::findOrFail($id);
+        }
+
         $filePath = $attachment->path ?? '';
         
         if (str_starts_with($filePath, 'test/') || str_starts_with($filePath, 'complianceCMS/') || !file_exists(Storage::disk('public')->path($filePath))) {

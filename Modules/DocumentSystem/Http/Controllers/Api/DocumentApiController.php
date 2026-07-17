@@ -75,6 +75,17 @@ class DocumentApiController extends Controller
             $docNumber = "{$prefix}{$runningNumber}";
         }
 
+        $user = $request->user() ?? auth()->user() ?? auth('admin')->user() ?? auth('web')->user();
+        $userId = $user ? $user->id : null;
+
+        \Log::info('Auth check in DocumentApiController@store:', [
+            'request_user' => $request->user() ? $request->user()->id : null,
+            'auth_user' => auth()->user() ? auth()->user()->id : null,
+            'auth_admin' => auth('admin')->user() ? auth('admin')->user()->id : null,
+            'auth_web' => auth('web')->user() ? auth('web')->user()->id : null,
+            'userId_resolved' => $userId,
+        ]);
+
         DB::beginTransaction();
         try {
             $doc = Document::create([
@@ -89,6 +100,8 @@ class DocumentApiController extends Controller
                 'company_id' => $companyId,
                 'department_id' => $departmentId,
                 'area_manager_id' => $request->input('area_manager_id'),
+                'user_id' => $userId,
+                'created_by' => $userId,
                 'module_id' => $request->input('module_id'),
                 'category_id' => $request->input('category_id'),
                 'mapping_id' => $request->input('mapping_id'),
@@ -184,6 +197,9 @@ class DocumentApiController extends Controller
             $docNumber = "{$prefix}{$runningNumber}";
         }
 
+        $user = $request->user() ?? auth()->user() ?? auth('admin')->user() ?? auth('web')->user();
+        $userId = $user ? $user->id : null;
+
         DB::beginTransaction();
         try {
             $doc->update([
@@ -198,6 +214,8 @@ class DocumentApiController extends Controller
                 'company_id' => $companyId,
                 'department_id' => $departmentId,
                 'area_manager_id' => $request->input('area_manager_id'),
+                'user_id' => $doc->user_id ?? $userId,
+                'created_by' => $doc->created_by ?? $userId,
                 'module_id' => $request->input('module_id'),
                 'category_id' => $request->input('category_id'),
                 'mapping_id' => $request->input('mapping_id'),
@@ -376,6 +394,8 @@ class DocumentApiController extends Controller
     {
         $request->validate([
             'reason' => 'required|string',
+            'files' => 'nullable|array',
+            'files.*' => 'file',
         ]);
 
         $user = auth()->user() ?? auth('admin')->user() ?? auth('web')->user();
@@ -388,18 +408,52 @@ class DocumentApiController extends Controller
         // Jika sudah di tahap approval lanjut (3 atau 6), kembalikan ke ON_REVISION (4)
         $currentStatus = (int) $doc->status;
         $newStatus = in_array($currentStatus, [3, 6]) ? '4' : '2';
-        $doc->update(['status' => $newStatus]);
 
-        DB::table('document_system_activities')->insert([
-            'id' => Str::uuid(),
-            'document_id' => $doc->id,
-            'user_id' => $userId,
-            'activity' => "Dokumen direturn: {$request->reason}",
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
+        DB::beginTransaction();
+        try {
+            $doc->update(['status' => $newStatus]);
 
-        return ResponseFormatter::success($doc, 'Dokumen berhasil dikembalikan ke draft.');
+            $activityId = Str::uuid()->toString();
+
+            DB::table('document_system_activities')->insert([
+                'id' => $activityId,
+                'document_id' => $doc->id,
+                'user_id' => $userId,
+                'activity' => "Dokumen direturn: {$request->reason}",
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+            // Handle uploaded evidence files
+            if ($request->hasFile('files')) {
+                $service = app(DocumentSystemService::class);
+                foreach ($request->file('files') as $file) {
+                    // Upload to blob storage in the 'revisions' or 'activities' subfolder
+                    $uploadResult = $service->uploadAttachment($file, 'activities');
+                    if ($uploadResult) {
+                        DB::table('document_system_activities_attachments')->insert([
+                            'id' => Str::uuid()->toString(),
+                            'activity_id' => $activityId,
+                            'name' => $file->getClientOriginalName(),
+                            'file_type' => strtolower($file->getClientOriginalExtension()),
+                            'file_size' => $file->getSize(),
+                            'path' => $uploadResult['fileBlobPathName'],
+                            'blob_url' => $uploadResult['fileBlobUrl'],
+                            'blob_response' => json_encode($uploadResult['blobResponse']),
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                        ]);
+                    }
+                }
+            }
+
+            DB::commit();
+
+            return ResponseFormatter::success($doc, 'Dokumen berhasil dikembalikan ke draft.');
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            return ResponseFormatter::error($e->getMessage(), 'Gagal memproses penolakan.', 500);
+        }
     }
 
     /**
@@ -407,7 +461,7 @@ class DocumentApiController extends Controller
      */
     public function show(string $id)
     {
-        $document = Document::with(['company', 'department', 'areaManager.user', 'owner', 'creator', 'mapping.category.module', 'attachments', 'invitedPeople', 'activities.user'])
+        $document = Document::with(['company', 'department', 'areaManager.user', 'owner', 'creator', 'mapping.category.module', 'attachments', 'invitedPeople', 'activities.user', 'activities.attachments'])
             ->findOrFail($id);
 
         $user = auth()->user() ?? auth('admin')->user() ?? auth('web')->user();

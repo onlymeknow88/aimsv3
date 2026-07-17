@@ -26,4 +26,9 @@ class Activity extends Model
     {
         return $this->belongsTo(\App\Models\User::class, 'user_id');
     }
+
+    public function attachments()
+    {
+        return $this->hasMany(ActivityAttachment::class, 'activity_id');
+    }
 }

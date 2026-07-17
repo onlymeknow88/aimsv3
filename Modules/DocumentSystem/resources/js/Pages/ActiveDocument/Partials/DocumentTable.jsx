@@ -58,7 +58,7 @@ export default function DocumentTable({ documents, selectedIds = [], onSelection
         {
             id: 'pic',
             header: 'PIC',
-            cell: ({ row }) => <span style={{ fontSize: '12px' }}>{row.original.area_manager?.user?.name || '-'}</span>
+            cell: ({ row }) => <span style={{ fontSize: '12px' }}>{row.original.owner?.name || '-'}</span>
         },
         {
             id: 'module',

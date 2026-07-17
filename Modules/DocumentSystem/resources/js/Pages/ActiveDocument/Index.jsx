@@ -153,8 +153,7 @@ export default function Index() {
 
                     <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                         <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <button style={{
+                        <DropdownMenuTrigger style={{
                                     display: 'inline-flex',
                                     alignItems: 'center',
                                     gap: '6px',
@@ -168,8 +167,7 @@ export default function Index() {
                                     cursor: 'pointer'
                                 }}>
                                     <SlidersHorizontal size={14} /> Columns
-                                </button>
-                            </DropdownMenuTrigger>
+                                </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="w-48 bg-white border border-gray-200 shadow-lg rounded-md p-1">
                                 <DropdownMenuGroup>
                                     <DropdownMenuLabel className="text-xs font-bold text-gray-500" style={{ padding: '8px 12px' }}>Toggle Columns</DropdownMenuLabel>

@@ -9,14 +9,16 @@ class ActivityAttachment extends Model
 {
     use HasUuids;
 
-    protected $table = 'document_system_activity_attachments';
+    protected $table = 'document_system_activities_attachments';
 
     protected $fillable = [
         'activity_id',
-        'file_name',
-        'file_path',
+        'path',
         'file_size',
-        'mime_type',
+        'file_type',
+        'name',
+        'blob_url',
+        'blob_response',
     ];
 
     public function activity()

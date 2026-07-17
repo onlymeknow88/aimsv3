@@ -8,10 +8,12 @@ import SearchableSelect from './Partials/Components/SearchableSelect';
 import SummernoteEditor from './Partials/Components/SummernoteEditor';
 import useMaker from './Hooks/useMaker';
 import BlobPreviewModal from './Partials/Components/BlobPreviewModal';
+import ConfirmationModal from './Partials/Components/ConfirmationModal';
 
 export default function Create({ document = null }) {
     const [existingAttachments, setExistingAttachments] = useState(document?.attachments || []);
     const [previewAttachment, setPreviewAttachment] = useState(null);
+    const [confirmModal, setConfirmModal] = useState({ isOpen: false, type: 'draft' });
 
     const handleDeleteAttachment = async (attId) => {
         if (!window.confirm('Apakah Anda yakin ingin menghapus lampiran ini?')) return;
@@ -45,6 +47,19 @@ export default function Create({ document = null }) {
         docCreated, setDocCreated,
         handleSave
     } = useMaker(document);
+
+    const triggerSave = (type) => {
+        setConfirmModal({ isOpen: true, type });
+    };
+
+    const handleConfirmSave = async () => {
+        try {
+            await handleSave(confirmModal.type);
+            setConfirmModal(prev => ({ ...prev, isOpen: false }));
+        } catch (err) {
+            setConfirmModal(prev => ({ ...prev, isOpen: false }));
+        }
+    };
 
     const isEdit = !!document;
 
@@ -321,10 +336,10 @@ export default function Create({ document = null }) {
                         <a href="/document-system/active" style={{ padding: '10px 20px', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-secondary)', textDecoration: 'none', fontSize: '11px', fontWeight: 600 }}>
                             Cancel
                         </a>
-                        <button onClick={() => handleSave('draft')} disabled={loading || !title} style={{ padding: '10px 20px', border: '1px solid var(--primary)', background: '#fff', color: 'var(--primary)', borderRadius: '8px', fontSize: '11px', fontWeight: 700, cursor: 'pointer' }}>
+                        <button onClick={() => triggerSave('draft')} disabled={loading || !title} style={{ padding: '10px 20px', border: '1px solid var(--primary)', background: '#fff', color: 'var(--primary)', borderRadius: '8px', fontSize: '11px', fontWeight: 700, cursor: 'pointer' }}>
                             {isEdit ? "Update Draft" : "Save as Draft"}
                         </button>
-                        <button onClick={() => handleSave('review')} disabled={loading || !title} style={{ padding: '10px 24px', border: 'none', background: 'var(--primary)', color: '#fff', borderRadius: '8px', fontSize: '11px', fontWeight: 700, cursor: 'pointer' }}>
+                        <button onClick={() => triggerSave('review')} disabled={loading || !title} style={{ padding: '10px 24px', border: 'none', background: 'var(--primary)', color: '#fff', borderRadius: '8px', fontSize: '11px', fontWeight: 700, cursor: 'pointer' }}>
                             {isEdit ? "Update & Submit" : "Submit for Review"}
                         </button>
                     </div>
@@ -338,6 +353,14 @@ export default function Create({ document = null }) {
                     onClose={() => setPreviewAttachment(null)}
                 />
             )}
+
+            <ConfirmationModal
+                isOpen={confirmModal.isOpen}
+                type={confirmModal.type}
+                loading={loading}
+                onConfirm={handleConfirmSave}
+                onCancel={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+            />
         </div>
     );
 }

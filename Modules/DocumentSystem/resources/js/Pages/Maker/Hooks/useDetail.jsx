@@ -50,6 +50,8 @@ export default function useDetail(id) {
         });
     }, [document, notes, fetchDocumentDetails]);
 
+    const [rejectFiles, setRejectFiles] = useState([]);
+
     const handleReject = useCallback(() => {
         if (!document) return;
         if (!notes.trim()) {
@@ -57,11 +59,19 @@ export default function useDetail(id) {
             return;
         }
         setLoading(true);
-        axios.post(`/api/document-system/documents/reject/${document.id}`, {
-            reason: notes
+
+        const formData = new FormData();
+        formData.append('reason', notes);
+        rejectFiles.forEach((file, index) => {
+            formData.append(`files[${index}]`, file);
+        });
+
+        axios.post(`/api/document-system/documents/reject/${document.id}`, formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
         })
         .then(() => {
             fetchDocumentDetails();
+            setRejectFiles([]);
         })
         .catch(err => {
             alert('Gagal memproses penolakan.');
@@ -72,7 +82,7 @@ export default function useDetail(id) {
             setNotes('');
             setIsRejectModalOpen(false);
         });
-    }, [document, notes, fetchDocumentDetails]);
+    }, [document, notes, rejectFiles, fetchDocumentDetails]);
 
     const showApproval = document ? (
         (canApproveL1 && String(document.status) === '1') || // level 1 and waiting review
@@ -102,6 +112,8 @@ export default function useDetail(id) {
         loading,
         isRejectModalOpen,
         setIsRejectModalOpen,
+        rejectFiles,
+        setRejectFiles,
         handleApprove,
         handleReject,
         showApproval,
