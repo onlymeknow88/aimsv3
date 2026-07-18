@@ -17,22 +17,9 @@ class UserController extends Controller
 {
     public function index()
     {
-        $users = User::with(['employee.company', 'employee.department', 'employee.section', 'documentRoles'])->latest()->get();
-        $companies = Company::all();
-        $departments = Department::all();
-        $sections = Section::all();
-        $roles = DB::table('aims_roles')->get();
-        $modules = DB::table('aims_modules')->get();
-
-        return Inertia::render('Admin/Users', [
-            'users' => $users,
-            'companies' => $companies,
-            'departments' => $departments,
-            'sections' => $sections,
-            'roles' => $roles,
-            'modules' => $modules
-        ]);
+        return Inertia::render('Admin/Users/Index');
     }
+
 
     public function store(Request $request)
     {

@@ -38,12 +38,14 @@ Route::middleware(['admin.session', 'auth:admin', 'admin.auth'])->prefix('admin'
     Route::post('/role-permissions/update', [\App\Http\Controllers\RolePermissionController::class, 'update']);
     Route::post('/role-permissions/bulk-update', [\App\Http\Controllers\RolePermissionController::class, 'bulkUpdate']);
     Route::post('/role-permissions/roles', [\App\Http\Controllers\RolePermissionController::class, 'storeRole']);
+    Route::put('/role-permissions/roles/{id}', [\App\Http\Controllers\RolePermissionController::class, 'updateRole']);
+    Route::delete('/role-permissions/roles/{id}', [\App\Http\Controllers\RolePermissionController::class, 'destroyRole']);
 
     // Users & Employee CRUD
     Route::get('/users', [\App\Http\Controllers\Admin\UserController::class, 'index'])->name('admin.users');
-    Route::post('/users', [\App\Http\Controllers\Admin\UserController::class, 'store']);
-    Route::put('/users/{id}', [\App\Http\Controllers\Admin\UserController::class, 'update']);
-    Route::delete('/users/{id}', [\App\Http\Controllers\Admin\UserController::class, 'destroy']);
+    // Route::post('/users', [\App\Http\Controllers\Admin\UserController::class, 'store']);
+    // Route::put('/users/{id}', [\App\Http\Controllers\Admin\UserController::class, 'update']);
+    // Route::delete('/users/{id}', [\App\Http\Controllers\Admin\UserController::class, 'destroy']);
 
     // Companies CRUD
     Route::get('/companies', [\App\Http\Controllers\Admin\CompanyController::class, 'index'])->name('admin.companies');
@@ -53,15 +55,18 @@ Route::middleware(['admin.session', 'auth:admin', 'admin.auth'])->prefix('admin'
 
     // Departments CRUD
     Route::get('/departments', [\App\Http\Controllers\Admin\DepartmentController::class, 'index'])->name('admin.departments');
-    Route::post('/departments', [\App\Http\Controllers\Admin\DepartmentController::class, 'store']);
-    Route::put('/departments/{id}', [\App\Http\Controllers\Admin\DepartmentController::class, 'update']);
-    Route::delete('/departments/{id}', [\App\Http\Controllers\Admin\DepartmentController::class, 'destroy']);
+    // Route::post('/departments', [\App\Http\Controllers\Admin\DepartmentController::class, 'store']);
+    // Route::put('/departments/{id}', [\App\Http\Controllers\Admin\DepartmentController::class, 'update']);
+    // Route::delete('/departments/{id}', [\App\Http\Controllers\Admin\DepartmentController::class, 'destroy']);
 
     // Sections CRUD
     Route::get('/sections', [\App\Http\Controllers\Admin\SectionController::class, 'index'])->name('admin.sections');
-    Route::post('/sections', [\App\Http\Controllers\Admin\SectionController::class, 'store']);
-    Route::put('/sections/{id}', [\App\Http\Controllers\Admin\SectionController::class, 'update']);
-    Route::delete('/sections/{id}', [\App\Http\Controllers\Admin\SectionController::class, 'destroy']);
+    // Route::post('/sections', [\App\Http\Controllers\Admin\SectionController::class, 'store']);
+    // Route::put('/sections/{id}', [\App\Http\Controllers\Admin\SectionController::class, 'update']);
+    // Route::delete('/sections/{id}', [\App\Http\Controllers\Admin\SectionController::class, 'destroy']);
+
+    // AIMS Menu — Inertia Page
+    Route::get('/aims-menu', [\App\Http\Controllers\Admin\AimsMenuController::class, 'index'])->name('admin.aims-menu');
 });
 
 require __DIR__.'/auth.php';

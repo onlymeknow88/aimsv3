@@ -192,4 +192,72 @@ class RolePermissionController extends Controller
 
         return back();
     }
+
+    /**
+     * Update Role
+     */
+    public function updateRole(Request $request, $id)
+    {
+        $request->validate([
+            'module_id' => 'required',
+            'name' => 'required|string|max:255',
+            'slug' => 'required|string|max:255'
+        ]);
+
+        $role = DB::table('aims_roles')->where('id', $id)->first();
+
+        if (!$role) {
+            return back()->withErrors(['error' => 'Role tidak ditemukan.']);
+        }
+
+        $exists = DB::table('aims_roles')
+            ->where('module_id', $request->module_id)
+            ->where('slug', $request->slug)
+            ->where('id', '!=', $id)
+            ->exists();
+
+        if ($exists) {
+            return back()->withErrors(['slug' => 'Role slug already exists for this module.']);
+        }
+
+        DB::table('aims_roles')
+            ->where('id', $id)
+            ->update([
+                'module_id' => $request->module_id,
+                'name' => $request->name,
+                'slug' => $request->slug,
+                'updated_at' => now()
+            ]);
+
+        \Illuminate\Support\Facades\Artisan::call('cache:clear');
+
+        return back()->with('success', 'Role berhasil diperbarui.');
+    }
+
+    /**
+     * Hapus Role
+     */
+    public function destroyRole($id)
+    {
+        try {
+            $role = DB::table('aims_roles')->where('id', $id)->first();
+
+            if (!$role) {
+                return back()->withErrors(['error' => 'Role tidak ditemukan.']);
+            }
+
+            // 1. Hapus permissions terkait terlebih dahulu (agar tidak error foreign key)
+            DB::table('aims_permissions')->where('role_id', $id)->delete();
+
+            // 2. Hapus dari pivot table user_roles (jika tabel ini ada di proyek Anda)
+            // DB::table('aims_user_roles')->where('role_id', $id)->delete();
+
+            // 3. Hapus role-nya
+            DB::table('aims_roles')->where('id', $id)->delete();
+
+            return back()->with('success', 'Role berhasil dihapus.');
+        } catch (\Exception $e) {
+            return back()->withErrors(['error' => 'Gagal menghapus role: ' . $e->getMessage()]);
+        }
+    }
 }

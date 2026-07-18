@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import { 
     Users, ShieldAlert, Landmark, Layers, MapPin, 
-    ArrowLeft, LogOut, ChevronDown, Menu, X, Settings
+    ArrowLeft, LogOut, ChevronDown, Menu, X, Settings, FolderOpen
 } from 'lucide-react';
 
 export default function AdminLayout({ children, title = "Backoffice Admin" }) {
@@ -21,6 +21,10 @@ export default function AdminLayout({ children, title = "Backoffice Admin" }) {
         { name: 'Companies', icon: () => <span style={{ fontSize: '16px' }}>🏛️</span>, href: '/admin/companies', active: currentPath.startsWith('/admin/companies') },
         { name: 'Departments', icon: () => <span style={{ fontSize: '16px' }}>🏢</span>, href: '/admin/departments', active: currentPath.startsWith('/admin/departments') },
         { name: 'Sections', icon: () => <span style={{ fontSize: '16px' }}>📁</span>, href: '/admin/sections', active: currentPath.startsWith('/admin/sections') },
+    ];
+
+    const systemMenuItems = [
+        { name: 'AIMS Menu', icon: () => <FolderOpen size={16} />, href: '/admin/aims-menu', active: currentPath.startsWith('/admin/aims-menu') },
     ];
 
     return (
@@ -55,12 +59,6 @@ export default function AdminLayout({ children, title = "Backoffice Admin" }) {
                     </div>
                 </div>
 
-                {/* Back to Home AIMS */}
-                <div style={{ padding: '12px 20px', borderBottom: '1px solid #1f2937' }}>
-                    <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#94a3b8', fontSize: '12px', textDecoration: 'none', fontWeight: 600 }}>
-                        ← Kembali ke Home AIMS
-                    </Link>
-                </div>
 
                 {/* Menu List */}
                 <div style={{ flex: 1, padding: '20px 12px', overflowY: 'auto' }}>
@@ -103,6 +101,42 @@ export default function AdminLayout({ children, title = "Backoffice Admin" }) {
                     {/* Master Data Section List */}
                     <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
                         {masterMenuItems.map((item, idx) => {
+                            const Icon = item.icon;
+                            return (
+                                <li key={idx} style={{ marginBottom: '6px' }}>
+                                    <Link
+                                        href={item.href}
+                                        style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '12px',
+                                            padding: '10px 16px',
+                                            borderRadius: '8px',
+                                            fontSize: '14px',
+                                            fontWeight: 600,
+                                            textDecoration: 'none',
+                                            color: item.active ? '#3b82f6' : '#a1a1aa',
+                                            backgroundColor: item.active ? 'rgba(59, 130, 246, 0.1)' : 'transparent',
+                                            transition: 'all 0.2s'
+                                        }}
+                                        className={!item.active ? 'nav-hover' : ''}
+                                    >
+                                        <Icon />
+                                        {item.name}
+                                    </Link>
+                                </li>
+                            );
+                        })}
+                    </ul>
+
+                    {/* System Section Header */}
+                    <div style={{ paddingLeft: '16px', fontSize: '13px', fontWeight: 700, color: '#3b82f6', textTransform: 'none', margin: '20px 0 10px 0' }}>
+                        System
+                    </div>
+
+                    {/* System Section List */}
+                    <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+                        {systemMenuItems.map((item, idx) => {
                             const Icon = item.icon;
                             return (
                                 <li key={idx} style={{ marginBottom: '6px' }}>

@@ -19,4 +19,9 @@ class AreaLocation extends Model
     {
         return $this->belongsToMany(Section::class, 'section_area_locations');
     }
+
+    public function areaManagers()
+    {
+        return $this->belongsToMany(AreaManager::class, 'area_manager_locations');
+    }
 }

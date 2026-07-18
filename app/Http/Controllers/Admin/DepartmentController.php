@@ -12,7 +12,7 @@ class DepartmentController extends Controller
 {
     public function index()
     {
-        return Inertia::render('Admin/Departments', [
+        return Inertia::render('Admin/Department/Index', [
             'departments' => Department::with('company')->latest()->get(),
             'companies' => Company::all()
         ]);
