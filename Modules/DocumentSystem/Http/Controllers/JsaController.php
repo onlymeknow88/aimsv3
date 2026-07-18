@@ -12,73 +12,43 @@ use Modules\DocumentSystem\Entities\JsaDocumentPeople;
 class JsaController extends Controller
 {
     /**
-     * List all JSA documents
+     * JSA Documents listing page.
      */
-    public function index(Request $request)
+    public function index()
     {
-        $documents = JsaDocument::with(['activities', 'people', 'attachments'])
-            ->latest()
-            ->get();
-
-        return ResponseFormatter::success($documents, 'JSA documents retrieved successfully');
-    }
-
-    /**
-     * Store new JSA document
-     */
-    public function store(Request $request)
-    {
-        $request->validate([
-            'title'       => 'required|string|max:255',
-            'work_type'   => 'required|string',
-            'location'    => 'required|string',
+        return inertia('DocumentSystem/Jsa/Index', [
+            'documents' => []
         ]);
+    }
 
-        $user = auth()->user() ?? auth('admin')->user() ?? auth('web')->user();
-        $userId = $user ? $user->id : null;
+    /**
+     * Create JSA page.
+     */
+    public function create()
+    {
+        return inertia('DocumentSystem/Jsa/Create');
+    }
 
-        $doc = JsaDocument::create([
-            'title'      => $request->title,
-            'work_type'  => $request->work_type,
-            'location'   => $request->location,
-            'status'     => '1', // Draft
-            'user_id'    => $userId,
-            'created_by' => $userId,
+    /**
+     * Edit JSA page.
+     */
+    public function edit($id)
+    {
+        $document = JsaDocument::with(['user', 'parent'])->findOrFail($id);
+        return inertia('DocumentSystem/Jsa/Create', [
+            'document' => $document
         ]);
-
-        return ResponseFormatter::success($doc, 'JSA berhasil dibuat.');
     }
 
     /**
-     * Update JSA document
+     * Obsolete JSA page.
      */
-    public function update(Request $request, string $id)
+    public function obsolete()
     {
-        $doc = JsaDocument::findOrFail($id);
-
-        $user = $request->user() ?? auth()->user() ?? auth('admin')->user() ?? auth('web')->user();
-        $userId = $user ? $user->id : null;
-
-        $doc->update(array_merge(
-            $request->only(['title', 'work_type', 'location', 'status']),
-            [
-                'user_id' => $doc->user_id ?? $userId,
-                'created_by' => $doc->created_by ?? $userId,
-            ]
-        ));
-
-        return ResponseFormatter::success($doc, 'JSA berhasil diperbarui.');
-    }
-
-    /**
-     * Delete JSA document
-     */
-    public function destroy(string $id)
-    {
-        $doc = JsaDocument::findOrFail($id);
-        $doc->delete();
-
-        return ResponseFormatter::success(null, 'JSA berhasil dihapus.');
+        return inertia('DocumentSystem/Jsa/Index', [
+            'documents' => [],
+            'isObsolete' => true
+        ]);
     }
 }
 

@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import axios from 'axios';
 
-export default function useJsa() {
+export default function useJsa(isObsolete = false) {
     const [formModalOpen, setFormModalOpen] = useState(false);
     const [drawerOpen, setDrawerOpen] = useState(false);
     const [selectedJsa, setSelectedJsa] = useState(null);
@@ -17,13 +17,13 @@ export default function useJsa() {
 
     const fetchDocuments = useCallback(() => {
         setFetching(true);
-        axios.get('/api/document-system/jsa')
+        axios.get(`/api/document-system/jsa?is_obsolete=${isObsolete}`)
             .then(res => {
                 setDocs(res.data?.result || []);
             })
             .catch(err => console.error("Error fetching JSA documents", err))
             .finally(() => setFetching(false));
-    }, []);
+    }, [isObsolete]);
 
     useEffect(() => {
         fetchDocuments();

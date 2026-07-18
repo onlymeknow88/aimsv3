@@ -19,9 +19,10 @@ Route::middleware(['web', 'auth'])->prefix('document-system')->group(function ()
     Route::get('/draft', [DocumentSystemController::class, 'draft'])->name('doc.draft');
     Route::get('/obsolete', [DocumentSystemController::class, 'obsolete'])->name('doc.obsolete');
     Route::get('/approval', [DocumentSystemController::class, 'approval'])->name('doc.approval');
-    Route::get('/jsa', [DocumentSystemController::class, 'jsa'])->name('doc.jsa');
-    Route::get('/jsa/create', [DocumentSystemController::class, 'jsaCreate'])->name('doc.jsa.create');
-    Route::get('/jsa/edit/{id}', [DocumentSystemController::class, 'jsaEdit'])->name('doc.jsa.edit');
+    Route::get('/jsa', [\Modules\DocumentSystem\Http\Controllers\JsaController::class, 'index'])->name('doc.jsa');
+    Route::get('/jsa/create', [\Modules\DocumentSystem\Http\Controllers\JsaController::class, 'create'])->name('doc.jsa.create');
+    Route::get('/jsa/obsolete', [\Modules\DocumentSystem\Http\Controllers\JsaController::class, 'obsolete'])->name('doc.jsa.obsolete');
+    Route::get('/jsa/edit/{id}', [\Modules\DocumentSystem\Http\Controllers\JsaController::class, 'edit'])->name('doc.jsa.edit');
     Route::get('/ptw', [DocumentSystemController::class, 'ptw'])->name('doc.ptw');
     Route::get('/master', [DocumentSystemController::class, 'master'])->name('doc.master');
 });

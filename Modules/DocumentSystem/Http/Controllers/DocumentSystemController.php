@@ -136,34 +136,7 @@ class DocumentSystemController extends Controller
         ]);
     }
 
-    /**
-     * JSA Documents listing.
-     */
-    public function jsa()
-    {
-        return inertia('DocumentSystem/Jsa/Index', [
-            'documents' => []
-        ]);
-    }
 
-    /**
-     * Create JSA page.
-     */
-    public function jsaCreate()
-    {
-        return inertia('DocumentSystem/Jsa/Create');
-    }
-
-    /**
-     * Edit JSA page.
-     */
-    public function jsaEdit($id)
-    {
-        $document = JsaDocument::with(['user', 'parent'])->findOrFail($id);
-        return inertia('DocumentSystem/Jsa/Create', [
-            'document' => $document
-        ]);
-    }
 
     /**
      * PTW Permit listing.

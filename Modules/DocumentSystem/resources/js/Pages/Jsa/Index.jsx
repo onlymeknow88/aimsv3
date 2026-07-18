@@ -6,20 +6,26 @@ import useJsa from './Hooks/useJsa';
 
 import JsaTable from './Partials/JsaTable';
 
-export default function Index() {
-    const { formModalOpen, drawerOpen, selectedJsa, loading, openForm, closeForm, openDrawer, closeDrawer, createJsa, docs, fetching } = useJsa();
+export default function Index({ isObsolete = false }) {
+    const { formModalOpen, drawerOpen, selectedJsa, loading, openForm, closeForm, openDrawer, closeDrawer, createJsa, docs, fetching } = useJsa(isObsolete);
 
     return (
         <DocumentSystemLayout>
-            <Head title="Job Safety Analysis" />
+            <Head title={isObsolete ? "Obsolete JSA Archive" : "Job Safety Analysis"} />
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
                 <div>
-                    <h1 style={{ fontSize: '20px', fontWeight: 800, color: 'var(--primary)', margin: 0 }}>Job Safety Analysis (JSA)</h1>
-                    <p style={{ color: 'var(--text-secondary)', fontSize: '11px', marginTop: '4px' }}>Analisis bahaya dan tindakan keselamatan kerja.</p>
+                    <h1 style={{ fontSize: '20px', fontWeight: 800, color: 'var(--primary)', margin: 0 }}>
+                        {isObsolete ? 'Obsolete JSA Archive' : 'Job Safety Analysis (JSA)'}
+                    </h1>
+                    <p style={{ color: 'var(--text-secondary)', fontSize: '11px', marginTop: '4px' }}>
+                        {isObsolete ? 'Arsip berkas JSA lama yang sudah tidak berlaku.' : 'Analisis bahaya dan tindakan keselamatan kerja.'}
+                    </p>
                 </div>
-                <button onClick={() => window.location.href = '/document-system/jsa/create'} style={{ display: 'flex', alignItems: 'center', gap: '6px', backgroundColor: 'var(--primary)', color: '#fff', border: 'none', borderRadius: '6px', padding: '8px 16px', fontSize: '11px', fontWeight: 700, cursor: 'pointer' }}>
-                    + Buat JSA
-                </button>
+                {!isObsolete && (
+                    <button onClick={() => window.location.href = '/document-system/jsa/create'} style={{ display: 'flex', alignItems: 'center', gap: '6px', backgroundColor: 'var(--primary)', color: '#fff', border: 'none', borderRadius: '6px', padding: '8px 16px', fontSize: '11px', fontWeight: 700, cursor: 'pointer' }}>
+                        + Buat JSA
+                    </button>
+                )}
             </div>
 
 

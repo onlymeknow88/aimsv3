@@ -16,7 +16,10 @@ class JsaApiController extends Controller
      */
     public function index(Request $request)
     {
+        $isObsolete = $request->boolean('is_obsolete', false);
+
         $documents = JsaDocument::with(['activities', 'people', 'attachments'])
+            ->where('is_obsolate', $isObsolete)
             ->latest()
             ->get();
 
