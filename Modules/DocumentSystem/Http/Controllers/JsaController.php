@@ -61,5 +61,15 @@ class JsaController extends Controller
             'isDraft' => true
         ]);
     }
+
+    /**
+     * View JSA document detail page.
+     */
+    public function detail($id)
+    {
+        return inertia('DocumentSystem/Jsa/Detail', [
+            'id' => $id
+        ]);
+    }
 }
 

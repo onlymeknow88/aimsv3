@@ -33,9 +33,11 @@ Route::middleware(['web'])->prefix('document-system')->group(function () {
     Route::get('/modules', [MasterDataApiController::class, 'getModules']);
     Route::get('/categories', [MasterDataApiController::class, 'getCategories']);
     Route::get('/mappings', [MasterDataApiController::class, 'getMappings']);
+    Route::get('/employees', [MasterDataApiController::class, 'getEmployees']);
 
     // JSA API Actions
     Route::get('/jsa', [JsaApiController::class, 'index']);
+    Route::get('/jsa/{id}', [JsaApiController::class, 'show']);
     Route::post('/jsa', [JsaApiController::class, 'store']);
     Route::post('/jsa/{id}', [JsaApiController::class, 'update']);
     Route::delete('/jsa/{id}', [JsaApiController::class, 'destroy']);

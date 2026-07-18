@@ -98,4 +98,25 @@ class MasterDataApiController extends Controller
             'Mappings retrieved successfully'
         );
     }
+
+    /**
+     * Fetch employees filtered by company.
+     */
+    public function getEmployees(Request $request)
+    {
+        $companyId = $request->query('company_id');
+        $query = \App\Models\Employee::with('user');
+        if ($companyId) {
+            $query->where('company_id', $companyId);
+        }
+        $employees = $query->get()->map(function ($emp) {
+            return [
+                'id' => $emp->user_id,
+                'name' => $emp->name ?: ($emp->user->name ?? 'Unknown'),
+                'email' => $emp->user->email ?? '',
+            ];
+        })->filter(fn($e) => !empty($e['email']))->values();
+
+        return ResponseFormatter::success($employees, 'Employees retrieved successfully');
+    }
 }

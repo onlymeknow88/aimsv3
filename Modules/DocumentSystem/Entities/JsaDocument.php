@@ -13,6 +13,7 @@ class JsaDocument extends Model
 
     protected $fillable = [
         'department_id',
+        'company_id',
         'department_code_id',
         'user_id',
         'status',
@@ -23,6 +24,7 @@ class JsaDocument extends Model
         'detail_location',
         'parent_document',
         'is_obsolate',
+        'revision',
     ];
 
     protected $casts = [
@@ -40,14 +42,24 @@ class JsaDocument extends Model
         return $this->belongsTo(JsaDocument::class, 'parent_document');
     }
 
+    public function company()
+    {
+        return $this->belongsTo(\App\Models\Company::class, 'company_id');
+    }
+
+    public function department()
+    {
+        return $this->belongsTo(\App\Models\Department::class, 'department_id');
+    }
+
     public function activities()
     {
-        return $this->hasMany(JsaDocumentActivity::class, 'jsa_document_id');
+        return $this->hasMany(JsaDocumentActivity::class, 'document_id');
     }
 
     public function people()
     {
-        return $this->hasMany(JsaDocumentPeople::class, 'jsa_document_id');
+        return $this->hasMany(JsaDocumentPeople::class, 'document_id');
     }
 
     public function attachments()

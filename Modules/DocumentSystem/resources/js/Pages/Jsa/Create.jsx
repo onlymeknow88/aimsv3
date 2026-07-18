@@ -1,11 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Head } from '@inertiajs/react';
 import { ArrowLeft, X, FileText } from 'lucide-react';
 import axios from 'axios';
 import SearchableSelect from '../Maker/Partials/Components/SearchableSelect';
 import SummernoteEditor from '../Maker/Partials/Components/SummernoteEditor';
 import FileDropzone from '@/Components/FileDropzone';
-import InvitedPeopleInput from '../Maker/Partials/Components/InvitedPeopleInput';
 import ConfirmationModal from '@/Components/ConfirmationModal';
 import useMaker from '../Maker/Hooks/useMaker';
 import BlobPreviewModal from '@/Components/BlobPreviewModal';
@@ -29,16 +28,36 @@ export default function Create({ document = null }) {
         handleSave
     } = useMaker(document);
 
+    const [documentNumber, setDocumentNumber] = useState(document?.document_number || '');
+    const [detailLocation, setDetailLocation] = useState(document?.detail_location || '');
+    const [employees, setEmployees] = useState([]);
+
+    useEffect(() => {
+        if (company) {
+            axios.get(`/api/document-system/employees?company_id=${company}`).then(res => {
+                setEmployees(res.data?.result || []);
+            });
+        } else {
+            setEmployees([]);
+        }
+    }, [company]);
+
     // Override handleSave for JSA API
     const handleJsaSave = async (statusType) => {
         const formData = new FormData();
         formData.append('title', title);
         formData.append('work_type', title); // Map work_type to title/work_type
-        formData.append('location', 'Office'); // Default/placeholder location
+        formData.append('location', detailLocation);
+        formData.append('document_number', documentNumber);
         formData.append('status', statusType === 'draft' ? '1' : '5'); // 1 = Draft, 5 = Active
         formData.append('description', description);
         formData.append('doc_created', docCreated);
         formData.append('department_id', department);
+        formData.append('company_id', company);
+
+        invitedEmails.forEach((email, index) => {
+            formData.append(`invited_emails[${index}]`, email);
+        });
 
         files.forEach((file, index) => {
             formData.append(`files[${index}]`, file);
@@ -144,6 +163,26 @@ export default function Create({ document = null }) {
                                     style={{ width: '100%', height: '40px', border: '1px solid var(--border-color)', borderRadius: '8px', padding: '0 12px', fontSize: '12px', outline: 'none' }}
                                 />
                             </div>
+                            <div>
+                                <label style={{ fontSize: '10.5px', fontWeight: 700, color: 'var(--text-secondary)', display: 'block', marginBottom: '6px' }}>DOCUMENT NUMBER (OPTIONAL)</label>
+                                <input 
+                                    type="text" 
+                                    value={documentNumber} 
+                                    onChange={e => setDocumentNumber(e.target.value)} 
+                                    placeholder="Masukkan Nomor Dokumen..." 
+                                    style={{ width: '100%', height: '40px', border: '1px solid var(--border-color)', borderRadius: '8px', padding: '0 12px', fontSize: '12px', outline: 'none' }}
+                                />
+                            </div>
+                            <div>
+                                <label style={{ fontSize: '10.5px', fontWeight: 700, color: 'var(--text-secondary)', display: 'block', marginBottom: '6px' }}>DETAIL LOCATION</label>
+                                <input 
+                                    type="text" 
+                                    value={detailLocation} 
+                                    onChange={e => setDetailLocation(e.target.value)} 
+                                    placeholder="Masukkan Detail Lokasi..." 
+                                    style={{ width: '100%', height: '40px', border: '1px solid var(--border-color)', borderRadius: '8px', padding: '0 12px', fontSize: '12px', outline: 'none' }}
+                                />
+                            </div>
                         </div>
                     </div>
 
@@ -152,7 +191,13 @@ export default function Create({ document = null }) {
                         <h3 style={{ fontSize: '14px', fontWeight: 700, color: 'var(--primary)', marginBottom: '16px', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px' }}>
                             Invited People
                         </h3>
-                        <InvitedPeopleInput invitedEmails={invitedEmails} setInvitedEmails={setInvitedEmails} />
+                        <SearchableSelect 
+                            options={employees.map(emp => ({ id: emp.email, name: `${emp.name} (${emp.email})`, email: emp.email }))} 
+                            value={invitedEmails} 
+                            onChange={setInvitedEmails} 
+                            placeholder="Pilih Orang yang Diundang..." 
+                            isMulti={true} 
+                        />
                     </div>
 
                     {/* Description */}

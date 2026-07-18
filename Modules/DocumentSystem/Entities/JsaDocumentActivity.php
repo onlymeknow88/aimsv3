@@ -9,10 +9,10 @@ class JsaDocumentActivity extends Model
 {
     use HasUuids;
 
-    protected $table = 'document_system_jsa_activities';
+    protected $table = 'jsa_document_activities';
 
     protected $fillable = [
-        'jsa_document_id',
+        'document_id',
         'user_id',
         'activity',
         'notes',
@@ -20,7 +20,7 @@ class JsaDocumentActivity extends Model
 
     public function jsaDocument()
     {
-        return $this->belongsTo(JsaDocument::class, 'jsa_document_id');
+        return $this->belongsTo(JsaDocument::class, 'document_id');
     }
 
     public function user()

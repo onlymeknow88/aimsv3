@@ -24,6 +24,7 @@ Route::middleware(['web', 'auth'])->prefix('document-system')->group(function ()
     Route::get('/jsa/draft', [\Modules\DocumentSystem\Http\Controllers\JsaController::class, 'draft'])->name('doc.jsa.draft');
     Route::get('/jsa/obsolete', [\Modules\DocumentSystem\Http\Controllers\JsaController::class, 'obsolete'])->name('doc.jsa.obsolete');
     Route::get('/jsa/edit/{id}', [\Modules\DocumentSystem\Http\Controllers\JsaController::class, 'edit'])->name('doc.jsa.edit');
+    Route::get('/jsa/detail/{id}', [\Modules\DocumentSystem\Http\Controllers\JsaController::class, 'detail'])->name('doc.jsa.detail');
     Route::get('/ptw', [DocumentSystemController::class, 'ptw'])->name('doc.ptw');
     Route::get('/master', [DocumentSystemController::class, 'master'])->name('doc.master');
 });

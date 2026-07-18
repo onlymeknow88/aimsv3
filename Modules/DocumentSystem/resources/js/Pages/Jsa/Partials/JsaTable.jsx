@@ -1,30 +1,102 @@
 import React, { useMemo, useState } from 'react';
 import { useReactTable, getCoreRowModel, getFilteredRowModel, getPaginationRowModel, flexRender } from '@tanstack/react-table';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
+import { Checkbox } from '@/components/ui/checkbox';
 import { FileText } from 'lucide-react';
 import BlobPreviewModal from '@/Components/BlobPreviewModal';
 
 export default function JsaTable({ documents, onOpenDrawer, loading = false }) {
     const [previewAttachment, setPreviewAttachment] = useState(null);
+    const [selectedRowIds, setSelectedRowIds] = useState(new Set());
+
+    const formatDate = (dateStr) => {
+        if (!dateStr) return '-';
+        const date = new Date(dateStr);
+        const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+        return `${String(date.getDate()).padStart(2, '0')} ${months[date.getMonth()]} ${date.getFullYear()}`;
+    };
 
     const columns = useMemo(() => [
+        {
+            id: 'select',
+            header: () => (
+                <Checkbox
+                    checked={documents.length > 0 && selectedRowIds.size === documents.length}
+                    onCheckedChange={(checked) => {
+                        if (checked) {
+                            setSelectedRowIds(new Set(documents.map(d => d.id)));
+                        } else {
+                            setSelectedRowIds(new Set());
+                        }
+                    }}
+                />
+            ),
+            cell: ({ row }) => (
+                <Checkbox
+                    checked={selectedRowIds.has(row.original.id)}
+                    onCheckedChange={(checked) => {
+                        const next = new Set(selectedRowIds);
+                        if (checked) {
+                            next.add(row.original.id);
+                        } else {
+                            next.delete(row.original.id);
+                        }
+                        setSelectedRowIds(next);
+                    }}
+                />
+            )
+        },
+        {
+            id: 'company',
+            header: 'Company',
+            cell: ({ row }) => (
+                <a
+                    href={`/document-system/jsa/detail/${row.original.id}`}
+                    style={{ fontWeight: 600, color: 'var(--primary)', textDecoration: 'underline', textDecorationStyle: 'dotted', cursor: 'pointer' }}
+                >
+                    {row.original.company?.company_name || '-'}
+                </a>
+            )
+        },
+        {
+            id: 'department',
+            header: 'Department',
+            cell: ({ row }) => <span style={{ color: 'var(--text-secondary)' }}>{row.original.department?.name || '-'}</span>
+        },
+        {
+            id: 'pic',
+            header: 'PIC',
+            cell: ({ row }) => <span style={{ color: 'var(--text-secondary)' }}>{row.original.user?.name || '-'}</span>
+        },
         {
             accessorKey: 'title',
             id: 'title',
             header: 'Judul',
-            cell: info => <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{info.getValue()}</span>
-        },
-        {
-            accessorKey: 'work_type',
-            id: 'work_type',
-            header: 'Jenis Pekerjaan',
             cell: info => <span style={{ color: 'var(--text-secondary)' }}>{info.getValue() || '-'}</span>
         },
         {
-            accessorKey: 'location',
-            id: 'location',
-            header: 'Lokasi',
+            accessorKey: 'document_number',
+            id: 'document_number',
+            header: 'ID Document',
             cell: info => <span style={{ color: 'var(--text-secondary)' }}>{info.getValue() || '-'}</span>
+        },
+        {
+            accessorKey: 'revision',
+            id: 'revision',
+            header: 'Revisi No.',
+            cell: info => <span style={{ color: 'var(--text-secondary)' }}>{!info.getValue() || info.getValue() === '' || info.getValue() === null ? '0.0' : `${info.getValue()}.0`}</span>
+        },
+        {
+            accessorKey: 'detail_location',
+            id: 'detail_location',
+            header: 'Detail Location',
+            cell: info => <span style={{ color: 'var(--text-secondary)' }}>{info.getValue() || '-'}</span>
+        },
+        {
+            accessorKey: 'doc_created',
+            id: 'doc_created',
+            header: 'Date Created',
+            cell: info => <span style={{ color: 'var(--text-secondary)' }}>{formatDate(info.getValue())}</span>
         },
         {
             accessorKey: 'status',
@@ -115,7 +187,7 @@ export default function JsaTable({ documents, onOpenDrawer, loading = false }) {
                 </button>
             )
         }
-    ], [onOpenDrawer, previewAttachment]);
+    ], [onOpenDrawer, previewAttachment, selectedRowIds, documents]);
 
     const table = useReactTable({
         data: documents,
