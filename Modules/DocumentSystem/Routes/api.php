@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use Modules\DocumentSystem\Http\Controllers\Api\DocumentApiController;
 use Modules\DocumentSystem\Http\Controllers\Api\PermissionApiController;
 use Modules\DocumentSystem\Http\Controllers\Api\MasterDataApiController;
+use Modules\DocumentSystem\Http\Controllers\Api\JsaApiController;
 use Modules\DocumentSystem\Http\Controllers\GeneralController;
 
 Route::middleware(['web'])->prefix('document-system')->group(function () {
@@ -34,10 +35,10 @@ Route::middleware(['web'])->prefix('document-system')->group(function () {
     Route::get('/mappings', [MasterDataApiController::class, 'getMappings']);
 
     // JSA API Actions
-    Route::get('/jsa', [\Modules\DocumentSystem\Http\Controllers\JsaController::class, 'index']);
-    Route::post('/jsa', [\Modules\DocumentSystem\Http\Controllers\JsaController::class, 'store']);
-    Route::post('/jsa/{id}', [\Modules\DocumentSystem\Http\Controllers\JsaController::class, 'update']);
-    Route::delete('/jsa/{id}', [\Modules\DocumentSystem\Http\Controllers\JsaController::class, 'destroy']);
+    Route::get('/jsa', [JsaApiController::class, 'index']);
+    Route::post('/jsa', [JsaApiController::class, 'store']);
+    Route::post('/jsa/{id}', [JsaApiController::class, 'update']);
+    Route::delete('/jsa/{id}', [JsaApiController::class, 'destroy']);
 
     // PTW API Actions
     Route::get('/ptw', [\Modules\DocumentSystem\Http\Controllers\PtwController::class, 'index']);

@@ -20,6 +20,8 @@ Route::middleware(['web', 'auth'])->prefix('document-system')->group(function ()
     Route::get('/obsolete', [DocumentSystemController::class, 'obsolete'])->name('doc.obsolete');
     Route::get('/approval', [DocumentSystemController::class, 'approval'])->name('doc.approval');
     Route::get('/jsa', [DocumentSystemController::class, 'jsa'])->name('doc.jsa');
+    Route::get('/jsa/create', [DocumentSystemController::class, 'jsaCreate'])->name('doc.jsa.create');
+    Route::get('/jsa/edit/{id}', [DocumentSystemController::class, 'jsaEdit'])->name('doc.jsa.edit');
     Route::get('/ptw', [DocumentSystemController::class, 'ptw'])->name('doc.ptw');
     Route::get('/master', [DocumentSystemController::class, 'master'])->name('doc.master');
 });

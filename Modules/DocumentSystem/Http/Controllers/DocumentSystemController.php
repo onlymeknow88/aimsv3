@@ -147,6 +147,25 @@ class DocumentSystemController extends Controller
     }
 
     /**
+     * Create JSA page.
+     */
+    public function jsaCreate()
+    {
+        return inertia('DocumentSystem/Jsa/Create');
+    }
+
+    /**
+     * Edit JSA page.
+     */
+    public function jsaEdit($id)
+    {
+        $document = JsaDocument::with(['user', 'parent'])->findOrFail($id);
+        return inertia('DocumentSystem/Jsa/Create', [
+            'document' => $document
+        ]);
+    }
+
+    /**
      * PTW Permit listing.
      */
     public function ptw()
