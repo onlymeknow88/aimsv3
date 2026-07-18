@@ -97,7 +97,7 @@ class JsaApiController extends Controller
                         'document_id' => $doc->id,
                         'email' => $email,
                         'user_id' => $userObj ? $userObj->id : null,
-                        'type' => 'invited',
+                        'type' => 1,
                         'is_notify_email' => true,
                     ]);
                 }
@@ -155,7 +155,7 @@ class JsaApiController extends Controller
                         'document_id' => $doc->id,
                         'email' => $email,
                         'user_id' => $userObj ? $userObj->id : null,
-                        'type' => 'invited',
+                        'type' => 1,
                         'is_notify_email' => true,
                     ]);
                 }
