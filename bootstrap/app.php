@@ -21,7 +21,14 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'module.permission' => \App\Http\Middleware\CheckModulePermission::class,
+            'admin.auth' => \App\Http\Middleware\AdminMiddleware::class,
+            'admin.session' => \App\Http\Middleware\SetAdminSessionName::class,
         ]);
+
+        $middleware->prependToPriorityList(
+            \Illuminate\Session\Middleware\StartSession::class,
+            \App\Http\Middleware\SetAdminSessionName::class
+        );
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

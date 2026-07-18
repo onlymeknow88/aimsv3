@@ -11,7 +11,7 @@ class AimsMenu extends Model
 
     protected $table = 'aims_menus';
 
-    protected $fillable = ['module_id', 'name', 'slug'];
+    protected $fillable = ['module_id', 'parent_id', 'order_by', 'name', 'slug'];
 
     public function module()
     {
@@ -21,5 +21,15 @@ class AimsMenu extends Model
     public function permissions()
     {
         return $this->hasMany(AimsPermission::class, 'menu_id');
+    }
+
+    public function parent()
+    {
+        return $this->belongsTo(AimsMenu::class, 'parent_id');
+    }
+
+    public function children()
+    {
+        return $this->hasMany(AimsMenu::class, 'parent_id');
     }
 }

@@ -19,7 +19,7 @@ class CheckModulePermission
      */
     public function handle(Request $request, Closure $next, string $moduleSlug, ?string $permissionType = 'can_view', ?string $menuSlug = null): Response
     {
-        $user = Auth::user();
+        $user = $request->user() ?? Auth::guard('admin')->user() ?? Auth::guard('web')->user();
 
         // 1. Check if user is authenticated
         if (!$user) {

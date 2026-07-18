@@ -103,17 +103,24 @@ export default function JsaTable({ documents, onOpenDrawer, loading = false }) {
             id: 'status',
             header: 'Status',
             cell: info => {
-                const isActive = String(info.getValue()) === '5';
+                const STATUS_MAP = {
+                    '1': { bg: 'rgba(99,102,241,0.1)',  color: '#6366F1', label: 'DRAFT'          },
+                    '2': { bg: 'rgba(245,158,11,0.1)',  color: '#F59E0B', label: 'PENDING REVIEW'  },
+                    '3': { bg: 'rgba(239,68,68,0.1)',   color: '#EF4444', label: 'REJECTED'        },
+                    '5': { bg: 'rgba(16,185,129,0.1)',  color: '#10B981', label: 'ACTIVE'          },
+                };
+                const cfg = STATUS_MAP[String(info.getValue())] || STATUS_MAP['1'];
                 return (
                     <span style={{
                         fontSize: '9px',
                         fontWeight: 700,
-                        backgroundColor: isActive ? 'rgba(16, 185, 129, 0.1)' : 'rgba(99, 102, 241, 0.1)',
-                        color: isActive ? '#10B981' : '#6366F1',
+                        backgroundColor: cfg.bg,
+                        color: cfg.color,
                         padding: '2px 8px',
-                        borderRadius: '10px'
+                        borderRadius: '10px',
+                        whiteSpace: 'nowrap'
                     }}>
-                        {isActive ? 'ACTIVE' : 'DRAFT'}
+                        {cfg.label}
                     </span>
                 );
             }

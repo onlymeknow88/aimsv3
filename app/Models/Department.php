@@ -12,11 +12,17 @@ class Department extends Model
     use HasFactory, HasUuids, SoftDeletes;
 
     protected $fillable = [
+        'company_id',
         'head_id',
         'code',
         'document_code',
         'name',
     ];
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class, 'company_id');
+    }
 
     public function head()
     {

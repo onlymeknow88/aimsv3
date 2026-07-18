@@ -15,6 +15,7 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             AdminUserSeeder::class,
+            AimsMenuSeeder::class,
             DocumentPermissionSeederTableSeeder::class,
             DummyDataSeeder::class,
         ]);

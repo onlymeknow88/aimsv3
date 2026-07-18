@@ -9,6 +9,12 @@ class JsaDocument extends Model
 {
     use HasUuids;
 
+    // Status Constants
+    const DRAFT          = '1';
+    const PENDING_REVIEW = '2';
+    const REJECTED       = '3';
+    const ACTIVE         = '5';
+
     protected $table = 'jsa_documents';
 
     protected $fillable = [
@@ -16,6 +22,7 @@ class JsaDocument extends Model
         'company_id',
         'department_code_id',
         'user_id',
+        'created_by',
         'status',
         'title',
         'description',
@@ -30,11 +37,17 @@ class JsaDocument extends Model
     protected $casts = [
         'doc_created' => 'datetime',
         'is_obsolate' => 'boolean',
+        'status'      => 'string',
     ];
 
     public function user()
     {
         return $this->belongsTo(\App\Models\User::class, 'user_id');
+    }
+
+    public function creator()
+    {
+        return $this->belongsTo(\App\Models\User::class, 'created_by');
     }
 
     public function parent()
@@ -54,7 +67,7 @@ class JsaDocument extends Model
 
     public function activities()
     {
-        return $this->hasMany(JsaDocumentActivity::class, 'document_id');
+        return $this->hasMany(JsaDocumentActivity::class, 'document_id')->latest();
     }
 
     public function people()

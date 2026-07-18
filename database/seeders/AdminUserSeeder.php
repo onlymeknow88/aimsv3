@@ -13,10 +13,10 @@ class AdminUserSeeder extends Seeder
     public function run(): void
     {
         \App\Models\User::updateOrCreate(
-            ['email' => 'superadmin@aims.id'],
+            ['email' => env('SUPERADMIN_EMAIL', 'superadmin@aims.id')],
             [
-                'name'      => 'Super Administrator',
-                'password'  => bcrypt('Admin@123!'),
+                'name'      => env('SUPERADMIN_NAME', 'Super Administrator'),
+                'password'  => bcrypt(env('SUPERADMIN_PASSWORD', 'Admin@123!')),
                 'role'      => 'super_admin',
                 'is_active' => true,
             ]

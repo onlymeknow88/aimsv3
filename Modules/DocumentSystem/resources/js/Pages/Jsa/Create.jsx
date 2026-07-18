@@ -46,10 +46,10 @@ export default function Create({ document = null }) {
     const handleJsaSave = async (statusType) => {
         const formData = new FormData();
         formData.append('title', title);
-        formData.append('work_type', title); // Map work_type to title/work_type
+        formData.append('work_type', title);
         formData.append('location', detailLocation);
         formData.append('document_number', documentNumber);
-        formData.append('status', statusType === 'draft' ? '1' : '5'); // 1 = Draft, 5 = Active
+        formData.append('status', '1'); // Always save as Draft first
         formData.append('description', description);
         formData.append('doc_created', docCreated);
         formData.append('department_id', department);
@@ -68,15 +68,25 @@ export default function Create({ document = null }) {
                 ? `/api/document-system/jsa/${document.id}` 
                 : '/api/document-system/jsa';
             
-            await axios.post(url, formData, {
+            const res = await axios.post(url, formData, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
+
+            // If submit mode: auto-submit for review in one step, then go to list
+            if (statusType === 'submit') {
+                const docId = res.data?.result?.id || document?.id;
+                if (docId) {
+                    await axios.post(`/api/document-system/jsa/${docId}/submit-review`);
+                }
+            }
+
             window.location.href = '/document-system/jsa';
         } catch (err) {
             console.error('Failed to save JSA', err);
             alert('Gagal menyimpan JSA.');
         }
     };
+
 
     const handleDeleteAttachment = async (id) => {
         if (confirm('Apakah Anda yakin ingin menghapus lampiran ini?')) {
@@ -271,8 +281,8 @@ export default function Create({ document = null }) {
                         <button onClick={() => triggerSave('draft')} style={{ height: '40px', padding: '0 20px', backgroundColor: '#e2e8f0', border: 'none', borderRadius: '8px', color: 'var(--text-primary)', fontSize: '12px', fontWeight: 600, cursor: 'pointer' }}>
                             Save as Draft
                         </button>
-                        <button onClick={() => triggerSave('submit')} style={{ height: '40px', padding: '0 20px', backgroundColor: 'var(--primary)', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '12px', fontWeight: 600, cursor: 'pointer' }}>
-                            Submit JSA
+                        <button onClick={() => triggerSave('submit')} style={{ height: '40px', padding: '0 20px', backgroundColor: 'var(--primary)', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '12px', fontWeight: 600, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                            Submit for Review
                         </button>
                     </div>
 
@@ -282,7 +292,7 @@ export default function Create({ document = null }) {
             <ConfirmationModal 
                 isOpen={confirmModal.isOpen} 
                 type={confirmModal.type} 
-                onClose={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))} 
+                onCancel={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))} 
                 onConfirm={handleConfirmSave} 
             />
 

@@ -14,8 +14,9 @@ class JsaDocumentActivity extends Model
     protected $fillable = [
         'document_id',
         'user_id',
-        'activity',
-        'notes',
+        'status_document',
+        'description',
+        'attachments',
     ];
 
     public function jsaDocument()

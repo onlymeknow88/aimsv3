@@ -18,16 +18,22 @@ class JsaApiController extends Controller
      */
     public function index(Request $request)
     {
-        $isObsolete = $request->boolean('is_obsolete', false);
-        $isDraft = $request->boolean('is_draft', false);
+        $query = JsaDocument::with(['activities', 'people', 'attachments', 'company', 'department', 'user', 'creator'])
+            ->where('is_obsolate', false);
 
-        $query = JsaDocument::with(['activities', 'people', 'attachments', 'company', 'department', 'user'])
-            ->where('is_obsolate', $isObsolete);
-
-        if ($isDraft) {
-            $query->where('status', '1'); // 1 = Draft
+        if ($request->boolean('is_obsolete', false)) {
+            // Obsolete archive
+            $query = JsaDocument::with(['activities', 'people', 'attachments', 'company', 'department', 'user', 'creator'])
+                ->where('is_obsolate', true);
+        } elseif ($request->boolean('is_draft', false)) {
+            // Draft only
+            $query->where('status', JsaDocument::DRAFT);
+        } elseif ($request->has('status')) {
+            // Specific status filter (e.g. status=2 for Pending Review)
+            $query->where('status', $request->status);
         } else {
-            $query->where('status', '5'); // 5 = Active
+            // Default: Active JSA — all non-draft, non-obsolete
+            $query->where('status', '!=', JsaDocument::DRAFT);
         }
 
         $documents = $query->latest()->get();
@@ -211,11 +217,93 @@ class JsaApiController extends Controller
      */
     public function show(string $id)
     {
-        $document = JsaDocument::with(['company', 'department', 'user', 'parent', 'attachments', 'people.user', 'activities.user'])
+        $document = JsaDocument::with(['company', 'department', 'user', 'creator', 'parent', 'attachments', 'people.user', 'activities.user'])
             ->findOrFail($id);
 
         return ResponseFormatter::success([
             'document' => $document,
         ], 'JSA document retrieved successfully');
     }
+
+    /**
+     * Submit JSA for review (DRAFT → PENDING_REVIEW)
+     */
+    public function submitForReview(string $id)
+    {
+        $doc = JsaDocument::findOrFail($id);
+
+        if ((string)$doc->status !== JsaDocument::DRAFT) {
+            return ResponseFormatter::error('Dokumen bukan berstatus Draft.', 422);
+        }
+
+        $user = auth()->user() ?? auth('admin')->user() ?? auth('web')->user();
+
+        $doc->update(['status' => JsaDocument::PENDING_REVIEW]);
+
+        JsaDocumentActivity::create([
+            'document_id'     => $doc->id,
+            'user_id'         => $user?->id,
+            'status_document' => 'Submitted for Review',
+            'description'     => 'Dokumen dikirim untuk direview.',
+        ]);
+
+        return ResponseFormatter::success($doc, 'Dokumen berhasil dikirim untuk review.');
+    }
+
+    /**
+     * Approve JSA (PENDING_REVIEW → ACTIVE)
+     */
+    public function approve(Request $request, string $id)
+    {
+        $doc = JsaDocument::findOrFail($id);
+
+        if ((string)$doc->status !== JsaDocument::PENDING_REVIEW) {
+            return ResponseFormatter::error('Dokumen bukan berstatus Pending Review.', 422);
+        }
+
+        $user = auth()->user() ?? auth('admin')->user() ?? auth('web')->user();
+
+        $doc->update(['status' => JsaDocument::ACTIVE]);
+
+        JsaDocumentActivity::create([
+            'document_id'     => $doc->id,
+            'user_id'         => $user?->id,
+            'status_document' => 'Document Approved',
+            'description'     => $request->input('notes', 'Dokumen telah disetujui dan diaktifkan.'),
+        ]);
+
+        return ResponseFormatter::success($doc, 'Dokumen berhasil disetujui.');
+    }
+
+    /**
+     * Reject JSA (PENDING_REVIEW → DRAFT)
+     */
+    public function reject(Request $request, string $id)
+    {
+        $request->validate([
+            'description' => 'required|string|max:500',
+        ], [
+            'description.required' => 'Alasan penolakan wajib diisi.',
+        ]);
+
+        $doc = JsaDocument::findOrFail($id);
+
+        if ((string)$doc->status !== JsaDocument::PENDING_REVIEW) {
+            return ResponseFormatter::error('Dokumen bukan berstatus Pending Review.', 422);
+        }
+
+        $user = auth()->user() ?? auth('admin')->user() ?? auth('web')->user();
+
+        $doc->update(['status' => JsaDocument::DRAFT]);
+
+        JsaDocumentActivity::create([
+            'document_id'     => $doc->id,
+            'user_id'         => $user?->id,
+            'status_document' => 'Document Rejected',
+            'description'     => $request->input('description'),
+        ]);
+
+        return ResponseFormatter::success($doc, 'Dokumen dikembalikan ke draft.');
+    }
 }
+
