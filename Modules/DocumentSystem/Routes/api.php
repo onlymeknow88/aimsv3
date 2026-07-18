@@ -39,6 +39,7 @@ Route::middleware(['web'])->prefix('document-system')->group(function () {
     Route::post('/jsa', [JsaApiController::class, 'store']);
     Route::post('/jsa/{id}', [JsaApiController::class, 'update']);
     Route::delete('/jsa/{id}', [JsaApiController::class, 'destroy']);
+    Route::delete('/jsa/attachments/{id}', [JsaApiController::class, 'deleteAttachment']);
 
     // PTW API Actions
     Route::get('/ptw', [\Modules\DocumentSystem\Http\Controllers\PtwController::class, 'index']);

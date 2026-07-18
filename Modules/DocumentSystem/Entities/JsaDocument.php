@@ -39,4 +39,19 @@ class JsaDocument extends Model
     {
         return $this->belongsTo(JsaDocument::class, 'parent_document');
     }
+
+    public function activities()
+    {
+        return $this->hasMany(JsaDocumentActivity::class, 'jsa_document_id');
+    }
+
+    public function people()
+    {
+        return $this->hasMany(JsaDocumentPeople::class, 'jsa_document_id');
+    }
+
+    public function attachments()
+    {
+        return $this->hasMany(JsaDocumentAttachment::class, 'jsa_document_id');
+    }
 }

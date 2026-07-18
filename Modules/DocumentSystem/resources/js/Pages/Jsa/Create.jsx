@@ -1,17 +1,19 @@
 import React, { useState } from 'react';
 import { Head } from '@inertiajs/react';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, X, FileText } from 'lucide-react';
 import axios from 'axios';
 import SearchableSelect from '../Maker/Partials/Components/SearchableSelect';
 import SummernoteEditor from '../Maker/Partials/Components/SummernoteEditor';
-import FileDropzone from '../Maker/Partials/Components/FileDropzone';
+import FileDropzone from '@/Components/FileDropzone';
 import InvitedPeopleInput from '../Maker/Partials/Components/InvitedPeopleInput';
-import ConfirmationModal from '../Maker/Partials/Components/ConfirmationModal';
+import ConfirmationModal from '@/Components/ConfirmationModal';
 import useMaker from '../Maker/Hooks/useMaker';
+import BlobPreviewModal from '@/Components/BlobPreviewModal';
 
 export default function Create({ document = null }) {
     const isEdit = !!document;
     const [confirmModal, setConfirmModal] = useState({ isOpen: false, type: 'draft' });
+    const [previewAttachment, setPreviewAttachment] = useState(null);
 
     const {
         loading,
@@ -34,17 +36,38 @@ export default function Create({ document = null }) {
         formData.append('work_type', title); // Map work_type to title/work_type
         formData.append('location', 'Office'); // Default/placeholder location
         formData.append('status', statusType === 'draft' ? '1' : '5'); // 1 = Draft, 5 = Active
+        formData.append('description', description);
+        formData.append('doc_created', docCreated);
+        formData.append('department_id', department);
+
+        files.forEach((file, index) => {
+            formData.append(`files[${index}]`, file);
+        });
 
         try {
             const url = isEdit 
                 ? `/api/document-system/jsa/${document.id}` 
                 : '/api/document-system/jsa';
             
-            await axios.post(url, formData);
+            await axios.post(url, formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
             window.location.href = '/document-system/jsa';
         } catch (err) {
             console.error('Failed to save JSA', err);
             alert('Gagal menyimpan JSA.');
+        }
+    };
+
+    const handleDeleteAttachment = async (id) => {
+        if (confirm('Apakah Anda yakin ingin menghapus lampiran ini?')) {
+            try {
+                await axios.delete(`/api/document-system/jsa/attachments/${id}`);
+                window.location.reload();
+            } catch (err) {
+                console.error('Failed to delete JSA attachment', err);
+                alert('Gagal menghapus lampiran.');
+            }
         }
     };
 
@@ -145,7 +168,54 @@ export default function Create({ document = null }) {
                         <h3 style={{ fontSize: '14px', fontWeight: 700, color: 'var(--primary)', marginBottom: '16px', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px' }}>
                             Attachment
                         </h3>
-                        <FileDropzone files={files} setFiles={setFiles} />
+                        <FileDropzone onFileDrop={setFiles} />
+                        {files.length > 0 && (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '8px' }}>
+                                <label style={{ fontSize: '10.5px', fontWeight: 700, color: 'var(--text-secondary)' }}>FILE YANG AKAN DI-UPLOAD</label>
+                                {files.map((file, idx) => (
+                                    <div key={idx} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', border: '1px dashed var(--success)', borderRadius: '6px', backgroundColor: 'rgba(47, 191, 113, 0.03)' }}>
+                                        <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--success)' }}>
+                                            ✓ {file.name}
+                                        </span>
+                                        <button 
+                                            type="button" 
+                                            onClick={() => setFiles(prev => prev.filter((_, i) => i !== idx))}
+                                            style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--danger)', padding: '4px' }}
+                                            title="Batalkan Upload"
+                                        >
+                                            <X size={14} />
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                        {document?.attachments && document.attachments.length > 0 && (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '12px' }}>
+                                <label style={{ fontSize: '10.5px', fontWeight: 700, color: 'var(--text-secondary)' }}>FILE LAMPIRAN SAAT INI</label>
+                                {document.attachments.map(att => {
+                                    const fileName = att.file_name || att.file_path?.split('/').pop() || 'Unnamed File';
+                                    return (
+                                        <div key={att.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', border: '1px solid var(--border-color)', borderRadius: '6px', backgroundColor: '#f8fafc' }}>
+                                            <span
+                                                onClick={() => setPreviewAttachment({ ...att, file_name: fileName, type: 'jsa' })}
+                                                style={{ fontSize: '11px', fontWeight: 600, color: 'var(--primary)', cursor: 'pointer', textDecoration: 'underline' }}
+                                                title="Klik untuk preview lampiran"
+                                            >
+                                                {fileName}
+                                            </span>
+                                            <button 
+                                                type="button" 
+                                                onClick={() => handleDeleteAttachment(att.id)}
+                                                style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--danger)', padding: '4px' }}
+                                                title="Hapus Lampiran"
+                                            >
+                                                <X size={14} />
+                                            </button>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
                     </div>
 
                     {/* Actions */}
@@ -170,6 +240,13 @@ export default function Create({ document = null }) {
                 onClose={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))} 
                 onConfirm={handleConfirmSave} 
             />
+
+            {previewAttachment && (
+                <BlobPreviewModal
+                    attachment={previewAttachment}
+                    onClose={() => setPreviewAttachment(null)}
+                />
+            )}
         </div>
     );
 }

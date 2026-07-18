@@ -5,9 +5,11 @@ export default function BlobPreviewModal({ attachment, onClose }) {
     if (!attachment) return null;
 
     const isActivity = attachment.type === 'activity';
-    const previewUrl = `/api/document-system/attachments/${attachment.id}/preview${isActivity ? '?type=activity' : ''}`;
-    const downloadUrl = `/api/document-system/attachments/${attachment.id}/download${isActivity ? '?type=activity' : ''}`;
-    const fileExtension = (attachment.file_type || (attachment.name ? attachment.name.split('.').pop() : '') || '').toLowerCase();
+    const isJsa = attachment.type === 'jsa';
+    const typeParam = isActivity ? '?type=activity' : (isJsa ? '?type=jsa' : '');
+    const previewUrl = `/api/document-system/attachments/${attachment.id}/preview${typeParam}`;
+    const downloadUrl = `/api/document-system/attachments/${attachment.id}/download${typeParam}`;
+    const fileExtension = (attachment.file_type || (attachment.name ? attachment.name.split('.').pop() : '') || (attachment.file_name ? attachment.file_name.split('.').pop() : '') || (attachment.file_path ? attachment.file_path.split('.').pop() : '') || '').toLowerCase();
     const isImage = ['png', 'jpg', 'jpeg', 'gif'].includes(fileExtension);
     const isPdf = fileExtension === 'pdf';
 

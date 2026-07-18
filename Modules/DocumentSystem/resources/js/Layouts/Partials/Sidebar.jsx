@@ -152,10 +152,11 @@ export default function Sidebar({
                             {openJsa ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
                         </button>
 
-                        {openJsa && (
+                         {openJsa && (
                             <ul style={{ listStyle: 'none', margin: '4px 0 0 0', paddingLeft: '28px' }}>
-                                <li><a href="/document-system/jsa" style={{ display: 'block', padding: '6px 12px', fontSize: '12px', color: currentPath === '/document-system/jsa' && !currentPath.includes('/obsolete') ? '#fff' : '#a3b1c6', textDecoration: 'none' }} className="hover-link">Active JSA</a></li>
+                                <li><a href="/document-system/jsa" style={{ display: 'block', padding: '6px 12px', fontSize: '12px', color: currentPath === '/document-system/jsa' ? '#fff' : '#a3b1c6', textDecoration: 'none' }} className="hover-link">Active JSA</a></li>
                                 <li><a href="/document-system/jsa/obsolete" style={{ display: 'block', padding: '6px 12px', fontSize: '12px', color: currentPath.includes('/jsa/obsolete') ? '#fff' : '#a3b1c6', textDecoration: 'none' }} className="hover-link">Obsolete JSA</a></li>
+                                <li><a href="/document-system/jsa/draft" style={{ display: 'block', padding: '6px 12px', fontSize: '12px', color: currentPath.includes('/jsa/draft') ? '#fff' : '#a3b1c6', textDecoration: 'none' }} className="hover-link">Draft JSA</a></li>
                             </ul>
                         )}
                     </li>

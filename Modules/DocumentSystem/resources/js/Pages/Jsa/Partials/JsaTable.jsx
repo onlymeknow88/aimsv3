@@ -1,8 +1,12 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useReactTable, getCoreRowModel, getFilteredRowModel, getPaginationRowModel, flexRender } from '@tanstack/react-table';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
+import { FileText } from 'lucide-react';
+import BlobPreviewModal from '@/Components/BlobPreviewModal';
 
 export default function JsaTable({ documents, onOpenDrawer, loading = false }) {
+    const [previewAttachment, setPreviewAttachment] = useState(null);
+
     const columns = useMemo(() => [
         {
             accessorKey: 'title',
@@ -43,6 +47,54 @@ export default function JsaTable({ documents, onOpenDrawer, loading = false }) {
             }
         },
         {
+            id: 'attachment',
+            header: 'Attachment',
+            cell: ({ row }) => {
+                const attachments = row.original.attachments || [];
+
+                if (attachments.length === 0) {
+                    return <span style={{ color: 'var(--text-muted)', fontSize: '11px' }}>—</span>;
+                }
+
+                return (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        {attachments.map(att => {
+                            const fileName = att.file_name || att.file_path?.split('/').pop() || 'File';
+                            return (
+                                <span
+                                    key={att.id}
+                                    onClick={() => setPreviewAttachment({
+                                        ...att,
+                                        file_name: fileName,
+                                        type: 'jsa'
+                                    })}
+                                    style={{
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        gap: '4px',
+                                        fontSize: '11px',
+                                        fontWeight: 600,
+                                        color: 'var(--primary)',
+                                        textDecoration: 'underline',
+                                        textDecorationStyle: 'dotted',
+                                        cursor: 'pointer',
+                                        maxWidth: '200px',
+                                        overflow: 'hidden',
+                                        textOverflow: 'ellipsis',
+                                        whiteSpace: 'nowrap'
+                                    }}
+                                    title={`Klik untuk preview: ${fileName}`}
+                                >
+                                    <FileText size={11} style={{ flexShrink: 0 }} />
+                                    {fileName}
+                                </span>
+                            );
+                        })}
+                    </div>
+                );
+            }
+        },
+        {
             id: 'actions',
             header: 'Aksi',
             cell: ({ row }) => (
@@ -63,7 +115,7 @@ export default function JsaTable({ documents, onOpenDrawer, loading = false }) {
                 </button>
             )
         }
-    ], [onOpenDrawer]);
+    ], [onOpenDrawer, previewAttachment]);
 
     const table = useReactTable({
         data: documents,
@@ -77,43 +129,52 @@ export default function JsaTable({ documents, onOpenDrawer, loading = false }) {
     const colsCount = columns.length;
 
     return (
-        <Table style={{ fontSize: '12px' }}>
-            <TableHeader>
-                {table.getHeaderGroups().map(hg => (
-                    <TableRow key={hg.id}>
-                        {hg.headers.map(h => (
-                            <TableHead key={h.id} style={{ fontWeight: 700, color: 'var(--text-secondary)' }}>
-                                {flexRender(h.column.columnDef.header, h.getContext())}
-                            </TableHead>
-                        ))}
-                    </TableRow>
-                ))}
-            </TableHeader>
-            <TableBody>
-                {loading ? (
-                    <TableRow>
-                        <TableCell colSpan={colsCount} style={{ textAlign: 'center', padding: '40px 24px', color: 'var(--text-secondary)' }}>
-                            Memuat data JSA...
-                        </TableCell>
-                    </TableRow>
-                ) : table.getRowModel().rows.length > 0 ? (
-                    table.getRowModel().rows.map(row => (
-                        <TableRow key={row.id}>
-                            {row.getVisibleCells().map(cell => (
-                                <TableCell key={cell.id}>
-                                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                                </TableCell>
+        <>
+            <Table style={{ fontSize: '12px' }}>
+                <TableHeader>
+                    {table.getHeaderGroups().map(hg => (
+                        <TableRow key={hg.id}>
+                            {hg.headers.map(h => (
+                                <TableHead key={h.id} style={{ fontWeight: 700, color: 'var(--text-secondary)' }}>
+                                    {flexRender(h.column.columnDef.header, h.getContext())}
+                                </TableHead>
                             ))}
                         </TableRow>
-                    ))
-                ) : (
-                    <TableRow>
-                        <TableCell colSpan={colsCount} style={{ padding: '32px', textAlign: 'center', color: 'var(--text-muted)' }}>
-                            Data JSA kosong.
-                        </TableCell>
-                    </TableRow>
-                )}
-            </TableBody>
-        </Table>
+                    ))}
+                </TableHeader>
+                <TableBody>
+                    {loading ? (
+                        <TableRow>
+                            <TableCell colSpan={colsCount} style={{ textAlign: 'center', padding: '40px 24px', color: 'var(--text-secondary)' }}>
+                                Memuat data JSA...
+                            </TableCell>
+                        </TableRow>
+                    ) : table.getRowModel().rows.length > 0 ? (
+                        table.getRowModel().rows.map(row => (
+                            <TableRow key={row.id}>
+                                {row.getVisibleCells().map(cell => (
+                                    <TableCell key={cell.id}>
+                                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                                    </TableCell>
+                                ))}
+                            </TableRow>
+                        ))
+                    ) : (
+                        <TableRow>
+                            <TableCell colSpan={colsCount} style={{ padding: '32px', textAlign: 'center', color: 'var(--text-muted)' }}>
+                                Data JSA kosong.
+                            </TableCell>
+                        </TableRow>
+                    )}
+                </TableBody>
+            </Table>
+
+            {previewAttachment && (
+                <BlobPreviewModal
+                    attachment={previewAttachment}
+                    onClose={() => setPreviewAttachment(null)}
+                />
+            )}
+        </>
     );
 }

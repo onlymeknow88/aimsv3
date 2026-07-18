@@ -9,14 +9,13 @@ class JsaDocumentAttachment extends Model
 {
     use HasUuids;
 
-    protected $table = 'document_system_jsa_attachments';
+    protected $table = 'jsa_document_attachments';
 
     protected $fillable = [
         'jsa_document_id',
-        'file_name',
         'file_path',
-        'file_size',
-        'mime_type',
+        'blob_url',
+        'blob_respon',
     ];
 
     public function jsaDocument()

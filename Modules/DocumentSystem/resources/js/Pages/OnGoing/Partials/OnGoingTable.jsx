@@ -3,7 +3,7 @@ import { useReactTable, getCoreRowModel, getFilteredRowModel, getPaginationRowMo
 import { FileText } from 'lucide-react';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
 import { Checkbox } from '@/components/ui/checkbox';
-import BlobPreviewModal from '../../Maker/Partials/Components/BlobPreviewModal';
+import BlobPreviewModal from '@/Components/BlobPreviewModal';
 
 export default function OnGoingTable({ documents, selectedIds = [], onSelectionChange, visibleColumns, loading = false }) {
     const [previewAttachment, setPreviewAttachment] = useState(null);

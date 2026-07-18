@@ -6,22 +6,40 @@ import useJsa from './Hooks/useJsa';
 
 import JsaTable from './Partials/JsaTable';
 
-export default function Index({ isObsolete = false }) {
-    const { formModalOpen, drawerOpen, selectedJsa, loading, openForm, closeForm, openDrawer, closeDrawer, createJsa, docs, fetching } = useJsa(isObsolete);
+export default function Index({ isObsolete = false, isDraft = false }) {
+    const { formModalOpen, drawerOpen, selectedJsa, loading, openForm, closeForm, openDrawer, closeDrawer, createJsa, docs, fetching } = useJsa(isObsolete, isDraft);
+
+    const getPageTitle = () => {
+        if (isObsolete) return "Obsolete JSA Archive";
+        if (isDraft) return "Draft Job Safety Analysis";
+        return "Job Safety Analysis";
+    };
+
+    const getHeadingText = () => {
+        if (isObsolete) return "Obsolete JSA Archive";
+        if (isDraft) return "Draft Job Safety Analysis (JSA)";
+        return "Job Safety Analysis (JSA)";
+    };
+
+    const getDescriptionText = () => {
+        if (isObsolete) return "Arsip berkas JSA lama yang sudah tidak berlaku.";
+        if (isDraft) return "Daftar draf analisis bahaya yang sedang dikerjakan.";
+        return "Analisis bahaya dan tindakan keselamatan kerja.";
+    };
 
     return (
         <DocumentSystemLayout>
-            <Head title={isObsolete ? "Obsolete JSA Archive" : "Job Safety Analysis"} />
+            <Head title={getPageTitle()} />
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
                 <div>
                     <h1 style={{ fontSize: '20px', fontWeight: 800, color: 'var(--primary)', margin: 0 }}>
-                        {isObsolete ? 'Obsolete JSA Archive' : 'Job Safety Analysis (JSA)'}
+                        {getHeadingText()}
                     </h1>
                     <p style={{ color: 'var(--text-secondary)', fontSize: '11px', marginTop: '4px' }}>
-                        {isObsolete ? 'Arsip berkas JSA lama yang sudah tidak berlaku.' : 'Analisis bahaya dan tindakan keselamatan kerja.'}
+                        {getDescriptionText()}
                     </p>
                 </div>
-                {!isObsolete && (
+                {!isObsolete && !isDraft && (
                     <button onClick={() => window.location.href = '/document-system/jsa/create'} style={{ display: 'flex', alignItems: 'center', gap: '6px', backgroundColor: 'var(--primary)', color: '#fff', border: 'none', borderRadius: '6px', padding: '8px 16px', fontSize: '11px', fontWeight: 700, cursor: 'pointer' }}>
                         + Buat JSA
                     </button>

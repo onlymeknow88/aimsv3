@@ -34,7 +34,7 @@ class JsaController extends Controller
      */
     public function edit($id)
     {
-        $document = JsaDocument::with(['user', 'parent'])->findOrFail($id);
+        $document = JsaDocument::with(['user', 'parent', 'attachments'])->findOrFail($id);
         return inertia('DocumentSystem/Jsa/Create', [
             'document' => $document
         ]);
@@ -48,6 +48,17 @@ class JsaController extends Controller
         return inertia('DocumentSystem/Jsa/Index', [
             'documents' => [],
             'isObsolete' => true
+        ]);
+    }
+
+    /**
+     * Draft JSA page.
+     */
+    public function draft()
+    {
+        return inertia('DocumentSystem/Jsa/Index', [
+            'documents' => [],
+            'isDraft' => true
         ]);
     }
 }

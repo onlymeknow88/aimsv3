@@ -3,7 +3,7 @@ import { Head } from '@inertiajs/react';
 import { ArrowLeft, User, Building, MapPin, Calendar, Layers, Eye, Download, Info, Users, Clock, Edit, FileText } from 'lucide-react';
 import StatusTimeline from '../OnGoing/Partials/Components/StatusTimeline';
 import useDetail from './Hooks/useDetail';
-import BlobPreviewModal from './Partials/Components/BlobPreviewModal';
+import BlobPreviewModal from '@/Components/BlobPreviewModal';
 
 export default function Detail({ id }) {
     const [previewAttachment, setPreviewAttachment] = useState(null);

@@ -3,12 +3,12 @@ import { Head } from '@inertiajs/react';
 import { ArrowLeft, X } from 'lucide-react';
 import axios from 'axios';
 import InvitedPeopleInput from './Partials/Components/InvitedPeopleInput';
-import FileDropzone from './Partials/Components/FileDropzone';
+import FileDropzone from '@/Components/FileDropzone';
 import SearchableSelect from './Partials/Components/SearchableSelect';
 import SummernoteEditor from './Partials/Components/SummernoteEditor';
 import useMaker from './Hooks/useMaker';
-import BlobPreviewModal from './Partials/Components/BlobPreviewModal';
-import ConfirmationModal from './Partials/Components/ConfirmationModal';
+import BlobPreviewModal from '@/Components/BlobPreviewModal';
+import ConfirmationModal from '@/Components/ConfirmationModal';
 
 export default function Create({ document = null }) {
     const [existingAttachments, setExistingAttachments] = useState(document?.attachments || []);
