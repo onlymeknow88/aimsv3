@@ -58,31 +58,6 @@ export default function Sidebar({
             {/* Navigasi Modul */}
             <div style={{ flex: 1, padding: '16px 8px' }}>
                 <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
-                    {/* 1. Dashboard */}
-                    <li style={{ marginBottom: '4px' }}>
-                        <a
-                            href="/coe"
-                            style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '12px',
-                                padding: '10px 16px',
-                                borderRadius: '8px',
-                                fontSize: '13px',
-                                fontWeight: 500,
-                                textDecoration: 'none',
-                                color: currentPath === '/coe' ? '#fff' : '#a3b1c6',
-                                backgroundColor: currentPath === '/coe' ? 'var(--primary)' : 'transparent',
-                                transition: 'all 0.2s ease',
-                                whiteSpace: 'nowrap'
-                            }}
-                            className={currentPath !== '/coe' ? "hover-link" : ""}
-                        >
-                            <LayoutDashboard size={14} style={{ color: currentPath === '/coe' ? '#fff' : 'rgba(255,255,255,0.4)', flexShrink: 0 }} />
-                            Dashboard
-                        </a>
-                    </li>
-
                     {/* 2. Calendar */}
                     <li style={{ marginBottom: '4px' }}>
                         <a
@@ -110,6 +85,30 @@ export default function Sidebar({
 
                     {hasCoeAccess && (
                         <>
+                            {/* 1. Dashboard */}
+                            <li style={{ marginBottom: '4px' }}>
+                                <a
+                                    href="/coe"
+                                    style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '12px',
+                                        padding: '10px 16px',
+                                        borderRadius: '8px',
+                                        fontSize: '13px',
+                                        fontWeight: 500,
+                                        textDecoration: 'none',
+                                        color: currentPath === '/coe' ? '#fff' : '#a3b1c6',
+                                        backgroundColor: currentPath === '/coe' ? 'var(--primary)' : 'transparent',
+                                        transition: 'all 0.2s ease',
+                                        whiteSpace: 'nowrap'
+                                    }}
+                                    className={currentPath !== '/coe' ? "hover-link" : ""}
+                                >
+                                    <LayoutDashboard size={14} style={{ color: currentPath === '/coe' ? '#fff' : 'rgba(255,255,255,0.4)', flexShrink: 0 }} />
+                                    Dashboard
+                                </a>
+                            </li>
                             {/* 3. Event List */}
                             <li style={{ marginBottom: '4px' }}>
                                 <a

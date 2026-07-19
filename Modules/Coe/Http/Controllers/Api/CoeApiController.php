@@ -198,4 +198,58 @@ class CoeApiController extends Controller
         $sections = \App\Models\Section::select('id', 'name')->orderBy('name', 'asc')->get();
         return ResponseFormatter::success($sections, 'Sections retrieved successfully');
     }
+
+    /**
+     * Get dashboard stats and chart data.
+     */
+    public function getDashboardStats()
+    {
+        $year = now()->year;
+
+        $totalEvents = Event::count();
+        $completedEvents = Event::where('status', 'Completed')->count();
+        $upcomingEvents = Event::where('status', 'Scheduled')->where('start_date', '>=', now()->toDateString())->count();
+        $cancelledEvents = Event::where('status', 'Cancelled')->count();
+
+        // 1. Monthly Completed Events
+        $monthlyCompleted = Event::selectRaw('MONTH(start_date) as month, COUNT(*) as count')
+            ->where('status', 'Completed')
+            ->whereYear('start_date', $year)
+            ->groupBy('month')
+            ->orderBy('month', 'asc')
+            ->pluck('count', 'month')
+            ->all();
+
+        $chart1Labels = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"];
+        $chart1Data = [];
+        for ($m = 1; $m <= 12; $m++) {
+            $chart1Data[] = $monthlyCompleted[$m] ?? 0;
+        }
+
+        // 3. Events by Status
+        $statusCounts = Event::selectRaw('status, COUNT(*) as count')
+            ->groupBy('status')
+            ->pluck('count', 'status')
+            ->all();
+
+        $chart3Labels = array_keys($statusCounts);
+        $chart3Data = array_values($statusCounts);
+
+        return ResponseFormatter::success([
+            'kpis' => [
+                'total' => $totalEvents,
+                'completed' => $completedEvents,
+                'upcoming' => $upcomingEvents,
+                'cancelled' => $cancelledEvents,
+            ],
+            'chart1' => [
+                'labels' => $chart1Labels,
+                'data' => $chart1Data,
+            ],
+            'chart3' => [
+                'labels' => $chart3Labels,
+                'data' => $chart3Data,
+            ]
+        ], 'Dashboard statistics retrieved successfully');
+    }
 }

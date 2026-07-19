@@ -8,6 +8,14 @@ use Inertia\Inertia;
 class CoeController extends Controller
 {
     /**
+     * Render the dashboard Inertia page.
+     */
+    public function dashboardIndex()
+    {
+        return Inertia::render('Coe/Dashboard/Index');
+    }
+
+    /**
      * Render the categories Inertia page.
      */
     public function categoryIndex()

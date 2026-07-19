@@ -3,11 +3,12 @@
 use Illuminate\Support\Facades\Route;
 use Modules\Coe\Http\Controllers\Api\CoeApiController;
 
-// Public CoE API Routes (View events, categories, and sections)
+// Public CoE API Routes (View events, categories, sections, and dashboard stats)
 Route::middleware(['web'])->prefix('coe')->group(function () {
     Route::get('/categories', [CoeApiController::class, 'getCategories']);
     Route::get('/events', [CoeApiController::class, 'getEvents']);
     Route::get('/sections', [CoeApiController::class, 'getSections']);
+    Route::get('/dashboard-stats', [CoeApiController::class, 'getDashboardStats']);
 });
 
 // Protected CoE API Routes (CRUD actions)
