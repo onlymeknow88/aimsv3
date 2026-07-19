@@ -92,6 +92,7 @@ class JsaApiController extends Controller
             'revision'        => $request->revision ?? '0',
             'user_id'         => $userId,
             'created_by'      => $userId,
+            'area_manager_id' => $request->area_manager_id,
         ]);
 
         if ($request->has('invited_emails')) {
@@ -149,6 +150,7 @@ class JsaApiController extends Controller
             'revision'        => $request->revision ?? $doc->revision,
             'user_id'         => $doc->user_id ?? $userId,
             'created_by'      => $doc->created_by ?? $userId,
+            'area_manager_id' => $request->area_manager_id ?? $doc->area_manager_id,
         ]);
 
         if ($request->has('invited_emails')) {
@@ -220,8 +222,19 @@ class JsaApiController extends Controller
         $document = JsaDocument::with(['company', 'department', 'user', 'creator', 'parent', 'attachments', 'people.user', 'activities.user'])
             ->findOrFail($id);
 
+        $user = auth()->user() ?? auth('admin')->user() ?? auth('web')->user();
+        $userRoles = $user ? \DB::table('aims_user_roles')
+            ->join('aims_roles', 'aims_user_roles.role_id', '=', 'aims_roles.id')
+            ->where('aims_user_roles.user_id', $user->id)
+            ->pluck('aims_roles.slug')
+            ->toArray() : [];
+        $isSuperAdmin = ($user && $user->role === 'super_admin') || in_array('super_admin', $userRoles) || in_array('system_admin', $userRoles);
+
+        $canApprove = $isSuperAdmin || in_array('approval_crs', $userRoles) || in_array('approval_pja', $userRoles);
+
         return ResponseFormatter::success([
             'document' => $document,
+            'canApprove' => $canApprove,
         ], 'JSA document retrieved successfully');
     }
 
@@ -282,6 +295,8 @@ class JsaApiController extends Controller
     {
         $request->validate([
             'description' => 'required|string|max:500',
+            'files'       => 'nullable|array',
+            'files.*'     => 'file',
         ], [
             'description.required' => 'Alasan penolakan wajib diisi.',
         ]);
@@ -296,11 +311,30 @@ class JsaApiController extends Controller
 
         $doc->update(['status' => JsaDocument::DRAFT]);
 
+        $uploadedAttachments = [];
+        if ($request->hasFile('files')) {
+            $service = app(DocumentSystemService::class);
+            foreach ($request->file('files') as $file) {
+                $uploadResult = $service->uploadAttachment($file, 'jsa_activities');
+                if ($uploadResult) {
+                    $uploadedAttachments[] = [
+                        'id'        => \Illuminate\Support\Str::uuid()->toString(),
+                        'file_name' => $file->getClientOriginalName(),
+                        'file_type' => strtolower($file->getClientOriginalExtension()),
+                        'file_size' => $file->getSize(),
+                        'path'      => $uploadResult['fileBlobPathName'],
+                        'blob_url'  => $uploadResult['blobUrl'] ?? null,
+                    ];
+                }
+            }
+        }
+
         JsaDocumentActivity::create([
             'document_id'     => $doc->id,
             'user_id'         => $user?->id,
             'status_document' => 'Document Rejected',
             'description'     => $request->input('description'),
+            'attachments'     => $uploadedAttachments,
         ]);
 
         return ResponseFormatter::success($doc, 'Dokumen dikembalikan ke draft.');

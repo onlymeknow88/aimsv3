@@ -20,6 +20,7 @@ export default function Index({ selectedModuleId }) {
         handleModuleChange,
         getPermValue,
         handleToggle,
+        handleToggleRoleAll,
         handleCancel,
         handleSave,
         // add role modal
@@ -212,6 +213,7 @@ export default function Index({ selectedModuleId }) {
                             menus={menus}
                             getPermValue={getPermValue}
                             onToggle={handleToggle}
+                            onToggleRoleAll={handleToggleRoleAll}
                             changedKeys={changedKeys}
                             onEditRole={openEditRoleModal}
                             onDeleteRole={handleDeleteRole}

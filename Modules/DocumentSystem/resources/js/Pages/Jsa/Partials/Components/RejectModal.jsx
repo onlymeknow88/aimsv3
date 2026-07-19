@@ -11,6 +11,7 @@ import { X, XCircle } from 'lucide-react';
  */
 export default function RejectModal({ isOpen, onClose, onConfirm, loading }) {
     const [notes, setNotes] = useState('');
+    const [rejectFiles, setRejectFiles] = useState([]);
     const [error, setError] = useState('');
 
     const handleSubmit = () => {
@@ -19,11 +20,12 @@ export default function RejectModal({ isOpen, onClose, onConfirm, loading }) {
             return;
         }
         setError('');
-        onConfirm(notes); // parent will send as 'description' key to API
+        onConfirm(notes, rejectFiles);
     };
 
     const handleClose = () => {
         setNotes('');
+        setRejectFiles([]);
         setError('');
         onClose();
     };
@@ -43,7 +45,7 @@ export default function RejectModal({ isOpen, onClose, onConfirm, loading }) {
                 borderRadius: '16px',
                 padding: '32px',
                 width: '100%',
-                maxWidth: '440px',
+                maxWidth: '480px',
                 boxShadow: '0 25px 50px -12px rgba(0,0,0,0.15)',
                 animation: 'scaleUp 0.2s cubic-bezier(0.16,1,0.3,1)'
             }}>
@@ -61,7 +63,7 @@ export default function RejectModal({ isOpen, onClose, onConfirm, loading }) {
                             <XCircle size={20} />
                         </div>
                         <h3 style={{ fontSize: '15px', fontWeight: 700, color: '#0f172a', margin: 0 }}>
-                            Tolak Dokumen JSA
+                            Reject & Return Revision
                         </h3>
                     </div>
                     <button
@@ -74,19 +76,19 @@ export default function RejectModal({ isOpen, onClose, onConfirm, loading }) {
 
                 {/* Description */}
                 <p style={{ fontSize: '12px', color: '#64748b', marginBottom: '16px', lineHeight: 1.7 }}>
-                    Dokumen akan dikembalikan ke status <strong>Draft</strong>.
-                    Berikan alasan penolakan yang jelas agar pembuat dapat melakukan perbaikan.
+                    Dokumen akan ditolak dan dikembalikan ke status <strong>Draft</strong>.
+                    Silakan berikan alasan atau catatan revisi di bawah ini.
                 </p>
 
                 {/* Textarea */}
-                <div>
-                    <label style={{ fontSize: '10.5px', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '6px' }}>
-                        ALASAN PENOLAKAN <span style={{ color: '#EF4444' }}>*</span>
+                <div style={{ marginBottom: '20px' }}>
+                    <label style={{ fontSize: '10px', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '6px', textTransform: 'uppercase' }}>
+                        Alasan Return / Catatan Revisi <span style={{ color: '#EF4444' }}>*</span>
                     </label>
                     <textarea
                         value={notes}
                         onChange={e => { setNotes(e.target.value); if (error) setError(''); }}
-                        placeholder="Contoh: Lampiran kurang lengkap, detail lokasi tidak sesuai..."
+                        placeholder="Tulis alasan revisi/return secara detail..."
                         rows={4}
                         disabled={loading}
                         style={{
@@ -102,8 +104,6 @@ export default function RejectModal({ isOpen, onClose, onConfirm, loading }) {
                             transition: 'border-color 0.2s',
                             lineHeight: 1.6,
                         }}
-                        onFocus={e => { if (!error) e.target.style.borderColor = '#6366F1'; }}
-                        onBlur={e => { if (!error) e.target.style.borderColor = '#e2e8f0'; }}
                     />
                     {error && (
                         <p style={{ fontSize: '11px', color: '#EF4444', marginTop: '4px', fontWeight: 600 }}>
@@ -112,8 +112,53 @@ export default function RejectModal({ isOpen, onClose, onConfirm, loading }) {
                     )}
                 </div>
 
+                {/* File Upload Evidence */}
+                <div style={{ marginBottom: '20px' }}>
+                    <label style={{ fontSize: '10px', fontWeight: 700, color: 'var(--text-secondary)', display: 'block', marginBottom: '6px', textTransform: 'uppercase' }}>
+                        Lampiran Bukti / Evidence (Optional)
+                    </label>
+                    <div style={{ border: '2px dashed #cbd5e1', borderRadius: '8px', padding: '16px', textAlign: 'center', backgroundColor: '#f8fafc' }}>
+                        <input
+                            type="file"
+                            multiple
+                            id="reject-files-input"
+                            onChange={e => {
+                                const newFiles = Array.from(e.target.files || []);
+                                setRejectFiles(prev => [...prev, ...newFiles]);
+                            }}
+                            style={{ display: 'none' }}
+                        />
+                        <label htmlFor="reject-files-input" style={{ cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
+                            <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--primary)', textDecoration: 'underline' }}>
+                                Pilih File Evidence
+                            </span>
+                            <span style={{ fontSize: '9px', color: 'var(--text-secondary)' }}>
+                                PDF, Gambar, Excel, dll.
+                            </span>
+                        </label>
+                    </div>
+                    {rejectFiles.length > 0 && (
+                        <div style={{ marginTop: '10px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                            {rejectFiles.map((file, idx) => (
+                                <div key={idx} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#fff', border: '1px solid #e2e8f0', borderRadius: '4px', padding: '4px 8px', fontSize: '10px' }}>
+                                    <span style={{ fontWeight: 600, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '300px' }}>
+                                        {file.name}
+                                    </span>
+                                    <button
+                                        type="button"
+                                        onClick={() => setRejectFiles(prev => prev.filter((_, i) => i !== idx))}
+                                        style={{ border: 'none', background: 'none', color: '#EF4444', cursor: 'pointer', fontSize: '10px', fontWeight: 700 }}
+                                    >
+                                        Hapus
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+
                 {/* Actions */}
-                <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
+                <div style={{ display: 'flex', gap: '10px' }}>
                     <button
                         onClick={handleClose}
                         disabled={loading}
@@ -140,7 +185,7 @@ export default function RejectModal({ isOpen, onClose, onConfirm, loading }) {
                             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px'
                         }}
                     >
-                        {loading ? 'Menolak...' : <><XCircle size={14} /> Tolak Dokumen</>}
+                        {loading ? 'Processing...' : <><XCircle size={14} /> Return</>}
                     </button>
                 </div>
             </div>

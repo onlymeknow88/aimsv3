@@ -30,7 +30,11 @@ export default function useMaker(document = null) {
     const [formNumber, setFormNumber] = useState('');
     const [title, setTitle] = useState(document?.title || '');
     const [description, setDescription] = useState(document?.description || '');
-    const [invitedEmails, setInvitedEmails] = useState(document?.invited_people?.map(p => p.email) || []);
+    const [invitedEmails, setInvitedEmails] = useState(
+        document?.invited_people?.map(p => p.email) || 
+        document?.people?.map(p => p.email) || 
+        []
+    );
     const [files, setFiles] = useState([]);
     const [activeSops, setActiveSops] = useState([]);
     const [parentDocumentId, setParentDocumentId] = useState(document?.parent_document || '');

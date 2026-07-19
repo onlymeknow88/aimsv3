@@ -32,6 +32,7 @@ class JsaDocument extends Model
         'parent_document',
         'is_obsolate',
         'revision',
+        'area_manager_id',
     ];
 
     protected $casts = [
@@ -39,6 +40,11 @@ class JsaDocument extends Model
         'is_obsolate' => 'boolean',
         'status'      => 'string',
     ];
+
+    public function areaManager()
+    {
+        return $this->belongsTo(\App\Models\User::class, 'area_manager_id');
+    }
 
     public function user()
     {

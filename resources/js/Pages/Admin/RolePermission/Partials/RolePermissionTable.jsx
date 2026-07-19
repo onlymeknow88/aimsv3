@@ -43,6 +43,7 @@ export default function RolePermissionTable({
     menus = [],
     getPermValue,
     onToggle,
+    onToggleRoleAll,
     changedKeys,
     onEditRole,
     onDeleteRole,
@@ -105,6 +106,29 @@ export default function RolePermissionTable({
                                 <code style={{ fontSize: '10px', color: '#94a3b8', fontWeight: 400 }}>
                                     {role.slug}
                                 </code>
+                                <div style={{ marginTop: '6px' }}>
+                                    <button
+                                        type="button"
+                                        onClick={() => onToggleRoleAll(role.id)}
+                                        style={{
+                                            fontSize: '10px',
+                                            fontWeight: 700,
+                                            color: '#2563eb',
+                                            backgroundColor: '#eff6ff',
+                                            border: 'none',
+                                            borderRadius: '4px',
+                                            padding: '2px 8px',
+                                            cursor: 'pointer',
+                                            outline: 'none',
+                                            transition: 'all 0.15s ease',
+                                        }}
+                                        onMouseEnter={e => { e.currentTarget.style.backgroundColor = '#dbeafe'; }}
+                                        onMouseLeave={e => { e.currentTarget.style.backgroundColor = '#eff6ff'; }}
+                                        title="Toggle semua permission untuk role ini"
+                                    >
+                                        Select All
+                                    </button>
+                                </div>
 
                                 <div 
                                     className="role-actions" 

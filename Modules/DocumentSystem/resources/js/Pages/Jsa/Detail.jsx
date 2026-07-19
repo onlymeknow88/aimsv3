@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Head, usePage } from '@inertiajs/react';
-import { ArrowLeft, Building, Layers, Calendar, Edit, Download, Clock, Send, Users, CheckCircle, XCircle } from 'lucide-react';
+import { ArrowLeft, Building, Layers, Calendar, Edit, Download, Clock, Send, Users, CheckCircle, XCircle, FileText } from 'lucide-react';
 import useJsaDetail from './Hooks/useJsaDetail';
 import BlobPreviewModal from '@/Components/BlobPreviewModal';
 import RejectModal from './Partials/Components/RejectModal';
@@ -35,6 +35,7 @@ export default function Detail({ id }) {
 
     const {
         document,
+        canApprove,
         loadingData,
         actionLoading,
         actionError,
@@ -56,10 +57,6 @@ export default function Detail({ id }) {
     const isPendingReview = String(document.status) === '2';
     const isActive        = String(document.status) === '5';
 
-    // Permission checks — adapt to your actual permission system
-    const canApprove = authUser?.permissions?.includes('Document System - Approve Document Level 1') ||
-                       authUser?.permissions?.includes('Document System - Approve Document Level 2') ||
-                       authUser?.is_admin;
     const isOwner    = authUser?.id === document.user_id;
 
     const getInitials = (name) =>
@@ -75,8 +72,8 @@ export default function Detail({ id }) {
         if (ok) setConfirmModal({ open: false, type: null });
     };
 
-    const handleReject = async (notes) => {
-        const ok = await rejectDocument(notes);
+    const handleReject = async (notes, files) => {
+        const ok = await rejectDocument(notes, files);
         if (ok) setRejectModal(false);
     };
 
@@ -102,59 +99,21 @@ export default function Detail({ id }) {
                     {actionError && (
                         <span style={{ fontSize: '11px', color: '#EF4444', fontWeight: 600 }}>{actionError}</span>
                     )}
-
-                    {/* Edit — hanya saat Draft */}
-                    {isDraft && (
+                    {String(document.status) === '5' && !document.is_obsolate && (
                         <a href={`/document-system/jsa/edit/${document.id}`} style={{
-                            display: 'inline-flex', alignItems: 'center', gap: '6px',
-                            padding: '7px 14px', border: '1px solid var(--border-color)',
-                            borderRadius: '8px', textDecoration: 'none', color: 'var(--text-secondary)',
-                            fontSize: '11px', fontWeight: 700
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            backgroundColor: 'var(--primary)',
+                            color: '#fff',
+                            borderRadius: '6px',
+                            padding: '6px 14px',
+                            fontSize: '11px',
+                            fontWeight: 700,
+                            textDecoration: 'none'
                         }}>
-                            <Edit size={13} /> Edit
+                            <Edit size={12} /> Update JSA (Revisi)
                         </a>
-                    )}
-
-                    {/* Submit for Review — Maker saat Draft */}
-                    {isDraft && (isOwner || canApprove) && (
-                        <button onClick={() => setConfirmModal({ open: true, type: 'submit' })}
-                            disabled={actionLoading}
-                            style={{
-                                display: 'inline-flex', alignItems: 'center', gap: '6px',
-                                padding: '7px 16px', border: 'none', borderRadius: '8px',
-                                backgroundColor: '#F59E0B', color: '#fff', fontSize: '11px', fontWeight: 700,
-                                cursor: actionLoading ? 'not-allowed' : 'pointer'
-                            }}>
-                            <Send size={13} /> Submit for Review
-                        </button>
-                    )}
-
-                    {/* Approve — Approver saat Pending Review */}
-                    {isPendingReview && canApprove && (
-                        <button onClick={() => setConfirmModal({ open: true, type: 'approve' })}
-                            disabled={actionLoading}
-                            style={{
-                                display: 'inline-flex', alignItems: 'center', gap: '6px',
-                                padding: '7px 16px', border: 'none', borderRadius: '8px',
-                                backgroundColor: '#10B981', color: '#fff', fontSize: '11px', fontWeight: 700,
-                                cursor: actionLoading ? 'not-allowed' : 'pointer'
-                            }}>
-                            <CheckCircle size={13} /> Approve
-                        </button>
-                    )}
-
-                    {/* Reject — Approver saat Pending Review */}
-                    {isPendingReview && canApprove && (
-                        <button onClick={() => setRejectModal(true)}
-                            disabled={actionLoading}
-                            style={{
-                                display: 'inline-flex', alignItems: 'center', gap: '6px',
-                                padding: '7px 16px', border: '1px solid #EF4444', borderRadius: '8px',
-                                backgroundColor: '#fff', color: '#EF4444', fontSize: '11px', fontWeight: 700,
-                                cursor: actionLoading ? 'not-allowed' : 'pointer'
-                            }}>
-                            <XCircle size={13} /> Reject
-                        </button>
                     )}
                 </div>
             </div>
@@ -345,6 +304,52 @@ export default function Detail({ id }) {
                             </div>
                         </div>
                     )}
+                    {/* Document Action (Approval) */}
+                    {isPendingReview && canApprove && (
+                        <div style={{
+                            backgroundColor: 'var(--card-bg)', border: '1px solid var(--border-color)',
+                            borderRadius: '12px', padding: '24px', boxShadow: 'var(--shadow-sm)',
+                            display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '16px'
+                        }}>
+                            <button
+                                onClick={() => setRejectModal(true)}
+                                disabled={actionLoading}
+                                style={{ border: '1px solid var(--danger)', color: 'var(--danger)', background: '#fff', borderRadius: '6px', padding: '8px 16px', cursor: 'pointer', fontSize: '11px', fontWeight: 700 }}
+                            >
+                                Reject & Return
+                            </button>
+                            <button
+                                onClick={() => setConfirmModal({ open: true, type: 'approve' })}
+                                disabled={actionLoading}
+                                style={{
+                                    border: 'none',
+                                    color: '#fff',
+                                    backgroundColor: 'var(--primary)',
+                                    borderRadius: '6px',
+                                    padding: '8px 16px',
+                                    cursor: actionLoading ? 'not-allowed' : 'pointer',
+                                    opacity: actionLoading ? 0.7 : 1,
+                                    fontSize: '11px',
+                                    fontWeight: 700,
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '6px'
+                                }}
+                            >
+                                {actionLoading ? (
+                                    <>
+                                        <svg style={{ animation: 'spin 1s linear infinite', width: '12px', height: '12px', color: '#fff' }} fill="none" viewBox="0 0 24 24">
+                                            <circle style={{ opacity: 0.25 }} cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                            <path style={{ opacity: 0.75 }} fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                                        </svg>
+                                        <span>Processing...</span>
+                                    </>
+                                ) : (
+                                    'Approve & Publish'
+                                )}
+                            </button>
+                        </div>
+                    )}
                 </main>
 
                 {/* ── RIGHT SIDEBAR — Activity Timeline ── */}
@@ -393,6 +398,20 @@ export default function Detail({ id }) {
                                                         lineHeight: 1.5
                                                     }}>
                                                         {act.description}
+                                                    </div>
+                                                )}
+                                                {act.attachments && act.attachments.length > 0 && (
+                                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '6px', borderLeft: '2px solid #E7ECF3', paddingLeft: '8px' }}>
+                                                        {act.attachments.map((file, fileIdx) => (
+                                                            <span
+                                                                key={fileIdx}
+                                                                onClick={() => setPreviewAttachment({ ...file, file_name: file.file_name, path: file.path, type: 'jsa_activity' })}
+                                                                style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--primary)', textDecoration: 'underline', textDecorationStyle: 'dotted', cursor: 'pointer', fontSize: '10px' }}
+                                                            >
+                                                                <FileText size={10} />
+                                                                {file.file_name}
+                                                            </span>
+                                                        ))}
                                                     </div>
                                                 )}
                                                 <div style={{ fontSize: '10px', color: '#94a3b8', marginTop: '4px' }}>

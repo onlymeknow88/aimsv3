@@ -96,6 +96,50 @@ export default function useRolePermission(initialModuleId) {
         });
     };
 
+    const handleToggleRoleAll = (roleId) => {
+        const fields = ['can_view', 'can_create', 'can_edit', 'can_delete', 'can_approval'];
+        const keys = [];
+        menus.forEach((menu) => {
+            fields.forEach((field) => {
+                keys.push(`${roleId}::${menu.id}::${field}`);
+            });
+        });
+
+        // If any of the permissions are currently false, check all. Else, uncheck all.
+        const allChecked = keys.every((key) => Boolean(localPermissions[key]));
+        const targetValue = !allChecked;
+
+        setLocalPermissions((prev) => {
+            const next = { ...prev };
+            keys.forEach((key) => {
+                next[key] = targetValue;
+            });
+            return next;
+        });
+
+        setChangedKeys((prev) => {
+            const next = new Set(prev);
+            keys.forEach((key) => {
+                const parts = key.split("::");
+                const menuId = Number(parts[1]);
+                const field = parts[2];
+                const originalPerm = permissions.find(
+                    (p) =>
+                        String(p.role_id) === String(roleId) &&
+                        String(p.menu_id) === String(menuId)
+                );
+                const originalVal = originalPerm ? Boolean(originalPerm[field]) : false;
+
+                if (targetValue === originalVal) {
+                    next.delete(key);
+                } else {
+                    next.add(key);
+                }
+            });
+            return next;
+        });
+    };
+
     const handleCancel = () => {
         const map = {};
         permissions.forEach((p) => {
@@ -215,6 +259,7 @@ export default function useRolePermission(initialModuleId) {
         handleModuleChange,
         getPermValue,
         handleToggle,
+        handleToggleRoleAll,
         handleCancel,
         handleSave,
         // add role modal

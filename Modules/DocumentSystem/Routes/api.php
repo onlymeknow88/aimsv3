@@ -12,12 +12,13 @@ Route::middleware(['web', 'auth'])->prefix('document-system')->group(function ()
     // ==========================================
     // 1. Document API Actions
     // ==========================================
+    Route::get('/attachments/{id}/preview', [GeneralController::class, 'previewAttachment']);
+    Route::get('/attachments/{id}/download', [GeneralController::class, 'downloadAttachment']);
+    Route::get('/attachments/{id}/sas-url', [GeneralController::class, 'sasUrl']);
+
     Route::middleware('module.permission:document-system,can_view,doc.maker')->group(function () {
         Route::get('/documents', [DocumentApiController::class, 'index']);
         Route::get('/documents/{id}', [DocumentApiController::class, 'show']);
-        Route::get('/attachments/{id}/preview', [GeneralController::class, 'previewAttachment']);
-        Route::get('/attachments/{id}/download', [GeneralController::class, 'downloadAttachment']);
-        Route::get('/attachments/{id}/sas-url', [GeneralController::class, 'sasUrl']);
     });
 
     Route::middleware('module.permission:document-system,can_create,doc.maker')->group(function () {

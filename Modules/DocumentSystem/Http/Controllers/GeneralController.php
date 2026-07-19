@@ -28,6 +28,34 @@ class GeneralController extends Controller
             } elseif (in_array($ext, ['png', 'jpg', 'jpeg', 'gif', 'webp'])) {
                 $mimeType = 'image/' . ($ext === 'jpg' ? 'jpeg' : $ext);
             }
+        } elseif ($type === 'jsa_activity') {
+            $path = $request->query('path');
+            if ($id !== 'none') {
+                $activity = \Modules\DocumentSystem\Entities\JsaDocumentActivity::where('attachments', 'like', "%{$id}%")->firstOrFail();
+                $attachmentData = collect($activity->attachments)->firstWhere('id', $id);
+            } else {
+                $filename = basename($path);
+                $activity = \Modules\DocumentSystem\Entities\JsaDocumentActivity::where('attachments', 'like', "%{$filename}%")->firstOrFail();
+                $attachmentData = collect($activity->attachments)->first(function($item) use ($path) {
+                    return ($item['path'] ?? '') === $path;
+                });
+            }
+            if (!$attachmentData) {
+                abort(404);
+            }
+            $fileName = $attachmentData['file_name'];
+            $mimeType = 'application/octet-stream';
+            $ext = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
+            if ($ext === 'pdf') {
+                $mimeType = 'application/pdf';
+            } elseif (in_array($ext, ['png', 'jpg', 'jpeg', 'gif', 'webp'])) {
+                $mimeType = 'image/' . ($ext === 'jpg' ? 'jpeg' : $ext);
+            }
+            $filePath = $attachmentData['path'] ?? '';
+            $attachment = (object)[
+                'path' => $filePath,
+                'file_path' => $filePath,
+            ];
         } elseif ($type === 'jsa') {
             $attachment = \Modules\DocumentSystem\Entities\JsaDocumentAttachment::findOrFail($id);
             $fileName = basename($attachment->file_path);
@@ -44,7 +72,7 @@ class GeneralController extends Controller
             $mimeType = $attachment->mime_type ?? 'application/octet-stream';
         }
 
-        $filePath = ($type === 'jsa') ? ($attachment->file_path ?? '') : ($attachment->path ?? '');
+        $filePath = ($type === 'jsa' || $type === 'jsa_activity') ? ($attachment->file_path ?? '') : ($attachment->path ?? '');
         $localPath = Storage::disk('public')->path($filePath);
 
         if (!$filePath || !file_exists($localPath)) {
@@ -82,6 +110,27 @@ class GeneralController extends Controller
         if ($type === 'activity') {
             $attachment = \Modules\DocumentSystem\Entities\ActivityAttachment::findOrFail($id);
             $fileName = $attachment->name;
+        } elseif ($type === 'jsa_activity') {
+            $path = $request->query('path');
+            if ($id !== 'none') {
+                $activity = \Modules\DocumentSystem\Entities\JsaDocumentActivity::where('attachments', 'like', "%{$id}%")->firstOrFail();
+                $attachmentData = collect($activity->attachments)->firstWhere('id', $id);
+            } else {
+                $filename = basename($path);
+                $activity = \Modules\DocumentSystem\Entities\JsaDocumentActivity::where('attachments', 'like', "%{$filename}%")->firstOrFail();
+                $attachmentData = collect($activity->attachments)->first(function($item) use ($path) {
+                    return ($item['path'] ?? '') === $path;
+                });
+            }
+            if (!$attachmentData) {
+                abort(404);
+            }
+            $fileName = $attachmentData['file_name'];
+            $filePath = $attachmentData['path'] ?? '';
+            $attachment = (object)[
+                'path' => $filePath,
+                'file_path' => $filePath,
+            ];
         } elseif ($type === 'jsa') {
             $attachment = \Modules\DocumentSystem\Entities\JsaDocumentAttachment::findOrFail($id);
             $fileName = basename($attachment->file_path);
@@ -90,7 +139,7 @@ class GeneralController extends Controller
             $fileName = $attachment->file_name;
         }
 
-        $filePath = ($type === 'jsa') ? ($attachment->file_path ?? '') : ($attachment->path ?? '');
+        $filePath = ($type === 'jsa' || $type === 'jsa_activity') ? ($attachment->file_path ?? '') : ($attachment->path ?? '');
         $localPath = Storage::disk('public')->path($filePath);
 
         if (!$filePath || !file_exists($localPath)) {

@@ -13,6 +13,7 @@ export default function Create({ document = null }) {
     const isEdit = !!document;
     const [confirmModal, setConfirmModal] = useState({ isOpen: false, type: 'draft' });
     const [previewAttachment, setPreviewAttachment] = useState(null);
+    const [saving, setSaving] = useState(false);
 
     const {
         loading,
@@ -44,6 +45,7 @@ export default function Create({ document = null }) {
 
     // Override handleSave for JSA API
     const handleJsaSave = async (statusType) => {
+        setSaving(true);
         const formData = new FormData();
         formData.append('title', title);
         formData.append('work_type', title);
@@ -54,6 +56,7 @@ export default function Create({ document = null }) {
         formData.append('doc_created', docCreated);
         formData.append('department_id', department);
         formData.append('company_id', company);
+        formData.append('area_manager_id', pj);
 
         invitedEmails.forEach((email, index) => {
             formData.append(`invited_emails[${index}]`, email);
@@ -84,6 +87,8 @@ export default function Create({ document = null }) {
         } catch (err) {
             console.error('Failed to save JSA', err);
             alert('Gagal menyimpan JSA.');
+        } finally {
+            setSaving(false);
         }
     };
 
@@ -292,6 +297,7 @@ export default function Create({ document = null }) {
             <ConfirmationModal 
                 isOpen={confirmModal.isOpen} 
                 type={confirmModal.type} 
+                loading={saving}
                 onCancel={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))} 
                 onConfirm={handleConfirmSave} 
             />

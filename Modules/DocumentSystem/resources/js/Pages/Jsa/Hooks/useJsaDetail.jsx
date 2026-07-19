@@ -3,6 +3,7 @@ import axios from 'axios';
 
 export default function useJsaDetail(id) {
     const [document, setDocument] = useState(null);
+    const [canApprove, setCanApprove] = useState(false);
     const [loadingData, setLoadingData] = useState(true);
     const [actionLoading, setActionLoading] = useState(false);
     const [actionError, setActionError] = useState(null);
@@ -14,6 +15,7 @@ export default function useJsaDetail(id) {
                 const data = res.data?.result;
                 if (data) {
                     setDocument(data.document);
+                    setCanApprove(Boolean(data.canApprove));
                 }
             })
             .catch(err => console.error("Error loading JSA details", err))
@@ -56,11 +58,19 @@ export default function useJsaDetail(id) {
         }
     }, [id, fetchJsaDetails]);
 
-    const rejectDocument = useCallback(async (notes) => {
+    const rejectDocument = useCallback(async (notes, files = []) => {
         setActionLoading(true);
         setActionError(null);
         try {
-            await axios.post(`/api/document-system/jsa/${id}/reject`, { description: notes });
+            const formData = new FormData();
+            formData.append('description', notes);
+            files.forEach((file, index) => {
+                formData.append(`files[${index}]`, file);
+            });
+
+            await axios.post(`/api/document-system/jsa/${id}/reject`, formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
             fetchJsaDetails();
             return true;
         } catch (err) {
@@ -74,6 +84,7 @@ export default function useJsaDetail(id) {
 
     return {
         document,
+        canApprove,
         loadingData,
         actionLoading,
         actionError,

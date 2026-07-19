@@ -475,7 +475,7 @@ class DocumentApiController extends Controller
             ->where('aims_user_roles.user_id', $user->id)
             ->pluck('aims_roles.slug')
             ->toArray() : [];
-        $isSuperAdmin = ($user && $user->role === 'super_admin') || in_array('super_admin', $userRoles);
+        $isSuperAdmin = ($user && $user->role === 'super_admin') || in_array('super_admin', $userRoles) || in_array('system_admin', $userRoles);
 
         $canApproveL1 = $isSuperAdmin || in_array('approval_crs', $userRoles);
         $canApproveL2 = $isSuperAdmin || in_array('approval_pja', $userRoles);

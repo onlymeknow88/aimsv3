@@ -6,9 +6,12 @@ export default function BlobPreviewModal({ attachment, onClose }) {
 
     const isActivity = attachment.type === 'activity';
     const isJsa = attachment.type === 'jsa';
-    const typeParam = isActivity ? '?type=activity' : (isJsa ? '?type=jsa' : '');
-    const previewUrl = `/api/document-system/attachments/${attachment.id}/preview${typeParam}`;
-    const downloadUrl = `/api/document-system/attachments/${attachment.id}/download${typeParam}`;
+    const isJsaActivity = attachment.type === 'jsa_activity';
+    const typeParam = isActivity ? '?type=activity' : (isJsa ? '?type=jsa' : (isJsaActivity ? '?type=jsa_activity' : ''));
+    const attachmentId = attachment.id || 'none';
+    const pathParam = attachment.path ? `&path=${encodeURIComponent(attachment.path)}` : '';
+    const previewUrl = `/api/document-system/attachments/${attachmentId}/preview${typeParam}${pathParam}`;
+    const downloadUrl = `/api/document-system/attachments/${attachmentId}/download${typeParam}${pathParam}`;
     const fileExtension = (attachment.file_type || (attachment.name ? attachment.name.split('.').pop() : '') || (attachment.file_name ? attachment.file_name.split('.').pop() : '') || (attachment.file_path ? attachment.file_path.split('.').pop() : '') || '').toLowerCase();
     const isImage = ['png', 'jpg', 'jpeg', 'gif'].includes(fileExtension);
     const isPdf = fileExtension === 'pdf';

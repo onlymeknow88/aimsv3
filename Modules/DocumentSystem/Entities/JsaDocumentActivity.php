@@ -19,6 +19,10 @@ class JsaDocumentActivity extends Model
         'attachments',
     ];
 
+    protected $casts = [
+        'attachments' => 'array',
+    ];
+
     public function jsaDocument()
     {
         return $this->belongsTo(JsaDocument::class, 'document_id');

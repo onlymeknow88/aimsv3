@@ -42,8 +42,19 @@ export default function useJsa(isObsolete = false, isDraft = false) {
         }
     }, [closeForm, fetchDocuments]);
 
+    const deleteJsa = useCallback(async (id) => {
+        if (!confirm('Apakah Anda yakin ingin menghapus dokumen JSA ini?')) return;
+        try {
+            await axios.delete(`/api/document-system/jsa/${id}`);
+            fetchDocuments();
+        } catch (err) {
+            console.error('Delete JSA failed', err);
+            alert('Gagal menghapus dokumen JSA.');
+        }
+    }, [fetchDocuments]);
+
     return {
         formModalOpen, drawerOpen, selectedJsa, loading, docs, fetching,
-        openForm, closeForm, openDrawer, closeDrawer, createJsa,
+        openForm, closeForm, openDrawer, closeDrawer, createJsa, deleteJsa,
     };
 }

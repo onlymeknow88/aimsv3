@@ -5,7 +5,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { FileText } from 'lucide-react';
 import BlobPreviewModal from '@/Components/BlobPreviewModal';
 
-export default function JsaTable({ documents, onOpenDrawer, loading = false }) {
+export default function JsaTable({ documents, onOpenDrawer, onDelete, loading = false }) {
     const [previewAttachment, setPreviewAttachment] = useState(null);
     const [selectedRowIds, setSelectedRowIds] = useState(new Set());
 
@@ -176,25 +176,48 @@ export default function JsaTable({ documents, onOpenDrawer, loading = false }) {
         {
             id: 'actions',
             header: 'Aksi',
-            cell: ({ row }) => (
-                <button
-                    onClick={() => window.location.href = `/document-system/jsa/edit/${row.original.id}`}
-                    style={{
-                        border: '1px solid var(--border-color)',
-                        background: '#fff',
-                        borderRadius: '4px',
-                        padding: '4px 10px',
-                        cursor: 'pointer',
-                        fontSize: '10px',
-                        fontWeight: 600,
-                        color: 'var(--text-primary)'
-                    }}
-                >
-                    Edit
-                </button>
-            )
+            cell: ({ row }) => {
+                const isActive = String(row.original.status) === '5';
+                if (isActive) return null;
+                return (
+                    <div style={{ display: 'flex', gap: '6px' }}>
+                        <button
+                            onClick={() => window.location.href = `/document-system/jsa/edit/${row.original.id}`}
+                        style={{
+                            border: '1px solid var(--border-color)',
+                            background: '#fff',
+                            borderRadius: '4px',
+                            padding: '4px 10px',
+                            cursor: 'pointer',
+                            fontSize: '10px',
+                            fontWeight: 600,
+                            color: 'var(--text-primary)'
+                        }}
+                    >
+                        Edit
+                    </button>
+                    {onDelete && (
+                        <button
+                            onClick={() => onDelete(row.original.id)}
+                            style={{
+                                border: '1px solid #fee2e2',
+                                background: '#fef2f2',
+                                borderRadius: '4px',
+                                padding: '4px 10px',
+                                cursor: 'pointer',
+                                fontSize: '10px',
+                                fontWeight: 600,
+                                color: '#ef4444'
+                            }}
+                        >
+                            Hapus
+                        </button>
+                    )}
+                </div>
+                );
+            }
         }
-    ], [onOpenDrawer, previewAttachment, selectedRowIds, documents]);
+    ], [onOpenDrawer, previewAttachment, selectedRowIds, documents, onDelete]);
 
     const table = useReactTable({
         data: documents,
