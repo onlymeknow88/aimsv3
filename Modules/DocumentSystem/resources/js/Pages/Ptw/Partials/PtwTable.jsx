@@ -2,14 +2,11 @@ import React, { useMemo, useState } from 'react';
 import { useReactTable, getCoreRowModel, flexRender } from '@tanstack/react-table';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
 import { Checkbox } from '@/components/ui/checkbox';
-import { FileText } from 'lucide-react';
-import BlobPreviewModal from '@/Components/BlobPreviewModal';
 import TablePagination from '@/Components/TablePagination';
 
-export default function JsaTable({
+export default function PtwTable({
     documents,
     onOpenDrawer,
-    onDelete,
     loading = false,
     pagination,
     onPageChange,
@@ -18,7 +15,6 @@ export default function JsaTable({
     columnFilters,
     onColumnFilterChange,
 }) {
-    const [previewAttachment, setPreviewAttachment] = useState(null);
     const [selectedRowIds, setSelectedRowIds] = useState(new Set());
 
     const formatDate = (dateStr) => {
@@ -62,12 +58,9 @@ export default function JsaTable({
             id: 'company',
             header: 'Company',
             cell: ({ row }) => (
-                <a
-                    href={`/document-system/jsa/detail/${row.original.id}`}
-                    style={{ fontWeight: 600, color: 'var(--primary)', textDecoration: 'underline', textDecorationStyle: 'dotted', cursor: 'pointer' }}
-                >
-                    {row.original.company?.company_name || '-'}
-                </a>
+                <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
+                    {row.original.department?.company?.company_name || '-'}
+                </span>
             )
         },
         {
@@ -93,12 +86,6 @@ export default function JsaTable({
             cell: info => <span style={{ color: 'var(--text-secondary)' }}>{info.getValue() || '-'}</span>
         },
         {
-            accessorKey: 'revision',
-            id: 'revision',
-            header: 'Revisi No.',
-            cell: info => <span style={{ color: 'var(--text-secondary)' }}>{!info.getValue() || info.getValue() === '' || info.getValue() === null ? '0.0' : `${info.getValue()}.0`}</span>
-        },
-        {
             accessorKey: 'detail_location',
             id: 'detail_location',
             header: 'Detail Location',
@@ -115,12 +102,10 @@ export default function JsaTable({
             header: 'Status',
             cell: info => {
                 const STATUS_MAP = {
-                    '1': { bg: 'rgba(99,102,241,0.1)',  color: '#6366F1', label: 'DRAFT'          },
-                    '2': { bg: 'rgba(245,158,11,0.1)',  color: '#F59E0B', label: 'PENDING REVIEW'  },
-                    '3': { bg: 'rgba(239,68,68,0.1)',   color: '#EF4444', label: 'REJECTED'        },
-                    '5': { bg: 'rgba(16,185,129,0.1)',  color: '#10B981', label: 'ACTIVE'          },
+                    '1': { bg: 'rgba(99,102,241,0.1)',  color: '#6366F1', label: 'DRAFT'  },
+                    '5': { bg: 'rgba(16,185,129,0.1)',  color: '#10B981', label: 'ACTIVE' },
                 };
-                const cfg = STATUS_MAP[String(info.row.original.status)] || STATUS_MAP['1'];
+                const cfg = STATUS_MAP[String(info.row.original.status)] || { bg: 'rgba(100,116,139,0.1)', color: '#64748b', label: String(info.row.original.status || 'DRAFT') };
                 return (
                     <span style={{
                         fontSize: '9px',
@@ -137,63 +122,12 @@ export default function JsaTable({
             }
         },
         {
-            id: 'attachment',
-            header: 'Attachment',
-            cell: ({ row }) => {
-                const attachments = row.original.attachments || [];
-
-                if (attachments.length === 0) {
-                    return <span style={{ color: 'var(--text-muted)', fontSize: '11px' }}>—</span>;
-                }
-
-                return (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                        {attachments.map(att => {
-                            const fileName = att.file_name || att.file_path?.split('/').pop() || 'File';
-                            return (
-                                <span
-                                    key={att.id}
-                                    onClick={() => setPreviewAttachment({
-                                        ...att,
-                                        file_name: fileName,
-                                        type: 'jsa'
-                                    })}
-                                    style={{
-                                        display: 'inline-flex',
-                                        alignItems: 'center',
-                                        gap: '4px',
-                                        fontSize: '11px',
-                                        fontWeight: 600,
-                                        color: 'var(--primary)',
-                                        textDecoration: 'underline',
-                                        textDecorationStyle: 'dotted',
-                                        cursor: 'pointer',
-                                        maxWidth: '200px',
-                                        overflow: 'hidden',
-                                        textOverflow: 'ellipsis',
-                                        whiteSpace: 'nowrap'
-                                    }}
-                                    title={`Klik untuk preview: ${fileName}`}
-                                >
-                                    <FileText size={11} style={{ flexShrink: 0 }} />
-                                    {fileName}
-                                </span>
-                            );
-                        })}
-                    </div>
-                );
-            }
-        },
-        {
             id: 'actions',
             header: 'Aksi',
-            cell: ({ row }) => {
-                const isActive = String(row.original.status) === '5';
-                if (isActive) return null;
-                return (
-                    <div style={{ display: 'flex', gap: '6px' }}>
-                        <button
-                            onClick={() => window.location.href = `/document-system/jsa/edit/${row.original.id}`}
+            cell: ({ row }) => (
+                <div style={{ display: 'flex', gap: '6px' }}>
+                    <button
+                        onClick={() => window.location.href = `/document-system/ptw/detail/${row.original.id}`}
                         style={{
                             border: '1px solid var(--border-color)',
                             background: '#fff',
@@ -205,30 +139,52 @@ export default function JsaTable({
                             color: 'var(--text-primary)'
                         }}
                     >
-                        Edit
+                        Detail
                     </button>
-                    {onDelete && (
-                        <button
-                            onClick={() => onDelete(row.original.id)}
-                            style={{
-                                border: '1px solid #fee2e2',
-                                background: '#fef2f2',
-                                borderRadius: '4px',
-                                padding: '4px 10px',
-                                cursor: 'pointer',
-                                fontSize: '10px',
-                                fontWeight: 600,
-                                color: '#ef4444'
-                            }}
-                        >
-                            Hapus
-                        </button>
+                    {String(row.original.status) === '1' && (
+                        <>
+                            <button
+                                onClick={() => window.location.href = `/document-system/ptw/edit/${row.original.id}`}
+                                style={{
+                                    border: '1px solid var(--border-color)',
+                                    background: '#fff',
+                                    borderRadius: '4px',
+                                    padding: '4px 10px',
+                                    cursor: 'pointer',
+                                    fontSize: '10px',
+                                    fontWeight: 600,
+                                    color: 'var(--text-primary)'
+                                }}
+                            >
+                                Edit
+                            </button>
+                            <button
+                                onClick={() => {
+                                    if (confirm('Apakah Anda yakin ingin menghapus draft PTW ini?')) {
+                                        axios.delete(`/api/document-system/ptw/${row.original.id}`).then(() => {
+                                            window.location.reload();
+                                        });
+                                    }
+                                }}
+                                style={{
+                                    border: '1px solid #fee2e2',
+                                    background: '#fef2f2',
+                                    borderRadius: '4px',
+                                    padding: '4px 10px',
+                                    cursor: 'pointer',
+                                    fontSize: '10px',
+                                    fontWeight: 600,
+                                    color: 'var(--danger)'
+                                }}
+                            >
+                                Delete
+                            </button>
+                        </>
                     )}
                 </div>
-                );
-            }
+            )
         }
-    ], [onOpenDrawer, previewAttachment, selectedRowIds, documents, onDelete]);
+    ], [documents, selectedRowIds]);
 
     const table = useReactTable({
         data: documents,
@@ -282,7 +238,7 @@ export default function JsaTable({
                     {loading ? (
                         <TableRow>
                             <TableCell colSpan={colsCount} style={{ textAlign: 'center', padding: '40px 24px', color: 'var(--text-secondary)' }}>
-                                Memuat data JSA...
+                                Memuat data PTW...
                             </TableCell>
                         </TableRow>
                     ) : table.getRowModel().rows.length > 0 ? (
@@ -298,7 +254,7 @@ export default function JsaTable({
                     ) : (
                         <TableRow>
                             <TableCell colSpan={colsCount} style={{ padding: '32px', textAlign: 'center', color: 'var(--text-muted)' }}>
-                                Data JSA kosong atau tidak ditemukan.
+                                Data PTW kosong atau tidak ditemukan.
                             </TableCell>
                         </TableRow>
                     )}
@@ -311,13 +267,6 @@ export default function JsaTable({
                 limit={limit}
                 onLimitChange={onLimitChange}
             />
-
-            {previewAttachment && (
-                <BlobPreviewModal
-                    attachment={previewAttachment}
-                    onClose={() => setPreviewAttachment(null)}
-                />
-            )}
         </>
     );
 }

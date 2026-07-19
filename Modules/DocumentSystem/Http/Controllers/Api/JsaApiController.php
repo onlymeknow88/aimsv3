@@ -36,7 +36,76 @@ class JsaApiController extends Controller
             $query->where('status', '!=', JsaDocument::DRAFT);
         }
 
-        $documents = $query->latest()->get();
+        // Search query (global search)
+        $search = $request->query('search');
+        if (!empty($search)) {
+            $query->where(function ($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%")
+                  ->orWhere('document_number', 'like', "%{$search}%");
+            });
+        }
+
+        // Column-wise searches
+        if ($request->filled('filter_company')) {
+            $comp = $request->query('filter_company');
+            $query->whereHas('company', function ($q) use ($comp) {
+                $q->where('company_name', 'like', "%{$comp}%")
+                  ->orWhere('document_code', 'like', "%{$comp}%");
+            });
+        }
+
+        if ($request->filled('filter_department')) {
+            $dept = $request->query('filter_department');
+            $query->whereHas('department', function ($q) use ($dept) {
+                $q->where('name', 'like', "%{$dept}%")
+                  ->orWhere('code', 'like', "%{$dept}%")
+                  ->orWhere('document_code', 'like', "%{$dept}%");
+            });
+        }
+
+        if ($request->filled('filter_pic')) {
+            $pic = $request->query('filter_pic');
+            $query->whereHas('user', function ($q) use ($pic) {
+                $q->where('name', 'like', "%{$pic}%");
+            });
+        }
+
+        if ($request->filled('filter_title')) {
+            $query->where('title', 'like', '%' . $request->query('filter_title') . '%');
+        }
+
+        if ($request->filled('filter_document_number')) {
+            $query->where('document_number', 'like', '%' . $request->query('filter_document_number') . '%');
+        }
+
+        if ($request->filled('filter_detail_location')) {
+            $query->where('detail_location', 'like', '%' . $request->query('filter_detail_location') . '%');
+        }
+
+        if ($request->filled('filter_status')) {
+            $statusVal = $request->query('filter_status');
+            $STATUS_MAP = [
+                'draft' => '1',
+                'pending review' => '2',
+                'rejected' => '3',
+                'active' => '5',
+            ];
+            $mappedStatus = $STATUS_MAP[strtolower($statusVal)] ?? null;
+            if ($mappedStatus) {
+                $query->where('status', $mappedStatus);
+            } else {
+                $query->where('status', 'like', '%' . $statusVal . '%');
+            }
+        }
+
+        $query->latest();
+
+        if ($request->has('page') || $request->has('limit')) {
+            $limit = $request->query('limit', 10);
+            $documents = $query->paginate($limit);
+        } else {
+            $documents = $query->get();
+        }
 
         return ResponseFormatter::success($documents, 'JSA documents retrieved successfully');
     }

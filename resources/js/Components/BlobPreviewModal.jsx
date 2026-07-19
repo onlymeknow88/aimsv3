@@ -7,7 +7,8 @@ export default function BlobPreviewModal({ attachment, onClose }) {
     const isActivity = attachment.type === 'activity';
     const isJsa = attachment.type === 'jsa';
     const isJsaActivity = attachment.type === 'jsa_activity';
-    const typeParam = isActivity ? '?type=activity' : (isJsa ? '?type=jsa' : (isJsaActivity ? '?type=jsa_activity' : ''));
+    const isPtw = attachment.type === 'ptw';
+    const typeParam = isActivity ? '?type=activity' : (isJsa ? '?type=jsa' : (isJsaActivity ? '?type=jsa_activity' : (isPtw ? '?type=ptw' : '')));
     const attachmentId = attachment.id || 'none';
     const pathParam = attachment.path ? `&path=${encodeURIComponent(attachment.path)}` : '';
     const previewUrl = `/api/document-system/attachments/${attachmentId}/preview${typeParam}${pathParam}`;

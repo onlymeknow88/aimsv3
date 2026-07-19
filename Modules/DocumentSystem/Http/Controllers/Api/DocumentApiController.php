@@ -21,6 +21,7 @@ class DocumentApiController extends Controller
     public function index(Request $request)
     {
         $status = $request->input('status');
+        $search = $request->query('search');
 
         $query = Document::with(['company', 'department', 'areaManager.user', 'owner', 'mapping.category.module', 'attachments'])
             ->latest();
@@ -38,7 +39,77 @@ class DocumentApiController extends Controller
             $query->where('is_obsolate', false);
         }
 
-        $documents = $query->get();
+        if (!empty($search)) {
+            $query->where(function ($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%")
+                  ->orWhere('document_number', 'like', "%{$search}%");
+            });
+        }
+
+        // Column-wise searches
+        if ($request->filled('filter_company')) {
+            $comp = $request->query('filter_company');
+            $query->whereHas('company', function ($q) use ($comp) {
+                $q->where('company_name', 'like', "%{$comp}%")
+                  ->orWhere('document_code', 'like', "%{$comp}%");
+            });
+        }
+
+        if ($request->filled('filter_department')) {
+            $dept = $request->query('filter_department');
+            $query->whereHas('department', function ($q) use ($dept) {
+                $q->where('name', 'like', "%{$dept}%")
+                  ->orWhere('code', 'like', "%{$dept}%")
+                  ->orWhere('document_code', 'like', "%{$dept}%");
+            });
+        }
+
+        if ($request->filled('filter_pic')) {
+            $pic = $request->query('filter_pic');
+            $query->whereHas('owner', function ($q) use ($pic) {
+                $q->where('name', 'like', "%{$pic}%");
+            });
+        }
+
+        if ($request->filled('filter_module')) {
+            $mod = $request->query('filter_module');
+            $query->whereHas('mapping.category.module', function ($q) use ($mod) {
+                $q->where('name', 'like', "%{$mod}%");
+            });
+        }
+
+        if ($request->filled('filter_category')) {
+            $cat = $request->query('filter_category');
+            $query->whereHas('mapping.category', function ($q) use ($cat) {
+                $q->where('name', 'like', "%{$cat}%");
+            });
+        }
+
+        if ($request->filled('filter_mapping')) {
+            $map = $request->query('filter_mapping');
+            $query->whereHas('mapping', function ($q) use ($map) {
+                $q->where('name', 'like', "%{$map}%");
+            });
+        }
+
+        if ($request->filled('filter_document_level')) {
+            $query->where('document_level', 'like', '%' . $request->query('filter_document_level') . '%');
+        }
+
+        if ($request->filled('filter_document_number')) {
+            $query->where('document_number', 'like', '%' . $request->query('filter_document_number') . '%');
+        }
+
+        if ($request->filled('filter_title')) {
+            $query->where('title', 'like', '%' . $request->query('filter_title') . '%');
+        }
+
+        if ($request->has('page') || $request->has('limit') || $request->query('paginate') === 'true') {
+            $limit = $request->query('limit', 10);
+            $documents = $query->paginate($limit);
+        } else {
+            $documents = $query->get();
+        }
 
         return ResponseFormatter::success($documents, 'Documents retrieved successfully');
     }

@@ -9,7 +9,7 @@ class PtwDocumentActivity extends Model
 {
     use HasUuids;
 
-    protected $table = 'document_system_ptw_activities';
+    protected $table = 'ptw_document_activities';
 
     protected $fillable = [
         'ptw_document_id',

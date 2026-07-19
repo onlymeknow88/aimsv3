@@ -132,7 +132,7 @@ return [
         | app folder name
         | for example can change it to 'src' or 'App'
         */
-        'app_folder' => 'app/',
+        'app_folder' => '',
 
         /*
         |--------------------------------------------------------------------------
@@ -172,7 +172,7 @@ return [
             'traits' => ['path' => 'app/Traits', 'generate' => false],
 
             // app/Http/
-            'controller' => ['path' => 'app/Http/Controllers', 'generate' => true],
+            'controller' => ['path' => 'Http/Controllers', 'generate' => true],
             'filter' => ['path' => 'app/Http/Middleware', 'generate' => false],
             'request' => ['path' => 'app/Http/Requests', 'generate' => false],
 

@@ -89,18 +89,26 @@ Route::middleware(['web', 'auth'])->prefix('document-system')->group(function ()
     // 4. PTW API Actions
     // ==========================================
     Route::middleware('module.permission:document-system,can_view,doc.ptw')->group(function () {
-        Route::get('/ptw', [\Modules\DocumentSystem\Http\Controllers\PtwController::class, 'index']);
+        Route::get('/ptw', [\Modules\DocumentSystem\Http\Controllers\Api\PtwController::class, 'index']);
+        Route::get('/ptw/{id}', [\Modules\DocumentSystem\Http\Controllers\Api\PtwController::class, 'show']);
     });
 
     Route::middleware('module.permission:document-system,can_create,doc.ptw')->group(function () {
-        Route::post('/ptw', [\Modules\DocumentSystem\Http\Controllers\PtwController::class, 'store']);
+        Route::post('/ptw', [\Modules\DocumentSystem\Http\Controllers\Api\PtwController::class, 'store']);
+        Route::post('/ptw/{id}/submit-review', [\Modules\DocumentSystem\Http\Controllers\Api\PtwController::class, 'submitForReview']);
     });
 
     Route::middleware('module.permission:document-system,can_edit,doc.ptw')->group(function () {
-        Route::post('/ptw/{id}', [\Modules\DocumentSystem\Http\Controllers\PtwController::class, 'update']);
+        Route::post('/ptw/{id}', [\Modules\DocumentSystem\Http\Controllers\Api\PtwController::class, 'update']);
+        Route::delete('/ptw/attachments/{id}', [\Modules\DocumentSystem\Http\Controllers\Api\PtwController::class, 'deleteAttachment']);
     });
 
     Route::middleware('module.permission:document-system,can_delete,doc.ptw')->group(function () {
-        Route::delete('/ptw/{id}', [\Modules\DocumentSystem\Http\Controllers\PtwController::class, 'destroy']);
+        Route::delete('/ptw/{id}', [\Modules\DocumentSystem\Http\Controllers\Api\PtwController::class, 'destroy']);
+    });
+
+    Route::middleware('module.permission:document-system,can_approval,doc.approval')->group(function () {
+        Route::post('/ptw/{id}/approve', [\Modules\DocumentSystem\Http\Controllers\Api\PtwController::class, 'approve']);
+        Route::post('/ptw/{id}/reject', [\Modules\DocumentSystem\Http\Controllers\Api\PtwController::class, 'reject']);
     });
 });

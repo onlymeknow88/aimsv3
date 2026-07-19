@@ -5,7 +5,19 @@ import useJsa from './Hooks/useJsa';
 import JsaTable from './Partials/JsaTable';
 
 export default function Index({ isObsolete = false, isDraft = false }) {
-    const { docs, fetching, openDrawer, deleteJsa } = useJsa(isObsolete, isDraft);
+    const { 
+        docs, 
+        fetching, 
+        openDrawer, 
+        deleteJsa,
+        page,
+        setPage,
+        limit,
+        setLimit,
+        pagination,
+        columnFilters,
+        setColumnFilters
+    } = useJsa(isObsolete, isDraft);
 
     const getPageTitle = () => {
         if (isObsolete) return "Obsolete JSA Archive";
@@ -47,7 +59,18 @@ export default function Index({ isObsolete = false, isDraft = false }) {
             </div>
 
             <div style={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--border-color)', borderRadius: '12px', overflow: 'hidden', boxShadow: 'var(--shadow-sm)' }}>
-                <JsaTable documents={docs} onOpenDrawer={openDrawer} onDelete={deleteJsa} loading={fetching} />
+                <JsaTable 
+                    documents={docs} 
+                    onOpenDrawer={openDrawer} 
+                    onDelete={deleteJsa} 
+                    loading={fetching}
+                    pagination={pagination}
+                    onPageChange={setPage}
+                    limit={limit}
+                    onLimitChange={setLimit}
+                    columnFilters={columnFilters}
+                    onColumnFilterChange={(colId, val) => setColumnFilters(prev => ({ ...prev, [colId]: val }))}
+                />
             </div>
         </DocumentSystemLayout>
     );

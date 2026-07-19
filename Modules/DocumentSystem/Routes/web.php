@@ -64,9 +64,18 @@ Route::middleware(['web', 'auth'])->prefix('document-system')->group(function ()
         ->name('doc.jsa.detail');
 
     // Permit To Work (PTW)
-    Route::get('/ptw', [DocumentSystemController::class, 'ptw'])
+    Route::get('/ptw', [\Modules\DocumentSystem\Http\Controllers\PtwController::class, 'index'])
         ->middleware('module.permission:document-system,can_view,doc.ptw')
         ->name('doc.ptw');
+    Route::get('/ptw/create', [\Modules\DocumentSystem\Http\Controllers\PtwController::class, 'create'])
+        ->middleware('module.permission:document-system,can_create,doc.ptw')
+        ->name('doc.ptw.create');
+    Route::get('/ptw/edit/{id}', [\Modules\DocumentSystem\Http\Controllers\PtwController::class, 'edit'])
+        ->middleware('module.permission:document-system,can_edit,doc.ptw')
+        ->name('doc.ptw.edit');
+    Route::get('/ptw/detail/{id}', [\Modules\DocumentSystem\Http\Controllers\PtwController::class, 'detail'])
+        ->middleware('module.permission:document-system,can_view,doc.ptw')
+        ->name('doc.ptw.detail');
 
     // Master Data
     Route::get('/master', [DocumentSystemController::class, 'master'])

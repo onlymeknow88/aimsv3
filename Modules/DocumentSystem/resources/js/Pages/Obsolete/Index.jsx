@@ -23,7 +23,15 @@ export default function Index() {
         selectedIds, 
         setSelectedIds, 
         handleEdit, 
-        handleDelete 
+        handleDelete, 
+        pagination,
+        limit,
+        setLimit,
+        page,
+        setPage,
+        fetchDocuments,
+        columnFilters,
+        setColumnFilters,
     } = useObsolete();
 
     const [visibleColumns, setVisibleColumns] = useState({
@@ -48,10 +56,7 @@ export default function Index() {
         }));
     };
 
-    const filtered = docs.filter(d =>
-        d.title?.toLowerCase().includes(search.toLowerCase()) ||
-        d.document_number?.toLowerCase().includes(search.toLowerCase())
-    );
+    const filtered = docs;
 
     return (
         <DocumentSystemLayout>
@@ -194,6 +199,12 @@ export default function Index() {
                     onSelectionChange={setSelectedIds}
                     visibleColumns={visibleColumns}
                     loading={loading}
+                    pagination={pagination}
+                    limit={limit}
+                    onLimitChange={setLimit}
+                    onPageChange={setPage}
+                    columnFilters={columnFilters}
+                    onColumnFilterChange={(colId, val) => setColumnFilters(prev => ({ ...prev, [colId]: val }))}
                 />
             </div>
         </DocumentSystemLayout>

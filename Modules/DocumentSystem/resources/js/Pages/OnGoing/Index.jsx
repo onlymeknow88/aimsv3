@@ -26,7 +26,14 @@ export default function Index() {
         drawerOpen, 
         selectedDoc, 
         openDrawer, 
-        closeDrawer 
+        closeDrawer,
+        pagination,
+        page,
+        setPage,
+        limit,
+        setLimit,
+        columnFilters,
+        setColumnFilters,
     } = useOnGoing();
 
     const [visibleColumns, setVisibleColumns] = useState({
@@ -51,10 +58,7 @@ export default function Index() {
         }));
     };
 
-    const filtered = docs.filter(d =>
-        d.title?.toLowerCase().includes(search.toLowerCase()) ||
-        d.document_number?.toLowerCase().includes(search.toLowerCase())
-    );
+    const filtered = docs;
 
     return (
         <DocumentSystemLayout>
@@ -130,6 +134,12 @@ export default function Index() {
                     onSelectionChange={setSelectedIds}
                     visibleColumns={visibleColumns}
                     loading={loading}
+                    pagination={pagination}
+                    limit={limit}
+                    onLimitChange={setLimit}
+                    onPageChange={setPage}
+                    columnFilters={columnFilters}
+                    onColumnFilterChange={(colId, val) => setColumnFilters(prev => ({ ...prev, [colId]: val }))}
                 />
             </div>
 

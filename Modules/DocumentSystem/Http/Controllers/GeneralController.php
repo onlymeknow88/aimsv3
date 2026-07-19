@@ -66,13 +66,17 @@ class GeneralController extends Controller
             } elseif (in_array($ext, ['png', 'jpg', 'jpeg', 'gif', 'webp'])) {
                 $mimeType = 'image/' . ($ext === 'jpg' ? 'jpeg' : $ext);
             }
+        } elseif ($type === 'ptw') {
+            $attachment = \Modules\DocumentSystem\Entities\PtwDocumentAttachment::findOrFail($id);
+            $fileName = $attachment->file_name;
+            $mimeType = $attachment->mime_type ?? 'application/octet-stream';
         } else {
             $attachment = Attachment::findOrFail($id);
             $fileName = $attachment->file_name;
             $mimeType = $attachment->mime_type ?? 'application/octet-stream';
         }
 
-        $filePath = ($type === 'jsa' || $type === 'jsa_activity') ? ($attachment->file_path ?? '') : ($attachment->path ?? '');
+        $filePath = ($type === 'jsa' || $type === 'jsa_activity' || $type === 'ptw') ? ($attachment->file_path ?? '') : ($attachment->path ?? '');
         $localPath = Storage::disk('public')->path($filePath);
 
         if (!$filePath || !file_exists($localPath)) {
@@ -134,12 +138,15 @@ class GeneralController extends Controller
         } elseif ($type === 'jsa') {
             $attachment = \Modules\DocumentSystem\Entities\JsaDocumentAttachment::findOrFail($id);
             $fileName = basename($attachment->file_path);
+        } elseif ($type === 'ptw') {
+            $attachment = \Modules\DocumentSystem\Entities\PtwDocumentAttachment::findOrFail($id);
+            $fileName = $attachment->file_name;
         } else {
             $attachment = Attachment::findOrFail($id);
             $fileName = $attachment->file_name;
         }
 
-        $filePath = ($type === 'jsa' || $type === 'jsa_activity') ? ($attachment->file_path ?? '') : ($attachment->path ?? '');
+        $filePath = ($type === 'jsa' || $type === 'jsa_activity' || $type === 'ptw') ? ($attachment->file_path ?? '') : ($attachment->path ?? '');
         $localPath = Storage::disk('public')->path($filePath);
 
         if (!$filePath || !file_exists($localPath)) {
@@ -166,11 +173,13 @@ class GeneralController extends Controller
             $attachment = \Modules\DocumentSystem\Entities\ActivityAttachment::findOrFail($id);
         } elseif ($type === 'jsa') {
             $attachment = \Modules\DocumentSystem\Entities\JsaDocumentAttachment::findOrFail($id);
+        } elseif ($type === 'ptw') {
+            $attachment = \Modules\DocumentSystem\Entities\PtwDocumentAttachment::findOrFail($id);
         } else {
             $attachment = Attachment::findOrFail($id);
         }
 
-        $filePath = ($type === 'jsa') ? ($attachment->file_path ?? '') : ($attachment->path ?? '');
+        $filePath = ($type === 'jsa' || $type === 'ptw') ? ($attachment->file_path ?? '') : ($attachment->path ?? '');
         
         if (str_starts_with($filePath, 'test/') || str_starts_with($filePath, 'complianceCMS/') || !file_exists(Storage::disk('public')->path($filePath))) {
             $sas = GetBlobSasUri('aims-cntr', $filePath);

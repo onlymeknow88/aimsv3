@@ -9,7 +9,7 @@ class PtwDocumentAttachment extends Model
 {
     use HasUuids;
 
-    protected $table = 'document_system_ptw_attachments';
+    protected $table = 'ptw_document_attachments';
 
     protected $fillable = [
         'ptw_document_id',

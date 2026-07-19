@@ -9,7 +9,7 @@ class PtwDocumentPeople extends Model
 {
     use HasUuids;
 
-    protected $table = 'document_system_ptw_people';
+    protected $table = 'ptw_document_people';
 
     protected $fillable = [
         'ptw_document_id',
