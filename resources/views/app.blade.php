@@ -13,7 +13,12 @@
         <!-- Scripts -->
         @routes
         @viteReactRefresh
-        @vite(['resources/js/app.jsx', "resources/js/Pages/{$page['component']}.jsx"])
+        @vite([
+            'resources/js/app.jsx',
+            str_starts_with($page['component'], 'DocumentSystem/')
+                ? 'Modules/DocumentSystem/resources/js/Pages/' . str_replace('DocumentSystem/', '', $page['component']) . '.jsx'
+                : "resources/js/Pages/{$page['component']}.jsx"
+        ])
         @inertiaHead
     </head>
     <body class="font-sans antialiased">

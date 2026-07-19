@@ -1,9 +1,10 @@
 import { defineConfig } from 'vite';
 import laravel from 'laravel-vite-plugin';
-// Uncomment the import for your frontend framework:
-// import vue from '@vitejs/plugin-vue';
-// import react from '@vitejs/plugin-react';
-// import { svelte } from '@sveltejs/vite-plugin-svelte';
+
+export const paths = [
+    'Modules/DocumentSystem/resources/assets/sass/app.scss',
+    'Modules/DocumentSystem/resources/assets/js/app.js',
+];
 
 export default defineConfig({
     build: {
