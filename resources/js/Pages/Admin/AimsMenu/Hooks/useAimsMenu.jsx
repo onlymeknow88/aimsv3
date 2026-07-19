@@ -65,7 +65,7 @@ export default function useAimsMenu() {
 
     const openCreate = () => {
         setEditId(null);
-        setForm({ ...emptyForm, module_id: modules[0]?.id ?? '' });
+        setForm({ ...emptyForm, module_id: filterModule || (modules[0]?.id ?? '') });
         setFormError(null);
         setModalOpen(true);
     };
