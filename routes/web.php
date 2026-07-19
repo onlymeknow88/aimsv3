@@ -5,7 +5,36 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 Route::get('/', function () {
-    return Inertia::render('Dashboard');
+    $events = [];
+    if (class_exists('Modules\Coe\Entities\Event')) {
+        $query = \Modules\Coe\Entities\Event::with(['category', 'section'])->orderBy('start_date', 'asc');
+        $rawEvents = (clone $query)->where('start_date', '>=', now()->toDateString())->limit(5)->get();
+        if ($rawEvents->isEmpty()) {
+            $rawEvents = $query->limit(5)->get();
+        }
+        $events = $rawEvents->map(function ($event) {
+            $startDate = \Carbon\Carbon::parse($event->start_date);
+            
+            $statusColor = '#FF8C24';
+            if ($event->status === 'Completed') {
+                $statusColor = '#2FBF71';
+            } elseif ($event->status === 'Cancelled') {
+                $statusColor = '#F44336';
+            }
+            
+            return [
+                'date'   => strtoupper($startDate->translatedFormat('d M')), // e.g. "23 JUN"
+                'title'  => $event->title,
+                'dept'   => $event->section->name ?? ($event->category->name ?? 'General'),
+                'status' => strtoupper($event->status),
+                'color'  => $statusColor,
+            ];
+        })->toArray();
+    }
+
+    return Inertia::render('Dashboard', [
+        'coeEvents' => $events
+    ]);
 })->name('dashboard');
 
 Route::middleware('admin.session')->group(function () {

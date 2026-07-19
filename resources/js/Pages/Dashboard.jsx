@@ -25,7 +25,7 @@ ChartJS.register(
     LineElement, ArcElement, ChartTitle, Tooltip, Legend, Filler
 );
 
-export default function Dashboard() {
+export default function Dashboard({ coeEvents = [] }) {
     // 1. KPI Cards
     const statsCards = [
         { title: 'PROJECT TO DATE', value: '1.245 Hari', trend: '▲ 8,5% dari periode lalu', icon: Calendar, color: '#2563eb' },
@@ -177,32 +177,32 @@ export default function Dashboard() {
                     <div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
                             <h4 style={{ fontSize: '14.5px', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>CALENDAR OF EVENT</h4>
-                            <a href="#" style={{ fontSize: '12px', color: 'var(--primary)', fontWeight: 600, textDecoration: 'none' }}>Lihat Semua</a>
+                            <a href="/coe/calendar" style={{ fontSize: '12px', color: 'var(--primary)', fontWeight: 600, textDecoration: 'none' }}>Lihat Semua</a>
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                            {[
-                                { date: '23 JUN', title: 'Safety Awareness Campaign Q2', dept: 'HSE Department', status: 'PENDING', color: '#FF8C24' },
-                                { date: '25 JUN', title: 'Inspection Area Workshop', dept: 'Mining Operation', status: 'PENDING', color: '#FF8C24' },
-                                { date: '28 JUN', title: 'Health Talk: Preventive Care', dept: 'Medical Department', status: 'DONE', color: '#2FBF71' },
-                                { date: '30 JUN', title: 'Emergency Response Drill', dept: 'Emergency Team', status: 'PENDING', color: '#FF8C24' },
-                                { date: '02 JUL', title: 'Enviro Monitoring Program', dept: 'Environment Department', status: 'CANCELLED', color: '#F44336' },
-                            ].map((evt, idx) => (
-                                <div key={idx} style={{ display: 'flex', gap: '16px', borderBottom: idx !== 4 ? '1px solid var(--border-color)' : 'none', paddingBottom: '10px', alignItems: 'center' }}>
-                                    <div style={{ backgroundColor: '#f1f5f9', borderRadius: '8px', padding: '6px 10px', textAlign: 'center', minWidth: '50px' }}>
-                                        <span style={{ fontSize: '13.5px', fontWeight: 800, color: 'var(--primary)', display: 'block' }}>{evt.date.split(' ')[0]}</span>
-                                        <span style={{ fontSize: '9.5px', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>{evt.date.split(' ')[1]}</span>
+                            {coeEvents.length > 0 ? (
+                                coeEvents.map((evt, idx) => (
+                                    <div key={idx} style={{ display: 'flex', gap: '16px', borderBottom: idx !== coeEvents.length - 1 ? '1px solid var(--border-color)' : 'none', paddingBottom: '10px', alignItems: 'center' }}>
+                                        <div style={{ backgroundColor: '#f1f5f9', borderRadius: '8px', padding: '6px 10px', textAlign: 'center', minWidth: '50px' }}>
+                                            <span style={{ fontSize: '13.5px', fontWeight: 800, color: 'var(--primary)', display: 'block' }}>{evt.date.split(' ')[0]}</span>
+                                            <span style={{ fontSize: '9.5px', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>{evt.date.split(' ')[1]}</span>
+                                        </div>
+                                        <div style={{ flex: 1 }}>
+                                            <h5 style={{ fontSize: '12.5px', fontWeight: 700, color: 'var(--text-primary)', margin: '0 0 2px 0' }}>{evt.title}</h5>
+                                            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{evt.dept}</span>
+                                        </div>
+                                        <span style={{ fontSize: '9.5px', fontWeight: 800, backgroundColor: `${evt.color}12`, color: evt.color, padding: '2px 6px', borderRadius: '4px' }}>{evt.status}</span>
                                     </div>
-                                    <div style={{ flex: 1 }}>
-                                        <h5 style={{ fontSize: '12.5px', fontWeight: 700, color: 'var(--text-primary)', margin: '0 0 2px 0' }}>{evt.title}</h5>
-                                        <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{evt.dept}</span>
-                                    </div>
-                                    <span style={{ fontSize: '9.5px', fontWeight: 800, backgroundColor: `${evt.color}12`, color: evt.color, padding: '2px 6px', borderRadius: '4px' }}>{evt.status}</span>
+                                ))
+                            ) : (
+                                <div style={{ textAlign: 'center', padding: '24px 0', color: 'var(--text-muted)', fontSize: '12px' }}>
+                                    Tidak ada agenda kegiatan saat ini.
                                 </div>
-                            ))}
+                            )}
                         </div>
                     </div>
                     <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '12px', marginTop: '12px', textAlign: 'center' }}>
-                        <a href="#" style={{ fontSize: '12px', color: 'var(--primary)', fontWeight: 700, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                        <a href="/coe/calendar" style={{ fontSize: '12px', color: 'var(--primary)', fontWeight: 700, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
                             Lihat Kalender Lengkap <ArrowRight size={12} />
                         </a>
                     </div>

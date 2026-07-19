@@ -2,6 +2,7 @@ import React from 'react';
 import {
     LayoutDashboard, ArrowLeft, ChevronDown, ChevronUp, Calendar, List, Database, Settings
 } from 'lucide-react';
+import { usePage } from '@inertiajs/react';
 
 export default function Sidebar({
     sidebarOpen,
@@ -10,6 +11,10 @@ export default function Sidebar({
     openMaster,
     setOpenMaster
 }) {
+    const { auth } = usePage().props;
+    const allowedModules = auth?.modules || [];
+    const hasCoeAccess = auth?.user && (allowedModules.includes('*') || allowedModules.includes('calender-of-event-coe'));
+
     return (
         <div
             style={{
@@ -103,81 +108,84 @@ export default function Sidebar({
                         </a>
                     </li>
 
-                    {/* 3. Event List */}
-                    <li style={{ marginBottom: '4px' }}>
-                        <a
-                            href="/coe/list"
-                            style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '12px',
-                                padding: '10px 16px',
-                                borderRadius: '8px',
-                                fontSize: '13px',
-                                fontWeight: 500,
-                                textDecoration: 'none',
-                                color: currentPath === '/coe/list' ? '#fff' : '#a3b1c6',
-                                backgroundColor: currentPath === '/coe/list' ? 'var(--primary)' : 'transparent',
-                                transition: 'all 0.2s ease',
-                                whiteSpace: 'nowrap'
-                            }}
-                            className={currentPath !== '/coe/list' ? "hover-link" : ""}
-                        >
-                            <List size={14} style={{ color: currentPath === '/coe/list' ? '#fff' : 'rgba(255,255,255,0.4)', flexShrink: 0 }} />
-                            Event List
-                        </a>
-                    </li>
+                    {hasCoeAccess && (
+                        <>
+                            {/* 3. Event List */}
+                            <li style={{ marginBottom: '4px' }}>
+                                <a
+                                    href="/coe/list"
+                                    style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '12px',
+                                        padding: '10px 16px',
+                                        borderRadius: '8px',
+                                        fontSize: '13px',
+                                        fontWeight: 500,
+                                        textDecoration: 'none',
+                                        color: currentPath === '/coe/list' ? '#fff' : '#a3b1c6',
+                                        backgroundColor: currentPath === '/coe/list' ? 'var(--primary)' : 'transparent',
+                                        transition: 'all 0.2s ease',
+                                        whiteSpace: 'nowrap'
+                                    }}
+                                    className={currentPath !== '/coe/list' ? "hover-link" : ""}
+                                >
+                                    <List size={14} style={{ color: currentPath === '/coe/list' ? '#fff' : 'rgba(255,255,255,0.4)', flexShrink: 0 }} />
+                                    Event List
+                                </a>
+                            </li>
 
-                    {/* 4. Master Data Settings Dropdown */}
-                    <li style={{ marginBottom: '4px' }}>
-                        <button
-                            onClick={() => setOpenMaster(!openMaster)}
-                            style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                justify_content: 'space-between',
-                                justifyContent: 'space-between',
-                                width: '100%',
-                                padding: '10px 16px',
-                                borderRadius: '8px',
-                                fontSize: '13px',
-                                fontWeight: 500,
-                                color: '#a3b1c6',
-                                backgroundColor: 'transparent',
-                                border: 'none',
-                                cursor: 'pointer',
-                                transition: 'all 0.2s ease',
-                                textAlign: 'left'
-                            }}
-                            className="hover-link"
-                        >
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                <Database size={14} style={{ color: 'rgba(255,255,255,0.4)' }} />
-                                <span>Master Data</span>
-                            </div>
-                            {openMaster ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
-                        </button>
+                            {/* 4. Master Data Settings Dropdown */}
+                            <li style={{ marginBottom: '4px' }}>
+                                <button
+                                    onClick={() => setOpenMaster(!openMaster)}
+                                    style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'space-between',
+                                        width: '100%',
+                                        padding: '10px 16px',
+                                        borderRadius: '8px',
+                                        fontSize: '13px',
+                                        fontWeight: 500,
+                                        color: '#a3b1c6',
+                                        backgroundColor: 'transparent',
+                                        border: 'none',
+                                        cursor: 'pointer',
+                                        transition: 'all 0.2s ease',
+                                        textAlign: 'left'
+                                    }}
+                                    className="hover-link"
+                                >
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                        <Database size={14} style={{ color: 'rgba(255,255,255,0.4)' }} />
+                                        <span>Master Data</span>
+                                    </div>
+                                    {openMaster ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+                                </button>
 
-                        {openMaster && (
-                            <ul style={{ listStyle: 'none', margin: '4px 0 0 0', paddingLeft: '28px' }}>
-                                <li>
-                                    <a
-                                        href="/coe/categories"
-                                        style={{
-                                            display: 'block',
-                                            padding: '6px 12px',
-                                            fontSize: '12px',
-                                            color: currentPath === '/coe/categories' ? '#fff' : '#a3b1c6',
-                                            textDecoration: 'none'
-                                        }}
-                                        className="hover-link"
-                                    >
-                                        Categories
-                                    </a>
-                                </li>
-                            </ul>
-                        )}
-                    </li>
+                                {openMaster && (
+                                    <ul style={{ listStyle: 'none', margin: '4px 0 0 0', paddingLeft: '28px' }}>
+                                        <li>
+                                            <a
+                                                href="/coe/categories"
+                                                style={{
+                                                    display: 'block',
+                                                    padding: '6px 12px',
+                                                    fontSize: '12px',
+                                                    color: currentPath === '/coe/categories' ? '#fff' : '#a3b1c6',
+                                                    textDecoration: 'none'
+                                                }}
+                                                className="hover-link"
+                                            >
+                                                Categories
+                                            </a>
+                                        </li>
+                                    </ul>
+                                )}
+                            </li>
+                        </>
+                    )}
                 </ul>
             </div>
         </div>
