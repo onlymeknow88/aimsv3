@@ -17,14 +17,31 @@ class UserController extends Controller
     /**
      * API: List all users with relations.
      */
-    public function index()
+    public function index(Request $request)
     {
         try {
-            $users = User::with([
+            $limit  = $request->query('limit', 10);
+            $search = $request->query('search', '');
+
+            $query = User::with([
                 'employee.company',
                 'employee.department',
                 'documentRoles',
-            ])->latest()->get()->map(fn($u) => [
+            ]);
+
+            if (!empty($search)) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                      ->orWhere('email', 'like', "%{$search}%")
+                      ->orWhereHas('employee', function ($eq) use ($search) {
+                          $eq->where('position', 'like', "%{$search}%");
+                      });
+                });
+            }
+
+            $usersPaginator = $query->latest()->paginate($limit);
+
+            $usersPaginator->through(fn($u) => [
                 'id'             => $u->id,
                 'name'           => $u->name,
                 'email'          => $u->email,
@@ -46,12 +63,12 @@ class UserController extends Controller
                     'company_id'       => $u->employee->company_id,
                     'department_id'    => $u->employee->department_id,
                     'company'          => $u->employee->company ? ['id' => $u->employee->company->id, 'company_name' => $u->employee->company->company_name] : null,
-                    'department'       => $u->employee->department ? ['id' => $u->employee->department->id, 'department_name' => $u->employee->department->department_name] : null,
+                    'department'       => $u->employee->department ? ['id' => $u->employee->department->id, 'name' => $u->employee->department->name] : null,
                 ] : null,
                 'document_roles' => $u->documentRoles->map(fn($r) => ['id' => $r->id, 'name' => $r->name, 'module_id' => $r->module_id])->values(),
             ]);
 
-            return ResponseFormatter::success($users, 'Data user berhasil diambil.');
+            return ResponseFormatter::success($usersPaginator, 'Data user berhasil diambil.');
         } catch (\Exception $e) {
             return ResponseFormatter::error('Gagal: ' . $e->getMessage(), 500);
         }
@@ -92,14 +109,12 @@ class UserController extends Controller
             'department_id'    => 'nullable|exists:departments,id',
             'emp_number'       => 'nullable|string|max:50',
             'emp_id_number'    => 'nullable|string|max:50',
-            'emp_position'     => 'nullable|string|max:255',
             'emp_grade'        => 'nullable|string|max:100',
             'emp_gender'       => 'nullable|in:male,female',
             'emp_status'       => 'nullable|string|max:100',
             'emp_marital'      => 'nullable|string|max:100',
             'emp_dob'          => 'nullable|date',
             'emp_blood_type'   => 'nullable|string|max:5',
-            'emp_address'      => 'nullable|string',
         ]);
 
         try {
@@ -109,6 +124,7 @@ class UserController extends Controller
                     'email'    => $validated['email'],
                     'password' => Hash::make($validated['password']),
                     'role'     => 'user',
+                    'department_id' => $validated['department_id'] ?? null,
                 ]);
 
                 if (!empty($validated['with_employee'])) {
@@ -119,14 +135,12 @@ class UserController extends Controller
                         'department_id'   => $validated['department_id'] ?? null,
                         'number'          => $validated['emp_number'] ?? null,
                         'id_number'       => $validated['emp_id_number'] ?? null,
-                        'position'        => $validated['emp_position'] ?? null,
                         'grade'           => $validated['emp_grade'] ?? null,
                         'gender'          => $validated['emp_gender'] ?? null,
                         'employee_status' => $validated['emp_status'] ?? null,
                         'marital_status'  => $validated['emp_marital'] ?? null,
                         'date_of_birth'   => $validated['emp_dob'] ?? null,
                         'blood_type'      => $validated['emp_blood_type'] ?? null,
-                        'address'         => $validated['emp_address'] ?? null,
                     ]);
                 }
 
@@ -163,14 +177,12 @@ class UserController extends Controller
             'department_id'    => 'nullable|exists:departments,id',
             'emp_number'       => 'nullable|string|max:50',
             'emp_id_number'    => 'nullable|string|max:50',
-            'emp_position'     => 'nullable|string|max:255',
             'emp_grade'        => 'nullable|string|max:100',
             'emp_gender'       => 'nullable|in:male,female',
             'emp_status'       => 'nullable|string|max:100',
             'emp_marital'      => 'nullable|string|max:100',
             'emp_dob'          => 'nullable|date',
             'emp_blood_type'   => 'nullable|string|max:5',
-            'emp_address'      => 'nullable|string',
         ]);
 
         try {
@@ -190,14 +202,12 @@ class UserController extends Controller
                             'department_id'   => $validated['department_id'] ?? null,
                             'number'          => $validated['emp_number'] ?? null,
                             'id_number'       => $validated['emp_id_number'] ?? null,
-                            'position'        => $validated['emp_position'] ?? null,
                             'grade'           => $validated['emp_grade'] ?? null,
                             'gender'          => $validated['emp_gender'] ?? null,
                             'employee_status' => $validated['emp_status'] ?? null,
                             'marital_status'  => $validated['emp_marital'] ?? null,
                             'date_of_birth'   => $validated['emp_dob'] ?? null,
                             'blood_type'      => $validated['emp_blood_type'] ?? null,
-                            'address'         => $validated['emp_address'] ?? null,
                         ]
                     );
                 } else {

@@ -25,6 +25,9 @@ export default function useUsers() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [search, setSearch] = useState('');
+    const [page, setPage] = useState(1);
+    const [limit, setLimit] = useState(10);
+    const [pagination, setPagination] = useState({ current_page: 1, last_page: 1, total: 0 });
 
     // Modal
     const [modalOpen, setModalOpen] = useState(false);
@@ -42,10 +45,15 @@ export default function useUsers() {
         setError(null);
         try {
             const [usersRes, masterRes] = await Promise.all([
-                axios.get(BASE),
+                axios.get(BASE, { params: { search, page, limit } }),
                 axios.get(MASTER_URL),
             ]);
-            setUsers(usersRes.data?.result || []);
+            setUsers(usersRes.data?.result?.data || []);
+            setPagination({
+                current_page: usersRes.data?.result?.current_page || 1,
+                last_page: usersRes.data?.result?.last_page || 1,
+                total: usersRes.data?.result?.total || 0,
+            });
             setMaster(masterRes.data?.result || {});
         } catch (e) {
             setError('Gagal memuat data.');
@@ -53,7 +61,17 @@ export default function useUsers() {
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [search, page, limit]);
+
+    // Reset page to 1 on search change
+    useEffect(() => {
+        setPage(1);
+    }, [search]);
+
+    // Reset page to 1 on limit change
+    useEffect(() => {
+        setPage(1);
+    }, [limit]);
 
     useEffect(() => { fetchUsers(); }, [fetchUsers]);
 
@@ -165,15 +183,13 @@ export default function useUsers() {
         }
     };
 
-    // ── Filtered list ─────────────────────────────────────────────────────────
-    const filteredUsers = users.filter(u =>
-        u.name?.toLowerCase().includes(search.toLowerCase()) ||
-        u.email?.toLowerCase().includes(search.toLowerCase()) ||
-        u.employee?.position?.toLowerCase().includes(search.toLowerCase())
-    );
-
     return {
-        users: filteredUsers,
+        users,
+        pagination,
+        page,
+        setPage,
+        limit,
+        setLimit,
         master,
         loading,
         error,

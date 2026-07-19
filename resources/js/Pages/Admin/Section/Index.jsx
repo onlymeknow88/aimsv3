@@ -1,10 +1,11 @@
-import React from "react";
+import { AlertTriangle, Plus, RefreshCw, Search } from "lucide-react";
+
 import AdminLayout from "@/Layouts/AdminLayout";
-import SectionTable from "./Partials/SectionTable";
-import SectionModal from "./Partials/SectionModal";
 import DeleteConfirmModal from "./Partials/DeleteConfirmModal";
+import React from "react";
+import SectionModal from "./Partials/SectionModal";
+import SectionTable from "./Partials/SectionTable";
 import useSection from "./Hooks/useSection";
-import { Plus, RefreshCw, AlertTriangle, Search } from "lucide-react";
 
 const inputStyle = {
     width: "100%",
@@ -55,12 +56,17 @@ export default function Index() {
         closeDeleteModal,
         confirmDelete,
         deleteAreaManager,
-        deleteAreaLocation
+        deleteAreaLocation,
+        page,
+        setPage,
+        limit,
+        setLimit,
+        pagination,
     } = useSection();
 
     return (
         <AdminLayout title="Sections">
-            <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
+            <div style={{ margin: "0 auto" }}>
                 {/* ── Header ──────────────────────────────────────────── */}
                 <div
                     style={{
@@ -146,6 +152,10 @@ export default function Index() {
                         loading={loading}
                         onEdit={openEditModal}
                         onDelete={openDeleteModal}
+                        pagination={pagination}
+                        limit={limit}
+                        onLimitChange={setLimit}
+                        onPageChange={setPage}
                     />
                 </div>
 
@@ -169,6 +179,7 @@ export default function Index() {
                     areaLocations={areaLocations}
                     areaManagers={areaManagers}
                     users={users}
+                    sections={sections}
                     onCreateAreaLocation={createAreaLocation}
                     onUpdateAreaLocation={updateAreaLocation}
                     onCreateAreaManager={createAreaManager}

@@ -1,8 +1,9 @@
-import React from 'react';
+import { AlertCircle, FolderOpen, Plus, RefreshCw } from 'lucide-react';
+
 import AdminLayout from '@/Layouts/AdminLayout';
-import { Plus, RefreshCw, AlertCircle, FolderOpen } from 'lucide-react';
-import useAimsMenu from './Hooks/useAimsMenu';
 import AimsMenuTable from './Partials/AimsMenuTable';
+import React from 'react';
+import useAimsMenu from './Hooks/useAimsMenu';
 
 export default function Index() {
     const {
@@ -52,7 +53,7 @@ export default function Index() {
 
     return (
         <AdminLayout title="AIMS Menu">
-            <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
+            <div style={{ margin: '0 auto' }}>
 
                 {/* ── Header ──────────────────────────────────────────────── */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>

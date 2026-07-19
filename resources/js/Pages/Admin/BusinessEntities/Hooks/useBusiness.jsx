@@ -1,26 +1,25 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from 'react';
 
-import axios from "axios";
+import axios from 'axios';
 
-const BASE = "/api/admin/departments";
+const BASE_URL = '/api/admin/business-entities';
 
 const emptyForm = {
-    name: "",
-    code: "",
-    document_code: "",
-    head_id: "",
+    name: '',
+    code: '',
+    document_code: '',
 };
 
-export default function useDepartment() {
+
+export default function useBusiness() {
     // Data
-    const [departments, setDepartments] = useState([]);
+    const [businessEntities, setBusinessEntities] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [search, setSearch] = useState("");
+    const [search, setSearch] = useState('');
     const [page, setPage] = useState(1);
     const [limit, setLimit] = useState(10);
     const [pagination, setPagination] = useState({ current_page: 1, last_page: 1, total: 0 });
-
 
     // Modal (create/edit)
     const [modalOpen, setModalOpen] = useState(false);
@@ -34,17 +33,20 @@ export default function useDepartment() {
     const [deleting, setDeleting] = useState(false);
     const [deleteError, setDeleteError] = useState(null);
 
-    // ── Fetch ──────────────────────────────────────────────────────────────────
-    const fetchDepartments = useCallback(async () => {
+    // ── Fetch ─────────────────────────────────
+    const fetchBusinessEntities = useCallback(async () => {
         setLoading(true);
         setError(null);
         try {
-            const response = await axios.get(BASE, { params: { search, page, limit } });
-            // ResponseFormatter::success membungkus hasil paginate(), datanya ada di result.data
-            setDepartments(response.data?.result?.data || []);
-            setPagination(response.data?.result?.pagination || { current_page: 1, last_page: 1, total: 0 });
+            const response = await axios.get(BASE_URL, { params: { search, page, limit } });
+            setBusinessEntities(response.data?.result?.data || []);
+            setPagination({
+                current_page: response.data?.result?.current_page || 1,
+                last_page: response.data?.result?.last_page || 1,
+                total: response.data?.result?.total || 0,
+            });
         } catch (e) {
-            setError("Gagal memuat data.");
+            setError('Gagal memuat data.');
             console.error(e);
         } finally {
             setLoading(false);
@@ -62,8 +64,8 @@ export default function useDepartment() {
     }, [limit]);
 
     useEffect(() => {
-        fetchDepartments();
-    }, [fetchDepartments]);
+        fetchBusinessEntities();
+    }, [fetchBusinessEntities]);
 
     // ── Modal helpers (create/edit) ──────────────────────────────────────────
     const openCreateModal = () => {
@@ -73,19 +75,18 @@ export default function useDepartment() {
         setModalOpen(true);
     };
 
-    const openEditModal = (dept) => {
-        setEditId(dept.id);
+    const openEditModal = (entity) => {
+        setEditId(entity.id);
         setForm({
-            name: dept.name || "",
-            code: dept.code || "",
-            document_code: dept.document_code || "",
-            head_id: dept.head_id || "",
+            name: entity.name || '',
+            code: entity.code || '',
+            document_code: entity.document_code || '',
         });
         setFormError(null);
         setModalOpen(true);
     };
 
-    const closeModal = () => {
+     const closeModal = () => {
         setModalOpen(false);
         setEditId(null);
         setForm(emptyForm);
@@ -93,41 +94,44 @@ export default function useDepartment() {
     };
 
     const setField = (field, value) => {
-        setForm((prev) => ({ ...prev, [field]: value }));
+        setForm(prev => ({ ...prev, [field]: value }));
     };
 
     const handleSubmit = async (e) => {
-        e.preventDefault();
+        if (e && typeof e.preventDefault === 'function') {
+            e.preventDefault();
+        }
         setSubmitting(true);
         setFormError(null);
         try {
             if (editId) {
-                await axios.put(`${BASE}/${editId}`, form);
+                // Update existing entity
+                await axios.put(`${BASE_URL}/${editId}`, form);
             } else {
-                await axios.post(BASE, form);
+                // Create new entity
+                await axios.post(BASE_URL, form);
             }
+            fetchBusinessEntities();
             closeModal();
-            fetchDepartments();
-        } catch (e) {
+        } catch (err) {
             const message =
-                e.response?.data?.message ||
-                Object.values(e.response?.data?.errors || {})[0]?.[0] ||
+                err.response?.data?.message ||
+                Object.values(err.response?.data?.errors || {})[0]?.[0] ||
                 "Gagal menyimpan data.";
             setFormError(message);
-            console.error(e);
+            console.error(err);
         } finally {
             setSubmitting(false);
         }
     };
 
-    // ── Modal helpers (delete confirmation) ──────────────────────────────────
-    const openDeleteModal = (dept) => {
+    // ── Modal helpers (delete confirmation) ──────────────────────────────────────────
+     const openDeleteModal = (dept) => {
         setDeleteTarget(dept);
         setDeleteError(null);
     };
 
     const closeDeleteModal = () => {
-        if (deleting) return; // jangan bisa ditutup saat masih proses
         setDeleteTarget(null);
         setDeleteError(null);
     };
@@ -137,12 +141,11 @@ export default function useDepartment() {
         setDeleting(true);
         setDeleteError(null);
         try {
-            await axios.delete(`${BASE}/${deleteTarget.id}`);
-            setDeleteTarget(null);
-            fetchDepartments();
+            await axios.delete(`${BASE_URL}/${deleteTarget.id}`);
+            fetchBusinessEntities();
+            closeDeleteModal();
         } catch (e) {
-            const message = e.response?.data?.message || "Gagal menghapus data.";
-            setDeleteError(message);
+            setDeleteError('Gagal menghapus data.');
             console.error(e);
         } finally {
             setDeleting(false);
@@ -150,18 +153,18 @@ export default function useDepartment() {
     };
 
     return {
-        departments, // filtering sudah dilakukan di server lewat query `search`
+        businessEntities,
         loading,
         error,
         search,
         setSearch,
-        fetchDepartments,
+        fetchBusinessEntities,
+        pagination,
         page,
         setPage,
         limit,
         setLimit,
-        pagination,
-        // modal create/edit
+        // Modal (create/edit)
         modalOpen,
         setModalOpen,
         editId,
@@ -173,8 +176,9 @@ export default function useDepartment() {
         openEditModal,
         closeModal,
         handleSubmit,
-        // modal delete confirmation
+        // Modal (delete confirmation)
         deleteTarget,
+        setDeleteTarget,
         deleting,
         deleteError,
         openDeleteModal,
@@ -182,3 +186,6 @@ export default function useDepartment() {
         confirmDelete,
     };
 }
+
+
+

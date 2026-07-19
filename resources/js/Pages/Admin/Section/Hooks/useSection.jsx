@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
+
 import axios from "axios";
 
 const BASE = "/api/admin/sections";
@@ -20,6 +21,9 @@ export default function useSection() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [search, setSearch] = useState("");
+    const [page, setPage] = useState(1);
+    const [limit, setLimit] = useState(10);
+    const [pagination, setPagination] = useState({ current_page: 1, last_page: 1, total: 0 });
 
     // Modal (create/edit)
     const [modalOpen, setModalOpen] = useState(false);
@@ -38,15 +42,16 @@ export default function useSection() {
         setLoading(true);
         setError(null);
         try {
-            const response = await axios.get(BASE, { params: { search } });
+            const response = await axios.get(BASE, { params: { search, page, limit } });
             setSections(response.data?.result?.data || []);
+            setPagination(response.data?.result?.pagination || { current_page: 1, last_page: 1, total: 0 });
         } catch (e) {
             setError("Gagal memuat data.");
             console.error(e);
         } finally {
             setLoading(false);
         }
-    }, [search]);
+    }, [search, page, limit]);
 
     // ── Fetch master data (daftar department untuk dropdown) ────────────────
     const fetchMasterData = useCallback(async () => {
@@ -60,6 +65,16 @@ export default function useSection() {
             console.error(e);
         }
     }, []);
+
+     // Reset page to 1 on search change
+    useEffect(() => {
+        setPage(1);
+    }, [search]);
+
+    // Reset page to 1 on limit change
+    useEffect(() => {
+        setPage(1);
+    }, [limit]);
 
     useEffect(() => {
         fetchSections();

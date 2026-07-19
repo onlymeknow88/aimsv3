@@ -1,4 +1,4 @@
-import { Briefcase, Edit2, Trash2, UserCheck, UserX } from "lucide-react";
+import { Edit2, Trash2 } from "lucide-react";
 import {
     Pagination,
     PaginationContent,
@@ -24,68 +24,6 @@ import {
     getPaginationRowModel,
     useReactTable,
 } from "@tanstack/react-table";
-
-// ── Avatar initials ───────────────────────────────────────────────────────────
-function Avatar({ name }) {
-    const initials = (name || "?")
-        .split(" ")
-        .slice(0, 2)
-        .map((w) => w[0])
-        .join("")
-        .toUpperCase();
-    const colors = [
-        "#6366f1",
-        "#10b981",
-        "#f59e0b",
-        "#ef4444",
-        "#8b5cf6",
-        "#ec4899",
-        "#14b8a6",
-        "#f97316",
-    ];
-    const color = colors[(name?.charCodeAt(0) || 0) % colors.length];
-    return (
-        <div
-            style={{
-                width: "34px",
-                height: "34px",
-                borderRadius: "50%",
-                backgroundColor: color,
-                color: "#fff",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: "12px",
-                fontWeight: 800,
-                flexShrink: 0,
-                letterSpacing: "0.03em",
-            }}
-        >
-            {initials}
-        </div>
-    );
-}
-
-// ── Role badge ────────────────────────────────────────────────────────────────
-function RoleBadge({ name }) {
-    return (
-        <span
-            style={{
-                display: "inline-block",
-                padding: "2px 8px",
-                borderRadius: "99px",
-                backgroundColor: "#eff6ff",
-                color: "#1d4ed8",
-                fontSize: "10.5px",
-                fontWeight: 700,
-                border: "1px solid #bfdbfe",
-                whiteSpace: "nowrap",
-            }}
-        >
-            {name}
-        </span>
-    );
-}
 
 // ── Action buttons ────────────────────────────────────────────────────────────
 function ActionBtns({ onEdit, onDelete }) {
@@ -139,12 +77,11 @@ function ActionBtns({ onEdit, onDelete }) {
     );
 }
 
-// ── Main Table ────────────────────────────────────────────────────────────────
-export default function UsersTable({
-    users = [],
-    loading = false,
+export default function BusinessTable({
+    businessEntities = [],
     onEdit,
     onDelete,
+    loading = false,
     pagination,
     onPageChange,
     limit = 10,
@@ -152,154 +89,15 @@ export default function UsersTable({
 }) {
     const columns = useMemo(
         () => [
-            {
-                id: "user",
-                header: "User",
-                cell: ({ row }) => {
-                    const u = row.original;
-                    return (
-                        <div
-                            style={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: "10px",
-                            }}
-                        >
-                            <Avatar name={u.name} />
-                            <div>
-                                <div
-                                    style={{
-                                        fontWeight: 700,
-                                        fontSize: "13px",
-                                        color: "#0f172a",
-                                    }}
-                                >
-                                    {u.name}
-                                </div>
-                                <div
-                                    style={{
-                                        fontSize: "11.5px",
-                                        color: "#64748b",
-                                    }}
-                                >
-                                    {u.email}
-                                </div>
-                            </div>
-                        </div>
-                    );
-                },
-            },
-            {
-                id: "employee",
-                header: "Data Karyawan",
-                cell: ({ row }) => {
-                    const emp = row.original.employee;
-                    if (!emp)
-                        return (
-                            <div
-                                style={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: "5px",
-                                    color: "#cbd5e1",
-                                    fontSize: "12px",
-                                }}
-                            >
-                                <UserX size={13} /> <span>Belum ada data</span>
-                            </div>
-                        );
-                    return (
-                        <div>
-                            <div
-                                style={{
-                                    fontSize: "11px",
-                                    color: "#64748b",
-                                    marginTop: "2px",
-                                }}
-                            >
-                                {emp.company?.company_name || "—"}
-                                {emp.department && (
-                                    <span> / {emp.department.name}</span>
-                                )}
-                            </div>
-                        </div>
-                    );
-                },
-            },
-            {
-                id: "roles",
-                header: "Roles",
-                cell: ({ row }) => {
-                    const roles = row.original.document_roles || [];
-                    if (roles.length === 0)
-                        return (
-                            <span
-                                style={{ color: "#cbd5e1", fontSize: "12px" }}
-                            >
-                                —
-                            </span>
-                        );
-                    return (
-                        <div
-                            style={{
-                                display: "flex",
-                                flexWrap: "wrap",
-                                gap: "4px",
-                                maxWidth: "220px",
-                            }}
-                        >
-                            {roles.slice(0, 3).map((r) => (
-                                <RoleBadge key={r.id} name={r.name} />
-                            ))}
-                            {roles.length > 3 && (
-                                <span
-                                    style={{
-                                        fontSize: "10.5px",
-                                        color: "#94a3b8",
-                                        alignSelf: "center",
-                                    }}
-                                >
-                                    +{roles.length - 3} lagi
-                                </span>
-                            )}
-                        </div>
-                    );
-                },
-            },
-            {
-                id: "status",
-                header: "Status",
-                cell: ({ row }) => {
-                    const active = row.original.is_active !== false;
-                    return (
-                        <span
-                            style={{
-                                display: "inline-flex",
-                                alignItems: "center",
-                                gap: "4px",
-                                fontSize: "11px",
-                                fontWeight: 700,
-                                padding: "3px 10px",
-                                borderRadius: "99px",
-                                backgroundColor: active ? "#f0fdf4" : "#fef2f2",
-                                color: active ? "#15803d" : "#dc2626",
-                            }}
-                        >
-                            {active ? (
-                                <UserCheck size={11} />
-                            ) : (
-                                <UserX size={11} />
-                            )}
-                            {active ? "Aktif" : "Nonaktif"}
-                        </span>
-                    );
-                },
-            },
+            { accessorKey: "name", header: "Nama Entitas Bisnis" },
             {
                 id: "actions",
-                header: "",
+                header: "Aksi",
+                meta: {
+                    align: "center",
+                },
                 cell: ({ row }) => (
-                    <div style={{ textAlign: "right" }}>
+                    <div style={{ textAlign: "center" }}>
                         <ActionBtns
                             onEdit={() => onEdit(row.original)}
                             onDelete={() => onDelete(row.original)}
@@ -312,10 +110,11 @@ export default function UsersTable({
     );
 
     const table = useReactTable({
-        data: users,
+        data: businessEntities,
         columns,
         getCoreRowModel: getCoreRowModel(),
         getFilteredRowModel: getFilteredRowModel(),
+        initialState: { pagination: { pageSize: 15 } },
     });
 
     const visibleCount = table.getVisibleFlatColumns().length;
@@ -361,6 +160,9 @@ export default function UsersTable({
                                         letterSpacing: "0.05em",
                                         padding: "14px 16px",
                                         whiteSpace: "nowrap",
+                                        textAlign:
+                                            h.column.columnDef.meta?.align ||
+                                            "left",
                                     }}
                                 >
                                     {flexRender(
@@ -383,7 +185,7 @@ export default function UsersTable({
                                     color: "#94a3b8",
                                 }}
                             >
-                                Memuat data user...
+                                Memuat data business entity...
                             </TableCell>
                         </TableRow>
                     ) : table.getRowModel().rows.length > 0 ? (
@@ -419,7 +221,8 @@ export default function UsersTable({
                                     fontSize: "14px",
                                 }}
                             >
-                                Belum ada user. Klik "Tambah User" untuk mulai.
+                                Belum ada business entity. Klik "Tambah Business
+                                Entity" untuk mulai.
                             </TableCell>
                         </TableRow>
                     )}

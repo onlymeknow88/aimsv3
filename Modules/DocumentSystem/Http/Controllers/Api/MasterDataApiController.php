@@ -35,14 +35,27 @@ class MasterDataApiController extends Controller
      */
     public function getPjs()
     {
-        $query = AreaManager::query()->with('user');
-        $managers = $query->get()->map(function ($mgr) {
-            return [
-                'id' => $mgr->id,
-                'name' => $mgr->user->name ?? 'Unknown',
-                'email' => $mgr->user->email ?? '',
-            ];
-        });
+        $managers = AreaManager::query()
+            ->with('user')
+            ->get()
+            ->map(function ($mgr) {
+                return [
+                    'id'    => $mgr->id,
+                    'user_id' => $mgr->user_id,
+                    'name'  => $mgr->user->name ?? 'Unknown',
+                    'email' => $mgr->user->email ?? '',
+                ];
+            })
+            ->unique('user_id')   // <- deduplikasi: satu user hanya muncul sekali
+            ->map(function ($mgr) {
+                // Kembalikan format tanpa user_id agar konsisten
+                return [
+                    'id'    => $mgr['id'],
+                    'name'  => $mgr['name'],
+                    'email' => $mgr['email'],
+                ];
+            })
+            ->values();
 
         return ResponseFormatter::success($managers, 'PJs retrieved successfully');
     }

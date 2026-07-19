@@ -1,11 +1,11 @@
-import { AlertTriangle, Plus, RefreshCw, Search } from "lucide-react";
+import { AlertTriangle, Building, Bus, Plus, RefreshCw, Search } from "lucide-react";
+import React, { useState } from "react";
 
 import AdminLayout from "@/Layouts/AdminLayout";
+import BusinessModal from "./Partials/BusinessModal";
+import BusinessTable from "./Partials/BusinessTable";
 import DeleteConfirmModal from "./Partials/DeleteConfirmModal";
-import DepartmentModal from "./Partials/DepartmentModal";
-import DepartmentTable from "./Partials/DepartmentTable";
-import React from "react";
-import useDepartment from "./Hooks/useDepartment";
+import useBusiness from "./Hooks/useBusiness";
 
 // ─── Form field helpers ────────────────────────────────────────────────────────
 const inputStyle = {
@@ -25,38 +25,37 @@ const onBlur = (e) => (e.target.style.borderColor = "#e2e8f0");
 
 export default function Index() {
     const {
-        departments,
+        businessEntities,
         loading,
         error,
-        fetchDepartments,
         search,
         setSearch,
+        modalOpen,
+        editId,
         openCreateModal,
         openEditModal,
         closeModal,
-        handleSubmit,
-        modalOpen,
-        editId,
         form,
         setField,
         submitting,
         formError,
-        // delete confirmation
+        handleSubmit,
         deleteTarget,
-        deleting,
-        deleteError,
         openDeleteModal,
         closeDeleteModal,
+        deleting,
+        deleteError,
         confirmDelete,
+        fetchBusinessEntities,
+        pagination,
         page,
         setPage,
         limit,
         setLimit,
-        pagination,
-    } = useDepartment();
+    } = useBusiness();
 
     return (
-        <AdminLayout title="Departments">
+        <AdminLayout title="Business Entities">
             <div style={{ margin: "0 auto" }}>
                 {/* ── Header ──────────────────────────────────────────── */}
                 <div
@@ -89,21 +88,32 @@ export default function Index() {
                                     alignItems: "center",
                                     justifyContent: "center",
                                 }}
-                            ></div>
+                            >
+                                <Building size={20} color="#fff" />
+                            </div>
                             <h1
                                 style={{
-                                    fontSize: "22px",
+                                    fontSize: "24px",
                                     fontWeight: 800,
-                                    color: "#0f172a",
+                                    color: "#1e293b",
                                     margin: 0,
                                 }}
                             >
-                                Departments
+                                Business Entities
                             </h1>
                         </div>
+                        <p
+                            style={{
+                                color: "#64748b",
+                                fontSize: "13px",
+                                marginTop: "4px",
+                            }}
+                        >
+                            Daftar dan manajemen entitas bisnis pada ekosistem
+                            AIMS.
+                        </p>
                     </div>
-
-                    <div
+                   <div
                         style={{
                             display: "flex",
                             gap: "10px",
@@ -137,7 +147,7 @@ export default function Index() {
                             />
                         </div>
                         <button
-                            onClick={fetchDepartments}
+                            onClick={fetchBusinessEntities}
                             style={{
                                 display: "flex",
                                 alignItems: "center",
@@ -172,7 +182,7 @@ export default function Index() {
                                 boxShadow: "0 3px 10px rgba(21,59,115,0.25)",
                             }}
                         >
-                            <Plus size={16} /> Tambah Department
+                            <Plus size={16} /> Tambah Business Entity
                         </button>
                     </div>
                 </div>
@@ -199,7 +209,7 @@ export default function Index() {
                 )}
 
                 <div
-                    style={{
+                   style={{
                         backgroundColor: "#fff",
                         borderRadius: "14px",
                         border: "1px solid #e2e8f0",
@@ -207,19 +217,19 @@ export default function Index() {
                         boxShadow: "0 2px 10px rgba(0,0,0,0.04)",
                     }}
                 >
-                    <DepartmentTable
-                        departments={departments}
+                    <BusinessTable
+                        businessEntities={businessEntities}
                         loading={loading}
                         onEdit={openEditModal}
                         onDelete={openDeleteModal}
-                        pagination={pagination}
-                        limit={limit}
-                        onLimitChange={setLimit}
-                        onPageChange={setPage}
+                         pagination={pagination}
+                    limit={limit}
+                    onLimitChange={setLimit}
+                    onPageChange={setPage}
                     />
                 </div>
 
-                {!loading && departments.length > 0 && (
+                {!loading && businessEntities.length > 0 && (
                     <p
                         style={{
                             marginTop: "10px",
@@ -228,14 +238,14 @@ export default function Index() {
                             textAlign: "right",
                         }}
                     >
-                        Menampilkan {departments.length} department
+                        Menampilkan {businessEntities.length} entitas bisnis
                     </p>
                 )}
             </div>
 
-            {/* ── Modal ───────────────────────────────────────────────── */}
+            {/* ── Modal Create/Edit ──────────────────────────────────── */}
             {modalOpen && (
-                <DepartmentModal
+                <BusinessModal
                     isOpen={modalOpen}
                     onClose={closeModal}
                     onSubmit={handleSubmit}
@@ -244,18 +254,20 @@ export default function Index() {
                     setField={setField}
                     submitting={submitting}
                     formError={formError}
+
                 />
             )}
 
-            {/* ── Delete Confirmation Modal ──────────────────────────── */}
-            <DeleteConfirmModal
-                isOpen={!!deleteTarget}
-                onClose={closeDeleteModal}
-                onConfirm={confirmDelete}
-                itemName={deleteTarget?.name}
-                deleting={deleting}
-                errorMessage={deleteError}
-            />
+            {deleteTarget && (
+                <DeleteConfirmModal
+                    isOpen={!!deleteTarget}
+                    onClose={closeDeleteModal}
+                    onConfirm={confirmDelete}
+                    deleting={deleting}
+                    errorMessage={deleteError}
+                    itemName={deleteTarget.name}
+                />
+            )}
         </AdminLayout>
     );
 }

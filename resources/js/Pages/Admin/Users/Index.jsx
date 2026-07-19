@@ -1,18 +1,20 @@
-import React from "react";
-import AdminLayout from "@/Layouts/AdminLayout";
 import {
+    AlertCircle,
+    AlertTriangle,
+    Briefcase,
     Plus,
     RefreshCw,
-    AlertCircle,
     Search,
-    Users,
     UserCheck,
-    Briefcase,
+    Users,
     X,
-    AlertTriangle,
 } from "lucide-react";
-import useUsers from "./Hooks/useUsers";
+
+import AdminLayout from "@/Layouts/AdminLayout";
+import React from "react";
+import SearchableSelect from "@/Components/SearchableSelect";
 import UsersTable from "./Partials/UsersTable";
+import useUsers from "./Hooks/useUsers";
 
 // ─── Toggle Switch Component ──────────────────────────────────────────────────
 function Toggle({ checked, onChange, label, description }) {
@@ -165,6 +167,11 @@ function Field({ label, required, children }) {
 export default function Index() {
     const {
         users,
+        pagination,
+        page,
+        setPage,
+        limit,
+        setLimit,
         master,
         loading,
         error,
@@ -194,25 +201,18 @@ export default function Index() {
         roles = [],
         modules = [],
     } = master;
-    
-    // Filter departments by selected company
-    const filteredDepts = form.company_id
-        ? departments.filter(
-            (d) => String(d.company_id) === String(form.company_id),
-        )
-        : departments;
 
     const filteredSections = form.department_id
         ? sections.filter(
-            (s) => String(s.department_id) === String(form.department_id),
-        )
+              (s) => String(s.department_id) === String(form.department_id),
+          )
         : sections;
 
     const hasEmployee = !!users.filter((u) => u.employee).length;
 
     return (
         <AdminLayout title="Users & Employees">
-            <div style={{ maxWidth: "1100px", margin: "0 auto" }}>
+            <div style={{ margin: "0 auto" }}>
                 {/* ── Header ──────────────────────────────────────────── */}
                 <div
                     style={{
@@ -355,7 +355,7 @@ export default function Index() {
                     {[
                         {
                             label: "Total User",
-                            value: users.length,
+                            value: pagination.total,
                             color: "#1d4ed8",
                             bg: "#eff6ff",
                         },
@@ -445,6 +445,10 @@ export default function Index() {
                         loading={loading}
                         onEdit={openEdit}
                         onDelete={handleDelete}
+                        pagination={pagination}
+                        onPageChange={setPage}
+                        limit={limit}
+                        onLimitChange={setLimit}
                     />
                 </div>
 
@@ -457,7 +461,7 @@ export default function Index() {
                             textAlign: "right",
                         }}
                     >
-                        Menampilkan {users.length} user
+                        Menampilkan {pagination.total} user
                     </p>
                 )}
             </div>
@@ -482,7 +486,7 @@ export default function Index() {
                             backgroundColor: "#fff",
                             borderRadius: "16px",
                             width: "100%",
-                            maxWidth: "680px",
+                            maxWidth: "1200px",
                             maxHeight: "92vh",
                             display: "flex",
                             flexDirection: "column",
@@ -551,12 +555,12 @@ export default function Index() {
                                     borderRadius: "6px",
                                 }}
                                 onMouseEnter={(e) =>
-                                (e.currentTarget.style.backgroundColor =
-                                    "#f1f5f9")
+                                    (e.currentTarget.style.backgroundColor =
+                                        "#f1f5f9")
                                 }
                                 onMouseLeave={(e) =>
-                                (e.currentTarget.style.backgroundColor =
-                                    "transparent")
+                                    (e.currentTarget.style.backgroundColor =
+                                        "transparent")
                                 }
                             >
                                 <X size={18} />
@@ -692,7 +696,7 @@ export default function Index() {
                                     <SectionTitle
                                         icon={UserCheck}
                                         title="Peran & Akses Modul"
-                                        color="#8b5cf6"
+                                        // color="#8b5cf6"
                                     />
                                     <div
                                         style={{
@@ -769,26 +773,26 @@ export default function Index() {
                                                         </span>
                                                         {activeRoles.length >
                                                             0 && (
-                                                                <span
-                                                                    style={{
-                                                                        fontSize:
-                                                                            "10px",
-                                                                        fontWeight: 700,
-                                                                        backgroundColor:
-                                                                            "#dbeafe",
-                                                                        color: "#1d4ed8",
-                                                                        padding:
-                                                                            "1px 7px",
-                                                                        borderRadius:
-                                                                            "99px",
-                                                                    }}
-                                                                >
-                                                                    {
-                                                                        activeRoles.length
-                                                                    }{" "}
-                                                                    aktif
-                                                                </span>
-                                                            )}
+                                                            <span
+                                                                style={{
+                                                                    fontSize:
+                                                                        "10px",
+                                                                    fontWeight: 700,
+                                                                    backgroundColor:
+                                                                        "#dbeafe",
+                                                                    color: "#1d4ed8",
+                                                                    padding:
+                                                                        "1px 7px",
+                                                                    borderRadius:
+                                                                        "99px",
+                                                                }}
+                                                            >
+                                                                {
+                                                                    activeRoles.length
+                                                                }{" "}
+                                                                aktif
+                                                            </span>
+                                                        )}
                                                     </label>
                                                     {isExpanded && (
                                                         <div
@@ -804,7 +808,7 @@ export default function Index() {
                                                             }}
                                                         >
                                                             {modRoles.length ===
-                                                                0 ? (
+                                                            0 ? (
                                                                 <span
                                                                     style={{
                                                                         fontSize:
@@ -897,7 +901,7 @@ export default function Index() {
                                     <SectionTitle
                                         icon={Briefcase}
                                         title="Data Karyawan"
-                                        color="#10b981"
+                                        // color="#10b981"
                                     />
                                     <Toggle
                                         checked={form.with_employee}
@@ -931,7 +935,24 @@ export default function Index() {
                                             }}
                                         >
                                             <Field label="Perusahaan">
-                                                <select
+                                                <SearchableSelect
+                                                    options={companies.map(
+                                                        (c) => ({
+                                                            id: c.id,
+                                                            name: c.company_name,
+                                                        }),
+                                                    )}
+                                                    value={form.company_id}
+                                                    onChange={(val) => {
+                                                        setField(
+                                                            "company_id",
+                                                            val,
+                                                        );
+                                                    }}
+                                                    placeholder="Pilih perusahaan..."
+                                                    isMulti={false}
+                                                />
+                                                {/* <select
                                                     value={form.company_id}
                                                     onChange={(e) => {
                                                         setField(
@@ -958,10 +979,27 @@ export default function Index() {
                                                             {c.company_name}
                                                         </option>
                                                     ))}
-                                                </select>
+                                                </select> */}
                                             </Field>
                                             <Field label="Departemen">
-                                                <select
+                                                <SearchableSelect
+                                                    options={departments.map(
+                                                        (d) => ({
+                                                            id: d.id,
+                                                            name: d.name,
+                                                        }),
+                                                    )}
+                                                    value={form.department_id}
+                                                    onChange={(val) =>
+                                                        setField(
+                                                            "department_id",
+                                                            val,
+                                                        )
+                                                    }
+                                                    placeholder="Pilih departemen..."
+                                                    isMulti={false}
+                                                />
+                                                {/* <select
                                                     value={form.department_id}
                                                     onChange={(e) =>
                                                         setField(
@@ -976,15 +1014,15 @@ export default function Index() {
                                                     <option value="">
                                                         — Pilih —
                                                     </option>
-                                                    {filteredDepts.map((d) => (
+                                                    {departments.map((d) => (
                                                         <option
                                                             key={d.id}
                                                             value={d.id}
                                                         >
-                                                            {d.department_name}
+                                                            {d.name}
                                                         </option>
                                                     ))}
-                                                </select>
+                                                </select> */}
                                             </Field>
                                         </div>
 
@@ -996,7 +1034,7 @@ export default function Index() {
                                                 gap: "12px",
                                             }}
                                         >
-                                            <Field label="No. Karyawan">
+                                            <Field label="No. MinePermit / Employee Number">
                                                 <input
                                                     type="text"
                                                     value={form.emp_number}
@@ -1023,38 +1061,6 @@ export default function Index() {
                                                         )
                                                     }
                                                     placeholder="Contoh: 3271..."
-                                                    style={inputStyle}
-                                                    onFocus={onFocus}
-                                                    onBlur={onBlur}
-                                                />
-                                            </Field>
-                                            <Field label="Jabatan / Posisi">
-                                                <input
-                                                    type="text"
-                                                    value={form.emp_position}
-                                                    onChange={(e) =>
-                                                        setField(
-                                                            "emp_position",
-                                                            e.target.value,
-                                                        )
-                                                    }
-                                                    placeholder="Contoh: Safety Officer"
-                                                    style={inputStyle}
-                                                    onFocus={onFocus}
-                                                    onBlur={onBlur}
-                                                />
-                                            </Field>
-                                            <Field label="Golongan / Grade">
-                                                <input
-                                                    type="text"
-                                                    value={form.emp_grade}
-                                                    onChange={(e) =>
-                                                        setField(
-                                                            "emp_grade",
-                                                            e.target.value,
-                                                        )
-                                                    }
-                                                    placeholder="Contoh: IVA"
                                                     style={inputStyle}
                                                     onFocus={onFocus}
                                                     onBlur={onBlur}
@@ -1088,14 +1094,14 @@ export default function Index() {
                                                         — Pilih —
                                                     </option>
                                                     <option value="male">
-                                                        Laki-laki
+                                                        Male
                                                     </option>
                                                     <option value="female">
-                                                        Perempuan
+                                                        Female
                                                     </option>
                                                 </select>
                                             </Field>
-                                            <Field label="Status Pernikahan">
+                                            <Field label="Marital Status">
                                                 <select
                                                     value={form.emp_marital}
                                                     onChange={(e) =>
@@ -1122,7 +1128,7 @@ export default function Index() {
                                                     </option>
                                                 </select>
                                             </Field>
-                                            <Field label="Status Karyawan">
+                                            <Field label="Status">
                                                 <select
                                                     value={form.emp_status}
                                                     onChange={(e) =>
@@ -1138,17 +1144,14 @@ export default function Index() {
                                                     <option value="">
                                                         — Pilih —
                                                     </option>
-                                                    <option value="permanent">
-                                                        Tetap
+                                                    <option value="active">
+                                                        Active
                                                     </option>
-                                                    <option value="contract">
-                                                        Kontrak
+                                                    <option value="inactive">
+                                                        Inactive
                                                     </option>
-                                                    <option value="outsource">
-                                                        Outsource
-                                                    </option>
-                                                    <option value="intern">
-                                                        Magang
+                                                    <option value="candidate">
+                                                        Candidate
                                                     </option>
                                                 </select>
                                             </Field>
@@ -1205,28 +1208,6 @@ export default function Index() {
                                                 </select>
                                             </Field>
                                         </div>
-
-                                        {/* Alamat */}
-                                        <Field label="Alamat">
-                                            <textarea
-                                                value={form.emp_address}
-                                                onChange={(e) =>
-                                                    setField(
-                                                        "emp_address",
-                                                        e.target.value,
-                                                    )
-                                                }
-                                                placeholder="Jl. Contoh No. 123, Jakarta..."
-                                                rows={2}
-                                                style={{
-                                                    ...inputStyle,
-                                                    resize: "vertical",
-                                                    minHeight: "64px",
-                                                }}
-                                                onFocus={onFocus}
-                                                onBlur={onBlur}
-                                            />
-                                        </Field>
                                     </div>
                                 )}
                             </div>
@@ -1283,8 +1264,8 @@ export default function Index() {
                                     {submitting
                                         ? "Menyimpan..."
                                         : editId
-                                            ? "Perbarui User"
-                                            : "Simpan User"}
+                                          ? "Perbarui User"
+                                          : "Simpan User"}
                                 </button>
                             </div>
                         </form>

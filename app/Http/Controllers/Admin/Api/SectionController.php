@@ -29,6 +29,7 @@ class SectionController extends Controller
                 'department:id,name',
                 'areaLocations:id,name',
                 'areaManagers.user:id,name,email',
+                'areaManagers.areaLocations:id,name',
             ]);
 
             if ($search) {
@@ -56,7 +57,7 @@ class SectionController extends Controller
         try {
             return ResponseFormatter::success([
                 'departments' => Department::orderBy('name')->get(['id', 'name']),
-                'area_locations' => AreaLocation::orderBy('name')->get(['id', 'name']),
+                'area_locations' => AreaLocation::with('sections:id,department_id')->orderBy('name')->get(['id', 'name']),
                 'area_managers' => AreaManager::with(['user:id,name,email', 'areaLocations:id,name'])
                     ->get(['id', 'user_id'])
                     ->sortBy(fn($manager) => $manager->user?->name)
@@ -79,8 +80,6 @@ class SectionController extends Controller
                 Rule::unique('area_locations', 'name')->whereNull('deleted_at'),
             ],
         ]);
-
-        dd($validated);
 
         try {
             $location = AreaLocation::create($validated);
@@ -215,6 +214,11 @@ class SectionController extends Controller
             $validated['area_location_ids'] ?? []
         );
 
+        $this->validateLocationDepartmentLocks(
+            $validated['area_location_ids'] ?? [],
+            $validated['department_id']
+        );
+
         try {
             $section = Section::create([
                 'name' => $validated['name'],
@@ -252,6 +256,12 @@ class SectionController extends Controller
         $this->validateManagerLocationLocks(
             $validated['area_manager_ids'] ?? [],
             $validated['area_location_ids'] ?? []
+        );
+
+        $this->validateLocationDepartmentLocks(
+            $validated['area_location_ids'] ?? [],
+            $validated['department_id'],
+            $id
         );
 
         try {
@@ -321,6 +331,28 @@ class SectionController extends Controller
             throw ValidationException::withMessages([
                 'area_manager_ids' =>
                 'Area Manager tidak memiliki Area Location yang sesuai.'
+            ]);
+        }
+    }
+
+    private function validateLocationDepartmentLocks(array $locationIds, $departmentId, $sectionId = null)
+    {
+        if (empty($locationIds)) {
+            return;
+        }
+
+        $invalidLocations = DB::table('section_area_locations')
+            ->join('sections', 'section_area_locations.section_id', '=', 'sections.id')
+            ->whereIn('section_area_locations.area_location_id', $locationIds)
+            ->where('sections.department_id', '!=', $departmentId);
+
+        if ($sectionId) {
+            $invalidLocations->where('sections.id', '!=', $sectionId);
+        }
+
+        if ($invalidLocations->exists()) {
+            throw ValidationException::withMessages([
+                'area_location_ids' => 'Salah satu Area Location yang Anda pilih sudah terikat pada Section di Departemen lain.'
             ]);
         }
     }

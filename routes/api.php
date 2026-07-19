@@ -64,4 +64,30 @@ Route::middleware(['admin.session', 'auth:admin', 'admin.auth'])
                 [SectionController::class, 'destroyAreaLocation']
             );
         });
+
+        // ── Business Entities API ──────────────────────────────────────────────
+        Route::prefix('business-entities')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Admin\Api\BusinessController::class, 'index']);
+            Route::post('/', [\App\Http\Controllers\Admin\Api\BusinessController::class, 'store']);
+            Route::put('/{id}', [\App\Http\Controllers\Admin\Api\BusinessController::class, 'update']);
+            Route::delete('/{id}', [\App\Http\Controllers\Admin\Api\BusinessController::class, 'destroy']);
+        });
+
+        // ── Companies API ──────────────────────────────────────────────────────
+        Route::prefix('companies')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Admin\Api\CompanyController::class, 'index']);
+            Route::post('/', [\App\Http\Controllers\Admin\Api\CompanyController::class, 'store']);
+            Route::put('/{id}', [\App\Http\Controllers\Admin\Api\CompanyController::class, 'update']);
+            Route::delete('/{id}', [\App\Http\Controllers\Admin\Api\CompanyController::class, 'destroy']);
+        });
+
+        // ── Role & Permissions API ─────────────────────────────────────────────
+        Route::prefix('role-permissions')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Admin\Api\RolePermissionController::class, 'index']);
+            Route::post('/update', [\App\Http\Controllers\Admin\Api\RolePermissionController::class, 'update']);
+            Route::post('/bulk-update', [\App\Http\Controllers\Admin\Api\RolePermissionController::class, 'bulkUpdate']);
+            Route::post('/roles', [\App\Http\Controllers\Admin\Api\RolePermissionController::class, 'storeRole']);
+            Route::put('/roles/{id}', [\App\Http\Controllers\Admin\Api\RolePermissionController::class, 'updateRole']);
+            Route::delete('/roles/{id}', [\App\Http\Controllers\Admin\Api\RolePermissionController::class, 'destroyRole']);
+        });
     });

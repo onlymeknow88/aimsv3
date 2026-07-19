@@ -29,17 +29,17 @@ Route::middleware(['admin.session', 'auth:admin', 'admin.auth'])->prefix('admin'
 
     // Business Entities CRUD
     Route::get('/business-entities', [\App\Http\Controllers\Admin\BusinessEntityController::class, 'index'])->name('admin.business-entities');
-    Route::post('/business-entities', [\App\Http\Controllers\Admin\BusinessEntityController::class, 'store']);
-    Route::put('/business-entities/{id}', [\App\Http\Controllers\Admin\BusinessEntityController::class, 'update']);
-    Route::delete('/business-entities/{id}', [\App\Http\Controllers\Admin\BusinessEntityController::class, 'destroy']);
+    // Route::post('/business-entities', [\App\Http\Controllers\Admin\BusinessEntityController::class, 'store']);
+    // Route::put('/business-entities/{id}', [\App\Http\Controllers\Admin\BusinessEntityController::class, 'update']);
+    // Route::delete('/business-entities/{id}', [\App\Http\Controllers\Admin\BusinessEntityController::class, 'destroy']);
 
     // Roles & Permission Matrix Matrix CRUD
     Route::get('/role-permissions', [\App\Http\Controllers\RolePermissionController::class, 'index'])->name('admin.role-permissions');
-    Route::post('/role-permissions/update', [\App\Http\Controllers\RolePermissionController::class, 'update']);
-    Route::post('/role-permissions/bulk-update', [\App\Http\Controllers\RolePermissionController::class, 'bulkUpdate']);
-    Route::post('/role-permissions/roles', [\App\Http\Controllers\RolePermissionController::class, 'storeRole']);
-    Route::put('/role-permissions/roles/{id}', [\App\Http\Controllers\RolePermissionController::class, 'updateRole']);
-    Route::delete('/role-permissions/roles/{id}', [\App\Http\Controllers\RolePermissionController::class, 'destroyRole']);
+    // Route::post('/role-permissions/update', [\App\Http\Controllers\RolePermissionController::class, 'update']);
+    // Route::post('/role-permissions/bulk-update', [\App\Http\Controllers\RolePermissionController::class, 'bulkUpdate']);
+    // Route::post('/role-permissions/roles', [\App\Http\Controllers\RolePermissionController::class, 'storeRole']);
+    // Route::put('/role-permissions/roles/{id}', [\App\Http\Controllers\RolePermissionController::class, 'updateRole']);
+    // Route::delete('/role-permissions/roles/{id}', [\App\Http\Controllers\RolePermissionController::class, 'destroyRole']);
 
     // Users & Employee CRUD
     Route::get('/users', [\App\Http\Controllers\Admin\UserController::class, 'index'])->name('admin.users');

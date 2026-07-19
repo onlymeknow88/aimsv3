@@ -61,7 +61,7 @@ function MultiCheckboxList({ label, items = [], value = [], onChange, onEditItem
                 style={{
                     border: "1px solid #e2e8f0",
                     borderRadius: "8px",
-                    maxHeight: "150px",
+                    flex: 1,
                     overflowY: "auto",
                     backgroundColor: "#fff",
                 }}
@@ -172,6 +172,7 @@ export default function SectionModal({
     areaLocations = [],
     areaManagers = [],
     users = [],
+    sections = [],
     onCreateAreaLocation,
     onUpdateAreaLocation,
     onCreateAreaManager,
@@ -232,6 +233,11 @@ export default function SectionModal({
 
     });
 
+    const filteredAreaLocations = areaLocations.filter((loc) => {
+        if (!loc.sections || loc.sections.length === 0) return true;
+        return !loc.sections.some((sec) => sec.department_id && sec.department_id !== form.department_id);
+    });
+
     const setSectionAreaLocations = (ids) => {
         const validManagerIds = (form.area_manager_ids || []).filter((managerId) => {
             const manager = areaManagers.find((item) => item.id === managerId);
@@ -242,6 +248,7 @@ export default function SectionModal({
         if (validManagerIds.length !== (form.area_manager_ids || []).length) {
             setField("area_manager_ids", validManagerIds);
         }
+        setManagerLocationIds((prev) => prev.filter((id) => ids.includes(id)));
     };
 
     const submitAreaLocation = async () => {
@@ -306,7 +313,8 @@ export default function SectionModal({
                     backgroundColor: "#fff",
                     borderRadius: "16px",
                     width: "100%",
-                    maxWidth: "860px",
+                    maxWidth: "1500px",
+                    height: "90vh",
                     maxHeight: "92vh",
                     display: "flex",
                     flexDirection: "column",
@@ -348,7 +356,7 @@ export default function SectionModal({
                 </div>
 
                 {/* Body */}
-                <form onSubmit={onSubmit} style={{ padding: "20px 24px", overflowY: "auto", flexGrow: 1 }}>
+                <form id="section-form" onSubmit={onSubmit} style={{ padding: "20px 24px 0 24px", overflowY: "auto", flexGrow: 1, display: "flex", flexDirection: "column" }}>
                     {formError && (
                         <div
                             style={{
@@ -368,7 +376,7 @@ export default function SectionModal({
                         </div>
                     )}
 
-                    <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "16px", flexGrow: 1, minHeight: 0 }}>
                         <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
                             <label htmlFor="department_id" style={{ fontSize: "13px", fontWeight: 700, color: "#0f172a" }}>
                                 Departemen <span style={{ color: "#ef4444" }}>*</span>
@@ -415,8 +423,8 @@ export default function SectionModal({
                             />
                         </div>
 
-                        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "16px" }}>
-                            <div style={{ border: "1px solid #e2e8f0", borderRadius: "12px", padding: "14px", backgroundColor: "#f8fafc" }}>
+                        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "16px", flexGrow: 1, minHeight: 0 }}>
+                            <div style={{ border: "1px solid #e2e8f0", borderRadius: "12px", padding: "14px", backgroundColor: "#f8fafc", display: "flex", flexDirection: "column" }}>
                                 <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "12px" }}>
                                     <label style={{ fontSize: "13px", fontWeight: 800, color: "#0f172a" }}>
                                         {editingLocationId ? "Edit Area Location" : "Tambah Area Location"}
@@ -460,42 +468,44 @@ export default function SectionModal({
                                         )}
                                     </div>
                                 </div>
+                                <p style={{ fontSize: "11px", color: "#64748b", margin: "4px 0 10px 0", lineHeight: 1.4 }}>
+                                    💡 <i>Cukup hilangkan centang untuk melepas lokasi dari Section ini. Tombol merah (tong sampah) digunakan untuk menghapus lokasi permanen dari database (hanya bisa jika tidak sedang digunakan).</i>
+                                </p>
+                                <MultiCheckboxList
+                                    label="Area Location"
+                                    items={filteredAreaLocations}
+                                    value={form.area_location_ids}
+                                    onChange={setSectionAreaLocations}
+                                    onEditItem={(location) => {
+                                        setEditingLocationId(location.id);
+                                        setLocationName(location.name || "");
+                                        setLocationError(null);
+                                    }}
+                                    onDeleteItem={async (location) => {
 
-                               <MultiCheckboxList
-    label="Area Location"
-    items={areaLocations}
-    value={form.area_location_ids}
-    onChange={setSectionAreaLocations}
-    onEditItem={(location) => {
-        setEditingLocationId(location.id);
-        setLocationName(location.name || "");
-        setLocationError(null);
-    }}
-    onDeleteItem={async (location) => {
+                                        if (!window.confirm(`Hapus Area Location "${location.name}" ?`))
+                                            return;
 
-        if (!window.confirm(`Hapus Area Location "${location.name}" ?`))
-            return;
+                                        try {
 
-        try {
+                                            await deleteAreaLocation(location.id);
 
-            await deleteAreaLocation(location.id);
+                                        } catch (e) {
 
-        } catch (e) {
+                                            alert(
+                                                e.response?.data?.message ??
+                                                "Gagal menghapus Area Location."
+                                            );
 
-            alert(
-                e.response?.data?.message ??
-                "Gagal menghapus Area Location."
-            );
+                                        }
 
-        }
-
-    }}
-    getLabel={(location) => location.name}
-    emptyText="Belum ada area location."
-/>
+                                    }}
+                                    getLabel={(location) => location.name}
+                                    emptyText="Belum ada area location."
+                                />
                             </div>
 
-                            <div style={{ border: "1px solid #e2e8f0", borderRadius: "12px", padding: "14px", backgroundColor: "#f8fafc" }}>
+                            <div style={{ border: "1px solid #e2e8f0", borderRadius: "12px", padding: "14px", backgroundColor: "#f8fafc", display: "flex", flexDirection: "column" }}>
                                 <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "12px" }}>
                                     <label style={{ fontSize: "13px", fontWeight: 800, color: "#0f172a" }}>
                                         {editingManagerId ? "Edit Area Manager" : "Tambah Area Manager"}
@@ -540,11 +550,11 @@ export default function SectionModal({
 
                                     <MultiCheckboxList
                                         label="Lock Area Location"
-                                        items={areaLocations}
+                                        items={areaLocations.filter((loc) => (form.area_location_ids || []).includes(loc.id))}
                                         value={managerLocationIds}
                                         onChange={setManagerLocationIds}
                                         getLabel={(location) => location.name}
-                                        emptyText="Belum ada area location."
+                                        emptyText={form.area_location_ids?.length === 0 ? "Pilih area location pada section terlebih dahulu." : "Belum ada area location."}
                                     />
                                 </div>
 
@@ -566,51 +576,63 @@ export default function SectionModal({
                                     }}
                                     getLabel={(manager) => {
                                         const name = manager.user?.name || manager.user?.email || "Manager tanpa user";
-                                        const locationCount = getManagerLocationIds(manager).length;
-                                        return `${name} (${locationCount} location)`;
+                                        const locationNames = (manager.area_locations || []).map(loc => loc.name).join(', ');
+                                        return `${name} (${locationNames || 'tidak ada lokasi'})`;
                                     }}
                                     emptyText={selectedLocationIds.length === 0 ? "Pilih area location dulu." : "Belum ada area manager untuk location terpilih."}
                                 />
                             </div>
                         </div>
                     </div>
-
-                    <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px", marginTop: "24px" }}>
-                        <button
-                            type="button"
-                            onClick={onClose}
-                            style={{
-                                padding: "10px 16px",
-                                backgroundColor: "#fff",
-                                color: "#475569",
-                                border: "1.5px solid #e2e8f0",
-                                borderRadius: "8px",
-                                fontSize: "13px",
-                                fontWeight: 600,
-                                cursor: "pointer",
-                            }}
-                        >
-                            Batal
-                        </button>
-                        <button
-                            type="submit"
-                            disabled={submitting}
-                            style={{
-                                padding: "10px 16px",
-                                backgroundColor: "#1d4ed8",
-                                color: "#fff",
-                                border: "none",
-                                borderRadius: "8px",
-                                fontSize: "13px",
-                                fontWeight: 700,
-                                cursor: submitting ? "not-allowed" : "pointer",
-                                opacity: submitting ? 0.6 : 1,
-                            }}
-                        >
-                            {submitting ? (editId ? "Menyimpan..." : "Membuat...") : (editId ? "Simpan Perubahan" : "Buat Section")}
-                        </button>
-                    </div>
                 </form>
+
+                {/* Sticky Footer */}
+                <div
+                    style={{
+                        padding: "16px 24px",
+                        borderTop: "1px solid #f1f5f9",
+                        display: "flex",
+                        justifyContent: "flex-end",
+                        gap: "10px",
+                        flexShrink: 0,
+                        backgroundColor: "#fff",
+                    }}
+                >
+                    <button
+                        type="button"
+                        onClick={onClose}
+                        style={{
+                            padding: "10px 16px",
+                            backgroundColor: "#fff",
+                            color: "#475569",
+                            border: "1.5px solid #e2e8f0",
+                            borderRadius: "8px",
+                            fontSize: "13px",
+                            fontWeight: 600,
+                            cursor: "pointer",
+                        }}
+                    >
+                        Batal
+                    </button>
+                    <button
+                        type="submit"
+                        form="section-form"
+                        disabled={submitting}
+                        style={{
+                            padding: "10px 16px",
+                            backgroundColor: "#1d4ed8",
+                            color: "#fff",
+                            border: "none",
+                            borderRadius: "8px",
+                            fontSize: "13px",
+                            fontWeight: 700,
+                            cursor: submitting ? "not-allowed" : "pointer",
+                            opacity: submitting ? 0.6 : 1,
+                        }}
+                    >
+                        {submitting ? (editId ? "Menyimpan..." : "Membuat...") : (editId ? "Simpan Perubahan" : "Buat Section")}
+                    </button>
+                </div>
             </div>
         </div>
     );

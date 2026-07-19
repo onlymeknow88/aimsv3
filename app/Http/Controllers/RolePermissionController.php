@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
@@ -16,7 +17,7 @@ class RolePermissionController extends Controller
         $modules = DB::table('aims_modules')->get();
 
         $selectedModuleId = $request->input('module_id');
-        if (!$selectedModuleId && $modules->isNotEmpty()) {
+        if (! $selectedModuleId && $modules->isNotEmpty()) {
             $selectedModuleId = $modules->first()->id;
         }
 
@@ -39,12 +40,12 @@ class RolePermissionController extends Controller
                 ->get();
         }
 
-        return Inertia::render('Admin/RolePermission', [
+        return Inertia::render('Admin/RolePermission/Index', [
             'modules' => $modules,
             'selectedModuleId' => (int) $selectedModuleId,
             'roles' => $roles,
             'menus' => $menus,
-            'permissions' => $permissions
+            'permissions' => $permissions,
         ]);
     }
 
@@ -57,7 +58,7 @@ class RolePermissionController extends Controller
             'role_id' => 'required',
             'menu_id' => 'required',
             'field' => 'required|string|in:can_view,can_create,can_edit,can_delete,can_approval',
-            'value' => 'required|boolean'
+            'value' => 'required|boolean',
         ]);
 
         $exists = DB::table('aims_permissions')
@@ -71,7 +72,7 @@ class RolePermissionController extends Controller
                 ->where('menu_id', $request->menu_id)
                 ->update([
                     $request->field => $request->value,
-                    'updated_at' => now()
+                    'updated_at' => now(),
                 ]);
         } else {
             DB::table('aims_permissions')->insert([
@@ -83,12 +84,12 @@ class RolePermissionController extends Controller
                 'can_delete' => $request->field === 'can_delete' ? $request->value : false,
                 'can_approval' => $request->field === 'can_approval' ? $request->value : false,
                 'created_at' => now(),
-                'updated_at' => now()
+                'updated_at' => now(),
             ]);
         }
 
         // Clear cache module permission agar langsung terupdate
-        \Illuminate\Support\Facades\Artisan::call('cache:clear');
+        Artisan::call('cache:clear');
 
         return response()->json(['success' => true]);
     }
@@ -107,7 +108,7 @@ class RolePermissionController extends Controller
         ]);
 
         // Normalize and validate field names (allow potential delimiters from frontend)
-        $allowedFields = ['can_view','can_create','can_edit','can_delete','can_approval'];
+        $allowedFields = ['can_view', 'can_create', 'can_edit', 'can_delete', 'can_approval'];
         $changes = $request->input('changes');
         foreach ($changes as $i => $change) {
             $raw = $change['field'] ?? '';
@@ -137,7 +138,7 @@ class RolePermissionController extends Controller
                     ->where('menu_id', $change['menu_id'])
                     ->update([
                         $change['field'] => $change['value'],
-                        'updated_at' => now()
+                        'updated_at' => now(),
                     ]);
             } else {
                 DB::table('aims_permissions')->insert([
@@ -149,13 +150,13 @@ class RolePermissionController extends Controller
                     'can_delete' => $change['field'] === 'can_delete' ? $change['value'] : false,
                     'can_approval' => $change['field'] === 'can_approval' ? $change['value'] : false,
                     'created_at' => now(),
-                    'updated_at' => now()
+                    'updated_at' => now(),
                 ]);
             }
         }
 
         // Clear cache after bulk update
-        \Illuminate\Support\Facades\Artisan::call('cache:clear');
+        Artisan::call('cache:clear');
 
         return response()->json(['success' => true]);
     }
@@ -168,7 +169,7 @@ class RolePermissionController extends Controller
         $request->validate([
             'module_id' => 'required',
             'name' => 'required|string|max:255',
-            'slug' => 'required|string|max:255'
+            'slug' => 'required|string|max:255',
         ]);
 
         // Cek unique role slug dalam scope modul
@@ -187,7 +188,7 @@ class RolePermissionController extends Controller
             'slug' => $request->slug,
             'is_system' => false,
             'created_at' => now(),
-            'updated_at' => now()
+            'updated_at' => now(),
         ]);
 
         return back();
@@ -201,12 +202,12 @@ class RolePermissionController extends Controller
         $request->validate([
             'module_id' => 'required',
             'name' => 'required|string|max:255',
-            'slug' => 'required|string|max:255'
+            'slug' => 'required|string|max:255',
         ]);
 
         $role = DB::table('aims_roles')->where('id', $id)->first();
 
-        if (!$role) {
+        if (! $role) {
             return back()->withErrors(['error' => 'Role tidak ditemukan.']);
         }
 
@@ -226,10 +227,10 @@ class RolePermissionController extends Controller
                 'module_id' => $request->module_id,
                 'name' => $request->name,
                 'slug' => $request->slug,
-                'updated_at' => now()
+                'updated_at' => now(),
             ]);
 
-        \Illuminate\Support\Facades\Artisan::call('cache:clear');
+        Artisan::call('cache:clear');
 
         return back()->with('success', 'Role berhasil diperbarui.');
     }
@@ -242,7 +243,7 @@ class RolePermissionController extends Controller
         try {
             $role = DB::table('aims_roles')->where('id', $id)->first();
 
-            if (!$role) {
+            if (! $role) {
                 return back()->withErrors(['error' => 'Role tidak ditemukan.']);
             }
 
@@ -257,7 +258,7 @@ class RolePermissionController extends Controller
 
             return back()->with('success', 'Role berhasil dihapus.');
         } catch (\Exception $e) {
-            return back()->withErrors(['error' => 'Gagal menghapus role: ' . $e->getMessage()]);
+            return back()->withErrors(['error' => 'Gagal menghapus role: '.$e->getMessage()]);
         }
     }
 }
