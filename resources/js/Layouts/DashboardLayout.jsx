@@ -47,6 +47,7 @@ export default function DashboardLayout({ children }) {
     const allowedModules = auth?.modules || [];
     const visibleNavigationItems = navigationItems.filter(item => {
         if (!item.moduleSlug) return true;
+        if (!auth?.user) return false;
         if (allowedModules.includes('*')) return true;
         return allowedModules.includes(item.moduleSlug);
     });
