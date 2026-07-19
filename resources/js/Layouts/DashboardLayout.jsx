@@ -26,7 +26,7 @@ export default function DashboardLayout({ children }) {
 
     const navigationItems = [
         { name: 'Dashboard', icon: LayoutDashboard, href: '/', active: currentPath === '/' },
-        { name: 'Calendar of Event (CoE)', icon: Calendar, href: '#', active: false },
+        { name: 'Calendar of Event (CoE)', icon: Calendar, href: '/coe/categories', active: currentPath.startsWith('/coe'), moduleSlug: 'calender-of-event-coe' },
         { name: 'Document System', icon: FileText, href: '/document-system', active: currentPath.startsWith('/document-system'), moduleSlug: 'document-system' },
         { name: 'Safety Accountability Program (SAP)', icon: ShieldAlert, href: '#', active: false, moduleSlug: 'sap' },
         { name: 'Field Leadership', icon: UserCheck, href: '#', active: false, moduleSlug: 'field-leadership' },

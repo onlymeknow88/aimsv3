@@ -29,6 +29,7 @@ export default function Index() {
         downloadFile,
         handleEdit,
         handleDelete,
+        exportDocuments,
         pagination,
         page,
         setPage,
@@ -118,6 +119,24 @@ export default function Index() {
                             </button>
                         )}
                         <button 
+                            onClick={() => exportDocuments(selectedIds)}
+                            style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '6px',
+                                backgroundColor: '#fff',
+                                border: '1px solid var(--border-color)',
+                                borderRadius: '6px',
+                                padding: '6px 12px',
+                                fontSize: '11px',
+                                fontWeight: 600,
+                                color: 'var(--text-primary)',
+                                cursor: 'pointer'
+                            }}
+                        >
+                            <FileText size={12} /> Export Excel
+                        </button>
+                        <button 
                             onClick={handleDelete}
                             style={{
                                 display: 'inline-flex',
@@ -190,6 +209,25 @@ export default function Index() {
                                 ))}
                             </DropdownMenuContent>
                         </DropdownMenu>
+
+                        <button 
+                            onClick={() => exportDocuments([])}
+                            style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '8px',
+                                backgroundColor: '#fff',
+                                border: '1px solid var(--border-color)',
+                                borderRadius: '6px',
+                                padding: '8px 16px',
+                                fontSize: '11px',
+                                fontWeight: 600,
+                                color: 'var(--text-primary)',
+                                cursor: 'pointer'
+                            }}
+                        >
+                            <FileText size={14} /> Export All
+                        </button>
 
                         <a 
                             href="/document-system/active/create"

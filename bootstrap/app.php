@@ -23,6 +23,11 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\HandleInertiaRequests::class,
         ]);
 
+        $middleware->validateCsrfTokens(except: [
+            'api/admin/*',
+            'admin/*',
+        ]);
+
         $middleware->alias([
             'module.permission' => \App\Http\Middleware\CheckModulePermission::class,
             'admin.auth' => \App\Http\Middleware\AdminMiddleware::class,

@@ -592,4 +592,136 @@ class DocumentApiController extends Controller
 
         return ResponseFormatter::success(['deleted' => $deleted], "{$deleted} dokumen berhasil dihapus.");
     }
+
+    /**
+     * Export safety documents to Excel with chronological revision dates.
+     */
+    public function export(Request $request)
+    {
+        $idsStr = $request->query('ids');
+        $ids = $idsStr ? explode(',', $idsStr) : [];
+
+        $query = Document::with(['company', 'department', 'owner']);
+        if (!empty($ids)) {
+            $query->whereIn('id', $ids);
+        } else {
+            // Default to active/expired documents
+            $query->whereIn('status', ['5', '7'])->where('is_obsolate', false);
+        }
+        $docs = $query->get();
+
+        $documents = [];
+        $maxRevisionCol = 0;
+
+        foreach ($docs as $doc) {
+            // Find all revision history by tracing related_document_id back to revision 0
+            $historyDocs = [];
+            $current = $doc;
+            while ($current) {
+                $historyDocs[] = $current;
+                if ($current->related_document_id) {
+                    $current = Document::find($current->related_document_id);
+                } else {
+                    $current = null;
+                }
+            }
+
+            // Sort by revision ascending to make sure they are in order: Rev 0, Rev 1, Rev 2...
+            usort($historyDocs, function($a, $b) {
+                return (int)$a->revision <=> (int)$b->revision;
+            });
+
+            // The creation date of the earliest revision (Rev 0) is the "Tanggal Pembuatan"
+            $firstDocCreated = count($historyDocs) > 0 ? $historyDocs[0]->doc_created : $doc->doc_created;
+
+            // Revision dates are for Rev 1, Rev 2, etc. (excluding Rev 0)
+            $revisionDates = [];
+            if (count($historyDocs) > 1) {
+                for ($i = 1; $i < count($historyDocs); $i++) {
+                    $revisionDates[] = $historyDocs[$i]->doc_created ? $historyDocs[$i]->doc_created->format('d/m/Y') : '';
+                }
+            }
+
+            $maxRevisionCol = max($maxRevisionCol, count($revisionDates));
+
+            $documents[] = [
+                'id' => $doc->id,
+                'title' => $doc->title,
+                'document_number' => $doc->document_number,
+                'win' => $doc->sop_add_win,
+                'form' => $doc->sop_add_form,
+                'pic' => $doc->owner ? $doc->owner->name : '-',
+                'revision' => $doc->revision ?? 0,
+                'first_doc_created' => $firstDocCreated ? $firstDocCreated->format('d/m/Y') : '-',
+                'revision_date' => $revisionDates,
+                'parent_document' => $doc->parent_document,
+                'document_level' => $doc->document_level,
+                'children' => [],
+            ];
+        }
+
+        // Standard grouping/sorting logic matching aims export
+        $doc_ts = collect($documents)->filter(function ($item) {
+            return $item['document_level'] == 'TS';
+        });
+        $doc_mn = collect($documents)->filter(function ($item) {
+            return $item['document_level'] == 'MN';
+        })->all();
+        $sop_doc = collect($documents)->filter(function ($item) {
+            return $item['document_level'] == 'SOP';
+        })->all();
+        $doc_win = collect($documents)->filter(function ($item) {
+            return $item['document_level'] == 'WIN';
+        })->all();
+        $doc_form = collect($documents)->filter(function ($item) {
+            return $item['document_level'] == 'FORM';
+        })->all();
+
+        $sortedDocs = collect($doc_mn)
+            ->merge($sop_doc)
+            ->merge($doc_ts)
+            ->merge($doc_win)
+            ->merge($doc_form);
+
+        $data = [];
+        $children = collect($sortedDocs)->filter(function ($item) {
+            return $item['parent_document'] != null;
+        })->all();
+        $parentDocs = collect($sortedDocs)->filter(function ($item) {
+            return $item['parent_document'] == null;
+        })->all();
+
+        $combine = [];
+        if (count($children) > 0) {
+            $win_child = collect($children)->filter(function ($item) {
+                return $item['win'] != null;
+            });
+            $form_child = collect($children)->filter(function ($item) {
+                return $item['form'] != null;
+            });
+            $combine_child = collect($win_child)->merge($form_child);
+            $combine = collect($parentDocs)->map(function ($item) use ($combine_child) {
+                $id = $item['id'];
+                $item['children'] = collect($combine_child)->filter(function ($i) use ($id) {
+                    return $i['parent_document'] == $id;
+                })->all();
+
+                return $item;
+            })->values();
+        }
+
+        if (count($combine) == 0) {
+            $data = $parentDocs;
+        } else {
+            $data = $combine;
+        }
+        if (count($data) == 0) {
+            $data = $children;
+        }
+
+        return \Maatwebsite\Excel\Facades\Excel::download(
+            new \Modules\DocumentSystem\Exports\DocumentSystemExport($data, $maxRevisionCol),
+            'Dokumen Induk - ' . date('Y-m-d') . '.xlsx'
+        );
+    }
 }

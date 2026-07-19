@@ -25,6 +25,7 @@ export default function AdminLayout({ children, title = "Backoffice Admin" }) {
 
     const systemMenuItems = [
         { name: 'AIMS Menu', icon: () => <FolderOpen size={16} />, href: '/admin/aims-menu', active: currentPath.startsWith('/admin/aims-menu') },
+        { name: 'AIMS Modules', icon: () => <span style={{ fontSize: '16px' }}>⚙️</span>, href: '/admin/modules', active: currentPath.startsWith('/admin/modules') },
     ];
 
     return (

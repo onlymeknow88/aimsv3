@@ -18,6 +18,13 @@ createInertiaApp({
             console.log('Resolving DocumentSystem Page:', { name, page, targetPath, availableKeys: Object.keys(glob) });
             return resolvePageComponent(targetPath, glob);
         }
+        if (name.startsWith('Coe/')) {
+            const page = name.replace('Coe/', '');
+            const targetPath = `../../Modules/Coe/resources/js/Pages/${page}.jsx`;
+            const glob = import.meta.glob('../../Modules/Coe/resources/js/Pages/**/*.jsx');
+            console.log('Resolving Coe Page:', { name, page, targetPath, availableKeys: Object.keys(glob) });
+            return resolvePageComponent(targetPath, glob);
+        }
         return resolvePageComponent(
             `./Pages/${name}.jsx`,
             import.meta.glob('./Pages/**/*.jsx'),

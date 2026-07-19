@@ -1,0 +1,11 @@
+{
+    "name": "Coe",
+    "alias": "coe",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\Coe\\App\\Providers\\CoeServiceProvider"
+    ],
+    "files": []
+}

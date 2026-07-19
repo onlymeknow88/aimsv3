@@ -90,4 +90,12 @@ Route::middleware(['admin.session', 'auth:admin', 'admin.auth'])
             Route::put('/roles/{id}', [\App\Http\Controllers\Admin\Api\RolePermissionController::class, 'updateRole']);
             Route::delete('/roles/{id}', [\App\Http\Controllers\Admin\Api\RolePermissionController::class, 'destroyRole']);
         });
+
+        // ── AIMS Modules API ──────────────────────────────────────────────────
+        Route::prefix('modules')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Admin\Api\AimsModuleController::class, 'index']);
+            Route::post('/', [\App\Http\Controllers\Admin\Api\AimsModuleController::class, 'store']);
+            Route::put('/{id}', [\App\Http\Controllers\Admin\Api\AimsModuleController::class, 'update']);
+            Route::delete('/{id}', [\App\Http\Controllers\Admin\Api\AimsModuleController::class, 'destroy']);
+        });
     });

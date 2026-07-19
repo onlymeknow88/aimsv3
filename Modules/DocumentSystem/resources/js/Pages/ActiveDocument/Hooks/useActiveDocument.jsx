@@ -120,6 +120,25 @@ export default function useActiveDocument() {
         }
     }, [selectedIds, fetchDocuments]);
 
+    const exportDocuments = useCallback(async (ids = []) => {
+        try {
+            const response = await axios.get('/api/document-system/documents/export', {
+                params: { ids: ids.join(',') },
+                responseType: 'blob',
+            });
+            const url = window.URL.createObjectURL(new Blob([response.data]));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', `Daftar_Induk_Dokumen_${new Date().toISOString().slice(0, 10)}.xlsx`);
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+        } catch (err) {
+            console.error('Export failed', err);
+            alert('Gagal mengekspor dokumen.');
+        }
+    }, []);
+
     return { 
         search, 
         setSearch, 
@@ -134,6 +153,7 @@ export default function useActiveDocument() {
         downloadFile,
         handleEdit,
         handleDelete,
+        exportDocuments,
         pagination,
         page,
         setPage,

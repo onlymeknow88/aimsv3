@@ -17,7 +17,9 @@
             'resources/js/app.jsx',
             str_starts_with($page['component'], 'DocumentSystem/')
                 ? 'Modules/DocumentSystem/resources/js/Pages/' . str_replace('DocumentSystem/', '', $page['component']) . '.jsx'
-                : "resources/js/Pages/{$page['component']}.jsx"
+                : (str_starts_with($page['component'], 'Coe/')
+                    ? 'Modules/Coe/resources/js/Pages/' . str_replace('Coe/', '', $page['component']) . '.jsx'
+                    : "resources/js/Pages/{$page['component']}.jsx")
         ])
         @inertiaHead
     </head>

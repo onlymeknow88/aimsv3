@@ -17,6 +17,7 @@ Route::middleware(['web', 'auth'])->prefix('document-system')->group(function ()
     Route::get('/attachments/{id}/sas-url', [GeneralController::class, 'sasUrl']);
 
     Route::middleware('module.permission:document-system,can_view,doc.maker')->group(function () {
+        Route::get('/documents/export', [DocumentApiController::class, 'export']);
         Route::get('/documents', [DocumentApiController::class, 'index']);
         Route::get('/documents/{id}', [DocumentApiController::class, 'show']);
     });
@@ -50,11 +51,21 @@ Route::middleware(['web', 'auth'])->prefix('document-system')->group(function ()
         Route::get('/departments', [MasterDataApiController::class, 'getDepartments']);
         Route::get('/pjs', [MasterDataApiController::class, 'getPjs']);
         Route::get('/modules', [MasterDataApiController::class, 'getModules']);
+        Route::post('/modules', [MasterDataApiController::class, 'storeModule']);
+        Route::put('/modules/{id}', [MasterDataApiController::class, 'updateModule']);
+        Route::delete('/modules/{id}', [MasterDataApiController::class, 'deleteModule']);
         Route::get('/categories', [MasterDataApiController::class, 'getCategories']);
+        Route::post('/categories', [MasterDataApiController::class, 'storeCategory']);
+        Route::put('/categories/{id}', [MasterDataApiController::class, 'updateCategory']);
+        Route::delete('/categories/{id}', [MasterDataApiController::class, 'deleteCategory']);
         Route::get('/mappings', [MasterDataApiController::class, 'getMappings']);
+        Route::post('/mappings', [MasterDataApiController::class, 'storeMapping']);
+        Route::put('/mappings/{id}', [MasterDataApiController::class, 'updateMapping']);
+        Route::delete('/mappings/{id}', [MasterDataApiController::class, 'deleteMapping']);
     });
 
     // Standard read endpoints allowed for active SOP reference creation
+    Route::get('/dashboard/stats', [MasterDataApiController::class, 'getDashboardStats']);
     Route::get('/active-sops', [DocumentApiController::class, 'getActiveSops']);
     Route::get('/employees', [MasterDataApiController::class, 'getEmployees']);
 

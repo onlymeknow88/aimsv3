@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Head, Link } from '@inertiajs/react';
 import DocumentSystemLayout from '@DS/Layouts/DocumentSystemLayout';
-import { FileText, Clock, AlertCircle, Trash2, ShieldAlert, Activity, ChevronRight, BarChart3 } from 'lucide-react';
+import { FileText, Clock, AlertCircle, Trash2, ShieldAlert, Activity, BarChart3 } from 'lucide-react';
 import { Bar } from 'react-chartjs-2';
+import axios from 'axios';
 import {
     Chart as ChartJS,
     CategoryScale,
@@ -23,7 +24,28 @@ ChartJS.register(
     Legend
 );
 
-export default function Index({ stats = {} }) {
+export default function Index() {
+    const [data, setData] = useState({ stats: {}, departments: [] });
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        axios.get('/api/document-system/dashboard/stats')
+            .then(res => {
+                if (res.data?.result) {
+                    setData(res.data.result);
+                }
+            })
+            .catch(err => {
+                console.error("Gagal memuat statistik dashboard:", err);
+            })
+            .finally(() => {
+                setLoading(false);
+            });
+    }, []);
+
+    const stats = data.stats || {};
+    const departments = data.departments || [];
+
     const statCards = [
         { title: 'Active Documents', count: stats.active_docs ?? 0, icon: FileText, color: 'var(--success)', bg: 'rgba(47, 191, 113, 0.05)', href: '/document-system/active' },
         { title: 'On Going Workflow', count: stats.ongoing_docs ?? 0, icon: Clock, color: 'var(--accent)', bg: 'rgba(255, 140, 36, 0.05)', href: '/document-system/ongoing' },
@@ -33,25 +55,17 @@ export default function Index({ stats = {} }) {
         { title: 'Active PTW', count: stats.ptw_active ?? 0, icon: Activity, color: '#06B6D4', bg: 'rgba(6, 182, 212, 0.05)', href: '/document-system/ptw' },
     ];
 
-    // Mock data for 9 department charts from aimsv2 logic
-    const departments = [
-        { name: 'Mining & Engineering', color: '#009D50', data: [65, 59, 20, 81, 56, 55, 40, 65, 59, 20, 81, 56] },
-        { name: 'CPP Operation', color: '#153B73', data: [40, 48, 60, 35, 75, 80, 50, 42, 63, 70, 52, 90] },
-        { name: 'Maintenance', color: '#FF8C24', data: [80, 65, 45, 70, 92, 85, 60, 75, 80, 95, 68, 77] },
-        { name: 'Logistic', color: '#2D7FF9', data: [35, 40, 55, 60, 48, 50, 62, 58, 45, 60, 72, 65] },
-        { name: 'Procurement', color: '#8B5CF6', data: [50, 55, 60, 58, 62, 70, 68, 72, 75, 80, 85, 90] },
-        { name: 'Explorasi', color: '#06B6D4', data: [20, 30, 25, 45, 35, 40, 50, 48, 52, 60, 58, 62] },
-        { name: 'External & Relation', color: '#F5A623', data: [45, 50, 48, 52, 58, 60, 55, 65, 62, 70, 75, 80] },
-        { name: 'Port Operation & Maintenance', color: '#EC4899', data: [60, 55, 65, 70, 72, 80, 78, 85, 82, 90, 88, 95] },
-        { name: 'IT', color: '#10B981', data: [75, 80, 85, 90, 92, 95, 98, 90, 93, 97, 95, 100] }
-    ];
-
     const chartOptions = {
         responsive: true,
         maintainAspectRatio: false,
         plugins: {
             legend: {
-                display: false
+                display: true,
+                position: 'bottom',
+                labels: {
+                    boxWidth: 8,
+                    font: { size: 9, family: 'Inter' }
+                }
             },
             tooltip: {
                 backgroundColor: '#10233F',
@@ -83,165 +97,121 @@ export default function Index({ stats = {} }) {
                 <p style={{ color: 'var(--text-secondary)', fontSize: '12px', marginTop: '4px' }}>Manajemen dokumen legal perusahaan, keselamatan operasional, SOP, JSA, dan PTW.</p>
             </div>
 
-            {/* Stat Cards Grid */}
-            <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-                gap: '20px',
-                marginBottom: '32px'
-            }}>
-                {statCards.map((card, idx) => {
-                    const IconComponent = card.icon;
-                    return (
-                        <a 
-                            key={idx} 
-                            href={card.href} 
-                            style={{
-                                textDecoration: 'none',
-                                backgroundColor: 'var(--card-bg)',
-                                border: '1px solid var(--border-color)',
-                                borderRadius: '12px',
-                                padding: '24px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContents: 'space-between',
-                                boxShadow: 'var(--shadow-sm)',
-                                transition: 'all 0.2s ease',
-                            }}
-                            className="hover-lift"
-                        >
-                            <div style={{ flex: 1 }}>
-                                <span style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{card.title}</span>
-                                <h3 style={{ fontSize: '32px', fontWeight: 800, color: 'var(--text-primary)', margin: '8px 0 0 0' }}>{card.count}</h3>
-                            </div>
-                            <div style={{ padding: '12px', borderRadius: '8px', backgroundColor: card.bg, color: card.color }}>
-                                <IconComponent size={28} />
-                            </div>
-                        </a>
-                    );
-                })}
-            </div>
-
-            {/* Department Charts Section */}
-            <div style={{ marginBottom: '32px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
-                    <BarChart3 size={18} style={{ color: 'var(--primary)' }} />
-                    <h2 style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>Statistik Dokumen Departemen</h2>
+            {loading ? (
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '300px', color: 'var(--text-secondary)' }}>
+                    Memuat data dashboard...
                 </div>
+            ) : (
+                <>
+                    {/* Stat Cards Grid */}
+                    <div style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+                        gap: '20px',
+                        marginBottom: '32px'
+                    }}>
+                        {statCards.map((card, idx) => {
+                            const IconComponent = card.icon;
+                            return (
+                                <a 
+                                    key={idx} 
+                                    href={card.href} 
+                                    style={{
+                                        textDecoration: 'none',
+                                        backgroundColor: 'var(--card-bg)',
+                                        border: '1px solid var(--border-color)',
+                                        borderRadius: '12px',
+                                        padding: '24px',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'space-between',
+                                        boxShadow: 'var(--shadow-sm)',
+                                        transition: 'all 0.2s ease',
+                                    }}
+                                    className="hover-lift"
+                                >
+                                    <div style={{ flex: 1 }}>
+                                        <span style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{card.title}</span>
+                                        <h3 style={{ fontSize: '32px', fontWeight: 800, color: 'var(--text-primary)', margin: '8px 0 0 0' }}>{card.count}</h3>
+                                    </div>
+                                    <div style={{ padding: '12px', borderRadius: '8px', backgroundColor: card.bg, color: card.color, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                        <IconComponent size={28} />
+                                    </div>
+                                </a>
+                            );
+                        })}
+                    </div>
 
-                <div style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
-                    gap: '20px'
-                }}>
-                    {departments.map((dept, idx) => {
-                        const chartData = {
-                            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agt', 'Sep', 'Okt', 'Nov', 'Des'],
-                            datasets: [{
-                                label: 'Dokumen',
-                                data: dept.data,
-                                backgroundColor: dept.color,
-                                borderRadius: 4,
-                                barThickness: 10
-                            }]
-                        };
+                    {/* Department Charts Section */}
+                    <div style={{ marginBottom: '32px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+                            <BarChart3 size={18} style={{ color: 'var(--primary)' }} />
+                            <h2 style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>Statistik Dokumen Departemen</h2>
+                        </div>
 
-                        return (
-                            <div key={idx} style={{
-                                backgroundColor: 'var(--card-bg)',
-                                border: '1px solid var(--border-color)',
-                                borderRadius: '12px',
-                                padding: '16px',
-                                boxShadow: 'var(--shadow-sm)',
-                                display: 'flex',
-                                flexDirection: 'column',
-                                height: '240px'
+                        {departments.length > 0 ? (
+                            <div style={{
+                                display: 'grid',
+                                gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+                                gap: '20px'
                             }}>
-                                <h4 style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '12px', borderBottom: '1px solid var(--border-color)', paddingBottom: '6px' }}>
-                                    {dept.name}
-                                </h4>
-                                <div style={{ flex: 1, position: 'relative' }}>
-                                    <Bar data={chartData} options={chartOptions} />
-                                </div>
+                                {departments.map((dept, idx) => {
+                                    const chartData = {
+                                        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agt', 'Sep', 'Okt', 'Nov', 'Des'],
+                                        datasets: [
+                                            {
+                                                label: 'Total Document',
+                                                data: dept.total,
+                                                backgroundColor: '#153B73',
+                                                borderRadius: 3,
+                                                barThickness: 6
+                                            },
+                                            {
+                                                label: 'Document Active',
+                                                data: dept.active,
+                                                backgroundColor: '#2FBF71',
+                                                borderRadius: 3,
+                                                barThickness: 6
+                                            },
+                                            {
+                                                label: 'Document Expired',
+                                                data: dept.expired,
+                                                backgroundColor: '#F44336',
+                                                borderRadius: 3,
+                                                barThickness: 6
+                                            }
+                                        ]
+                                    };
+
+                                    return (
+                                        <div key={idx} style={{
+                                            backgroundColor: 'var(--card-bg)',
+                                            border: '1px solid var(--border-color)',
+                                            borderRadius: '12px',
+                                            padding: '16px',
+                                            boxShadow: 'var(--shadow-sm)',
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            height: '280px'
+                                        }}>
+                                            <h4 style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '12px', borderBottom: '1px solid var(--border-color)', paddingBottom: '6px' }}>
+                                                {dept.name} {dept.company_code ? `- ${dept.company_code}` : ''}
+                                            </h4>
+                                            <div style={{ flex: 1, position: 'relative' }}>
+                                                <Bar data={chartData} options={chartOptions} />
+                                            </div>
+                                        </div>
+                                    );
+                                })}
                             </div>
-                        );
-                    })}
-                </div>
-            </div>
-
-            {/* Quick Actions Panel */}
-            <div style={{
-                backgroundColor: 'var(--card-bg)',
-                border: '1px solid var(--border-color)',
-                borderRadius: '12px',
-                padding: '24px',
-                boxShadow: 'var(--shadow-sm)'
-            }}>
-                <h3 style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '16px', borderBottom: '1px solid var(--border-color)', paddingBottom: '10px' }}>
-                    Quick Operations
-                </h3>
-                <div style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-                    gap: '16px'
-                }}>
-                    <a href="/document-system/maker" style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        padding: '16px',
-                        border: '1px solid var(--border-color)',
-                        borderRadius: '8px',
-                        textDecoration: 'none',
-                        color: 'var(--text-primary)',
-                        backgroundColor: '#fafbfc'
-                    }} className="hover-lift">
-                        <div>
-                            <h4 style={{ fontSize: '12px', fontWeight: 700, color: 'var(--primary)' }}>Buat Dokumen Baru (Maker)</h4>
-                            <p style={{ fontSize: '10px', color: 'var(--text-secondary)', marginTop: '2px' }}>SOP, Technical Standard, Manual, Work Instruction & Form.</p>
-                        </div>
-                        <ChevronRight size={18} style={{ color: 'var(--text-muted)' }} />
-                    </a>
-
-                    <a href="/document-system/jsa" style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        padding: '16px',
-                        border: '1px solid var(--border-color)',
-                        borderRadius: '8px',
-                        textDecoration: 'none',
-                        color: 'var(--text-primary)',
-                        backgroundColor: '#fafbfc'
-                    }} className="hover-lift">
-                        <div>
-                            <h4 style={{ fontSize: '12px', fontWeight: 700, color: 'var(--primary)' }}>Create Job Safety Analysis</h4>
-                            <p style={{ fontSize: '10px', color: 'var(--text-secondary)', marginTop: '2px' }}>Isi matriks analisis bahaya, langkah kerja, & mitigasi risiko.</p>
-                        </div>
-                        <ChevronRight size={18} style={{ color: 'var(--text-muted)' }} />
-                    </a>
-
-                    <a href="/document-system/ptw" style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        padding: '16px',
-                        border: '1px solid var(--border-color)',
-                        borderRadius: '8px',
-                        textDecoration: 'none',
-                        color: 'var(--text-primary)',
-                        backgroundColor: '#fafbfc'
-                    }} className="hover-lift">
-                        <div>
-                            <h4 style={{ fontSize: '12px', fontWeight: 700, color: 'var(--primary)' }}>Apply Permit to Work (PTW)</h4>
-                            <p style={{ fontSize: '10px', color: 'var(--text-secondary)', marginTop: '2px' }}>Izin kerja aman untuk risiko tinggi (Hot Work, Ketinggian, Confined Space).</p>
-                        </div>
-                        <ChevronRight size={18} style={{ color: 'var(--text-muted)' }} />
-                    </a>
-                </div>
-            </div>
+                        ) : (
+                            <div style={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '24px', textAlign: 'center', color: 'var(--text-secondary)', fontSize: '13px' }}>
+                                Belum ada departemen aktif yang memiliki dokumen.
+                            </div>
+                        )}
+                    </div>
+                </>
+            )}
         </DocumentSystemLayout>
     );
 }
-
-

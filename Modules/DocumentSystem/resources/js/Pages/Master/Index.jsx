@@ -2,9 +2,9 @@ import React from 'react';
 import { Head } from '@inertiajs/react';
 import DocumentSystemLayout from '@DS/Layouts/DocumentSystemLayout';
 import useMaster from './Hooks/useMaster';
-import ModuleTable from './Partials/ModuleTable';
-import CategoryTable from './Partials/CategoryTable';
-import MappingTable from './Partials/MappingTable';
+import ModuleTable from './Partials/Module/Partials/ModuleTable';
+import CategoryTable from './Partials/Category';
+import MappingTable from './Partials/Mapping';
 import DocumentSystemConfig from './Partials/DocumentSystemConfig';
 
 export default function Index({ taxonomy = [] }) {

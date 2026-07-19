@@ -49,9 +49,9 @@ Route::middleware(['admin.session', 'auth:admin', 'admin.auth'])->prefix('admin'
 
     // Companies CRUD
     Route::get('/companies', [\App\Http\Controllers\Admin\CompanyController::class, 'index'])->name('admin.companies');
-    Route::post('/companies', [\App\Http\Controllers\Admin\CompanyController::class, 'store']);
-    Route::put('/companies/{id}', [\App\Http\Controllers\Admin\CompanyController::class, 'update']);
-    Route::delete('/companies/{id}', [\App\Http\Controllers\Admin\CompanyController::class, 'destroy']);
+    // Route::post('/companies', [\App\Http\Controllers\Admin\CompanyController::class, 'store']);
+    // Route::put('/companies/{id}', [\App\Http\Controllers\Admin\CompanyController::class, 'update']);
+    // Route::delete('/companies/{id}', [\App\Http\Controllers\Admin\CompanyController::class, 'destroy']);
 
     // Departments CRUD
     Route::get('/departments', [\App\Http\Controllers\Admin\DepartmentController::class, 'index'])->name('admin.departments');
@@ -67,6 +67,9 @@ Route::middleware(['admin.session', 'auth:admin', 'admin.auth'])->prefix('admin'
 
     // AIMS Menu — Inertia Page
     Route::get('/aims-menu', [\App\Http\Controllers\Admin\AimsMenuController::class, 'index'])->name('admin.aims-menu');
+
+    // AIMS Modules — Inertia Page
+    Route::get('/modules', [\App\Http\Controllers\Admin\AimsModuleController::class, 'index'])->name('admin.modules');
 });
 
 require __DIR__.'/auth.php';
