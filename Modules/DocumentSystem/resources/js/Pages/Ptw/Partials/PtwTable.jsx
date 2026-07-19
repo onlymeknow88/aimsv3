@@ -3,6 +3,10 @@ import { useReactTable, getCoreRowModel, flexRender } from '@tanstack/react-tabl
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
 import { Checkbox } from '@/components/ui/checkbox';
 import TablePagination from '@/Components/TablePagination';
+import DeleteConfirmModal from './Components/DeleteConfirmModal';
+import BlobPreviewModal from '@/Components/BlobPreviewModal';
+import { FileText, Edit, Trash2 } from 'lucide-react';
+import axios from 'axios';
 
 export default function PtwTable({
     documents,
@@ -16,12 +20,30 @@ export default function PtwTable({
     onColumnFilterChange,
 }) {
     const [selectedRowIds, setSelectedRowIds] = useState(new Set());
+    const [deleteTargetId, setDeleteTargetId] = useState(null);
+    const [deleting, setDeleting] = useState(false);
+    const [previewAttachment, setPreviewAttachment] = useState(null);
 
     const formatDate = (dateStr) => {
         if (!dateStr) return '-';
         const date = new Date(dateStr);
         const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
         return `${String(date.getDate()).padStart(2, '0')} ${months[date.getMonth()]} ${date.getFullYear()}`;
+    };
+
+    const handleDeleteConfirm = async () => {
+        if (!deleteTargetId) return;
+        setDeleting(true);
+        try {
+            await axios.delete(`/api/document-system/ptw/${deleteTargetId}`);
+            setDeleteTargetId(null);
+            window.location.reload();
+        } catch (err) {
+            console.error('Failed to delete PTW', err);
+            alert('Gagal menghapus draft PTW.');
+        } finally {
+            setDeleting(false);
+        }
     };
 
     const columns = useMemo(() => [
@@ -58,9 +80,12 @@ export default function PtwTable({
             id: 'company',
             header: 'Company',
             cell: ({ row }) => (
-                <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
-                    {row.original.department?.company?.company_name || '-'}
-                </span>
+                <a
+                    href={`/document-system/ptw/detail/${row.original.id}`}
+                    style={{ fontWeight: 600, color: 'var(--primary)', textDecoration: 'underline', textDecorationStyle: 'dotted', cursor: 'pointer' }}
+                >
+                    {row.original.company?.company_name || '-'}
+                </a>
             )
         },
         {
@@ -102,10 +127,12 @@ export default function PtwTable({
             header: 'Status',
             cell: info => {
                 const STATUS_MAP = {
-                    '1': { bg: 'rgba(99,102,241,0.1)',  color: '#6366F1', label: 'DRAFT'  },
-                    '5': { bg: 'rgba(16,185,129,0.1)',  color: '#10B981', label: 'ACTIVE' },
+                    '1': { bg: 'rgba(99,102,241,0.1)',  color: '#6366F1', label: 'DRAFT'          },
+                    '2': { bg: 'rgba(245,158,11,0.1)',  color: '#F59E0B', label: 'PENDING REVIEW'  },
+                    '3': { bg: 'rgba(239,68,68,0.1)',   color: '#EF4444', label: 'REJECTED'        },
+                    '5': { bg: 'rgba(16,185,129,0.1)',  color: '#10B981', label: 'ACTIVE'          },
                 };
-                const cfg = STATUS_MAP[String(info.row.original.status)] || { bg: 'rgba(100,116,139,0.1)', color: '#64748b', label: String(info.row.original.status || 'DRAFT') };
+                const cfg = STATUS_MAP[String(info.row.original.status)] || STATUS_MAP['1'];
                 return (
                     <span style={{
                         fontSize: '9px',
@@ -122,25 +149,36 @@ export default function PtwTable({
             }
         },
         {
+            id: 'attachment',
+            header: 'Attachment',
+            cell: ({ row }) => {
+                const attachments = row.original.attachments || [];
+
+                if (attachments.length === 0) {
+                    return <span style={{ color: 'var(--text-muted)' }}>-</span>;
+                }
+
+                return (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        {attachments.map((file, idx) => (
+                            <span
+                                key={idx}
+                                onClick={() => setPreviewAttachment({ ...file, type: 'ptw' })}
+                                style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: 'var(--primary)', textDecoration: 'underline', textDecorationStyle: 'dotted', cursor: 'pointer', fontSize: '10px', fontWeight: 600 }}
+                            >
+                                <FileText size={12} />
+                                {file.file_name || (file.file_path ? file.file_path.split('/').pop() : 'Attachment')}
+                            </span>
+                        ))}
+                    </div>
+                );
+            }
+        },
+        {
             id: 'actions',
             header: 'Aksi',
             cell: ({ row }) => (
                 <div style={{ display: 'flex', gap: '6px' }}>
-                    <button
-                        onClick={() => window.location.href = `/document-system/ptw/detail/${row.original.id}`}
-                        style={{
-                            border: '1px solid var(--border-color)',
-                            background: '#fff',
-                            borderRadius: '4px',
-                            padding: '4px 10px',
-                            cursor: 'pointer',
-                            fontSize: '10px',
-                            fontWeight: 600,
-                            color: 'var(--text-primary)'
-                        }}
-                    >
-                        Detail
-                    </button>
                     {String(row.original.status) === '1' && (
                         <>
                             <button
@@ -148,36 +186,36 @@ export default function PtwTable({
                                 style={{
                                     border: '1px solid var(--border-color)',
                                     background: '#fff',
-                                    borderRadius: '4px',
-                                    padding: '4px 10px',
+                                    borderRadius: '6px',
+                                    width: '28px',
+                                    height: '28px',
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
                                     cursor: 'pointer',
-                                    fontSize: '10px',
-                                    fontWeight: 600,
-                                    color: 'var(--text-primary)'
+                                    color: 'var(--primary)'
                                 }}
+                                title="Edit"
                             >
-                                Edit
+                                <Edit size={14} />
                             </button>
                             <button
-                                onClick={() => {
-                                    if (confirm('Apakah Anda yakin ingin menghapus draft PTW ini?')) {
-                                        axios.delete(`/api/document-system/ptw/${row.original.id}`).then(() => {
-                                            window.location.reload();
-                                        });
-                                    }
-                                }}
+                                onClick={() => setDeleteTargetId(row.original.id)}
                                 style={{
                                     border: '1px solid #fee2e2',
                                     background: '#fef2f2',
-                                    borderRadius: '4px',
-                                    padding: '4px 10px',
+                                    borderRadius: '6px',
+                                    width: '28px',
+                                    height: '28px',
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
                                     cursor: 'pointer',
-                                    fontSize: '10px',
-                                    fontWeight: 600,
                                     color: 'var(--danger)'
                                 }}
+                                title="Hapus"
                             >
-                                Delete
+                                <Trash2 size={14} />
                             </button>
                         </>
                     )}
@@ -267,6 +305,22 @@ export default function PtwTable({
                 limit={limit}
                 onLimitChange={onLimitChange}
             />
+
+            <DeleteConfirmModal
+                isOpen={!!deleteTargetId}
+                deleting={deleting}
+                onClose={() => setDeleteTargetId(null)}
+                onConfirm={handleDeleteConfirm}
+                title="Hapus Draft PTW"
+                description="Apakah Anda yakin ingin menghapus draft PTW ini? Tindakan ini tidak dapat dibatalkan."
+            />
+
+            {previewAttachment && (
+                <BlobPreviewModal
+                    attachment={previewAttachment}
+                    onClose={() => setPreviewAttachment(null)}
+                />
+            )}
         </>
     );
 }

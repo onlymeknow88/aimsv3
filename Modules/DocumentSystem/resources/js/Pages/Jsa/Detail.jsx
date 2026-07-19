@@ -353,84 +353,67 @@ export default function Detail({ id }) {
                 </main>
 
                 {/* ── RIGHT SIDEBAR — Activity Timeline ── */}
-                <aside>
-                    <div style={{
-                        backgroundColor: 'var(--card-bg)', border: '1px solid var(--border-color)',
-                        borderRadius: '12px', padding: '16px', boxShadow: 'var(--shadow-sm)',
-                        position: 'sticky', top: '20px'
-                    }}>
-                        <h4 style={{ fontSize: '10px', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            <Clock size={11} /> Activity Log
-                        </h4>
+                <aside style={{
+                    backgroundColor: 'var(--card-bg)', border: '1px solid var(--border-color)',
+                    borderRadius: '12px', padding: '20px 16px', boxShadow: 'var(--shadow-sm)'
+                }}>
+                    <h4 style={{ fontSize: '10px', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <Clock size={11} /> Riwayat Dokumen
+                    </h4>
 
-                        {document.activities && document.activities.length > 0 ? (
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                                {document.activities.map((act, idx) => {
-                                    const dotColor = getDotClass(act.status_document);
-                                    return (
-                                        <div key={act.id || idx} style={{ display: 'flex', gap: '10px', position: 'relative' }}>
-                                            {/* Timeline line */}
-                                            {idx < document.activities.length - 1 && (
-                                                <div style={{
-                                                    position: 'absolute', left: '7px', top: '20px',
-                                                    width: '2px', height: 'calc(100% + 16px)',
-                                                    backgroundColor: '#E7ECF3'
-                                                }} />
-                                            )}
-                                            {/* Dot */}
-                                            <div style={{
-                                                width: '16px', height: '16px', borderRadius: '50%',
-                                                backgroundColor: dotColor, flexShrink: 0, marginTop: '2px',
-                                                boxShadow: `0 0 0 3px ${dotColor}20`
-                                            }} />
-                                            <div style={{ flex: 1 }}>
-                                                <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-primary)', lineHeight: 1.3 }}>
-                                                    {act.status_document}
-                                                </div>
-                                                <div style={{ fontSize: '10.5px', color: 'var(--text-secondary)', marginTop: '2px' }}>
-                                                    {act.user?.name || 'System'}
-                                                </div>
-                                                {act.description && (
-                                                    <div style={{
-                                                        fontSize: '10.5px', color: '#64748b', marginTop: '4px',
-                                                        padding: '6px 8px', backgroundColor: '#f8fafc',
-                                                        borderRadius: '6px', borderLeft: `2px solid ${dotColor}`,
-                                                        lineHeight: 1.5
-                                                    }}>
-                                                        {act.description}
-                                                    </div>
-                                                )}
-                                                {act.attachments && act.attachments.length > 0 && (
-                                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '6px', borderLeft: '2px solid #E7ECF3', paddingLeft: '8px' }}>
-                                                        {act.attachments.map((file, fileIdx) => (
-                                                            <span
-                                                                key={fileIdx}
-                                                                onClick={() => setPreviewAttachment({ ...file, file_name: file.file_name, path: file.path, type: 'jsa_activity' })}
-                                                                style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--primary)', textDecoration: 'underline', textDecorationStyle: 'dotted', cursor: 'pointer', fontSize: '10px' }}
-                                                            >
-                                                                <FileText size={10} />
-                                                                {file.file_name}
-                                                            </span>
-                                                        ))}
-                                                    </div>
-                                                )}
-                                                <div style={{ fontSize: '10px', color: '#94a3b8', marginTop: '4px' }}>
-                                                    {act.created_at
-                                                        ? new Date(act.created_at).toLocaleString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
-                                                        : '-'}
-                                                </div>
-                                            </div>
+                    {document.activities && document.activities.length > 0 ? (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', position: 'relative', paddingLeft: '16px', borderLeft: '1px solid var(--border-color)', margin: '8px 0 0 8px' }}>
+                            {document.activities.map((act, idx) => {
+                                const dotColor = getDotClass(act.status_document);
+                                return (
+                                    <div key={act.id || idx} style={{ position: 'relative' }}>
+                                        {/* Circle dot on border line */}
+                                        <div style={{
+                                            position: 'absolute', left: '-21.5px', top: '2px',
+                                            width: '10px', height: '10px', borderRadius: '50%',
+                                            backgroundColor: dotColor,
+                                            border: '2px solid var(--card-bg)'
+                                        }} />
+
+                                        <div style={{ fontSize: '11.5px', fontWeight: 700, color: 'var(--text-primary)' }}>
+                                            {act.status_document}
                                         </div>
-                                    );
-                                })}
-                            </div>
-                        ) : (
-                            <div style={{ textAlign: 'center', padding: '24px 0' }}>
-                                <Clock size={28} style={{ color: '#CBD5E1', marginBottom: '8px' }} />
-                                <p style={{ fontSize: '11px', color: '#94a3b8', margin: 0 }}>Belum ada activity</p>
-                            </div>
-                        )}
-                    </div>
+                                        <div style={{ fontSize: '10px', color: 'var(--text-secondary)', marginTop: '2px' }}>
+                                            Oleh: {act.user?.name || 'System'}
+                                        </div>
+                                        {act.description && (
+                                            <p style={{ fontSize: '10.5px', color: 'var(--text-muted)', margin: '4px 0 0 0', backgroundColor: '#f1f5f9', padding: '6px 8px', borderRadius: '4px', fontStyle: 'italic', lineHeight: 1.4 }}>
+                                                {act.description}
+                                            </p>
+                                        )}
+                                        {act.attachments && act.attachments.length > 0 && (
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '6px', borderLeft: '2px solid #E7ECF3', paddingLeft: '8px' }}>
+                                                {act.attachments.map((file, fileIdx) => (
+                                                    <span
+                                                        key={fileIdx}
+                                                        onClick={() => setPreviewAttachment({ ...file, file_name: file.file_name, path: file.path, type: 'jsa_activity' })}
+                                                        style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--primary)', textDecoration: 'underline', textDecorationStyle: 'dotted', cursor: 'pointer', fontSize: '10px' }}
+                                                    >
+                                                        <FileText size={10} />
+                                                        {file.file_name}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        )}
+                                        <div style={{ fontSize: '9px', color: 'var(--text-muted)', marginTop: '4px' }}>
+                                            {act.created_at
+                                                ? new Date(act.created_at).toLocaleString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+                                                : '-'}
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    ) : (
+                        <p style={{ fontSize: '11px', color: 'var(--text-muted)', textAlign: 'center', margin: '20px 0' }}>
+                            Belum ada riwayat aktivitas.
+                        </p>
+                    )}
                 </aside>
             </div>
 

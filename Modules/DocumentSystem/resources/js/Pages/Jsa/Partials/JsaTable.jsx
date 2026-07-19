@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { useReactTable, getCoreRowModel, flexRender } from '@tanstack/react-table';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
 import { Checkbox } from '@/components/ui/checkbox';
-import { FileText } from 'lucide-react';
+import { FileText, Edit, Trash2 } from 'lucide-react';
 import BlobPreviewModal from '@/Components/BlobPreviewModal';
 import TablePagination from '@/Components/TablePagination';
 
@@ -194,37 +194,43 @@ export default function JsaTable({
                     <div style={{ display: 'flex', gap: '6px' }}>
                         <button
                             onClick={() => window.location.href = `/document-system/jsa/edit/${row.original.id}`}
-                        style={{
-                            border: '1px solid var(--border-color)',
-                            background: '#fff',
-                            borderRadius: '4px',
-                            padding: '4px 10px',
-                            cursor: 'pointer',
-                            fontSize: '10px',
-                            fontWeight: 600,
-                            color: 'var(--text-primary)'
-                        }}
-                    >
-                        Edit
-                    </button>
-                    {onDelete && (
-                        <button
-                            onClick={() => onDelete(row.original.id)}
                             style={{
-                                border: '1px solid #fee2e2',
-                                background: '#fef2f2',
-                                borderRadius: '4px',
-                                padding: '4px 10px',
+                                border: '1px solid var(--border-color)',
+                                background: '#fff',
+                                borderRadius: '6px',
+                                width: '28px',
+                                height: '28px',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
                                 cursor: 'pointer',
-                                fontSize: '10px',
-                                fontWeight: 600,
-                                color: '#ef4444'
+                                color: 'var(--primary)'
                             }}
+                            title="Edit"
                         >
-                            Hapus
+                            <Edit size={14} />
                         </button>
-                    )}
-                </div>
+                        {onDelete && (
+                            <button
+                                onClick={() => onDelete(row.original.id)}
+                                style={{
+                                    border: '1px solid #fee2e2',
+                                    background: '#fef2f2',
+                                    borderRadius: '6px',
+                                    width: '28px',
+                                    height: '28px',
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    cursor: 'pointer',
+                                    color: '#ef4444'
+                                }}
+                                title="Hapus"
+                            >
+                                <Trash2 size={14} />
+                            </button>
+                        )}
+                    </div>
                 );
             }
         }

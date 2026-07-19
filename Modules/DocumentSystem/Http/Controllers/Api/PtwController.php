@@ -22,7 +22,7 @@ class PtwController extends Controller
             $limit = $request->query('limit', 10);
             $search = $request->query('search', '');
 
-            $query = PtwDocument::with(['company', 'department', 'user']);
+            $query = PtwDocument::with(['company', 'department', 'user', 'attachments']);
 
             if ($search) {
                 $query->where(function ($q) use ($search) {
@@ -101,12 +101,16 @@ class PtwController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
+        $validator = \Validator::make($request->all(), [
             'title'       => 'required|string|max:255',
-            'location'    => 'required|string',
+            'location'    => 'nullable|string',
             'company_id'  => 'required',
             'department_id' => 'required',
         ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
 
         $user = auth()->user() ?? auth('admin')->user() ?? auth('web')->user();
         $userId = $user ? $user->id : null;
@@ -284,6 +288,22 @@ class PtwController extends Controller
 
         if ((string)$doc->status !== '1') { // 1 = Draft
             return ResponseFormatter::error('Dokumen bukan berstatus Draft.', 422);
+        }
+
+        $validator = \Validator::make($doc->toArray(), [
+            'title'           => 'required',
+            'company_id'      => 'required',
+            'department_id'   => 'required',
+            'detail_location' => 'required',
+        ], [
+            'title.required'           => 'Judul PTW wajib diisi sebelum diajukan review.',
+            'company_id.required'      => 'Perusahaan wajib dipilih sebelum diajukan review.',
+            'department_id.required'   => 'Departemen wajib dipilih sebelum diajukan review.',
+            'detail_location.required' => 'Detail Lokasi wajib diisi sebelum diajukan review.',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
         }
 
         $user = auth()->user() ?? auth('admin')->user() ?? auth('web')->user();

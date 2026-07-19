@@ -14,6 +14,7 @@ export default function Create({ document = null }) {
     const [confirmModal, setConfirmModal] = useState({ isOpen: false, type: 'draft' });
     const [previewAttachment, setPreviewAttachment] = useState(null);
     const [saving, setSaving] = useState(false);
+    const [validationErrors, setValidationErrors] = useState({});
 
     const {
         loading,
@@ -58,6 +59,7 @@ export default function Create({ document = null }) {
         formData.append('company_id', company);
         formData.append('area_manager_id', pj);
 
+        setValidationErrors({});
         invitedEmails.forEach((email, index) => {
             formData.append(`invited_emails[${index}]`, email);
         });
@@ -86,7 +88,10 @@ export default function Create({ document = null }) {
             window.location.href = '/document-system/jsa';
         } catch (err) {
             console.error('Failed to save JSA', err);
-            alert('Gagal menyimpan JSA.');
+            const data = err.response?.data;
+            if (data?.errors) {
+                setValidationErrors(data.errors);
+            }
         } finally {
             setSaving(false);
         }
@@ -141,14 +146,23 @@ export default function Create({ document = null }) {
                             <div>
                                 <label style={{ fontSize: '10.5px', fontWeight: 700, color: 'var(--text-secondary)', display: 'block', marginBottom: '6px' }}>COMPANY</label>
                                 <SearchableSelect options={companies} value={company} onChange={setCompany} placeholder="Pilih Perusahaan..." />
+                                {validationErrors.company_id && (
+                                    <span style={{ color: '#EF4444', fontSize: '10px', marginTop: '4px', display: 'block', fontWeight: 600 }}>{validationErrors.company_id[0]}</span>
+                                )}
                             </div>
                             <div>
                                 <label style={{ fontSize: '10.5px', fontWeight: 700, color: 'var(--text-secondary)', display: 'block', marginBottom: '6px' }}>DEPARTMENT</label>
                                 <SearchableSelect options={departments} value={department} onChange={setDepartment} placeholder="Pilih Departemen..." />
+                                {validationErrors.department_id && (
+                                    <span style={{ color: '#EF4444', fontSize: '10px', marginTop: '4px', display: 'block', fontWeight: 600 }}>{validationErrors.department_id[0]}</span>
+                                )}
                             </div>
                             <div>
                                 <label style={{ fontSize: '10.5px', fontWeight: 700, color: 'var(--text-secondary)', display: 'block', marginBottom: '6px' }}>PENANGGUNG JAWAB</label>
                                 <SearchableSelect options={pjs} value={pj} onChange={setPj} placeholder="Pilih Penanggung Jawab..." />
+                                {validationErrors.area_manager_id && (
+                                    <span style={{ color: '#EF4444', fontSize: '10px', marginTop: '4px', display: 'block', fontWeight: 600 }}>{validationErrors.area_manager_id[0]}</span>
+                                )}
                             </div>
                         </div>
                     </div>
@@ -168,6 +182,9 @@ export default function Create({ document = null }) {
                                     placeholder="Masukkan Judul Dokumen..." 
                                     style={{ width: '100%', height: '40px', border: '1px solid var(--border-color)', borderRadius: '8px', padding: '0 12px', fontSize: '12px', outline: 'none' }}
                                 />
+                                {validationErrors.title && (
+                                    <span style={{ color: '#EF4444', fontSize: '10px', marginTop: '4px', display: 'block', fontWeight: 600 }}>{validationErrors.title[0]}</span>
+                                )}
                             </div>
                             <div>
                                 <label style={{ fontSize: '10.5px', fontWeight: 700, color: 'var(--text-secondary)', display: 'block', marginBottom: '6px' }}>DATE OF CREATE DOCUMENT</label>
@@ -177,6 +194,9 @@ export default function Create({ document = null }) {
                                     onChange={e => setDocCreated(e.target.value)} 
                                     style={{ width: '100%', height: '40px', border: '1px solid var(--border-color)', borderRadius: '8px', padding: '0 12px', fontSize: '12px', outline: 'none' }}
                                 />
+                                {validationErrors.doc_created && (
+                                    <span style={{ color: '#EF4444', fontSize: '10px', marginTop: '4px', display: 'block', fontWeight: 600 }}>{validationErrors.doc_created[0]}</span>
+                                )}
                             </div>
                             <div>
                                 <label style={{ fontSize: '10.5px', fontWeight: 700, color: 'var(--text-secondary)', display: 'block', marginBottom: '6px' }}>DOCUMENT NUMBER (OPTIONAL)</label>
@@ -187,6 +207,9 @@ export default function Create({ document = null }) {
                                     placeholder="Masukkan Nomor Dokumen..." 
                                     style={{ width: '100%', height: '40px', border: '1px solid var(--border-color)', borderRadius: '8px', padding: '0 12px', fontSize: '12px', outline: 'none' }}
                                 />
+                                {validationErrors.document_number && (
+                                    <span style={{ color: '#EF4444', fontSize: '10px', marginTop: '4px', display: 'block', fontWeight: 600 }}>{validationErrors.document_number[0]}</span>
+                                )}
                             </div>
                             <div>
                                 <label style={{ fontSize: '10.5px', fontWeight: 700, color: 'var(--text-secondary)', display: 'block', marginBottom: '6px' }}>DETAIL LOCATION</label>
@@ -197,6 +220,9 @@ export default function Create({ document = null }) {
                                     placeholder="Masukkan Detail Lokasi..." 
                                     style={{ width: '100%', height: '40px', border: '1px solid var(--border-color)', borderRadius: '8px', padding: '0 12px', fontSize: '12px', outline: 'none' }}
                                 />
+                                {validationErrors.location && (
+                                    <span style={{ color: '#EF4444', fontSize: '10px', marginTop: '4px', display: 'block', fontWeight: 600 }}>{validationErrors.location[0]}</span>
+                                )}
                             </div>
                         </div>
                     </div>

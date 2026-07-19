@@ -115,12 +115,16 @@ class JsaApiController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
+        $validator = \Validator::make($request->all(), [
             'title'       => 'required|string|max:255',
-            'work_type'   => 'required|string',
-            'location'    => 'required|string',
+            'work_type'   => 'nullable|string',
+            'location'    => 'nullable|string',
             'company_id'  => 'required',
         ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
 
         $user = auth()->user() ?? auth('admin')->user() ?? auth('web')->user();
         $userId = $user ? $user->id : null;
@@ -316,6 +320,20 @@ class JsaApiController extends Controller
 
         if ((string)$doc->status !== JsaDocument::DRAFT) {
             return ResponseFormatter::error('Dokumen bukan berstatus Draft.', 422);
+        }
+
+        $validator = \Validator::make($doc->toArray(), [
+            'title'           => 'required',
+            'company_id'      => 'required',
+            'detail_location' => 'required',
+        ], [
+            'title.required'           => 'Judul JSA wajib diisi sebelum diajukan review.',
+            'company_id.required'      => 'Perusahaan wajib dipilih sebelum diajukan review.',
+            'detail_location.required' => 'Detail Lokasi wajib diisi sebelum diajukan review.',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
         }
 
         $user = auth()->user() ?? auth('admin')->user() ?? auth('web')->user();

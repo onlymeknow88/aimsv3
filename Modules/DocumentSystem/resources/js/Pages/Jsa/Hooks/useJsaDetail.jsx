@@ -34,7 +34,13 @@ export default function useJsaDetail(id) {
             fetchJsaDetails();
             return true;
         } catch (err) {
-            const msg = err.response?.data?.message || 'Gagal mengirim untuk review.';
+            const data = err.response?.data;
+            let msg = 'Gagal mengirim untuk review.';
+            if (data?.errors) {
+                msg = Object.values(data.errors).flat().join(' ');
+            } else if (data?.message) {
+                msg = data.message;
+            }
             setActionError(msg);
             return false;
         } finally {

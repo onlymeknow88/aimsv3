@@ -33,6 +33,7 @@ export default function useMaker(document = null) {
     const [invitedEmails, setInvitedEmails] = useState(
         document?.invited_people?.map(p => p.email) || 
         document?.people?.map(p => p.email) || 
+        document?.peoples?.map(p => p.email) || 
         []
     );
     const [files, setFiles] = useState([]);
