@@ -1,6 +1,7 @@
-import React from 'react';
+import { Bell, LogIn, LogOut, Menu } from 'lucide-react';
+
 import { Link } from '@inertiajs/react';
-import { Bell, LogOut, LogIn, Menu } from 'lucide-react';
+import React from 'react';
 
 export default function Header({
     auth,
@@ -10,7 +11,7 @@ export default function Header({
     setSidebarOpen
 }) {
     return (
-        <header style={{
+        <header className="dashboard-header" style={{
             height: '70px',
             backgroundColor: 'var(--card-bg)',
             borderBottom: '1px solid var(--border-color)',
@@ -41,7 +42,7 @@ export default function Header({
                     <Menu size={20} />
                 </button>
                 <div>
-                    <h2 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>Selamat Datang di AIMS</h2>
+                    <h2 className="header-title" style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>Selamat Datang di AIMS</h2>
                     <span className="header-subtitle" style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Aplikasi Integrated Management System</span>
                 </div>
             </div>
@@ -102,11 +103,11 @@ export default function Header({
                         {profileDropdownOpen && (
                             <>
                                 {/* Backdrop to close dropdown */}
-                                <div 
-                                    onClick={() => setProfileDropdownOpen(false)} 
+                                <div
+                                    onClick={() => setProfileDropdownOpen(false)}
                                     style={{ position: 'fixed', inset: 0, zIndex: 98, cursor: 'default' }}
                                 />
-                                
+
                                 <div style={{
                                     position: 'absolute',
                                     right: 0,
@@ -129,7 +130,7 @@ export default function Header({
                                     {/* Dropdown Options */}
                                     <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
                                         <li>
-                                            <Link 
+                                            <Link
                                                 href={route('profile.edit')}
                                                 style={{
                                                     display: 'flex',
@@ -144,12 +145,12 @@ export default function Header({
                                                 className="dropdown-item"
                                                 onClick={() => setProfileDropdownOpen(false)}
                                             >
-                                                👤 Profile
+                                                Profile
                                             </Link>
                                         </li>
                                         <li>
-                                            <Link 
-                                                href="#" 
+                                            <Link
+                                                href={route('dashboard-portal.dashboard')}
                                                 style={{
                                                     display: 'flex',
                                                     alignItems: 'center',
@@ -163,13 +164,32 @@ export default function Header({
                                                 className="dropdown-item"
                                                 onClick={() => setProfileDropdownOpen(false)}
                                             >
-                                                🔐 Setup 2FA
+                                                Dashboard Portal
+                                            </Link>
+                                        </li>
+                                        <li>
+                                            <Link
+                                                href="#"
+                                                style={{
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: '10px',
+                                                    padding: '10px 16px',
+                                                    fontSize: '13px',
+                                                    color: 'var(--text-primary)',
+                                                    textDecoration: 'none',
+                                                    transition: 'background-color 0.2s'
+                                                }}
+                                                className="dropdown-item"
+                                                onClick={() => setProfileDropdownOpen(false)}
+                                            >
+                                                Setup 2FA
                                             </Link>
                                         </li>
                                         <li style={{ borderTop: '1px solid var(--border-color)', marginTop: '4px', paddingTop: '4px' }}>
-                                            <Link 
-                                                href={route('logout')} 
-                                                method="post" 
+                                            <Link
+                                                href={route('logout')}
+                                                method="post"
                                                 as="button"
                                                 style={{
                                                     width: '100%',
@@ -198,8 +218,8 @@ export default function Header({
                     </div>
                 ) : (
                     <div style={{ borderLeft: '1px solid var(--border-color)', paddingLeft: '20px' }}>
-                        <Link 
-                            href="/login" 
+                        <Link
+                            href="/login"
                             style={{
                                 display: 'flex',
                                 alignItems: 'center',
@@ -223,7 +243,7 @@ export default function Header({
                     </div>
                 )}
             </div>
-            
+
             <style dangerouslySetInnerHTML={{
                 __html: `
                 .dropdown-item:hover {

@@ -17,7 +17,7 @@ export default function SlideShow({
                 position: 'relative',
                 borderRadius: '16px',
                 padding: '40px',
-                background: 'linear-gradient(135deg, #10233f 0%, #153b73 100%)',
+                background: 'linear-gradient(25deg, #098192 0%, #06495B 41%, #023952 100%)',
                 boxShadow: 'var(--shadow-premium)',
                 overflow: 'hidden',
                 display: 'flex',
@@ -33,7 +33,8 @@ export default function SlideShow({
                     }
                     @media (max-width: 768px) {
                         .slideshow-card {
-                            height: 240px !important;
+                            height: auto !important;
+                            aspect-ratio: 16/9 !important;
                             padding: 20px !important;
                         }
                         .slideshow-title {
@@ -44,6 +45,15 @@ export default function SlideShow({
                         }
                         .slideshow-content {
                             max-width: 100% !important;
+                        }
+                        .slideshow-fallback {
+                            width: 100% !important;
+                            right: 0 !important;
+                            left: 0 !important;
+                            top: 20px !important;
+                            bottom: 20px !important;
+                            opacity: 0.15 !important;
+                            background-position: center !important;
                         }
                     }
                 `}</style>
@@ -64,7 +74,7 @@ export default function SlideShow({
             position: 'relative',
             borderRadius: '16px',
             padding: '40px',
-            background: 'linear-gradient(135deg, #10233f 0%, #153b73 100%)',
+            background: 'linear-gradient(25deg, #098192 0%, #06495B 41%, #023952 100%)',
             color: '#fff',
             boxShadow: 'var(--shadow-premium)',
             overflow: 'hidden',
@@ -76,7 +86,8 @@ export default function SlideShow({
             <style>{`
                 @media (max-width: 768px) {
                     .slideshow-card {
-                        height: 240px !important;
+                        height: auto !important;
+                        aspect-ratio: 16/9 !important;
                         padding: 20px !important;
                     }
                     .slideshow-title {
@@ -87,6 +98,15 @@ export default function SlideShow({
                     }
                     .slideshow-content {
                         max-width: 100% !important;
+                    }
+                    .slideshow-fallback {
+                        width: 100% !important;
+                        right: 0 !important;
+                        left: 0 !important;
+                        top: 20px !important;
+                        bottom: 20px !important;
+                        opacity: 0.15 !important;
+                        background-position: center !important;
                     }
                 }
             `}</style>
@@ -111,14 +131,14 @@ export default function SlideShow({
                     <source src={currentSlide.blob_url} type="video/mp4" />
                 </video>
             ) : (
-                <div style={{ position: 'absolute', right: 0, bottom: 0, top: 0, width: '45%', backgroundImage: 'url("https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&q=80&w=600")', backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.3, borderLeft: '1px solid rgba(255,255,255,0.05)', zIndex: 1 }} />
+                <div className="slideshow-fallback" style={{ position: 'absolute', right: '40px', bottom: '40px', top: '40px', width: '35%', backgroundImage: 'url("/images/Alamtri Geo Monochrome - Full Color.png")', backgroundSize: 'contain', backgroundRepeat: 'no-repeat', backgroundPosition: 'center', opacity: 1, zIndex: 3 }} />
             )}
 
             {/* Dark overlay for readability */}
             <div style={{
                 position: 'absolute',
                 inset: 0,
-                background: 'linear-gradient(90deg, rgba(16, 35, 63, 0.9) 0%, rgba(16, 35, 63, 0.65) 50%, rgba(16, 35, 63, 0.2) 100%)',
+                background: 'linear-gradient(90deg, rgba(2, 57, 82, 0.9) 0%, rgba(2, 57, 82, 0.55) 50%, rgba(2, 57, 82, 0) 100%)',
                 zIndex: 2
             }} />
 

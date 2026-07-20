@@ -79,6 +79,13 @@ export default function DashboardLayout({ children }) {
                     .mobile-toggle {
                         display: flex !important;
                     }
+                    .dashboard-header {
+                        padding: 0 16px !important;
+                    }
+                    .header-title {
+                        font-size: 14px !important;
+                        white-space: nowrap !important;
+                    }
                     .header-subtitle {
                         display: none !important;
                     }

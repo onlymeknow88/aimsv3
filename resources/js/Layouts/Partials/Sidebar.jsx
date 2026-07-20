@@ -15,30 +15,7 @@ export default function Sidebar({
 }) {
     return (
         <>
-            {/* Sidebar Toggle Button for Mobile */}
-            <button
-                onClick={() => setSidebarOpen(!sidebarOpen)}
-                style={{
-                    position: 'fixed',
-                    bottom: '20px',
-                    right: '20px',
-                    zIndex: 999,
-                    backgroundColor: 'var(--primary)',
-                    color: '#fff',
-                    border: 'none',
-                    borderRadius: '50%',
-                    width: '50px',
-                    height: '50px',
-                    display: 'none',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    boxShadow: 'var(--shadow-lg)',
-                    cursor: 'pointer'
-                }}
-                className="mobile-toggle"
-            >
-                {sidebarOpen ? <X size={24} /> : <Menu size={24} />}
-            </button>
+
 
             {/* Sidebar Panel */}
             <div
@@ -67,21 +44,18 @@ export default function Sidebar({
                     gap: '12px',
                     borderBottom: '1px solid rgba(255, 255, 255, 0.05)'
                 }}>
-                    <div style={{
-                        width: '40px',
-                        height: '40px',
-                        borderRadius: '8px',
-                        backgroundColor: 'var(--accent)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        color: '#fff',
-                        fontWeight: 'bold',
-                        fontSize: '1.25rem',
-                        boxShadow: '0 4px 10px rgba(255, 140, 36, 0.3)'
-                    }}>
-                        ★
-                    </div>
+                    <img 
+                        src="/images/Alamtri Geo Logo - Full Color 1.png" 
+                        alt="Alamtri Logo" 
+                        style={{
+                            width: '40px',
+                            height: '40px',
+                            objectFit: 'contain',
+                            borderRadius: '8px',
+                            backgroundColor: '#fff',
+                            padding: '4px'
+                        }}
+                    />
                     <div>
                         <h1 style={{ color: '#fff', fontSize: '18px', fontWeight: 700, margin: 0, letterSpacing: '0.5px' }}>AIMS</h1>
                         <span style={{ fontSize: '12px', color: '#64748b', display: 'block', whiteSpace: 'nowrap' }}>Integrated Management System</span>

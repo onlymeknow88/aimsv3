@@ -69,30 +69,6 @@ export default function Sidebar({
 
                     {hasCoeAccess && (
                         <>
-                            {/* 1. Dashboard */}
-                            <li style={{ marginBottom: '4px' }}>
-                                <a
-                                    href="/dashboard-portal"
-                                    style={{
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: '12px',
-                                        padding: '10px 16px',
-                                        borderRadius: '8px',
-                                        fontSize: '13px',
-                                        fontWeight: 500,
-                                        textDecoration: 'none',
-                                        color: currentPath === '/dashboard-portal' ? '#fff' : '#a3b1c6',
-                                        backgroundColor: currentPath === '/dashboard-portal' ? 'var(--primary)' : 'transparent',
-                                        transition: 'all 0.2s ease',
-                                        whiteSpace: 'nowrap'
-                                    }}
-                                    className={currentPath !== '/dashboard-portal' ? "hover-link" : ""}
-                                >
-                                    <LayoutDashboard size={14} style={{ color: currentPath === '/dashboard-portal' ? '#fff' : 'rgba(255,255,255,0.4)', flexShrink: 0 }} />
-                                    Dashboard
-                                </a>
-                            </li>
                             {/* 2. Slide Show */}
                             <li style={{ marginBottom: '4px' }}>
                                 <a

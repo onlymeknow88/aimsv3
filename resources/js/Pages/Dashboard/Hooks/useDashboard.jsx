@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
+
 import axios from 'axios';
 
 export default function useDashboard(initialEvents = [], initialSlideshows = []) {
@@ -30,7 +31,7 @@ export default function useDashboard(initialEvents = [], initialSlideshows = [])
         {
             id: 'default-1',
             name: 'Utamakan Keselamatan, Ciptakan Masa Depan Tanpa Kecelakaan Kerja',
-            description: 'Zero Incident • Zero Harm • Zero Compromise',
+            description: 'Alamtri Zero Accident Mindset (AZAM)',
             blob_url: null
         }
     ];
