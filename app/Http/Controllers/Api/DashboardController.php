@@ -19,14 +19,14 @@ class DashboardController extends Controller
             }
             $events = $rawEvents->map(function ($event) {
                 $startDate = \Carbon\Carbon::parse($event->start_date);
-                
+
                 $statusColor = '#FF8C24';
                 if ($event->status === 'Completed') {
                     $statusColor = '#2FBF71';
                 } elseif ($event->status === 'Cancelled') {
                     $statusColor = '#F44336';
                 }
-                
+
                 return [
                     'date'   => strtoupper($startDate->translatedFormat('d M')), // e.g. "23 JUN"
                     'title'  => $event->title,
@@ -51,9 +51,16 @@ class DashboardController extends Controller
                 })->toArray();
         }
 
+        // Fetch latest general KPI stats from dashboard_general
+        $generalStats = null;
+        if (class_exists('Modules\DashboardPortal\app\Models\General')) {
+            $generalStats = \Modules\DashboardPortal\app\Models\General::orderBy('created_at', 'desc')->first();
+        }
+
         return ResponseFormatter::success([
-            'coeEvents' => $events,
-            'slideshows' => $slideshows
+            'coeEvents'    => $events,
+            'slideshows'   => $slideshows,
+            'generalStats' => $generalStats,
         ], 'Dashboard data retrieved successfully');
     }
 }

@@ -1,12 +1,10 @@
 import {
     ArrowLeft,
-    Calendar,
-    ChevronDown,
-    ChevronUp,
-    Database,
+    BarChart2,
+    Image,
     LayoutDashboard,
-    List,
-    Settings
+    Newspaper,
+    Video,
 } from 'lucide-react';
 
 import React from 'react';
@@ -47,11 +45,11 @@ export default function Sidebar({
             {/* Logo / Header Modul */}
             <div style={{ padding: '24px 20px', display: 'flex', alignItems: 'center', gap: '12px', borderBottom: '1px solid rgba(255, 255, 255, 0.05)', whiteSpace: 'nowrap' }}>
                 <div style={{ width: '40px', height: '40px', borderRadius: '8px', backgroundColor: 'var(--primary)', display: 'flex', alignItems: 'center', justify_content: 'center', color: '#fff', fontWeight: 'bold', fontSize: '16px', flexShrink: 0, justifyContent: 'center' }}>
-                    📅
+                    🛡️
                 </div>
                 <div>
-                    <h1 style={{ color: '#fff', fontSize: '15px', fontWeight: 700, margin: 0 }}>CoE Portal</h1>
-                    <span style={{ fontSize: '11px', color: '#64748b', display: 'block' }}>Center of Excellence</span>
+                    <h1 style={{ color: '#fff', fontSize: '15px', fontWeight: 700, margin: 0 }}>Dashboard Portal</h1>
+                    <span style={{ fontSize: '11px', color: '#64748b', display: 'block' }}>AIMS v3 Admin Panel</span>
                 </div>
             </div>
 
@@ -69,7 +67,32 @@ export default function Sidebar({
 
                     {hasCoeAccess && (
                         <>
-                            {/* 2. Slide Show */}
+                            {/* Dashboard */}
+                            <li style={{ marginBottom: '4px' }}>
+                                <a
+                                    href="/dashboard-portal"
+                                    style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '12px',
+                                        padding: '10px 16px',
+                                        borderRadius: '8px',
+                                        fontSize: '13px',
+                                        fontWeight: 500,
+                                        textDecoration: 'none',
+                                        color: currentPath === '/dashboard-portal' ? '#fff' : '#a3b1c6',
+                                        backgroundColor: currentPath === '/dashboard-portal' ? 'var(--primary)' : 'transparent',
+                                        transition: 'all 0.2s ease',
+                                        whiteSpace: 'nowrap'
+                                    }}
+                                    className={currentPath !== '/dashboard-portal' ? "hover-link" : ""}
+                                >
+                                    <LayoutDashboard size={14} style={{ color: currentPath === '/dashboard-portal' ? '#fff' : 'rgba(255,255,255,0.4)', flexShrink: 0 }} />
+                                    Dashboard
+                                </a>
+                            </li>
+
+                            {/* Slideshow */}
                             <li style={{ marginBottom: '4px' }}>
                                 <a
                                     href="/dashboard-portal/slideshow"
@@ -89,11 +112,12 @@ export default function Sidebar({
                                     }}
                                     className={currentPath !== '/dashboard-portal/slideshow' ? "hover-link" : ""}
                                 >
-                                    <List size={14} style={{ color: currentPath === '/dashboard-portal/slideshow' ? '#fff' : 'rgba(255,255,255,0.4)', flexShrink: 0 }} />
+                                    <Video size={14} style={{ color: currentPath === '/dashboard-portal/slideshow' ? '#fff' : 'rgba(255,255,255,0.4)', flexShrink: 0 }} />
                                     SlideShow
                                 </a>
                             </li>
-                            {/* 3. Banner */}
+
+                            {/* Banner */}
                             <li style={{ marginBottom: '4px' }}>
                                 <a
                                     href="/dashboard-portal/banner"
@@ -113,8 +137,58 @@ export default function Sidebar({
                                     }}
                                     className={currentPath !== '/dashboard-portal/banner' ? "hover-link" : ""}
                                 >
-                                    <List size={14} style={{ color: currentPath === '/dashboard-portal/banner' ? '#fff' : 'rgba(255,255,255,0.4)', flexShrink: 0 }} />
+                                    <Image size={14} style={{ color: currentPath === '/dashboard-portal/banner' ? '#fff' : 'rgba(255,255,255,0.4)', flexShrink: 0 }} />
                                     Banner
+                                </a>
+                            </li>
+
+                            {/* General */}
+                            <li style={{ marginBottom: '4px' }}>
+                                <a
+                                    href="/dashboard-portal/general"
+                                    style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '12px',
+                                        padding: '10px 16px',
+                                        borderRadius: '8px',
+                                        fontSize: '13px',
+                                        fontWeight: 500,
+                                        textDecoration: 'none',
+                                        color: currentPath === '/dashboard-portal/general' ? '#fff' : '#a3b1c6',
+                                        backgroundColor: currentPath === '/dashboard-portal/general' ? 'var(--primary)' : 'transparent',
+                                        transition: 'all 0.2s ease',
+                                        whiteSpace: 'nowrap'
+                                    }}
+                                    className={currentPath !== '/dashboard-portal/general' ? "hover-link" : ""}
+                                >
+                                    <BarChart2 size={14} style={{ color: currentPath === '/dashboard-portal/general' ? '#fff' : 'rgba(255,255,255,0.4)', flexShrink: 0 }} />
+                                    General KPI
+                                </a>
+                            </li>
+
+                            {/* News & Update */}
+                            <li style={{ marginBottom: '4px' }}>
+                                <a
+                                    href="/dashboard-portal/news-and-update"
+                                    style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '12px',
+                                        padding: '10px 16px',
+                                        borderRadius: '8px',
+                                        fontSize: '13px',
+                                        fontWeight: 500,
+                                        textDecoration: 'none',
+                                        color: currentPath === '/dashboard-portal/news-and-update' ? '#fff' : '#a3b1c6',
+                                        backgroundColor: currentPath === '/dashboard-portal/news-and-update' ? 'var(--primary)' : 'transparent',
+                                        transition: 'all 0.2s ease',
+                                        whiteSpace: 'nowrap'
+                                    }}
+                                    className={currentPath !== '/dashboard-portal/news-and-update' ? "hover-link" : ""}
+                                >
+                                    <Newspaper size={14} style={{ color: currentPath === '/dashboard-portal/news-and-update' ? '#fff' : 'rgba(255,255,255,0.4)', flexShrink: 0 }} />
+                                    News &amp; Update
                                 </a>
                             </li>
 

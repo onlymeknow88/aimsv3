@@ -1,20 +1,11 @@
 import {
     Activity,
     AlertCircle,
-    ArrowRight,
     Award,
     Briefcase,
-    Calendar,
-    ChevronLeft,
-    ChevronRight,
-    Clock,
-    Download,
-    FileSpreadsheet,
     FileText,
     HardHat,
-    HelpCircle,
     ShieldAlert,
-    TrendingUp
 } from 'lucide-react';
 import {
     ArcElement,
@@ -35,6 +26,7 @@ import { Head, Link } from '@inertiajs/react';
 import CalendarofEvent from './Partials/Widget/CalendarofEvent';
 import DashboardLayout from '@/Layouts/DashboardLayout';
 import React from 'react';
+import SafetyKPI from './Partials/Widget/SafetyKPI';
 import SlideShow from './Partials/Widget/SlideShow';
 import useDashboard from './Hooks/useDashboard';
 
@@ -55,15 +47,10 @@ export default function Dashboard({ coeEvents: initialEvents = [], slideshows: i
         nextSlide,
         prevSlide,
         loading,
+        generalStats,
     } = useDashboard(initialEvents, initialSlideshows);
 
-    // 1. KPI Cards
-    const statsCards = [
-        { title: 'PROJECT TO DATE', value: '1.245 Hari', trend: '▲ 8,5% dari periode lalu', icon: Calendar, color: '#2563eb' },
-        { title: 'MANHOURS', value: '12.456.789 Jam', trend: '▲ 6,3% dari periode lalu', icon: Clock, color: '#ea580c' },
-        { title: 'DAY AFTER LAST LTI', value: '245 Hari', trend: '▲ 15,2% dari periode lalu', icon: HardHat, color: '#16a34a' },
-        { title: 'MANPOWER', value: '3.456 Orang', trend: '▼ -2,1% dari periode lalu', icon: TrendingUp, color: '#7c3aed' },
-    ];
+    // KPI Cards — data dari API dashboard_general (lihat SafetyKPI widget)
 
     // 2. Production YTD Chart
     const lineChartData = {
@@ -145,25 +132,8 @@ export default function Dashboard({ coeEvents: initialEvents = [], slideshows: i
         <DashboardLayout>
             <Head title="AIMS Dashboard" />
 
-            {/* Section 1: KPI Cards */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px', marginBottom: '32px' }}>
-                {statsCards.map((c, i) => {
-                    const Icon = c.icon;
-                    return (
-                        <div key={i} style={{ backgroundColor: '#fff', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '20px', display: 'flex', alignItems: 'center', gap: '16px', boxShadow: 'var(--shadow-sm)', position: 'relative' }}>
-                            <div style={{ width: '48px', height: '48px', borderRadius: '50%', backgroundColor: `${c.color}15`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: c.color }}>
-                                <Icon size={24} />
-                            </div>
-                            <div>
-                                <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', display: 'block', marginBottom: '4px' }}>{c.title}</span>
-                                <h3 style={{ fontSize: '22px', fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>{c.value}</h3>
-                                <span style={{ fontSize: '11.5px', color: c.trend.includes('▲') ? 'var(--success)' : 'var(--danger)', fontWeight: 600 }}>{c.trend}</span>
-                            </div>
-                            <span style={{ position: 'absolute', right: '12px', top: '12px', fontSize: '11px', color: 'var(--text-muted)', cursor: 'help' }}>ⓘ</span>
-                        </div>
-                    );
-                })}
-            </div>
+            {/* Section 1: KPI Cards — Safety Performance dari dashboard_general */}
+            <SafetyKPI generalStats={generalStats} loading={loading} />
 
             {/* Section 2: Hero Area */}
             <div className="dashboard-grid-hero" style={{ display: 'grid', gridTemplateColumns: '1.8fr 1.2fr', gap: '24px', marginBottom: '32px' }}>
