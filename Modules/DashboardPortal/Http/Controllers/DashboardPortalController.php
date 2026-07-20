@@ -21,4 +21,11 @@ class DashboardPortalController extends Controller
     {
         return Inertia::render('DashboardPortal/Slideshow/Index');
     }
+    /**
+     * Display a listing of the resource.
+     */
+    public function bannerIndex()
+    {
+        return Inertia::render('DashboardPortal/Banner/Index');
+    }
 }

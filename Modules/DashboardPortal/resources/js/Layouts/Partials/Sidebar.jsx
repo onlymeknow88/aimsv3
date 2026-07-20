@@ -82,15 +82,39 @@ export default function Sidebar({
                                         fontSize: '13px',
                                         fontWeight: 500,
                                         textDecoration: 'none',
-                                        color: currentPath === '/dashboard-portal/list' ? '#fff' : '#a3b1c6',
-                                        backgroundColor: currentPath === '/dashboard-portal/list' ? 'var(--primary)' : 'transparent',
+                                        color: currentPath === '/dashboard-portal/slideshow' ? '#fff' : '#a3b1c6',
+                                        backgroundColor: currentPath === '/dashboard-portal/slideshow' ? 'var(--primary)' : 'transparent',
                                         transition: 'all 0.2s ease',
                                         whiteSpace: 'nowrap'
                                     }}
-                                    className={currentPath !== '/dashboard-portal/list' ? "hover-link" : ""}
+                                    className={currentPath !== '/dashboard-portal/slideshow' ? "hover-link" : ""}
                                 >
-                                    <List size={14} style={{ color: currentPath === '/dashboard-portal/list' ? '#fff' : 'rgba(255,255,255,0.4)', flexShrink: 0 }} />
+                                    <List size={14} style={{ color: currentPath === '/dashboard-portal/slideshow' ? '#fff' : 'rgba(255,255,255,0.4)', flexShrink: 0 }} />
                                     SlideShow
+                                </a>
+                            </li>
+                            {/* 3. Banner */}
+                            <li style={{ marginBottom: '4px' }}>
+                                <a
+                                    href="/dashboard-portal/banner"
+                                    style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '12px',
+                                        padding: '10px 16px',
+                                        borderRadius: '8px',
+                                        fontSize: '13px',
+                                        fontWeight: 500,
+                                        textDecoration: 'none',
+                                        color: currentPath === '/dashboard-portal/banner' ? '#fff' : '#a3b1c6',
+                                        backgroundColor: currentPath === '/dashboard-portal/banner' ? 'var(--primary)' : 'transparent',
+                                        transition: 'all 0.2s ease',
+                                        whiteSpace: 'nowrap'
+                                    }}
+                                    className={currentPath !== '/dashboard-portal/banner' ? "hover-link" : ""}
+                                >
+                                    <List size={14} style={{ color: currentPath === '/dashboard-portal/banner' ? '#fff' : 'rgba(255,255,255,0.4)', flexShrink: 0 }} />
+                                    Banner
                                 </a>
                             </li>
 
