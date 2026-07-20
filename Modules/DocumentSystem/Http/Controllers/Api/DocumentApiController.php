@@ -12,6 +12,7 @@ use Illuminate\Support\Str;
 use Modules\DocumentSystem\Entities\Document;
 use Modules\DocumentSystem\Entities\Attachment;
 use Modules\DocumentSystem\Services\DocumentSystemService;
+use Modules\DocumentSystem\Services\WatermarkService;
 
 class DocumentApiController extends Controller
 {
@@ -475,15 +476,66 @@ class DocumentApiController extends Controller
         if ($request->level == 1) {
             $doc->update(['status' => '3', 'approved_by_crs' => $userId, 'approved_at_crs' => now()]);
         } else {
-            $doc->update(['status' => '5', 'approved_by_pja' => $userId, 'approved_at_pja' => now()]); // Active
-
-            // On final approval: rename all attachments with FINAL_ prefix on blob storage
+            // ── Level 2 (PJA / Final Approval) ───────────────────────────────
+            // 1. Rename attachments to FINAL_ in blob storage
             try {
-                $service = new \Modules\DocumentSystem\Services\DocumentSystemService();
-                $service->renameToBlobFinal($doc);
+                $docService = new DocumentSystemService();
+                $docService->renameToBlobFinal($doc);
             } catch (\Exception $e) {
                 \Log::error('Failed to rename blobs to FINAL_ on final approval: ' . $e->getMessage());
             }
+
+            // 2. Apply watermark to the latest PDF attachment and store as uncontrolled copy
+            $uncontrolledPath       = null;
+            $uncontrolledBlobUrl    = null;
+            $uncontrolledBlobRespon = null;
+            try {
+                $latestAttachment = $doc->attachments()
+                    ->where('file_type', 'pdf')
+                    ->latest()
+                    ->first();
+
+                if ($latestAttachment && $latestAttachment->path) {
+                    $sas = GetBlobSasUri('aims-cntr', $latestAttachment->path);
+                    $sasUrl = is_array($sas)
+                        ? ($sas['blobUriSas'] ?? $sas['sasUri'] ?? $sas['url'] ?? $sas['blobUri'] ?? null)
+                        : $sas;
+
+                    if ($sasUrl) {
+                        $watermarkService = app(WatermarkService::class);
+                        $watermarkedTmp   = $watermarkService->applyWatermark($sasUrl, $latestAttachment->file_name ?? 'document.pdf', 'review');
+
+                        // Upload watermarked file to the 'uncontrolled' subfolder
+                        $uncontrolledFileName = 'UNCONTROLLED_' . ($latestAttachment->file_name ?? 'document.pdf');
+                        $uploadResult = uploadToBlobStorage($uncontrolledFileName, $watermarkedTmp, 'document-systems-files/uncontrolled');
+
+                        // Clean up temp file
+                        $watermarkService->cleanup($watermarkedTmp);
+
+                        if ($uploadResult && !empty($uploadResult['fileBlobPathName'])) {
+                            $uncontrolledPath    = $uploadResult['fileBlobPathName'];
+                            $uncontrolledBlobUrl = $uploadResult['fileBlobUrl'] ?? null;
+                            $uncontrolledBlobRespon = json_encode($uploadResult['blobResponse'] ?? []);
+                        }
+                    }
+                }
+            } catch (\Exception $e) {
+                // Non-fatal: log but continue with approval
+                \Log::error('WatermarkService failed on final approval for doc ' . $doc->id . ': ' . $e->getMessage());
+            }
+
+            // 3. Update document status to ACTIVE and store uncontrolled path if generated
+            $updatePayload = [
+                'status'          => '5',
+                'approved_by_pja' => $userId,
+                'approved_at_pja' => now(),
+            ];
+            if ($uncontrolledPath) {
+                $updatePayload['uncontrolled_file_path']    = $uncontrolledPath;
+                $updatePayload['uncontrolled_blob_url']     = $uncontrolledBlobUrl ?? null;
+                $updatePayload['uncontrolled_blob_respon']  = $uncontrolledBlobRespon ?? null;
+            }
+            $doc->update($updatePayload);
         }
 
         // Log activity

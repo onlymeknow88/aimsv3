@@ -8,6 +8,7 @@ export default function useDetail(id) {
     const [loadingData, setLoadingData] = useState(true);
     const [notes, setNotes] = useState('');
     const [loading, setLoading] = useState(false);
+    const [loadingMessage, setLoadingMessage] = useState('');
     const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
 
     const fetchDocumentDetails = useCallback(() => {
@@ -32,7 +33,14 @@ export default function useDetail(id) {
     const handleApprove = useCallback(() => {
         if (!document) return;
         const level = String(document.status) === '1' ? 1 : 2;
+
         setLoading(true);
+        // Level 2 triggers watermarking which can take a few seconds
+        setLoadingMessage(level === 2
+            ? 'Memproses watermark & menerbitkan dokumen...'
+            : 'Memproses persetujuan...'
+        );
+
         axios.post(`/api/document-system/documents/approve/${document.id}`, {
             level,
             notes
@@ -46,6 +54,7 @@ export default function useDetail(id) {
         })
         .finally(() => {
             setLoading(false);
+            setLoadingMessage('');
             setNotes('');
         });
     }, [document, notes, fetchDocumentDetails]);
@@ -91,7 +100,7 @@ export default function useDetail(id) {
 
     const handleDeleteAttachment = useCallback((attachmentId) => {
         if (!window.confirm('Apakah Anda yakin ingin menghapus lampiran ini?')) return;
-        
+
         axios.delete(`/api/document-system/attachments/${attachmentId}`)
             .then(() => {
                 fetchDocumentDetails();
@@ -110,6 +119,7 @@ export default function useDetail(id) {
         notes,
         setNotes,
         loading,
+        loadingMessage,
         isRejectModalOpen,
         setIsRejectModalOpen,
         rejectFiles,
