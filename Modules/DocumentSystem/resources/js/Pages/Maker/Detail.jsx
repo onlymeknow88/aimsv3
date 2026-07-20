@@ -1,12 +1,23 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Head } from '@inertiajs/react';
 import { ArrowLeft, User, Building, MapPin, Calendar, Layers, Eye, Download, Info, Users, Clock, Edit, FileText } from 'lucide-react';
 import StatusTimeline from '../OnGoing/Partials/Components/StatusTimeline';
 import useDetail from './Hooks/useDetail';
 import BlobPreviewModal from '@/Components/BlobPreviewModal';
+import ConfirmationModal from '@/Components/ConfirmationModal';
 
 export default function Detail({ id }) {
     const [previewAttachment, setPreviewAttachment] = useState(null);
+    const [isConfirmRenewOpen, setIsConfirmRenewOpen] = useState(false);
+    const [isConfirmApproveOpen, setIsConfirmApproveOpen] = useState(false);
+    const [isMobile, setIsMobile] = useState(false);
+
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth <= 768);
+        handleResize();
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
     const {
         document,
         loadingData,
@@ -98,33 +109,37 @@ export default function Detail({ id }) {
                 )}
 
                 {['5', '7'].includes(String(document.status)) && !document.is_obsolate && (
-                    <a href={`/document-system/active/edit/${document.id}`} style={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '6px',
-                        backgroundColor: 'var(--primary)',
-                        color: '#fff',
-                        borderRadius: '6px',
-                        padding: '6px 14px',
-                        fontSize: '11px',
-                        fontWeight: 700,
-                        textDecoration: 'none'
-                    }}>
+                    <button 
+                        onClick={() => setIsConfirmRenewOpen(true)}
+                        style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            backgroundColor: 'var(--primary)',
+                            color: '#fff',
+                            borderRadius: '6px',
+                            padding: '6px 14px',
+                            fontSize: '11px',
+                            fontWeight: 700,
+                            border: 'none',
+                            cursor: 'pointer'
+                        }}
+                    >
                         <Edit size={12} /> Update Document (Revisi)
-                    </a>
+                    </button>
                 )}
             </div>
 
             {/* 3-Column Grid Layout */}
             <div style={{
                 display: 'grid',
-                gridTemplateColumns: '260px 1fr 280px',
-                gap: '24px',
+                gridTemplateColumns: isMobile ? '1fr' : '260px 1fr 280px',
+                gap: isMobile ? '16px' : '24px',
                 alignItems: 'start'
             }}>
 
                 {/* LEFT SIDEBAR: Metadata Owner */}
-                <aside style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <aside style={{ display: 'flex', flexDirection: 'column', gap: '16px', order: isMobile ? 2 : 1 }}>
                     <div style={{
                         backgroundColor: 'var(--card-bg)',
                         border: '1px solid var(--border-color)',
@@ -177,7 +192,7 @@ export default function Detail({ id }) {
                 </aside>
 
                 {/* CENTER COLUMN: Document Details */}
-                <main style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                <main style={{ display: 'flex', flexDirection: 'column', gap: '20px', order: isMobile ? 1 : 2 }}>
                     {/* Detail Card */}
                     <div style={{
                         backgroundColor: 'var(--card-bg)',
@@ -310,7 +325,7 @@ export default function Detail({ id }) {
                                 Reject & Return
                             </button>
                             <button
-                                onClick={handleApprove}
+                                onClick={() => setIsConfirmApproveOpen(true)}
                                 disabled={loading}
                                 style={{
                                     border: 'none',
@@ -462,7 +477,7 @@ export default function Detail({ id }) {
                 )}
 
                 {/* RIGHT SIDEBAR: Progress Alur Timeline */}
-                <aside style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <aside style={{ display: 'flex', flexDirection: 'column', gap: '16px', order: isMobile ? 3 : 3 }}>
                     <div style={{
                         backgroundColor: 'var(--card-bg)',
                         border: '1px solid var(--border-color)',
@@ -525,6 +540,36 @@ export default function Detail({ id }) {
                     onClose={() => setPreviewAttachment(null)}
                 />
             )}
+
+            <ConfirmationModal
+                isOpen={isConfirmRenewOpen}
+                type="generic"
+                title="Perbarui Dokumen (Revisi)?"
+                description="Apakah Anda yakin ingin memperbarui dokumen ini? Dokumen baru versi revisi akan dibuat sebagai Draft."
+                confirmText="Ya, Perbarui"
+                cancelText="Batal"
+                onConfirm={() => {
+                    setIsConfirmRenewOpen(false);
+                    window.location.href = `/document-system/active/edit/${document.id}`;
+                }}
+                onCancel={() => setIsConfirmRenewOpen(false)}
+            />
+
+            <ConfirmationModal
+                isOpen={isConfirmApproveOpen}
+                type="generic"
+                title={String(document.status) === '1' ? "Forward to Checker?" : "Publish Document?"}
+                description={String(document.status) === '1' 
+                    ? "This document will be forwarded to the final checker." 
+                    : "This document will be active for 2 years and cannot be edited."}
+                confirmText="Yes"
+                cancelText="Cancel"
+                onConfirm={() => {
+                    setIsConfirmApproveOpen(false);
+                    handleApprove();
+                }}
+                onCancel={() => setIsConfirmApproveOpen(false)}
+            />
         </div>
     );
 }

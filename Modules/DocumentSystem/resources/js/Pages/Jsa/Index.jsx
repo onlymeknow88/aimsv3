@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Head } from '@inertiajs/react';
 import DocumentSystemLayout from '@DS/Layouts/DocumentSystemLayout';
 import useJsa from './Hooks/useJsa';
@@ -18,6 +18,15 @@ export default function Index({ isObsolete = false, isDraft = false }) {
         columnFilters,
         setColumnFilters
     } = useJsa(isObsolete, isDraft);
+
+    const [isMobile, setIsMobile] = useState(false);
+
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth <= 768);
+        handleResize();
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     const getPageTitle = () => {
         if (isObsolete) return "Obsolete JSA Archive";
@@ -40,7 +49,14 @@ export default function Index({ isObsolete = false, isDraft = false }) {
     return (
         <DocumentSystemLayout>
             <Head title={getPageTitle()} />
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
+            <div style={{
+                display: 'flex',
+                flexDirection: isMobile ? 'column' : 'row',
+                alignItems: isMobile ? 'flex-start' : 'center',
+                justifyContent: 'space-between',
+                marginBottom: '20px',
+                gap: isMobile ? '12px' : '16px'
+            }}>
                 <div>
                     <h1 style={{ fontSize: '20px', fontWeight: 800, color: 'var(--primary)', margin: 0 }}>
                         {getHeadingText()}
@@ -52,7 +68,7 @@ export default function Index({ isObsolete = false, isDraft = false }) {
                 {!isObsolete && !isDraft && (
                     <button
                         onClick={() => window.location.href = '/document-system/jsa/create'}
-                        style={{ display: 'flex', alignItems: 'center', gap: '6px', backgroundColor: 'var(--primary)', color: '#fff', border: 'none', borderRadius: '6px', padding: '8px 16px', fontSize: '11px', fontWeight: 700, cursor: 'pointer' }}>
+                        style={{ display: 'flex', alignItems: 'center', gap: '6px', backgroundColor: 'var(--primary)', color: '#fff', border: 'none', borderRadius: '6px', padding: '8px 16px', fontSize: '11px', fontWeight: 700, cursor: 'pointer', width: isMobile ? '100%' : 'auto', justifyContent: 'center' }}>
                         + Buat JSA
                     </button>
                 )}

@@ -234,7 +234,8 @@ export default function PtwTable({
 
     return (
         <>
-            <Table style={{ fontSize: '12px' }}>
+        <div style={{ width: '100%', overflowX: 'auto', WebkitOverflowScrolling: 'touch', border: '1px solid var(--border-color)', borderRadius: '8px', marginBottom: '16px' }}>
+            <Table style={{ fontSize: '12px', minWidth: '1000px' }}>
                 <TableHeader>
                     {table.getHeaderGroups().map(hg => (
                         <TableRow key={hg.id}>
@@ -283,7 +284,7 @@ export default function PtwTable({
                         table.getRowModel().rows.map(row => (
                             <TableRow key={row.id}>
                                 {row.getVisibleCells().map(cell => (
-                                    <TableCell key={cell.id}>
+                                    <TableCell key={cell.id} style={{ padding: '10px 12px', whiteSpace: 'nowrap' }}>
                                         {flexRender(cell.column.columnDef.cell, cell.getContext())}
                                     </TableCell>
                                 ))}
@@ -298,6 +299,7 @@ export default function PtwTable({
                     )}
                 </TableBody>
             </Table>
+        </div>
 
             <TablePagination
                 pagination={pagination}

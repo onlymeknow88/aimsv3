@@ -192,10 +192,28 @@ class DocumentApiController extends Controller
                 $invitedEmails = $request->input('invited_emails', []);
                 foreach ($invitedEmails as $email) {
                     if (! empty($email)) {
+                        $resolvedEmail = $email;
+                        $userId = null;
+
+                        // Try resolving from AreaManager
+                        $mgr = \App\Models\AreaManager::with('user')->find($email);
+                        if ($mgr && $mgr->user) {
+                            $resolvedEmail = $mgr->user->email;
+                            $userId = $mgr->user_id;
+                        } else {
+                            // Try resolving from User
+                            $usr = \App\Models\User::find($email);
+                            if ($usr) {
+                                $resolvedEmail = $usr->email;
+                                $userId = $usr->id;
+                            }
+                        }
+
                         DB::table('document_system_invited_people')->insert([
                             'id' => Str::uuid()->toString(),
                             'document_id' => $doc->id,
-                            'email' => $email,
+                            'user_id' => $userId,
+                            'email' => $resolvedEmail,
                             'status' => 0, // Pending
                             'created_at' => now(),
                             'updated_at' => now(),
@@ -306,10 +324,28 @@ class DocumentApiController extends Controller
                 $invitedEmails = $request->input('invited_emails', []);
                 foreach ($invitedEmails as $email) {
                     if (! empty($email)) {
+                        $resolvedEmail = $email;
+                        $userId = null;
+
+                        // Try resolving from AreaManager
+                        $mgr = \App\Models\AreaManager::with('user')->find($email);
+                        if ($mgr && $mgr->user) {
+                            $resolvedEmail = $mgr->user->email;
+                            $userId = $mgr->user_id;
+                        } else {
+                            // Try resolving from User
+                            $usr = \App\Models\User::find($email);
+                            if ($usr) {
+                                $resolvedEmail = $usr->email;
+                                $userId = $usr->id;
+                            }
+                        }
+
                         DB::table('document_system_invited_people')->insert([
                             'id' => Str::uuid()->toString(),
                             'document_id' => $doc->id,
-                            'email' => $email,
+                            'user_id' => $userId,
+                            'email' => $resolvedEmail,
                             'status' => 0, // Pending
                             'created_at' => now(),
                             'updated_at' => now(),
@@ -539,6 +575,29 @@ class DocumentApiController extends Controller
     {
         $document = Document::with(['company', 'department', 'areaManager.user', 'owner', 'creator', 'mapping.category.module', 'attachments', 'invitedPeople', 'activities.user', 'activities.attachments'])
             ->findOrFail($id);
+
+        // Dynamically resolve legacy UUIDs stored in email column
+        foreach ($document->invitedPeople as $person) {
+            if (!filter_var($person->email, FILTER_VALIDATE_EMAIL)) {
+                $mgr = \App\Models\AreaManager::with('user')->find($person->email);
+                if ($mgr && $mgr->user) {
+                    $person->email = $mgr->user->email;
+                    if (!$person->user_id) {
+                        $person->user_id = $mgr->user_id;
+                        $person->save();
+                    }
+                } else {
+                    $usr = \App\Models\User::find($person->email);
+                    if ($usr) {
+                        $person->email = $usr->email;
+                        if (!$person->user_id) {
+                            $person->user_id = $usr->id;
+                            $person->save();
+                        }
+                    }
+                }
+            }
+        }
 
         $user = auth()->user() ?? auth('admin')->user() ?? auth('web')->user();
         $userRoles = $user ? \DB::table('aims_user_roles')

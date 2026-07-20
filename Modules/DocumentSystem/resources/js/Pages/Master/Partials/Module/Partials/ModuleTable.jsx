@@ -1,11 +1,11 @@
-import React from 'react';
-import { Search, RefreshCw, Plus, Edit2, Trash2 } from 'lucide-react';
-import useModule from '../Hooks/useModule';
-import ModuleModal from './ModuleModal';
-import DeleteConfirmModal from '@/Components/DeleteConfirmModal';
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
+import { Edit2, Plus, RefreshCw, Search, Trash2 } from 'lucide-react';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
+import DeleteConfirmModal from '@/Components/DeleteConfirmModal';
+import ModuleModal from './ModuleModal';
+import React from 'react';
 import TablePagination from '@/Components/TablePagination';
+import useModule from '../Hooks/useModule';
 
 // Form field helpers
 const inputStyle = {
@@ -139,6 +139,17 @@ export default function ModuleTable() {
             )}
 
             {/* Table */}
+             <div
+                    style={{
+                        backgroundColor: "#fff",
+                        borderRadius: "14px",
+                        border: "1px solid #e2e8f0",
+                        overflow: "hidden",
+                        boxShadow: "0 2px 10px rgba(0,0,0,0.04)",
+                    }}
+                >
+
+
             <div style={{ overflowX: 'auto' }}>
                 <Table>
                     <TableHeader>
@@ -206,6 +217,7 @@ export default function ModuleTable() {
                 limit={limit}
                 onLimitChange={setLimit}
             />
+            </div>
 
             {/* Modals */}
             <ModuleModal

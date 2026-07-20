@@ -5,6 +5,7 @@ import {
 
 export default function Sidebar({
     sidebarOpen,
+    isMobile,
     currentPath,
     currentSearch,
     openDocs,
@@ -26,7 +27,7 @@ export default function Sidebar({
                 display: 'flex',
                 flexDirection: 'column',
                 height: '100vh',
-                position: 'sticky',
+                position: isMobile ? 'fixed' : 'sticky',
                 top: 0,
                 left: 0,
                 transition: 'all 0.3s ease-in-out',

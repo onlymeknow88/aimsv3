@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Head } from '@inertiajs/react';
 import DocumentSystemLayout from '@DS/Layouts/DocumentSystemLayout';
 import useApproval from './Hooks/useApproval';
@@ -34,6 +34,15 @@ export default function Index() {
         handleDelete
     } = useApproval();
 
+    const [isMobile, setIsMobile] = useState(false);
+
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth <= 768);
+        handleResize();
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
     const filtered = docs.filter(d =>
         d.title?.toLowerCase().includes(search.toLowerCase()) ||
         d.document_number?.toLowerCase().includes(search.toLowerCase())
@@ -51,31 +60,33 @@ export default function Index() {
 
     const handleSelectRow = (id, checked) => {
         if (checked) {
-            setSelectedIds([...selectedIds, id]);
+            setSelectedIds(prev => [...prev, id]);
         } else {
-            setSelectedIds(selectedIds.filter(x => x !== id));
+            setSelectedIds(prev => prev.filter(x => x !== id));
         }
     };
 
     return (
         <DocumentSystemLayout>
-            <Head title="Approval Action Center" />
+            <Head title="Document Approval" />
 
             <div style={{ marginBottom: '20px' }}>
-                <h1 style={{ fontSize: '20px', fontWeight: 800, color: 'var(--primary)', margin: 0 }}>Approval Action Center</h1>
-                <p style={{ color: 'var(--text-secondary)', fontSize: '11px', marginTop: '4px' }}>Persetujuan dokumen K3LH & SOP (Level 1 CRS & Level 2 PJA).</p>
+                <h1 style={{ fontSize: '20px', fontWeight: 800, color: 'var(--primary)', margin: 0 }}>Document Approval</h1>
+                <p style={{ color: 'var(--text-secondary)', fontSize: '11px', marginTop: '4px' }}>Daftar dokumen keselamatan kerja dan operasional yang memerlukan persetujuan Anda.</p>
             </div>
 
             {selectedIds.length > 0 ? (
                 <div style={{
                     display: 'flex',
-                    alignItems: 'center',
+                    flexDirection: isMobile ? 'column' : 'row',
+                    alignItems: isMobile ? 'flex-start' : 'center',
                     justifyContent: 'space-between',
                     backgroundColor: 'rgba(21, 59, 115, 0.05)',
                     border: '1px solid rgba(21, 59, 115, 0.15)',
                     borderRadius: '8px',
                     padding: '10px 16px',
                     marginBottom: '20px',
+                    gap: isMobile ? '12px' : '16px',
                     animation: 'fadeIn 0.2s ease'
                 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -91,7 +102,7 @@ export default function Index() {
                         </button>
                     </div>
 
-                    <div style={{ display: 'flex', gap: '8px' }}>
+                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', width: isMobile ? '100%' : 'auto' }}>
                         {selectedIds.length === 1 && (
                             <button 
                                 onClick={handleEdit}
@@ -106,7 +117,9 @@ export default function Index() {
                                     fontSize: '11px',
                                     fontWeight: 600,
                                     color: 'var(--text-primary)',
-                                    cursor: 'pointer'
+                                    cursor: 'pointer',
+                                    flex: isMobile ? 1 : 'initial',
+                                    justifyContent: 'center'
                                 }}
                             >
                                 <Edit size={12} /> Edit
@@ -125,7 +138,9 @@ export default function Index() {
                                 fontSize: '11px',
                                 fontWeight: 600,
                                 color: '#fff',
-                                cursor: 'pointer'
+                                cursor: 'pointer',
+                                flex: isMobile ? '100%' : 'initial',
+                                justifyContent: 'center'
                             }}
                         >
                             <Trash2 size={12} /> Delete
@@ -135,18 +150,19 @@ export default function Index() {
             ) : (
                 <div style={{
                     display: 'flex',
-                    alignItems: 'center',
+                    flexDirection: isMobile ? 'column' : 'row',
+                    alignItems: isMobile ? 'stretch' : 'center',
                     justifyContent: 'space-between',
                     marginBottom: '20px',
                     gap: '16px'
                 }}>
-                    <div style={{ position: 'relative', flex: 1, maxWidth: '320px' }}>
+                    <div style={{ position: 'relative', flex: 1, maxWidth: isMobile ? '100%' : '320px' }}>
                         <Search size={16} style={{ position: 'absolute', left: '12px', top: '10px', color: 'var(--text-muted)' }} />
                         <input
                             value={search}
                             onChange={e => setSearch(e.target.value)}
                             placeholder="Cari judul atau nomor dokumen..."
-                            style={{ width: '100%', padding: '8px 12px 8px 36px', border: '1px solid var(--border-color)', borderRadius: '6px', fontSize: '11px', outline: 'none' }}
+                            style={{ width: '100%', padding: '8px 12px 8px 36px', border: '1px solid var(--border-color)', borderRadius: '6px', fontSize: '11px', outline: 'none', boxSizing: 'border-box' }}
                         />
                     </div>
                 </div>
@@ -164,42 +180,44 @@ export default function Index() {
                 </div>
             ) : (
                 <div style={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--border-color)', borderRadius: '12px', overflow: 'hidden', boxShadow: 'var(--shadow-sm)' }}>
-                    <Table style={{ fontSize: '12px' }}>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead style={{ width: '40px' }}>
-                                    <Checkbox
-                                        checked={isAllSelected}
-                                        onCheckedChange={handleSelectAll}
-                                    />
-                                </TableHead>
-                                {['No. Dokumen', 'Judul', 'Aksi'].map(h => (
-                                    <TableHead key={h} style={{ fontWeight: 700, color: 'var(--text-secondary)' }}>{h}</TableHead>
-                                ))}
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {filtered.map(doc => (
-                                <TableRow key={doc.id}>
-                                    <TableCell style={{ width: '40px' }}>
+                    <div style={{ width: '100%', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+                        <Table style={{ fontSize: '12px', minWidth: '900px' }}>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead style={{ width: '40px' }}>
                                         <Checkbox
-                                            checked={selectedIds.includes(doc.id)}
-                                            onCheckedChange={(checked) => handleSelectRow(doc.id, checked)}
+                                            checked={isAllSelected}
+                                            onCheckedChange={handleSelectAll}
                                         />
-                                    </TableCell>
-                                    <TableCell style={{ fontWeight: 700, color: 'var(--primary)' }}>{doc.document_number}</TableCell>
-                                    <TableCell style={{ fontWeight: 600 }}>{doc.title}</TableCell>
-                                    <TableCell>
-                                        <div style={{ display: 'flex', gap: '8px' }}>
-                                            <button onClick={() => openDrawer(doc)} style={{ border: '1px solid var(--border-color)', background: '#fff', borderRadius: '4px', padding: '4px 10px', cursor: 'pointer', fontSize: '10px' }}>Detail</button>
-                                            <button onClick={() => openApprove(doc)} style={{ border: 'none', background: 'var(--success)', color: '#fff', borderRadius: '4px', padding: '4px 12px', cursor: 'pointer', fontSize: '10px', fontWeight: 700 }}>Setuju</button>
-                                            <button onClick={() => openReject(doc)} style={{ border: 'none', background: 'var(--danger)', color: '#fff', borderRadius: '4px', padding: '4px 12px', cursor: 'pointer', fontSize: '10px', fontWeight: 700 }}>Tolak</button>
-                                        </div>
-                                    </TableCell>
+                                    </TableHead>
+                                    {['No. Dokumen', 'Judul', 'Aksi'].map(h => (
+                                        <TableHead key={h} style={{ fontWeight: 700, color: 'var(--text-secondary)' }}>{h}</TableHead>
+                                    ))}
                                 </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
+                            </TableHeader>
+                            <TableBody>
+                                {filtered.map(doc => (
+                                    <TableRow key={doc.id}>
+                                        <TableCell style={{ width: '40px' }}>
+                                            <Checkbox
+                                                checked={selectedIds.includes(doc.id)}
+                                                onCheckedChange={(checked) => handleSelectRow(doc.id, checked)}
+                                            />
+                                        </TableCell>
+                                        <TableCell style={{ fontWeight: 700, color: 'var(--primary)', whiteSpace: 'nowrap' }}>{doc.document_number}</TableCell>
+                                        <TableCell style={{ fontWeight: 600, whiteSpace: 'nowrap' }}>{doc.title}</TableCell>
+                                        <TableCell style={{ whiteSpace: 'nowrap' }}>
+                                            <div style={{ display: 'flex', gap: '8px' }}>
+                                                <button onClick={() => openDrawer(doc)} style={{ border: '1px solid var(--border-color)', background: '#fff', borderRadius: '4px', padding: '4px 10px', cursor: 'pointer', fontSize: '10px' }}>Detail</button>
+                                                <button onClick={() => openApprove(doc)} style={{ border: 'none', background: 'var(--success)', color: '#fff', borderRadius: '4px', padding: '4px 12px', cursor: 'pointer', fontSize: '10px', fontWeight: 700 }}>Setuju</button>
+                                                <button onClick={() => openReject(doc)} style={{ border: 'none', background: 'var(--danger)', color: '#fff', borderRadius: '4px', padding: '4px 12px', cursor: 'pointer', fontSize: '10px', fontWeight: 700 }}>Tolak</button>
+                                            </div>
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </div>
                 </div>
             )}
 

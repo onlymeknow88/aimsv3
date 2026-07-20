@@ -3,7 +3,11 @@ import { AlertCircle, CheckCircle2 } from 'lucide-react';
 
 export default function ConfirmationModal({ 
     isOpen, 
-    type, // 'draft' or 'review'
+    type, // 'draft', 'review', or 'generic'
+    title,
+    description,
+    confirmText = 'Submit',
+    cancelText = 'Cancel',
     onConfirm, 
     onCancel, 
     loading 
@@ -11,6 +15,7 @@ export default function ConfirmationModal({
     if (!isOpen) return null;
 
     const isDraft = type === 'draft';
+    const isReview = type === 'review';
 
     return (
         <div style={{
@@ -54,14 +59,14 @@ export default function ConfirmationModal({
                     width: '56px',
                     height: '56px',
                     borderRadius: '50%',
-                    backgroundColor: isDraft ? 'rgba(59, 130, 246, 0.08)' : 'rgba(16, 185, 129, 0.08)',
+                    backgroundColor: isDraft ? 'rgba(59, 130, 246, 0.08)' : (isReview ? 'rgba(16, 185, 129, 0.08)' : 'rgba(251, 191, 36, 0.08)'),
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     marginBottom: '20px',
-                    color: isDraft ? 'rgb(59, 130, 246)' : 'rgb(16, 185, 129)'
+                    color: isDraft ? 'rgb(59, 130, 246)' : (isReview ? 'rgb(16, 185, 129)' : 'rgb(245, 158, 11)')
                 }}>
-                    {isDraft ? <AlertCircle size={28} /> : <CheckCircle2 size={28} />}
+                    {isDraft ? <AlertCircle size={28} /> : (isReview ? <CheckCircle2 size={28} /> : <AlertCircle size={28} />)}
                 </div>
 
                 {/* Content */}
@@ -71,7 +76,7 @@ export default function ConfirmationModal({
                     color: '#0f172a',
                     margin: '0 0 8px 0'
                 }}>
-                    {isDraft ? 'Simpan sebagai Draft?' : 'Kirim untuk Review?'}
+                    {isDraft ? 'Simpan sebagai Draft?' : (isReview ? 'Kirim untuk Review?' : title)}
                 </h3>
                 <p style={{
                     fontSize: '12px',
@@ -81,7 +86,9 @@ export default function ConfirmationModal({
                 }}>
                     {isDraft 
                         ? 'Dokumen akan disimpan sebagai draft terlebih dahulu dan dapat diedit kembali nanti.' 
-                        : 'Dokumen akan dikirim ke penanggung jawab / reviewer untuk proses verifikasi.'}
+                        : (isReview
+                        ? 'Dokumen akan dikirim ke penanggung jawab / reviewer untuk proses verifikasi.'
+                        : description)}
                 </p>
 
                 {/* Action Buttons */}
@@ -109,7 +116,7 @@ export default function ConfirmationModal({
                         onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8fafc'}
                         onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#fff'}
                     >
-                        Cancel
+                        {cancelText}
                     </button>
                     <button
                         onClick={onConfirm}
@@ -119,7 +126,7 @@ export default function ConfirmationModal({
                             padding: '10px 16px',
                             border: 'none',
                             borderRadius: '8px',
-                            backgroundColor: isDraft ? 'rgb(59, 130, 246)' : 'var(--primary)',
+                            backgroundColor: isDraft ? 'rgb(59, 130, 246)' : (isReview ? 'var(--primary)' : 'rgb(245, 158, 11)'),
                             color: '#fff',
                             fontSize: '12px',
                             fontWeight: 600,
@@ -154,7 +161,7 @@ export default function ConfirmationModal({
                                 <span>Processing...</span>
                             </>
                         ) : (
-                            'Submit'
+                            isDraft || isReview ? 'Submit' : confirmText
                         )}
                     </button>
                 </div>

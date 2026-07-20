@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Head, usePage } from '@inertiajs/react';
 import { ArrowLeft, Building, Layers, Calendar, Edit, Download, Clock, Send, Users, CheckCircle, XCircle, FileText } from 'lucide-react';
 import useJsaDetail from './Hooks/useJsaDetail';
 import BlobPreviewModal from '@/Components/BlobPreviewModal';
 import RejectModal from './Partials/Components/RejectModal';
 import ApprovalConfirmModal from './Partials/Components/ApprovalConfirmModal';
+import ConfirmationModal from '@/Components/ConfirmationModal';
 
 // Status config
 const STATUS_CONFIG = {
@@ -32,6 +33,15 @@ export default function Detail({ id }) {
     const [previewAttachment, setPreviewAttachment] = useState(null);
     const [rejectModal, setRejectModal] = useState(false);
     const [confirmModal, setConfirmModal] = useState({ open: false, type: null });
+    const [isConfirmRenewOpen, setIsConfirmRenewOpen] = useState(false);
+    const [isMobile, setIsMobile] = useState(false);
+
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth <= 768);
+        handleResize();
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     const {
         document,
@@ -100,20 +110,24 @@ export default function Detail({ id }) {
                         <span style={{ fontSize: '11px', color: '#EF4444', fontWeight: 600 }}>{actionError}</span>
                     )}
                     {String(document.status) === '5' && !document.is_obsolate && (
-                        <a href={`/document-system/jsa/edit/${document.id}`} style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '6px',
-                            backgroundColor: 'var(--primary)',
-                            color: '#fff',
-                            borderRadius: '6px',
-                            padding: '6px 14px',
-                            fontSize: '11px',
-                            fontWeight: 700,
-                            textDecoration: 'none'
-                        }}>
+                        <button 
+                            onClick={() => setIsConfirmRenewOpen(true)}
+                            style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '6px',
+                                backgroundColor: 'var(--primary)',
+                                color: '#fff',
+                                borderRadius: '6px',
+                                padding: '6px 14px',
+                                fontSize: '11px',
+                                fontWeight: 700,
+                                border: 'none',
+                                cursor: 'pointer'
+                            }}
+                        >
                             <Edit size={12} /> Update JSA (Revisi)
-                        </a>
+                        </button>
                     )}
                 </div>
             </div>
@@ -121,15 +135,15 @@ export default function Detail({ id }) {
             {/* ── 3-Column Grid Layout ── */}
             <div style={{
                 display: 'grid',
-                gridTemplateColumns: '240px 1fr 280px',
-                gap: '20px',
+                gridTemplateColumns: isMobile ? '1fr' : '240px 1fr 280px',
+                gap: isMobile ? '16px' : '20px',
                 maxWidth: '1100px',
                 margin: '0 auto',
                 alignItems: 'start'
             }}>
 
                 {/* ── LEFT SIDEBAR ── */}
-                <aside style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <aside style={{ display: 'flex', flexDirection: 'column', gap: '16px', order: isMobile ? 2 : 1 }}>
                     <div style={{
                         backgroundColor: 'var(--card-bg)', border: '1px solid var(--border-color)',
                         borderRadius: '12px', padding: '16px', boxShadow: 'var(--shadow-sm)'
@@ -225,7 +239,7 @@ export default function Detail({ id }) {
                 </aside>
 
                 {/* ── CENTER CONTENT ── */}
-                <main style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <main style={{ display: 'flex', flexDirection: 'column', gap: '16px', order: isMobile ? 1 : 2 }}>
                     {/* Detail Card */}
                     <div style={{
                         backgroundColor: 'var(--card-bg)', border: '1px solid var(--border-color)',
@@ -355,7 +369,8 @@ export default function Detail({ id }) {
                 {/* ── RIGHT SIDEBAR — Activity Timeline ── */}
                 <aside style={{
                     backgroundColor: 'var(--card-bg)', border: '1px solid var(--border-color)',
-                    borderRadius: '12px', padding: '20px 16px', boxShadow: 'var(--shadow-sm)'
+                    borderRadius: '12px', padding: '20px 16px', boxShadow: 'var(--shadow-sm)',
+                    order: isMobile ? 3 : 3
                 }}>
                     <h4 style={{ fontSize: '10px', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                         <Clock size={11} /> Riwayat Dokumen
@@ -437,6 +452,19 @@ export default function Detail({ id }) {
                     onClose={() => setPreviewAttachment(null)}
                 />
             )}
+            <ConfirmationModal
+                isOpen={isConfirmRenewOpen}
+                type="generic"
+                title="Perbarui JSA (Revisi)?"
+                description="Apakah Anda yakin ingin memperbarui JSA ini? Dokumen baru versi revisi akan dibuat sebagai Draft."
+                confirmText="Ya, Perbarui"
+                cancelText="Batal"
+                onConfirm={() => {
+                    setIsConfirmRenewOpen(false);
+                    window.location.href = `/document-system/jsa/edit/${document.id}`;
+                }}
+                onCancel={() => setIsConfirmRenewOpen(false)}
+            />
         </div>
     );
 }

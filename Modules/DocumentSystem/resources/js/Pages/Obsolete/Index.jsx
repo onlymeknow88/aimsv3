@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Head } from '@inertiajs/react';
 import DocumentSystemLayout from '@DS/Layouts/DocumentSystemLayout';
 import { Search, Plus, Edit, Trash2, X, SlidersHorizontal } from 'lucide-react';
@@ -49,6 +49,15 @@ export default function Index() {
         'Aksi': true
     });
 
+    const [isMobile, setIsMobile] = useState(false);
+
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth <= 768);
+        handleResize();
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
     const toggleColumn = (col) => {
         setVisibleColumns(prev => ({
             ...prev,
@@ -60,23 +69,25 @@ export default function Index() {
 
     return (
         <DocumentSystemLayout>
-            <Head title="Obsolete Archive" />
+            <Head title="Obsolete Document" />
             
             <div style={{ marginBottom: '20px' }}>
-                <h1 style={{ fontSize: '20px', fontWeight: 800, color: 'var(--primary)', margin: 0 }}>Obsolete Archive</h1>
-                <p style={{ color: 'var(--text-secondary)', fontSize: '11px', marginTop: '4px' }}>Arsip berkas dokumen lama yang sudah tidak berlaku.</p>
+                <h1 style={{ fontSize: '20px', fontWeight: 800, color: 'var(--primary)', margin: 0 }}>Obsolete Document</h1>
+                <p style={{ color: 'var(--text-secondary)', fontSize: '11px', marginTop: '4px' }}>Arsip dokumen yang sudah ditarik dan tidak berlaku lagi (Obsolete).</p>
             </div>
 
             {selectedIds.length > 0 ? (
                 <div style={{
                     display: 'flex',
-                    alignItems: 'center',
+                    flexDirection: isMobile ? 'column' : 'row',
+                    alignItems: isMobile ? 'flex-start' : 'center',
                     justifyContent: 'space-between',
                     backgroundColor: 'rgba(21, 59, 115, 0.05)',
                     border: '1px solid rgba(21, 59, 115, 0.15)',
                     borderRadius: '8px',
                     padding: '10px 16px',
                     marginBottom: '20px',
+                    gap: isMobile ? '12px' : '16px',
                     animation: 'fadeIn 0.2s ease'
                 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -92,7 +103,7 @@ export default function Index() {
                         </button>
                     </div>
 
-                    <div style={{ display: 'flex', gap: '8px' }}>
+                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', width: isMobile ? '100%' : 'auto' }}>
                         {selectedIds.length === 1 && (
                             <button 
                                 onClick={handleEdit}
@@ -107,7 +118,9 @@ export default function Index() {
                                     fontSize: '11px',
                                     fontWeight: 600,
                                     color: 'var(--text-primary)',
-                                    cursor: 'pointer'
+                                    cursor: 'pointer',
+                                    flex: isMobile ? 1 : 'initial',
+                                    justifyContent: 'center'
                                 }}
                             >
                                 <Edit size={12} /> Edit
@@ -126,7 +139,9 @@ export default function Index() {
                                 fontSize: '11px',
                                 fontWeight: 600,
                                 color: '#fff',
-                                cursor: 'pointer'
+                                cursor: 'pointer',
+                                flex: isMobile ? '100%' : 'initial',
+                                justifyContent: 'center'
                             }}
                         >
                             <Trash2 size={12} /> Delete
@@ -136,22 +151,23 @@ export default function Index() {
             ) : (
                 <div style={{
                     display: 'flex',
-                    alignItems: 'center',
+                    flexDirection: isMobile ? 'column' : 'row',
+                    alignItems: isMobile ? 'stretch' : 'center',
                     justifyContent: 'space-between',
                     marginBottom: '20px',
                     gap: '16px'
                 }}>
-                    <div style={{ position: 'relative', flex: 1, maxWidth: '320px' }}>
+                    <div style={{ position: 'relative', flex: 1, maxWidth: isMobile ? '100%' : '320px' }}>
                         <Search size={16} style={{ position: 'absolute', left: '12px', top: '10px', color: 'var(--text-muted)' }} />
                         <input
                             value={search}
                             onChange={e => setSearch(e.target.value)}
                             placeholder="Cari judul atau nomor dokumen..."
-                            style={{ width: '100%', padding: '8px 12px 8px 36px', border: '1px solid var(--border-color)', borderRadius: '6px', fontSize: '11px', outline: 'none' }}
+                            style={{ width: '100%', padding: '8px 12px 8px 36px', border: '1px solid var(--border-color)', borderRadius: '6px', fontSize: '11px', outline: 'none', boxSizing: 'border-box' }}
                         />
                     </div>
 
-                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap', width: isMobile ? '100%' : 'auto' }}>
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                                 <button style={{
@@ -165,7 +181,9 @@ export default function Index() {
                                     fontSize: '11px',
                                     fontWeight: 600,
                                     color: 'var(--text-primary)',
-                                    cursor: 'pointer'
+                                    cursor: 'pointer',
+                                    flex: isMobile ? 1 : 'initial',
+                                    justifyContent: 'center'
                                 }}>
                                     <SlidersHorizontal size={14} /> Columns
                                 </button>
@@ -188,6 +206,26 @@ export default function Index() {
                                 ))}
                             </DropdownMenuContent>
                         </DropdownMenu>
+
+                        <a 
+                            href="/document-system/active/create"
+                            style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '8px',
+                                backgroundColor: 'var(--primary)',
+                                color: '#fff',
+                                border: 'none',
+                                borderRadius: '6px',
+                                padding: '8px 12px',
+                                fontSize: '11px',
+                                fontWeight: 600,
+                                cursor: 'pointer',
+                                textDecoration: 'none'
+                            }}
+                        >
+                            <Plus size={14} /> New
+                        </a>
                     </div>
                 </div>
             )}

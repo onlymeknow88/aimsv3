@@ -272,70 +272,72 @@ export default function OnGoingTable({
     };
 
     return (<>
-        <Table style={{ fontSize: '12px' }}>
-            <TableHeader>
-                {table.getHeaderGroups().map(hg => (
-                    <TableRow key={hg.id}>
-                        {hg.headers.map(h => {
-                                                    const isSearchable = ['company', 'department', 'pic', 'module', 'category', 'document_level', 'mapping', 'document_number', 'title'].includes(h.id);
-                                                    return (
-                                                        <TableHead key={h.id} style={{ fontWeight: 700, color: 'var(--text-secondary)', padding: '10px 12px', verticalAlign: 'top' }}>
-                                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', minWidth: isSearchable ? '120px' : 'auto' }}>
-                                                                <span>{flexRender(h.column.columnDef.header, h.getContext())}</span>
-                                                                {isSearchable && onColumnFilterChange && (
-                                                                    <input
-                                                                        type="text"
-                                                                        placeholder={`Cari...`}
-                                                                        value={columnFilters[h.id] || ''}
-                                                                        onChange={(e) => onColumnFilterChange(h.id, e.target.value)}
-                                                                        onClick={(e) => e.stopPropagation()}
-                                                                        style={{
-                                                                            width: '100%',
-                                                                            padding: '4px 8px',
-                                                                            fontSize: '11px',
-                                                                            fontWeight: 'normal',
-                                                                            border: '1px solid #e2e8f0',
-                                                                            borderRadius: '4px',
-                                                                            outline: 'none',
-                                                                            boxSizing: 'border-box',
-                                                                            color: '#334155',
-                                                                            backgroundColor: '#fff'
-                                                                        }}
-                                                                    />
-                                                                )}
-                                                            </div>
-                                                        </TableHead>
-                                                    );
-                                                })}
-                    </TableRow>
-                ))}
-            </TableHeader>
-            <TableBody>
-                {loading ? (
-                    <TableRow>
-                        <TableCell colSpan={visibleColsCount} style={{ textAlign: 'center', padding: '40px 24px', color: 'var(--text-secondary)' }}>
-                            Memuat data alur persetujuan...
-                        </TableCell>
-                    </TableRow>
-                ) : table.getRowModel().rows.length > 0 ? (
-                    table.getRowModel().rows.map(row => (
-                        <TableRow key={row.id}>
-                            {row.getVisibleCells().map(cell => (
-                                <TableCell key={cell.id}>
-                                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                                </TableCell>
-                            ))}
+        <div style={{ width: '100%', overflowX: 'auto', WebkitOverflowScrolling: 'touch', border: '1px solid var(--border-color)', borderRadius: '8px', marginBottom: '16px' }}>
+            <Table style={{ fontSize: '12px', minWidth: '1100px' }}>
+                <TableHeader>
+                    {table.getHeaderGroups().map(hg => (
+                        <TableRow key={hg.id}>
+                            {hg.headers.map(h => {
+                                                        const isSearchable = ['company', 'department', 'pic', 'module', 'category', 'document_level', 'mapping', 'document_number', 'title'].includes(h.id);
+                                                        return (
+                                                            <TableHead key={h.id} style={{ fontWeight: 700, color: 'var(--text-secondary)', padding: '10px 12px', verticalAlign: 'top' }}>
+                                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', minWidth: isSearchable ? '120px' : 'auto' }}>
+                                                                    <span>{flexRender(h.column.columnDef.header, h.getContext())}</span>
+                                                                    {isSearchable && onColumnFilterChange && (
+                                                                        <input
+                                                                            type="text"
+                                                                            placeholder={`Cari...`}
+                                                                            value={columnFilters[h.id] || ''}
+                                                                            onChange={(e) => onColumnFilterChange(h.id, e.target.value)}
+                                                                            onClick={(e) => e.stopPropagation()}
+                                                                            style={{
+                                                                                width: '100%',
+                                                                                padding: '4px 8px',
+                                                                                fontSize: '11px',
+                                                                                fontWeight: 'normal',
+                                                                                border: '1px solid #e2e8f0',
+                                                                                borderRadius: '4px',
+                                                                                outline: 'none',
+                                                                                boxSizing: 'border-box',
+                                                                                color: '#334155',
+                                                                                backgroundColor: '#fff'
+                                                                            }}
+                                                                        />
+                                                                    )}
+                                                                </div>
+                                                            </TableHead>
+                                                        );
+                                                    })}
                         </TableRow>
-                    ))
-                ) : (
-                    <TableRow>
-                        <TableCell colSpan={visibleColsCount} style={{ padding: '32px', textAlign: 'center', color: 'var(--text-muted)' }}>
-                            Tidak ada dokumen yang sedang dalam proses review.
-                        </TableCell>
-                    </TableRow>
-                )}
-            </TableBody>
-        </Table>
+                    ))}
+                </TableHeader>
+                <TableBody>
+                    {loading ? (
+                        <TableRow>
+                            <TableCell colSpan={visibleColsCount} style={{ textAlign: 'center', padding: '40px 24px', color: 'var(--text-secondary)' }}>
+                                Memuat data alur persetujuan...
+                            </TableCell>
+                        </TableRow>
+                    ) : table.getRowModel().rows.length > 0 ? (
+                        table.getRowModel().rows.map(row => (
+                            <TableRow key={row.id}>
+                                {row.getVisibleCells().map(cell => (
+                                    <TableCell key={cell.id} style={{ padding: '10px 12px', whiteSpace: 'nowrap' }}>
+                                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                                    </TableCell>
+                                ))}
+                            </TableRow>
+                        ))
+                    ) : (
+                        <TableRow>
+                            <TableCell colSpan={visibleColsCount} style={{ padding: '32px', textAlign: 'center', color: 'var(--text-muted)' }}>
+                                Tidak ada dokumen yang sedang dalam proses review.
+                            </TableCell>
+                        </TableRow>
+                    )}
+                </TableBody>
+            </Table>
+        </div>
 
         {/* Pagination Controls */}
         {pagination && (

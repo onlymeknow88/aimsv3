@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Head } from '@inertiajs/react';
 import DocumentSystemLayout from '@DS/Layouts/DocumentSystemLayout';
 import { FileText, Clock, Search, SlidersHorizontal } from 'lucide-react';
@@ -51,6 +51,15 @@ export default function Index() {
         'Aksi': true
     });
 
+    const [isMobile, setIsMobile] = useState(false);
+
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth <= 768);
+        handleResize();
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
     const toggleColumn = (col) => {
         setVisibleColumns(prev => ({
             ...prev,
@@ -71,22 +80,23 @@ export default function Index() {
 
             <div style={{
                 display: 'flex',
-                alignItems: 'center',
+                flexDirection: isMobile ? 'column' : 'row',
+                alignItems: isMobile ? 'stretch' : 'center',
                 justifyContent: 'space-between',
                 marginBottom: '20px',
                 gap: '16px'
             }}>
-                <div style={{ position: 'relative', flex: 1, maxWidth: '320px' }}>
+                <div style={{ position: 'relative', flex: 1, maxWidth: isMobile ? '100%' : '320px' }}>
                     <Search size={16} style={{ position: 'absolute', left: '12px', top: '10px', color: 'var(--text-muted)' }} />
                     <input
                         value={search}
                         onChange={e => setSearch(e.target.value)}
                         placeholder="Cari judul atau nomor dokumen..."
-                        style={{ width: '100%', padding: '8px 12px 8px 36px', border: '1px solid var(--border-color)', borderRadius: '6px', fontSize: '11px', outline: 'none' }}
+                        style={{ width: '100%', padding: '8px 12px 8px 36px', border: '1px solid var(--border-color)', borderRadius: '6px', fontSize: '11px', outline: 'none', boxSizing: 'border-box' }}
                     />
                 </div>
 
-                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap', width: isMobile ? '100%' : 'auto' }}>
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <button style={{
@@ -100,7 +110,9 @@ export default function Index() {
                                 fontSize: '11px',
                                 fontWeight: 600,
                                 color: 'var(--text-primary)',
-                                cursor: 'pointer'
+                                cursor: 'pointer',
+                                flex: isMobile ? 1 : 'initial',
+                                justifyContent: 'center'
                             }}>
                                 <SlidersHorizontal size={14} /> Columns
                             </button>

@@ -27,6 +27,14 @@ ChartJS.register(
 export default function Index() {
     const [data, setData] = useState({ stats: {}, departments: [] });
     const [loading, setLoading] = useState(true);
+    const [isMobile, setIsMobile] = useState(false);
+
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth <= 768);
+        handleResize();
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     useEffect(() => {
         axios.get('/api/document-system/dashboard/stats')
@@ -106,7 +114,7 @@ export default function Index() {
                     {/* Stat Cards Grid */}
                     <div style={{
                         display: 'grid',
-                        gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+                        gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(220px, 1fr))',
                         gap: '20px',
                         marginBottom: '32px'
                     }}>
@@ -152,7 +160,7 @@ export default function Index() {
                         {departments.length > 0 ? (
                             <div style={{
                                 display: 'grid',
-                                gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+                                gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(320px, 1fr))',
                                 gap: '20px'
                             }}>
                                 {departments.map((dept, idx) => {

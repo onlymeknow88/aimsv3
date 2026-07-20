@@ -1,12 +1,13 @@
-import React from 'react';
-import { Search, RefreshCw, Plus, Edit2, Trash2, CalendarDays } from 'lucide-react';
-import useEvent from '../Hooks/useEvent';
-import EventModal from './EventModal';
-import DeleteConfirmModal from '@/Components/DeleteConfirmModal';
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
-import TablePagination from '@/Components/TablePagination';
+import { CalendarDays, Edit2, Plus, RefreshCw, Search, Trash2 } from 'lucide-react';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+
 import CoeLayout from '../../../Layouts/CoeLayout';
+import DeleteConfirmModal from '@/Components/DeleteConfirmModal';
+import EventModal from './EventModal';
 import { Head } from '@inertiajs/react';
+import React from 'react';
+import TablePagination from '@/Components/TablePagination';
+import useEvent from '../Hooks/useEvent';
 
 // Form field helpers
 const inputStyle = {
@@ -67,7 +68,7 @@ export default function EventTable() {
                 {/* Header / Actions */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
                     <h3 style={{ fontSize: '14px', fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>Daftar Agenda</h3>
-                    
+
                     <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
                         {/* Search */}
                         <div style={{ position: 'relative' }}>
@@ -129,6 +130,15 @@ export default function EventTable() {
                 )}
 
                 {/* Table */}
+                 <div
+                    style={{
+                        backgroundColor: "#fff",
+                        borderRadius: "14px",
+                        border: "1px solid #e2e8f0",
+                        overflow: "hidden",
+                        boxShadow: "0 2px 10px rgba(0,0,0,0.04)",
+                    }}
+                >
                 <div style={{ overflowX: 'auto' }}>
                     <Table>
                         <TableHeader>
@@ -218,7 +228,7 @@ export default function EventTable() {
                     limit={limit}
                     onLimitChange={setLimit}
                 />
-
+</div>
                 {/* Modals */}
                 <EventModal
                     isOpen={modalOpen}
