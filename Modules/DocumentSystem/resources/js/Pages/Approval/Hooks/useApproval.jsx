@@ -38,9 +38,9 @@ export default function useApproval() {
     const approveDocument = useCallback(async (id, level, notes) => {
         setActionLoading(true);
         try {
-            await axios.post(`/document-system/approval/${id}/approve`, { level, notes });
-            closeApprove();
+            await axios.post(`/api/document-system/documents/approve/${id}`, { level, notes });
             fetchDocuments();
+            closeApprove();
         } catch (err) {
             console.error('Approve failed', err);
         } finally {
@@ -51,9 +51,9 @@ export default function useApproval() {
     const rejectDocument = useCallback(async (id, reason) => {
         setActionLoading(true);
         try {
-            await axios.post(`/document-system/approval/${id}/reject`, { reason });
-            closeReject();
+            await axios.post(`/api/document-system/documents/reject/${id}`, { reason });
             fetchDocuments();
+            closeReject();
         } catch (err) {
             console.error('Reject failed', err);
         } finally {

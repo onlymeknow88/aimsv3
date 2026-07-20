@@ -17,6 +17,12 @@ export default function ApprovalDetailDrawer({ doc, open, onClose, onApprove, on
                     <div><span style={{ fontSize: '10px', fontWeight: 700, color: 'var(--text-muted)', display: 'block' }}>LEVEL</span><span>{doc.document_level}</span></div>
                     <div><span style={{ fontSize: '10px', fontWeight: 700, color: 'var(--text-muted)', display: 'block' }}>DESKRIPSI</span><span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>{doc.description || '-'}</span></div>
                 </div>
+                <a
+                    href={`/document-system/active/detail/${doc.id}`}
+                    style={{ display: 'block', textAlign: 'center', padding: '9px', marginBottom: '10px', border: '1px solid var(--border-color)', borderRadius: '6px', fontSize: '11px', fontWeight: 700, color: 'var(--primary)', textDecoration: 'none', backgroundColor: '#f8fafc' }}
+                >
+                    Lihat Detail Lengkap →
+                </a>
                 <div style={{ display: 'flex', gap: '8px' }}>
                     <button onClick={() => onApprove(doc)} style={{ flex: 1, padding: '10px', backgroundColor: 'var(--success)', color: '#fff', border: 'none', borderRadius: '6px', fontWeight: 700, cursor: 'pointer' }}>✓ Setuju</button>
                     <button onClick={() => onReject(doc)} style={{ flex: 1, padding: '10px', backgroundColor: 'var(--danger)', color: '#fff', border: 'none', borderRadius: '6px', fontWeight: 700, cursor: 'pointer' }}>✕ Tolak</button>

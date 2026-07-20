@@ -8,6 +8,7 @@ export default function useDashboard(initialEvents = [], initialSlideshows = [])
     const [coeEvents, setCoeEvents] = useState(initialEvents);
     const [slidesData, setSlidesData] = useState(initialSlideshows);
     const [generalStats, setGeneralStats] = useState(null);
+    const [newsItems, setNewsItems] = useState([]);
 
     const [loading, setLoading] = useState(true);
 
@@ -19,6 +20,7 @@ export default function useDashboard(initialEvents = [], initialSlideshows = [])
                     setCoeEvents(res.data.result.coeEvents || []);
                     setSlidesData(res.data.result.slideshows || []);
                     setGeneralStats(res.data.result.generalStats || null);
+                    setNewsItems(res.data.result.newsItems || []);
                 }
             })
             .catch(err => {
@@ -60,5 +62,6 @@ export default function useDashboard(initialEvents = [], initialSlideshows = [])
         prevSlide,
         loading,
         generalStats,
+        newsItems,
     };
 }

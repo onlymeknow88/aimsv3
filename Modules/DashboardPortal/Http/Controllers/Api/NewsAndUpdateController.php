@@ -25,19 +25,22 @@ class NewsAndUpdateController extends Controller
             });
         }
 
+        $resolveBlobUrl = function ($item) {
+            if ($item->url) {
+                $sas = GetBlobSasUri('aims-cntr', $item->url);
+                $item->blob_url = is_array($sas)
+                    ? ($sas['blobUriSas'] ?? $item->blob_url)
+                    : ($sas ?: $item->blob_url);
+            }
+            return $item;
+        };
+
         if ($request->has('page') || $request->has('limit')) {
             $limit = $request->query('limit', 10);
             $data = $query->paginate($limit);
+            $data->getCollection()->transform($resolveBlobUrl);
         } else {
-            $data = $query->get()->map(function ($item) {
-                if ($item->url) {
-                    $sas = GetBlobSasUri('aims-cntr', $item->url);
-                    $item->blob_url = is_array($sas)
-                        ? ($sas['blobUriSas'] ?? $item->blob_url)
-                        : ($sas ?: $item->blob_url);
-                }
-                return $item;
-            });
+            $data = $query->get()->map($resolveBlobUrl);
         }
 
         return ResponseFormatter::success($data, 'News and update data retrieved successfully');

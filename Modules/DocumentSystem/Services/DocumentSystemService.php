@@ -18,7 +18,7 @@ class DocumentSystemService
         $prefix = "{$company}-{$dept}-{$level}";
         $count = Document::where('prefix_code', $prefix)->count() + 1;
         $runningCode = str_pad($count, 3, '0', STR_PAD_LEFT);
-        
+
         return "{$prefix}-{$runningCode}";
     }
 
@@ -35,7 +35,7 @@ class DocumentSystemService
         $filePathTemp = $file->getRealPath();
 
         $result = uploadToBlobStorage($filename, $filePathTemp, $path);
-        
+
         if (is_array($result) && !empty($result['fileBlobPathName'])) {
             return $result;
         }
@@ -88,7 +88,12 @@ class DocumentSystemService
                 file_put_contents($tmpPath, $fileContent);
 
                 // Determine the directory path (strip existing filename from the path)
+                // Also strip the environment prefix ('test/' or 'complianceCMS/') that
+                // uploadToBlobStorage will re-add automatically based on APP_ENV.
                 $directoryPath = ltrim(dirname($currentPath), '/');
+                // Strip all leading environment prefixes that uploadToBlobStorage will re-add
+                $directoryPath = preg_replace('#^(test/)*#', '', $directoryPath);
+                $directoryPath = preg_replace('#^(complianceCMS/)*#', '', $directoryPath);
 
                 // Re-upload with the new FINAL_ filename
                 $uploadResult = uploadToBlobStorage($newFileName, $tmpPath, $directoryPath);

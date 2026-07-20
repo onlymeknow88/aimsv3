@@ -25,6 +25,8 @@ import { Head, Link } from '@inertiajs/react';
 
 import CalendarofEvent from './Partials/Widget/CalendarofEvent';
 import DashboardLayout from '@/Layouts/DashboardLayout';
+import DocumentSystemWidget from './Partials/Widget/DocumentSystem/DocumentSystemWidget';
+import NewsUpdate from './Partials/Widget/NewsUpdate';
 import React from 'react';
 import SafetyKPI from './Partials/Widget/SafetyKPI';
 import SlideShow from './Partials/Widget/SlideShow';
@@ -48,6 +50,7 @@ export default function Dashboard({ coeEvents: initialEvents = [], slideshows: i
         prevSlide,
         loading,
         generalStats,
+        newsItems,
     } = useDashboard(initialEvents, initialSlideshows);
 
     // KPI Cards — data dari API dashboard_general (lihat SafetyKPI widget)
@@ -153,6 +156,11 @@ export default function Dashboard({ coeEvents: initialEvents = [], slideshows: i
                 <CalendarofEvent loading={loading} coeEvents={coeEvents} />
             </div>
 
+            {/* Section 3: Document System Widget */}
+            <DocumentSystemWidget />
+
+            {/* Section 4: News & Update */}
+            <NewsUpdate newsItems={newsItems} loading={loading} />
 
         </DashboardLayout>
     );

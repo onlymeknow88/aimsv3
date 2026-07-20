@@ -63,7 +63,7 @@ class BannerController extends Controller
         $fileName = time() . '_' . $file->getClientOriginalName();
 
         // Upload to Azure Blob Storage via helper
-        $uploadResult = uploadToBlobStorage($fileName, $file->getRealPath(), 'slideshow');
+        $uploadResult = uploadToBlobStorage($fileName, $file->getRealPath(), 'banner');
 
         if (!$uploadResult || empty($uploadResult['fileBlobPathName'])) {
             return ResponseFormatter::error(null, 'Gagal mengunggah gambar ke Blob Storage.', 500);
@@ -104,7 +104,7 @@ class BannerController extends Controller
             $file = $request->file('file');
             $fileName = time() . '_' . $file->getClientOriginalName();
 
-            $uploadResult = uploadToBlobStorage($fileName, $file->getRealPath(), 'slideshow');
+            $uploadResult = uploadToBlobStorage($fileName, $file->getRealPath(), 'banner');
             if ($uploadResult && !empty($uploadResult['fileBlobPathName'])) {
                 $data['attc'] = $file->getClientOriginalName();
                 $data['url'] = $uploadResult['fileBlobPathName'];
