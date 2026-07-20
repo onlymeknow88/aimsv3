@@ -1,5 +1,9 @@
+import React from 'react';
 import DashboardLayout from '@/Layouts/DashboardLayout';
 import { Head, Link } from '@inertiajs/react';
+import useDashboard from './Hooks/useDashboard';
+import SlideShow from './Partials/Widget/SlideShow';
+import CalendarofEvent from './Partials/Widget/CalendarofEvent';
 import { Bar, Line, Doughnut } from 'react-chartjs-2';
 import { 
     FileText, Calendar, Clock, HardHat, TrendingUp, AlertCircle, Award, 
@@ -25,7 +29,20 @@ ChartJS.register(
     LineElement, ArcElement, ChartTitle, Tooltip, Legend, Filler
 );
 
-export default function Dashboard({ coeEvents = [] }) {
+export default function Dashboard({ coeEvents: initialEvents = [], slideshows: initialSlideshows = [] }) {
+    const {
+        activeSlide,
+        setActiveSlide,
+        previewVideo,
+        setPreviewVideo,
+        coeEvents,
+        slides,
+        currentSlide,
+        nextSlide,
+        prevSlide,
+        loading,
+    } = useDashboard(initialEvents, initialSlideshows);
+
     // 1. KPI Cards
     const statsCards = [
         { title: 'PROJECT TO DATE', value: '1.245 Hari', trend: '▲ 8,5% dari periode lalu', icon: Calendar, color: '#2563eb' },
@@ -135,82 +152,25 @@ export default function Dashboard({ coeEvents = [] }) {
             </div>
 
             {/* Section 2: Hero Area */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1.8fr 1.2fr', gap: '24px', marginBottom: '32px' }}>
+            <div className="dashboard-grid-hero" style={{ display: 'grid', gridTemplateColumns: '1.8fr 1.2fr', gap: '24px', marginBottom: '32px' }}>
                 {/* Welcome Banner Slideshow Container */}
-                <div style={{
-                    position: 'relative',
-                    borderRadius: '16px',
-                    padding: '40px',
-                    background: 'linear-gradient(135deg, #10233f 0%, #153b73 100%)',
-                    color: '#fff',
-                    boxShadow: 'var(--shadow-premium)',
-                    overflow: 'hidden',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'space-between',
-                    minHeight: '260px'
-                }}>
-                    <div style={{ maxWidth: '70%', position: 'relative', zIndex: 2 }}>
-                        <h2 style={{ fontSize: '24px', fontWeight: 800, marginBottom: '12px', lineHeight: 1.3 }}>Utamakan Keselamatan,<br />Ciptakan Masa Depan Tanpa Kecelakaan Kerja</h2>
-                        <p style={{ fontSize: '13.5px', color: '#94a3b8', marginBottom: '24px' }}>Zero Incident • Zero Harm • Zero Compromise</p>
-                        <button style={{ backgroundColor: '#fff', color: '#10233f', border: 'none', borderRadius: '6px', padding: '10px 20px', fontSize: '12.5px', fontWeight: 700, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
-                            <span>▶</span> Tonton Video
-                        </button>
-                    </div>
-                    {/* Slideshow pagination dots */}
-                    <div style={{ display: 'flex', gap: '6px', marginTop: '16px', zIndex: 2 }}>
-                        <span style={{ width: '20px', height: '6px', borderRadius: '3px', backgroundColor: '#FF8C24' }} />
-                        <span style={{ width: '6px', height: '6px', borderRadius: '3px', backgroundColor: 'rgba(255,255,255,0.3)' }} />
-                        <span style={{ width: '6px', height: '6px', borderRadius: '3px', backgroundColor: 'rgba(255,255,255,0.3)' }} />
-                    </div>
-                    <div style={{ position: 'absolute', right: 0, bottom: 0, top: 0, width: '45%', backgroundImage: 'url("https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&q=80&w=600")', backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.3, borderLeft: '1px solid rgba(255,255,255,0.05)' }} />
-                    
-                    {/* Left/Right controls */}
-                    <div style={{ position: 'absolute', right: '20px', bottom: '20px', display: 'flex', gap: '8px', zIndex: 2 }}>
-                        <button style={{ width: '28px', height: '28px', borderRadius: '50%', border: '1px solid rgba(255,255,255,0.2)', backgroundColor: 'rgba(255,255,255,0.05)', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><ChevronLeft size={14} /></button>
-                        <button style={{ width: '28px', height: '28px', borderRadius: '50%', border: '1px solid rgba(255,255,255,0.2)', backgroundColor: 'rgba(255,255,255,0.05)', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><ChevronRight size={14} /></button>
-                    </div>
-                </div>
+                <SlideShow
+                    loading={loading}
+                    currentSlide={currentSlide}
+                    slides={slides}
+                    activeSlide={activeSlide}
+                    setActiveSlide={setActiveSlide}
+                    prevSlide={prevSlide}
+                    nextSlide={nextSlide}
+                    setPreviewVideo={setPreviewVideo}
+                />
 
                 {/* Event Calendar Sidebar */}
-                <div style={{ backgroundColor: '#fff', border: '1px solid var(--border-color)', borderRadius: '16px', padding: '24px', boxShadow: 'var(--shadow-sm)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-                    <div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                            <h4 style={{ fontSize: '14.5px', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>CALENDAR OF EVENT</h4>
-                            <a href="/coe/calendar" style={{ fontSize: '12px', color: 'var(--primary)', fontWeight: 600, textDecoration: 'none' }}>Lihat Semua</a>
-                        </div>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                            {coeEvents.length > 0 ? (
-                                coeEvents.map((evt, idx) => (
-                                    <div key={idx} style={{ display: 'flex', gap: '16px', borderBottom: idx !== coeEvents.length - 1 ? '1px solid var(--border-color)' : 'none', paddingBottom: '10px', alignItems: 'center' }}>
-                                        <div style={{ backgroundColor: '#f1f5f9', borderRadius: '8px', padding: '6px 10px', textAlign: 'center', minWidth: '50px' }}>
-                                            <span style={{ fontSize: '13.5px', fontWeight: 800, color: 'var(--primary)', display: 'block' }}>{evt.date.split(' ')[0]}</span>
-                                            <span style={{ fontSize: '9.5px', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>{evt.date.split(' ')[1]}</span>
-                                        </div>
-                                        <div style={{ flex: 1 }}>
-                                            <h5 style={{ fontSize: '12.5px', fontWeight: 700, color: 'var(--text-primary)', margin: '0 0 2px 0' }}>{evt.title}</h5>
-                                            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{evt.dept}</span>
-                                        </div>
-                                        <span style={{ fontSize: '9.5px', fontWeight: 800, backgroundColor: `${evt.color}12`, color: evt.color, padding: '2px 6px', borderRadius: '4px' }}>{evt.status}</span>
-                                    </div>
-                                ))
-                            ) : (
-                                <div style={{ textAlign: 'center', padding: '24px 0', color: 'var(--text-muted)', fontSize: '12px' }}>
-                                    Tidak ada agenda kegiatan saat ini.
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                    <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '12px', marginTop: '12px', textAlign: 'center' }}>
-                        <a href="/coe/calendar" style={{ fontSize: '12px', color: 'var(--primary)', fontWeight: 700, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                            Lihat Kalender Lengkap <ArrowRight size={12} />
-                        </a>
-                    </div>
-                </div>
+                <CalendarofEvent loading={loading} coeEvents={coeEvents} />
             </div>
 
             {/* Section 3: Analytics & Summaries */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.8fr 1fr', gap: '24px', marginBottom: '32px' }}>
+            <div className="dashboard-grid-analytics" style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.8fr 1fr', gap: '24px', marginBottom: '32px' }}>
                 {/* 1. Production YTD Chart */}
                 <div style={{ backgroundColor: '#fff', border: '1px solid var(--border-color)', borderRadius: '16px', padding: '24px', boxShadow: 'var(--shadow-sm)' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
@@ -272,12 +232,12 @@ export default function Dashboard({ coeEvents = [] }) {
             </div>
 
             {/* Section 4: Information Center */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '20px', marginBottom: '32px' }}>
+            <div className="dashboard-grid-info" style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '20px', marginBottom: '32px' }}>
                 {/* 1. News & Update */}
                 <div style={{ backgroundColor: '#fff', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '16px', boxShadow: 'var(--shadow-sm)' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
-                        <span style={{ fontSize: '12.5px', fontWeight: 700, color: 'var(--text-primary)' }}>NEWS & UPDATE</span>
-                        <a href="#" style={{ fontSize: '11px', color: 'var(--primary)', fontWeight: 700 }}>Lihat Semua</a>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px', gap: '8px' }}>
+                        <span style={{ fontSize: '11px', fontWeight: 800, color: 'var(--text-primary)', lineHeight: '1.2' }}>NEWS & UPDATE</span>
+                        <a href="#" style={{ fontSize: '10.5px', color: 'var(--primary)', fontWeight: 700, textDecoration: 'none', whiteSpace: 'nowrap' }}>Lihat Semua</a>
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                         <div>
@@ -293,9 +253,9 @@ export default function Dashboard({ coeEvents = [] }) {
 
                 {/* 2. Incident Notification */}
                 <div style={{ backgroundColor: '#fff', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '16px', boxShadow: 'var(--shadow-sm)' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                        <span style={{ fontSize: '12.5px', fontWeight: 700, color: 'var(--text-primary)' }}>INCIDENT ALERTS</span>
-                        <a href="#" style={{ fontSize: '11px', color: 'var(--primary)', fontWeight: 700 }}>Lihat Semua</a>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px', gap: '8px' }}>
+                        <span style={{ fontSize: '11px', fontWeight: 800, color: 'var(--text-primary)', lineHeight: '1.2' }}>INCIDENT ALERTS</span>
+                        <a href="#" style={{ fontSize: '10.5px', color: 'var(--primary)', fontWeight: 700, textDecoration: 'none', whiteSpace: 'nowrap' }}>Lihat Semua</a>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
                         <span style={{ fontSize: '24px', fontWeight: 800, color: 'var(--danger)' }}>2</span>
@@ -309,9 +269,9 @@ export default function Dashboard({ coeEvents = [] }) {
 
                 {/* 3. K3LH Activities */}
                 <div style={{ backgroundColor: '#fff', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '16px', boxShadow: 'var(--shadow-sm)' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                        <span style={{ fontSize: '12.5px', fontWeight: 700, color: 'var(--text-primary)' }}>K3LH ACTIVITIES</span>
-                        <a href="#" style={{ fontSize: '11px', color: 'var(--primary)', fontWeight: 700 }}>Lihat Semua</a>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px', gap: '8px' }}>
+                        <span style={{ fontSize: '11px', fontWeight: 800, color: 'var(--text-primary)', lineHeight: '1.2' }}>K3LH ACTIVITIES</span>
+                        <a href="#" style={{ fontSize: '10.5px', color: 'var(--primary)', fontWeight: 700, textDecoration: 'none', whiteSpace: 'nowrap' }}>Lihat Semua</a>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
                         <span style={{ fontSize: '24px', fontWeight: 800, color: 'var(--success)' }}>14</span>
@@ -342,7 +302,7 @@ export default function Dashboard({ coeEvents = [] }) {
             </div>
 
             {/* Section 5: Safety Performance & Quick Links */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1.2fr 1.3fr', gap: '24px' }}>
+            <div className="dashboard-grid-footer" style={{ display: 'grid', gridTemplateColumns: '1.5fr 1.2fr 1.3fr', gap: '24px' }}>
                 {/* 1. Safety Performance YTD */}
                 <div style={{ backgroundColor: '#fff', border: '1px solid var(--border-color)', borderRadius: '16px', padding: '24px', boxShadow: 'var(--shadow-sm)' }}>
                     <h4 style={{ fontSize: '14.5px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '16px' }}>SAFETY PERFORMANCE (YTD 2026)</h4>
@@ -405,6 +365,21 @@ export default function Dashboard({ coeEvents = [] }) {
                     </div>
                 </div>
             </div>
+
+            {previewVideo && (
+                <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(15, 23, 42, 0.6)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '20px' }}>
+                    <div style={{ backgroundColor: '#fff', borderRadius: '16px', width: '100%', maxWidth: '800px', padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <h3 style={{ fontSize: '16px', fontWeight: 800, color: '#0f172a', margin: 0 }}>Preview: {previewVideo.name}</h3>
+                            <button onClick={() => setPreviewVideo(null)} style={{ border: 'none', background: 'none', fontSize: '20px', cursor: 'pointer', color: '#64748b' }}>&times;</button>
+                        </div>
+                        <video key={previewVideo.blob_url} width="100%" height="auto" controls autoPlay style={{ borderRadius: '8px' }}>
+                            <source src={previewVideo.blob_url} type="video/mp4" />
+                            Browser Anda tidak mendukung pemutaran video.
+                        </video>
+                    </div>
+                </div>
+            )}
         </DashboardLayout>
     );
 }

@@ -11,6 +11,7 @@ export default function FileDropzone({ onFileDrop, accept = '.pdf,.docx,.xlsx,.p
     const handleChange = (e) => {
         const files = Array.from(e.target.files);
         if (files.length) onFileDrop(files);
+        e.target.value = '';
     };
 
     return (

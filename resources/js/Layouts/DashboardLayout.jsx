@@ -52,6 +52,13 @@ export default function DashboardLayout({ children }) {
         return allowedModules.includes(item.moduleSlug);
     });
 
+    // Set sidebarOpen to false by default on mobile screens on mount
+    React.useEffect(() => {
+        if (typeof window !== 'undefined' && window.innerWidth <= 1024) {
+            setSidebarOpen(false);
+        }
+    }, []);
+
     return (
         <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: 'var(--bg-color)', position: 'relative' }}>
 
@@ -62,7 +69,8 @@ export default function DashboardLayout({ children }) {
                     .sidebar-container {
                         transform: translateX(${sidebarOpen ? '0' : '-280px'});
                         position: fixed !important;
-                        z-index: 99;
+                        z-index: 999;
+                        height: 100vh !important;
                     }
                     .main-content-container {
                         margin-left: 0 !important;
@@ -71,8 +79,42 @@ export default function DashboardLayout({ children }) {
                     .mobile-toggle {
                         display: flex !important;
                     }
+                    .header-subtitle {
+                        display: none !important;
+                    }
+                    .mobile-backdrop {
+                        display: block !important;
+                    }
+                    /* Force dashboard grids to stack on mobile/tablet */
+                    .dashboard-grid-hero,
+                    .dashboard-grid-analytics,
+                    .dashboard-grid-footer,
+                    .dashboard-grid-info {
+                        grid-template-columns: 1fr !important;
+                        gap: 16px !important;
+                    }
+                    /* Reduce padding on mobile */
+                    .main-container {
+                        padding: 16px !important;
+                    }
                 }
             `}} />
+
+            {/* Mobile Sidebar Backdrop */}
+            {sidebarOpen && (
+                <div 
+                    onClick={() => setSidebarOpen(false)}
+                    style={{
+                        position: 'fixed',
+                        inset: 0,
+                        backgroundColor: 'rgba(15, 23, 42, 0.4)',
+                        backdropFilter: 'blur(2px)',
+                        zIndex: 98,
+                        display: 'none'
+                    }}
+                    className="mobile-backdrop"
+                />
+            )}
 
             {/* Sidebar Partial */}
             <Sidebar
@@ -104,10 +146,12 @@ export default function DashboardLayout({ children }) {
                     auth={auth}
                     profileDropdownOpen={profileDropdownOpen}
                     setProfileDropdownOpen={setProfileDropdownOpen}
+                    sidebarOpen={sidebarOpen}
+                    setSidebarOpen={setSidebarOpen}
                 />
 
                 {/* Dashboard Content Container */}
-                <main style={{ padding: '32px', flex: 1, overflowY: 'auto' }}>
+                <main className="main-container" style={{ padding: '32px', flex: 1, overflowY: 'auto' }}>
                     {children}
                 </main>
             </div>

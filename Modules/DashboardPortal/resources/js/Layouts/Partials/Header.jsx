@@ -15,7 +15,7 @@ export default function Header({
                 {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
             </button>
             <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-secondary)' }}>Welcome to Calendar of Event (CoE)</span>
+                <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-secondary)' }}>Welcome to Dashboard Portal</span>
             </div>
         </header>
     );

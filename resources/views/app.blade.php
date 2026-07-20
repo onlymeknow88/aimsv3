@@ -13,13 +13,21 @@
         <!-- Scripts -->
         @routes
         @viteReactRefresh
+        @php
+            $component = $page['component'];
+            $parts = explode('/', $component);
+            $moduleName = $parts[0];
+            $modulePath = base_path("Modules/{$moduleName}");
+            if (count($parts) > 1 && file_exists($modulePath)) {
+                $relativePath = implode('/', array_slice($parts, 1));
+                $viteAsset = "Modules/{$moduleName}/resources/js/Pages/{$relativePath}.jsx";
+            } else {
+                $viteAsset = "resources/js/Pages/{$component}.jsx";
+            }
+        @endphp
         @vite([
             'resources/js/app.jsx',
-            str_starts_with($page['component'], 'DocumentSystem/')
-                ? 'Modules/DocumentSystem/resources/js/Pages/' . str_replace('DocumentSystem/', '', $page['component']) . '.jsx'
-                : (str_starts_with($page['component'], 'Coe/')
-                    ? 'Modules/Coe/resources/js/Pages/' . str_replace('Coe/', '', $page['component']) . '.jsx'
-                    : "resources/js/Pages/{$page['component']}.jsx")
+            $viteAsset
         ])
         @inertiaHead
     </head>

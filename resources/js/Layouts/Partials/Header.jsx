@@ -1,11 +1,13 @@
 import React from 'react';
 import { Link } from '@inertiajs/react';
-import { Bell, LogOut, LogIn } from 'lucide-react';
+import { Bell, LogOut, LogIn, Menu } from 'lucide-react';
 
 export default function Header({
     auth,
     profileDropdownOpen,
-    setProfileDropdownOpen
+    setProfileDropdownOpen,
+    sidebarOpen,
+    setSidebarOpen
 }) {
     return (
         <header style={{
@@ -15,14 +17,33 @@ export default function Header({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            padding: '0 32px',
+            padding: '0 24px',
             position: 'sticky',
             top: 0,
             zIndex: 10
         }}>
-            <div>
-                <h2 style={{ fontSize: '21px', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>Selamat Datang di AIMS</h2>
-                <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>Aplikasi Integrated Management System</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <button
+                    className="mobile-toggle"
+                    onClick={() => setSidebarOpen(!sidebarOpen)}
+                    style={{
+                        display: 'none',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        padding: '8px',
+                        border: '1.5px solid var(--border-color)',
+                        borderRadius: '8px',
+                        background: 'transparent',
+                        color: 'var(--text-primary)',
+                        cursor: 'pointer'
+                    }}
+                >
+                    <Menu size={20} />
+                </button>
+                <div>
+                    <h2 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>Selamat Datang di AIMS</h2>
+                    <span className="header-subtitle" style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Aplikasi Integrated Management System</span>
+                </div>
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>

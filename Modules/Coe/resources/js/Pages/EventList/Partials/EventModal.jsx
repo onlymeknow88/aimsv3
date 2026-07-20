@@ -178,7 +178,13 @@ export default function EventModal({
                                 <input
                                     type="date"
                                     value={form.start_date}
-                                    onChange={(e) => setField("start_date", e.target.value)}
+                                    onChange={(e) => {
+                                        const newStartDate = e.target.value;
+                                        setField("start_date", newStartDate);
+                                        if (form.end_date && form.end_date < newStartDate) {
+                                            setField("end_date", newStartDate);
+                                        }
+                                    }}
                                     required
                                     style={{ padding: "10px 14px", border: "1.5px solid #e2e8f0", borderRadius: "8px", fontSize: "13px", color: "#0f172a", outline: "none" }}
                                 />
@@ -189,6 +195,7 @@ export default function EventModal({
                                     type="date"
                                     value={form.end_date}
                                     onChange={(e) => setField("end_date", e.target.value)}
+                                    min={form.start_date}
                                     style={{ padding: "10px 14px", border: "1.5px solid #e2e8f0", borderRadius: "8px", fontSize: "13px", color: "#0f172a", outline: "none" }}
                                 />
                             </div>

@@ -1,0 +1,11 @@
+{
+    "name": "DashboardPortal",
+    "alias": "dashboardportal",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\DashboardPortal\\App\\Providers\\DashboardPortalServiceProvider"
+    ],
+    "files": []
+}

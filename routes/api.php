@@ -99,3 +99,7 @@ Route::middleware(['admin.session', 'auth:admin', 'admin.auth'])
             Route::delete('/{id}', [\App\Http\Controllers\Admin\Api\AimsModuleController::class, 'destroy']);
         });
     });
+
+Route::middleware(['web', 'auth'])->prefix('api')->group(function () {
+    Route::get('/dashboard/data', [\App\Http\Controllers\Api\DashboardController::class, 'getData']);
+});
