@@ -375,6 +375,29 @@ export default function BannerIndex() {
                                             <TableCell
                                                 style={{ padding: "14px 16px" }}
                                             >
+                                                {banner.blob_url ? (
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                        <img
+                                                            src={banner.blob_url}
+                                                            alt={banner.name}
+                                                            style={{
+                                                                width: '50px',
+                                                                height: '35px',
+                                                                objectFit: 'cover',
+                                                                borderRadius: '6px',
+                                                                border: '1px solid #e2e8f0',
+                                                                cursor: 'pointer',
+                                                                boxShadow: '0 2px 5px rgba(0,0,0,0.05)'
+                                                            }}
+                                                            onClick={() => setpreviewBanner(banner)}
+                                                        />
+                                                        <span style={{ fontSize: '12px', color: '#475569', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '120px' }} title={banner.attc}>
+                                                            {banner.attc}
+                                                        </span>
+                                                    </div>
+                                                ) : (
+                                                    <span style={{ fontSize: '11px', color: '#94a3b8' }}>Tidak ada file</span>
+                                                )}
                                             </TableCell>
                                             <TableCell
                                                 style={{
@@ -508,6 +531,25 @@ export default function BannerIndex() {
                                     &times;
                                 </button>
                             </div>
+                            {previewBanner.blob_url ? (
+                                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', backgroundColor: '#f8fafc', borderRadius: '12px', padding: '12px', border: '1px dashed #e2e8f0', minHeight: '300px' }}>
+                                    <img
+                                        src={previewBanner.blob_url}
+                                        alt={previewBanner.name}
+                                        style={{
+                                            maxWidth: '100%',
+                                            maxHeight: '450px',
+                                            objectFit: 'contain',
+                                            borderRadius: '8px',
+                                            boxShadow: 'var(--shadow-md)'
+                                        }}
+                                    />
+                                </div>
+                            ) : (
+                                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '200px', color: '#94a3b8', fontSize: '13px' }}>
+                                    Tidak ada file untuk dipratinjau.
+                                </div>
+                            )}
 
                         </div>
                     </div>
