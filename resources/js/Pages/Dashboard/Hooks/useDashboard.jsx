@@ -7,6 +7,7 @@ export default function useDashboard(initialEvents = [], initialSlideshows = [])
     const [previewVideo, setPreviewVideo] = useState(null);
     const [coeEvents, setCoeEvents] = useState(initialEvents);
     const [slidesData, setSlidesData] = useState(initialSlideshows);
+    const [generalStats, setGeneralStats] = useState(null);
 
     const [loading, setLoading] = useState(true);
 
@@ -17,6 +18,7 @@ export default function useDashboard(initialEvents = [], initialSlideshows = [])
                 if (res.data?.result) {
                     setCoeEvents(res.data.result.coeEvents || []);
                     setSlidesData(res.data.result.slideshows || []);
+                    setGeneralStats(res.data.result.generalStats || null);
                 }
             })
             .catch(err => {
@@ -57,5 +59,6 @@ export default function useDashboard(initialEvents = [], initialSlideshows = [])
         nextSlide,
         prevSlide,
         loading,
+        generalStats,
     };
 }

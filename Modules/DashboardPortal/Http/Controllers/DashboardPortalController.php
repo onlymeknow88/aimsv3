@@ -1,5 +1,6 @@
 <?php
 
+
 namespace Modules\DashboardPortal\Http\Controllers;
 
 use App\Http\Controllers\Controller;
@@ -27,5 +28,21 @@ class DashboardPortalController extends Controller
     public function bannerIndex()
     {
         return Inertia::render('DashboardPortal/Banner/Index');
+    }
+
+    /**
+     * Display a listing of the resource.
+     */
+    public function generalIndex()
+    {
+        return Inertia::render('DashboardPortal/General/Index');
+    }
+
+    /**
+     * Display a listing of the resource.
+     */
+    public function newsAndUpdateIndex()
+    {
+        return Inertia::render('DashboardPortal/NewsAndUpdate/Index');
     }
 }
