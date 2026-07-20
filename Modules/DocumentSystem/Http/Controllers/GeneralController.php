@@ -79,24 +79,25 @@ class GeneralController extends Controller
         $filePath = ($type === 'jsa' || $type === 'jsa_activity' || $type === 'ptw') ? ($attachment->file_path ?? '') : ($attachment->path ?? '');
         $localPath = Storage::disk('public')->path($filePath);
 
-        if (!$filePath || !file_exists($localPath)) {
+        // Early return: jika path kosong langsung 404
+        if (!$filePath) {
+            abort(404, 'Path file tidak ditemukan.');
+        }
+
+        if (!file_exists($localPath)) {
             $sas = GetBlobSasUri('aims-cntr', $filePath);
             if ($sas) {
-                $url = is_array($sas) ? ($sas['blobUriSas'] ?? $sas['sasUri'] ?? $sas['url'] ?? $sas['blobUri'] ?? $sas[0]['sasUri'] ?? null) : $sas;
+                $url = is_array($sas)
+                    ? ($sas['blobUriSas'] ?? $sas['sasUri'] ?? $sas['url'] ?? $sas['blobUri'] ?? $sas[0]['sasUri'] ?? null)
+                    : $sas;
+
                 if ($url) {
-                    try {
-                        $client = new \GuzzleHttp\Client();
-                        $response = $client->get($url);
-                        return response($response->getBody()->getContents(), 200, [
-                            'Content-Type' => $mimeType,
-                            'Content-Disposition' => 'inline; filename="' . $fileName . '"',
-                        ]);
-                    } catch (\Exception $e) {
-                        \Log::error('Error streaming blob preview: ' . $e->getMessage());
-                    }
+                    // Redirect ke SAS URL langsung — lebih cepat dari streaming via PHP
+                    // Browser akan stream langsung dari Azure tanpa bottleneck PHP
+                    return redirect($url);
                 }
             }
-            abort(404, 'File tidak ditemukan.');
+            abort(404, 'File tidak ditemukan di storage.');
         }
 
         return response()->file($localPath, [
@@ -180,7 +181,7 @@ class GeneralController extends Controller
         }
 
         $filePath = ($type === 'jsa' || $type === 'ptw') ? ($attachment->file_path ?? '') : ($attachment->path ?? '');
-        
+
         if (str_starts_with($filePath, 'test/') || str_starts_with($filePath, 'complianceCMS/') || !file_exists(Storage::disk('public')->path($filePath))) {
             $sas = GetBlobSasUri('aims-cntr', $filePath);
             $url = is_array($sas) ? ($sas['blobUriSas'] ?? $sas['sasUri'] ?? $sas['url'] ?? $sas['blobUri'] ?? $sas[0]['sasUri'] ?? null) : $sas;

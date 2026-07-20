@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Head } from '@inertiajs/react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/Components/ui/table';
-import { Edit2, Eye, EyeOff, FileText, Image, Plus, RefreshCw, Search, Trash2 } from 'lucide-react';
+import { Edit2, Eye, EyeOff, ExternalLink, FileText, Image, Plus, RefreshCw, Search, Trash2, X } from 'lucide-react';
 import DashboardPortalLayout from '../../../Layouts/DashboardPortalLayout';
 import TablePagination from '@/Components/TablePagination';
 import ConfirmationModal from '@/Components/ConfirmationModal';
@@ -31,6 +31,8 @@ export default function NewsAndUpdateTable() {
         deleteTarget, deleting, deleteError,
         openDeleteModal, closeDeleteModal, confirmDelete,
     } = useNewsAndUpdate();
+
+    const [previewNews, setPreviewNews] = useState(null);
 
     return (
         <DashboardPortalLayout>
@@ -136,18 +138,37 @@ export default function NewsAndUpdateTable() {
                                             {/* Attachment */}
                                             <TableCell style={{ padding: '14px 16px' }}>
                                                 {item.blob_url ? (
-                                                    <a
-                                                        href={item.blob_url}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', color: 'var(--primary)', fontSize: '12px', fontWeight: 600, textDecoration: 'none' }}
-                                                    >
-                                                        {item.attc?.match(/\.(jpg|jpeg|png|gif|webp)$/i)
-                                                            ? <Image size={12} />
-                                                            : <FileText size={12} />
+                                                    (() => {
+                                                        const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(item.attc || item.blob_url || '');
+                                                        const isPdf = /\.pdf$/i.test(item.attc || item.blob_url || '');
+                                                        if (isImage) {
+                                                            return (
+                                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                                    <img
+                                                                        src={item.blob_url}
+                                                                        alt={item.title}
+                                                                        onClick={() => setPreviewNews(item)}
+                                                                        onError={e => { e.target.style.display = 'none'; }}
+                                                                        style={{ width: '50px', height: '35px', objectFit: 'cover', borderRadius: '6px', border: '1px solid #e2e8f0', cursor: 'pointer', boxShadow: '0 2px 5px rgba(0,0,0,0.05)' }}
+                                                                    />
+                                                                    <span style={{ fontSize: '11px', color: '#475569', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '90px' }} title={item.attc}>
+                                                                        {item.attc}
+                                                                    </span>
+                                                                </div>
+                                                            );
                                                         }
-                                                        {item.attc || 'Lihat File'}
-                                                    </a>
+                                                        return (
+                                                            <a
+                                                                href={item.blob_url}
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
+                                                                style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', color: isPdf ? '#ef4444' : 'var(--primary)', fontSize: '12px', fontWeight: 600, textDecoration: 'none' }}
+                                                            >
+                                                                {isPdf ? <FileText size={12} /> : <ExternalLink size={12} />}
+                                                                {item.attc || 'Lihat File'}
+                                                            </a>
+                                                        );
+                                                    })()
                                                 ) : (
                                                     <span style={{ color: '#94a3b8', fontSize: '12px' }}>Tidak ada file</span>
                                                 )}
@@ -195,6 +216,37 @@ export default function NewsAndUpdateTable() {
                         onLimitChange={setLimit}
                     />
                 </div>
+
+                {/* Image Preview Modal */}
+                {previewNews && (
+                    <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(15, 23, 42, 0.6)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '20px' }}>
+                        <div style={{ backgroundColor: '#fff', borderRadius: '16px', width: '100%', maxWidth: '800px', padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <h3 style={{ fontSize: '15px', fontWeight: 800, color: '#0f172a', margin: 0 }}>Preview: {previewNews.title}</h3>
+                                <button onClick={() => setPreviewNews(null)} style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#64748b', display: 'flex', alignItems: 'center', padding: '4px' }}>
+                                    <X size={20} />
+                                </button>
+                            </div>
+                            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', backgroundColor: '#f8fafc', borderRadius: '12px', padding: '12px', border: '1px dashed #e2e8f0', minHeight: '300px' }}>
+                                <img
+                                    src={previewNews.blob_url}
+                                    alt={previewNews.title}
+                                    style={{ maxWidth: '100%', maxHeight: '450px', objectFit: 'contain', borderRadius: '8px', boxShadow: '0 4px 16px rgba(0,0,0,0.1)' }}
+                                />
+                            </div>
+                            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                                <a
+                                    href={previewNews.blob_url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: 'var(--primary)', fontWeight: 600, textDecoration: 'none' }}
+                                >
+                                    <ExternalLink size={12} /> Buka di tab baru
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 {/* Form Modal */}
                 <NewsAndUpdateModal
