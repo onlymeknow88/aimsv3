@@ -8,11 +8,22 @@ export default function BlobPreviewModal({ attachment, onClose }) {
     const isJsa = attachment.type === 'jsa';
     const isJsaActivity = attachment.type === 'jsa_activity';
     const isPtw = attachment.type === 'ptw';
-    const typeParam = isActivity ? '?type=activity' : (isJsa ? '?type=jsa' : (isJsaActivity ? '?type=jsa_activity' : (isPtw ? '?type=ptw' : '')));
+    
+    // Construct query parameters cleanly
+    const params = [];
+    if (isActivity) params.push('type=activity');
+    else if (isJsa) params.push('type=jsa');
+    else if (isJsaActivity) params.push('type=jsa_activity');
+    else if (isPtw) params.push('type=ptw');
+    
+    if (attachment.path) {
+        params.push(`path=${encodeURIComponent(attachment.path)}`);
+    }
+    
+    const queryString = params.length > 0 ? `?${params.join('&')}` : '';
     const attachmentId = attachment.id || 'none';
-    const pathParam = attachment.path ? `&path=${encodeURIComponent(attachment.path)}` : '';
-    const previewUrl = `/api/document-system/attachments/${attachmentId}/preview${typeParam}${pathParam}`;
-    const downloadUrl = `/api/document-system/attachments/${attachmentId}/download${typeParam}${pathParam}`;
+    const previewUrl = `/api/document-system/attachments/${attachmentId}/preview${queryString}`;
+    const downloadUrl = `/api/document-system/attachments/${attachmentId}/download${queryString}`;
     const fileExtension = (attachment.file_type || (attachment.name ? attachment.name.split('.').pop() : '') || (attachment.file_name ? attachment.file_name.split('.').pop() : '') || (attachment.file_path ? attachment.file_path.split('.').pop() : '') || '').toLowerCase();
     const isImage = ['png', 'jpg', 'jpeg', 'gif'].includes(fileExtension);
     const isPdf = fileExtension === 'pdf';
