@@ -70,7 +70,7 @@ export default function DocumentTable({
         {
             id: 'company',
             header: 'Company',
-            cell: ({ row }) => <span style={{ fontSize: '12px' ,fontWeight: 700 }}>   <a href={`/document-system/active/detail/${row.original.id}`} style={{ color: 'var(--primary)', textDecoration: 'none' }}>{getCompanyCode(row.original)}</a></span>
+            cell: ({ row }) => <span style={{ fontSize: '12px', fontWeight: 700 }}>   <a href={`/document-system/active/detail/${row.original.id}`} style={{ color: 'var(--primary)', textDecoration: 'none' }}>{getCompanyCode(row.original)}</a></span>
         },
         {
             id: 'department',
@@ -128,7 +128,7 @@ export default function DocumentTable({
             header: 'No. Dokumen',
             cell: ({ row }) => (
                 <span >
-                        {row.original.document_number}
+                    {row.original.document_number}
                 </span>
             )
         },
@@ -277,37 +277,37 @@ export default function DocumentTable({
                 <TableHeader>
                     {table.getHeaderGroups().map(hg => (
                         <TableRow key={hg.id}>
-                           {hg.headers.map(h => {
-                                                                               const isSearchable = ['company', 'department', 'pic', 'module', 'category', 'document_level', 'mapping', 'document_number', 'title'].includes(h.id);
-                                                                               return (
-                                                                                   <TableHead key={h.id} style={{ fontWeight: 700, color: 'var(--text-secondary)', padding: '10px 12px', verticalAlign: 'top' }}>
-                                                                                       <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', minWidth: isSearchable ? '120px' : 'auto' }}>
-                                                                                           <span>{flexRender(h.column.columnDef.header, h.getContext())}</span>
-                                                                                           {isSearchable && onColumnFilterChange && (
-                                                                                               <input
-                                                                                                   type="text"
-                                                                                                   placeholder={`Cari...`}
-                                                                                                   value={columnFilters[h.id] || ''}
-                                                                                                   onChange={(e) => onColumnFilterChange(h.id, e.target.value)}
-                                                                                                   onClick={(e) => e.stopPropagation()}
-                                                                                                   style={{
-                                                                                                       width: '100%',
-                                                                                                       padding: '4px 8px',
-                                                                                                       fontSize: '11px',
-                                                                                                       fontWeight: 'normal',
-                                                                                                       border: '1px solid #e2e8f0',
-                                                                                                       borderRadius: '4px',
-                                                                                                       outline: 'none',
-                                                                                                       boxSizing: 'border-box',
-                                                                                                       color: '#334155',
-                                                                                                       backgroundColor: '#fff'
-                                                                                                   }}
-                                                                                               />
-                                                                                           )}
-                                                                                       </div>
-                                                                                   </TableHead>
-                                                                               );
-                                                                           })}
+                            {hg.headers.map(h => {
+                                const isSearchable = ['company', 'department', 'pic', 'module', 'category', 'document_level', 'mapping', 'document_number', 'title'].includes(h.id);
+                                return (
+                                    <TableHead key={h.id} style={{ fontWeight: 700, color: 'var(--text-secondary)', padding: '10px 12px', verticalAlign: 'top' }}>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', minWidth: isSearchable ? '120px' : 'auto' }}>
+                                            <span>{flexRender(h.column.columnDef.header, h.getContext())}</span>
+                                            {isSearchable && onColumnFilterChange && (
+                                                <input
+                                                    type="text"
+                                                    placeholder={`Cari...`}
+                                                    value={columnFilters[h.id] || ''}
+                                                    onChange={(e) => onColumnFilterChange(h.id, e.target.value)}
+                                                    onClick={(e) => e.stopPropagation()}
+                                                    style={{
+                                                        width: '100%',
+                                                        padding: '4px 8px',
+                                                        fontSize: '11px',
+                                                        fontWeight: 'normal',
+                                                        border: '1px solid #e2e8f0',
+                                                        borderRadius: '4px',
+                                                        outline: 'none',
+                                                        boxSizing: 'border-box',
+                                                        color: '#334155',
+                                                        backgroundColor: '#fff'
+                                                    }}
+                                                />
+                                            )}
+                                        </div>
+                                    </TableHead>
+                                );
+                            })}
                         </TableRow>
                     ))}
                 </TableHeader>
@@ -468,12 +468,12 @@ export default function DocumentTable({
                                 style={{
                                     opacity:
                                         pagination.current_page ===
-                                        pagination.last_page
+                                            pagination.last_page
                                             ? 0.5
                                             : 1,
                                     cursor:
                                         pagination.current_page ===
-                                        pagination.last_page
+                                            pagination.last_page
                                             ? "not-allowed"
                                             : "pointer",
                                 }}
