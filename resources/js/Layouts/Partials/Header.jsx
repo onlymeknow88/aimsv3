@@ -1,7 +1,8 @@
-import { Bell, LogIn, LogOut, Menu } from 'lucide-react';
+import { Bell, LogIn, LogOut, Menu, Shield } from 'lucide-react';
+import { Link, router } from '@inertiajs/react';
 
-import { Link } from '@inertiajs/react';
 import React from 'react';
+import axios from 'axios';
 
 export default function Header({
     auth,
@@ -169,7 +170,7 @@ export default function Header({
                                         </li>
                                         <li>
                                             <Link
-                                                href="#"
+                                                href={route('two-factor.setup')}
                                                 style={{
                                                     display: 'flex',
                                                     alignItems: 'center',
@@ -183,14 +184,21 @@ export default function Header({
                                                 className="dropdown-item"
                                                 onClick={() => setProfileDropdownOpen(false)}
                                             >
-                                                Setup 2FA
+                                                <Shield size={14} /> Setup 2FA
                                             </Link>
                                         </li>
                                         <li style={{ borderTop: '1px solid var(--border-color)', marginTop: '4px', paddingTop: '4px' }}>
-                                            <Link
-                                                href={route('logout')}
-                                                method="post"
-                                                as="button"
+                                            <button
+                                                onClick={async () => {
+                                                    try {
+                                                        await axios.post('/logout');
+                                                        window.location.href = '/login';
+                                                    } catch (error) {
+                                                        console.error('Logout error:', error);
+                                                        // Fallback: paksa redirect meski error
+                                                        window.location.href = '/login';
+                                                    }
+                                                }}
                                                 style={{
                                                     width: '100%',
                                                     display: 'flex',
@@ -203,13 +211,14 @@ export default function Header({
                                                     border: 'none',
                                                     textAlign: 'left',
                                                     cursor: 'pointer',
-                                                    transition: 'background-color 0.2s'
+                                                    transition: 'background-color 0.2s',
+                                                    fontFamily: 'inherit',
                                                 }}
                                                 className="dropdown-item"
                                             >
                                                 <LogOut size={14} />
                                                 Logout
-                                            </Link>
+                                            </button>
                                         </li>
                                     </ul>
                                 </div>

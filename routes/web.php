@@ -6,7 +6,7 @@ use Inertia\Inertia;
 
 Route::get('/', function () {
     return Inertia::render('Dashboard/Dashboard');
-})->name('dashboard');
+})->middleware(['auth', '2fa'])->name('dashboard');
 
 Route::middleware('admin.session')->group(function () {
     Route::get('/admin/login', [\App\Http\Controllers\Admin\AdminLoginController::class, 'showLoginForm'])->name('admin.login');

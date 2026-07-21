@@ -48,12 +48,27 @@ class HandleInertiaRequests extends Middleware
             }
         }
 
+        // FLS menus — hanya di-load untuk halaman field-leadership
+        $flsMenus = [];
+        if ($request->is('field-leadership*')) {
+            $moduleId = \DB::table('aims_modules')->where('slug', 'field-leadership')->value('id');
+            if ($moduleId) {
+                $flsMenus = \DB::table('aims_menus')
+                    ->where('module_id', $moduleId)
+                    ->orderBy('parent_id')
+                    ->orderBy('order_by')
+                    ->get()
+                    ->toArray();
+            }
+        }
+
         return [
             ...parent::share($request),
             'auth' => [
                 'user' => $user,
                 'modules' => $allowedModules,
             ],
+            'flsMenus' => $flsMenus,
         ];
     }
 }
