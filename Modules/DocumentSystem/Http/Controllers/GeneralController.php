@@ -18,6 +18,34 @@ class GeneralController extends Controller
     public function previewAttachment(string $id, Request $request)
     {
         $type = $request->query('type', 'document');
+
+        // Uncontrolled copy — path passed directly via query string
+        if ($type === 'uncontrolled') {
+            $filePath = $request->query('path');
+            if (!$filePath) abort(404, 'Path tidak ditemukan.');
+            $fileName = basename($filePath);
+            $mimeType = 'application/pdf';
+            $localPath = Storage::disk('public')->path($filePath);
+            if (!file_exists($localPath)) {
+                $sas = GetBlobSasUri('aims-cntr', $filePath);
+                $url = is_array($sas)
+                    ? ($sas['blobUriSas'] ?? $sas['sasUri'] ?? $sas['url'] ?? $sas['blobUri'] ?? null)
+                    : $sas;
+                if ($url) {
+                    $fileContents = @file_get_contents($url);
+                    if ($fileContents === false) abort(404, 'File tidak dapat diambil.');
+                    return response($fileContents, 200, [
+                        'Content-Type' => $mimeType,
+                        'Content-Disposition' => 'inline; filename="' . addslashes($fileName) . '"',
+                        'Cache-Control' => 'private, max-age=300',
+                    ]);
+                }
+            }
+            return response()->file($localPath, [
+                'Content-Type' => $mimeType,
+                'Content-Disposition' => 'inline; filename="' . addslashes($fileName) . '"',
+            ]);
+        }
         if ($type === 'activity') {
             $attachment = \Modules\DocumentSystem\Entities\ActivityAttachment::findOrFail($id);
             $fileName = $attachment->name;
@@ -73,7 +101,16 @@ class GeneralController extends Controller
         } else {
             $attachment = Attachment::findOrFail($id);
             $fileName = $attachment->file_name;
-            $mimeType = $attachment->mime_type ?? 'application/octet-stream';
+            // Derive mime type from file_type column or file extension since mime_type may not be stored
+            $ext = strtolower($attachment->file_type ?? pathinfo($fileName, PATHINFO_EXTENSION));
+            $mimeType = match($ext) {
+                'pdf'          => 'application/pdf',
+                'png'          => 'image/png',
+                'jpg', 'jpeg'  => 'image/jpeg',
+                'gif'          => 'image/gif',
+                'webp'         => 'image/webp',
+                default        => $attachment->mime_type ?? 'application/octet-stream',
+            };
         }
 
         $filePath = ($type === 'jsa' || $type === 'jsa_activity' || $type === 'ptw') ? ($attachment->file_path ?? '') : ($attachment->path ?? '');
@@ -92,9 +129,17 @@ class GeneralController extends Controller
                     : $sas;
 
                 if ($url) {
-                    // Redirect ke SAS URL langsung — lebih cepat dari streaming via PHP
-                    // Browser akan stream langsung dari Azure tanpa bottleneck PHP
-                    return redirect($url);
+                    // Stream via PHP so we control Content-Disposition header
+                    // Direct redirect to Azure causes forced download due to blob storage headers
+                    $fileContents = @file_get_contents($url);
+                    if ($fileContents === false) {
+                        abort(404, 'File tidak dapat diambil dari storage.');
+                    }
+                    return response($fileContents, 200, [
+                        'Content-Type' => $mimeType,
+                        'Content-Disposition' => 'inline; filename="' . addslashes($fileName) . '"',
+                        'Cache-Control' => 'private, max-age=300',
+                    ]);
                 }
             }
             abort(404, 'File tidak ditemukan di storage.');
@@ -102,7 +147,7 @@ class GeneralController extends Controller
 
         return response()->file($localPath, [
             'Content-Type' => $mimeType,
-            'Content-Disposition' => 'inline; filename="' . $fileName . '"',
+            'Content-Disposition' => 'inline; filename="' . addslashes($fileName) . '"',
         ]);
     }
 
@@ -112,6 +157,25 @@ class GeneralController extends Controller
     public function downloadAttachment(string $id, Request $request)
     {
         $type = $request->query('type', 'document');
+
+        // Uncontrolled copy — path passed directly via query string
+        if ($type === 'uncontrolled') {
+            $filePath = $request->query('path');
+            if (!$filePath) abort(404, 'Path tidak ditemukan.');
+            $fileName = basename($filePath);
+            $localPath = Storage::disk('public')->path($filePath);
+            if (!file_exists($localPath)) {
+                $sas = GetBlobSasUri('aims-cntr', $filePath);
+                $url = is_array($sas)
+                    ? ($sas['blobUriSas'] ?? $sas['sasUri'] ?? $sas['url'] ?? $sas['blobUri'] ?? null)
+                    : $sas;
+                if ($url) {
+                    return redirect($url);
+                }
+                abort(404, 'File tidak ditemukan.');
+            }
+            return response()->download($localPath, $fileName);
+        }
         if ($type === 'activity') {
             $attachment = \Modules\DocumentSystem\Entities\ActivityAttachment::findOrFail($id);
             $fileName = $attachment->name;

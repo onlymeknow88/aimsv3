@@ -9,18 +9,27 @@ export default function useDashboard(initialEvents = [], initialSlideshows = [])
     const [slidesData, setSlidesData] = useState(initialSlideshows);
     const [generalStats, setGeneralStats] = useState(null);
     const [newsItems, setNewsItems] = useState([]);
+    const [coeStats, setCoeStats] = useState(null);
 
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         setLoading(true);
-        axios.get('/api/dashboard/data')
-            .then(res => {
-                if (res.data?.result) {
-                    setCoeEvents(res.data.result.coeEvents || []);
-                    setSlidesData(res.data.result.slideshows || []);
-                    setGeneralStats(res.data.result.generalStats || null);
-                    setNewsItems(res.data.result.newsItems || []);
+
+        // Fetch dashboard data + COE stats secara paralel
+        Promise.all([
+            axios.get('/api/dashboard/data'),
+            axios.get('/api/dashboard/coe/stats'),
+        ])
+            .then(([dashRes, statsRes]) => {
+                if (dashRes.data?.result) {
+                    setCoeEvents(dashRes.data.result.coeEvents || []);
+                    setSlidesData(dashRes.data.result.slideshows || []);
+                    setGeneralStats(dashRes.data.result.generalStats || null);
+                    setNewsItems(dashRes.data.result.newsItems || []);
+                }
+                if (statsRes.data?.result) {
+                    setCoeStats(statsRes.data.result);
                 }
             })
             .catch(err => {
@@ -63,5 +72,6 @@ export default function useDashboard(initialEvents = [], initialSlideshows = [])
         loading,
         generalStats,
         newsItems,
+        coeStats,
     };
 }

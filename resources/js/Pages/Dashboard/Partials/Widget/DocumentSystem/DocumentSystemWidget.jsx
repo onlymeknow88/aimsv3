@@ -1,8 +1,88 @@
-import React, { useCallback, useEffect, useState } from 'react';
 import { FileText, RefreshCw } from 'lucide-react';
-import axios from 'axios';
+
 import DocumentSystemDoughnut from './DocumentSystemDoughnut';
 import DocumentSystemSummary from './DocumentSystemSummary';
+import React from 'react';
+import useDocumentSystemWidget from './useDocumentSystemWidget';
+
+// ── Loading skeleton ─────────────────────────────────────────────────────────
+function LoadingSkeleton() {
+    return (
+        <>
+            <style>{`
+                @keyframes docsys-pulse {
+                    0%, 100% { opacity: 1; }
+                    50% { opacity: 0.4; }
+                }
+            `}</style>
+            <div className="docsys-grid">
+                {/* Left skeleton — 3 summary blocks */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                    {[1, 2, 3].map(i => (
+                        <div key={i} style={{
+                            backgroundColor: '#f8fafc',
+                            border: '1px solid #e2e8f0',
+                            borderRadius: '12px',
+                            padding: '14px 16px',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '10px',
+                            animation: 'docsys-pulse 1.5s infinite',
+                        }}>
+                            <div style={{ height: '12px', backgroundColor: '#e2e8f0', borderRadius: '4px', width: '60%' }} />
+                            <div style={{ height: '26px', backgroundColor: '#e2e8f0', borderRadius: '6px', width: '40%' }} />
+                            <div style={{ height: '10px', backgroundColor: '#e2e8f0', borderRadius: '999px', width: '100%' }} />
+                            <div style={{ height: '11px', backgroundColor: '#e2e8f0', borderRadius: '4px', width: '50%' }} />
+                        </div>
+                    ))}
+                </div>
+
+                {/* Right skeleton — charts grid */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                    {/* Top row — 2 doughnuts */}
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                        {[1, 2].map(i => (
+                            <div key={i} style={{
+                                backgroundColor: '#f8fafc',
+                                border: '1px solid #e2e8f0',
+                                borderRadius: '12px',
+                                padding: '16px',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                alignItems: 'center',
+                                gap: '12px',
+                                animation: 'docsys-pulse 1.5s infinite',
+                            }}>
+                                <div style={{ width: '120px', height: '120px', backgroundColor: '#e2e8f0', borderRadius: '50%' }} />
+                                <div style={{ height: '12px', backgroundColor: '#e2e8f0', borderRadius: '4px', width: '70%' }} />
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* Bottom row — category bars */}
+                    <div style={{
+                        backgroundColor: '#f8fafc',
+                        border: '1px solid #e2e8f0',
+                        borderRadius: '12px',
+                        padding: '16px',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '12px',
+                        animation: 'docsys-pulse 1.5s infinite',
+                    }}>
+                        <div style={{ height: '12px', backgroundColor: '#e2e8f0', borderRadius: '4px', width: '50%' }} />
+                        {[1, 2, 3, 4].map(i => (
+                            <div key={i} style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                                <div style={{ height: '10px', backgroundColor: '#e2e8f0', borderRadius: '4px', flex: 1 }} />
+                                <div style={{ height: '10px', backgroundColor: '#e2e8f0', borderRadius: '4px', width: '40px' }} />
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </div>
+        </>
+    );
+}
 
 // ── Error state ───────────────────────────────────────────────────────────────
 function ErrorState({ onRetry }) {
@@ -50,42 +130,7 @@ function ErrorState({ onRetry }) {
  *              current year when omitted.
  */
 export default function DocumentSystemWidget({ filters = {} }) {
-    const [stats,   setStats]   = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [error,   setError]   = useState(false);
-
-    const fetchStats = useCallback(async (currentFilters) => {
-        setLoading(true);
-        setError(false);
-        try {
-            // Normalise array values to comma-separated strings for the query
-            const params = {};
-            if (currentFilters.years)     params.years     = Array.isArray(currentFilters.years)     ? currentFilters.years.join(',')     : currentFilters.years;
-            if (currentFilters.months)    params.months    = Array.isArray(currentFilters.months)    ? currentFilters.months.join(',')    : currentFilters.months;
-            if (currentFilters.companies) params.companies = Array.isArray(currentFilters.companies) ? currentFilters.companies.join(',') : currentFilters.companies;
-
-            const res = await axios.get('/api/portal/document-system/stats', { params });
-            if (res.data?.meta?.code === 200) {
-                setStats(res.data.data);
-            } else {
-                setError(true);
-            }
-        } catch {
-            setError(true);
-        } finally {
-            setLoading(false);
-        }
-    }, []);
-
-    // Re-fetch whenever filters change
-    useEffect(() => {
-        fetchStats(filters);
-    }, [
-        filters?.years,
-        filters?.months,
-        filters?.companies,
-        fetchStats,
-    ]);
+    const { stats, loading, error, refetch } = useDocumentSystemWidget(filters);
 
     return (
         <div style={{
@@ -105,7 +150,7 @@ export default function DocumentSystemWidget({ filters = {} }) {
                 marginBottom: '20px',
             }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <FileText size={16} style={{ color: '#00552F' }} />
+                    <FileText size={16} style={{ color: 'var(--primary)' }} />
                     <h4 style={{
                         fontSize: '14.5px',
                         fontWeight: 700,
@@ -133,23 +178,31 @@ export default function DocumentSystemWidget({ filters = {} }) {
                     from { transform: rotate(0deg); }
                     to   { transform: rotate(360deg); }
                 }
+                .docsys-grid {
+                    display: grid;
+                    grid-template-columns: minmax(220px, 1fr) minmax(0, 3fr);
+                    gap: 24px;
+                    align-items: start;
+                }
+                @media (max-width: 768px) {
+                    .docsys-grid {
+                        grid-template-columns: 1fr;
+                    }
+                }
             `}</style>
 
             {/* ── Content ──────────────────────────────────────────────────── */}
             {error ? (
-                <ErrorState onRetry={() => fetchStats(filters)} />
+                <ErrorState onRetry={refetch} />
+            ) : loading ? (
+                <LoadingSkeleton />
             ) : (
-                <div style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'minmax(0, 4fr) minmax(0, 8fr)',
-                    gap: '24px',
-                    alignItems: 'start',
-                }}>
-                    {/* Left — summary stats */}
-                    <DocumentSystemSummary stats={stats} loading={loading} />
+                <div className="docsys-grid">
+                    {/* Left — YTD + KPI cards */}
+                    <DocumentSystemSummary stats={stats} loading={false} />
 
-                    {/* Right — doughnut charts + category bar */}
-                    <DocumentSystemDoughnut stats={stats} loading={loading} />
+                    {/* Right — donuts + line chart + category */}
+                    <DocumentSystemDoughnut stats={stats} loading={false} />
                 </div>
             )}
         </div>

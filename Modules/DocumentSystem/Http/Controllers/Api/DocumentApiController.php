@@ -477,20 +477,13 @@ class DocumentApiController extends Controller
             $doc->update(['status' => '3', 'approved_by_crs' => $userId, 'approved_at_crs' => now()]);
         } else {
             // ── Level 2 (PJA / Final Approval) ───────────────────────────────
-            // 1. Rename attachments to FINAL_ in blob storage
-            try {
-                $docService = new DocumentSystemService();
-                $docService->renameToBlobFinal($doc);
-            } catch (\Exception $e) {
-                \Log::error('Failed to rename blobs to FINAL_ on final approval: ' . $e->getMessage());
-            }
-
-            // 2. Apply watermark to the latest PDF attachment and store as uncontrolled copy
+            // 1. Apply watermark BEFORE renaming so we use the original blob path
             $uncontrolledPath       = null;
             $uncontrolledBlobUrl    = null;
             $uncontrolledBlobRespon = null;
             try {
-                $latestAttachment = $doc->attachments()
+                // Query fresh from DB to avoid stale eager-loaded relation
+                $latestAttachment = Attachment::where('document_id', $doc->id)
                     ->where('file_type', 'pdf')
                     ->latest()
                     ->first();
@@ -502,26 +495,58 @@ class DocumentApiController extends Controller
                         : $sas;
 
                     if ($sasUrl) {
+                        // Use FINAL-{original_filename} for uncontrolled copy
+                        $originalFileName = $latestAttachment->file_name ?? 'document.pdf';
+                        // Strip any existing FINAL_ prefix to avoid duplication
+                        $cleanFileName = preg_replace('/^FINAL[_-]/', '', $originalFileName);
+                        $uncontrolledFileName = 'FINAL-' . $cleanFileName;
+
                         $watermarkService = app(WatermarkService::class);
-                        $watermarkedTmp   = $watermarkService->applyWatermark($sasUrl, $latestAttachment->file_name ?? 'document.pdf', 'review');
+                        $watermarkedTmp = $watermarkService->applyWatermark(
+                            $sasUrl,
+                            $uncontrolledFileName,
+                            'review'
+                        );
 
                         // Upload watermarked file to the 'uncontrolled' subfolder
-                        $uncontrolledFileName = 'UNCONTROLLED_' . ($latestAttachment->file_name ?? 'document.pdf');
-                        $uploadResult = uploadToBlobStorage($uncontrolledFileName, $watermarkedTmp, 'document-systems-files/uncontrolled');
+                        $uploadResult = uploadToBlobStorage(
+                            $uncontrolledFileName,
+                            $watermarkedTmp,
+                            'document-systems-files/uncontrolled'
+                        );
 
-                        // Clean up temp file
+                        \Log::info('Uncontrolled upload result', [
+                            'doc_id'       => $doc->id,
+                            'fileName'     => $uncontrolledFileName,
+                            'uploadResult' => $uploadResult,
+                        ]);
+
+                        // Clean up temp file after upload
                         $watermarkService->cleanup($watermarkedTmp);
 
                         if ($uploadResult && !empty($uploadResult['fileBlobPathName'])) {
-                            $uncontrolledPath    = $uploadResult['fileBlobPathName'];
-                            $uncontrolledBlobUrl = $uploadResult['fileBlobUrl'] ?? null;
+                            $uncontrolledPath       = $uploadResult['fileBlobPathName'];
+                            $uncontrolledBlobUrl    = $uploadResult['fileBlobUrl'] ?? null;
                             $uncontrolledBlobRespon = json_encode($uploadResult['blobResponse'] ?? []);
+                        } else {
+                            \Log::error('Uncontrolled upload returned empty fileBlobPathName', [
+                                'doc_id' => $doc->id,
+                                'result' => $uploadResult,
+                            ]);
                         }
                     }
                 }
             } catch (\Exception $e) {
                 // Non-fatal: log but continue with approval
                 \Log::error('WatermarkService failed on final approval for doc ' . $doc->id . ': ' . $e->getMessage());
+            }
+
+            // 2. Rename attachments to FINAL_ in blob storage (after watermark)
+            try {
+                $docService = new DocumentSystemService();
+                $docService->renameToBlobFinal($doc);
+            } catch (\Exception $e) {
+                \Log::error('Failed to rename blobs to FINAL_ on final approval: ' . $e->getMessage());
             }
 
             // 3. Update document status to ACTIVE and store uncontrolled path if generated
@@ -625,7 +650,7 @@ class DocumentApiController extends Controller
      */
     public function show(string $id)
     {
-        $document = Document::with(['company', 'department', 'areaManager.user', 'owner', 'creator', 'mapping.category.module', 'attachments', 'invitedPeople', 'activities.user', 'activities.attachments'])
+        $document = Document::with(['company', 'department', 'areaManager.user', 'owner', 'creator', 'mapping.category.module', 'attachments', 'invitedPeople', 'activities.user', 'activities.attachments', 'approvedByCrsUser', 'approvedByPjaUser'])
             ->findOrFail($id);
 
         // Dynamically resolve legacy UUIDs stored in email column

@@ -1,5 +1,6 @@
+import { ChevronDown, ChevronUp, FileText, TrendingDown, TrendingUp } from 'lucide-react';
+
 import React from 'react';
-import { ChevronDown, ChevronUp, FileText } from 'lucide-react';
 
 // ── Skeleton ──────────────────────────────────────────────────────────────────
 function SkeletonBlock({ width = '100%', height = '14px', radius = '6px' }) {
@@ -15,7 +16,7 @@ function SkeletonBlock({ width = '100%', height = '14px', radius = '6px' }) {
 }
 
 // ── Progress bar ──────────────────────────────────────────────────────────────
-function ProgressBar({ percent, color = '#00552F' }) {
+function ProgressBar({ percent, color = '#153B73' }) {
     const clamped = Math.min(100, Math.max(0, percent));
     return (
         <div style={{
@@ -73,46 +74,82 @@ function ComparisonRow({ label, done, target, percent }) {
     );
 }
 
-// ── Main component ────────────────────────────────────────────────────────────
-export default function DocumentSystemSummary({ stats, loading }) {
+// ── KPI Card ──────────────────────────────────────────────────────────────────
+function KpiCard({ label, actual, target, mark, color = '#153B73', loading }) {
+    const isUp = mark === 'up';
+    const percent = target > 0 ? Math.round((actual / target) * 100) : 0;
+
     if (loading) {
         return (
-            <>
-                <style>{`
-                    @keyframes docsummary-pulse {
-                        0%, 100% { opacity: 1; }
-                        50%       { opacity: 0.45; }
-                    }
-                `}</style>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                    {/* YTD skeleton */}
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                        <SkeletonBlock width="60%" height="12px" />
-                        <SkeletonBlock height="10px" radius="999px" />
-                        <SkeletonBlock width="40%" height="11px" />
-                    </div>
-                    {/* Monthly skeleton */}
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                        <SkeletonBlock width="50%" height="12px" />
-                        <SkeletonBlock height="10px" radius="999px" />
-                        <SkeletonBlock height="10px" radius="999px" />
-                    </div>
-                    {/* Yearly skeleton */}
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                        <SkeletonBlock width="50%" height="12px" />
-                        <SkeletonBlock height="10px" radius="999px" />
-                        <SkeletonBlock height="10px" radius="999px" />
-                    </div>
-                </div>
-            </>
+            <div style={{
+                backgroundColor: '#f8fafc',
+                border: '1px solid #e2e8f0',
+                borderRadius: '12px',
+                padding: '16px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '10px',
+                animation: 'docsummary-pulse 1.5s infinite',
+            }}>
+                <SkeletonBlock width="60%" height="11px" />
+                <SkeletonBlock width="40%" height="28px" />
+                <SkeletonBlock height="10px" radius="999px" />
+                <SkeletonBlock width="50%" height="11px" />
+            </div>
         );
     }
 
+    return (
+        <div style={{
+            backgroundColor: '#f8fafc',
+            border: '1px solid #e2e8f0',
+            borderRadius: '12px',
+            padding: '16px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '8px',
+        }}>
+            <span style={{ fontSize: '11px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                {label}
+            </span>
+
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', flexWrap: 'wrap' }}>
+                <span style={{ fontSize: '28px', fontWeight: 800, color, lineHeight: 1 }}>
+                    {actual.toLocaleString('id-ID')}
+                </span>
+                <span style={{ fontSize: '12px', color: '#94a3b8' }}>
+                    / {target.toLocaleString('id-ID')} target
+                </span>
+            </div>
+
+            <ProgressBar percent={percent} color={color} />
+
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '11px', color: '#94a3b8' }}>{percent}% selesai</span>
+                {mark && (
+                    <span style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '3px',
+                        fontSize: '10px',
+                        fontWeight: 700,
+                        color: isUp ? '#065f46' : '#991b1b',
+                    }}>
+                        {isUp ? <TrendingUp size={11} /> : <TrendingDown size={11} />}
+                        {isUp ? 'Naik' : 'Turun'} VS LY
+                    </span>
+                )}
+            </div>
+        </div>
+    );
+}
+
+// ── Main component ────────────────────────────────────────────────────────────
+export default function DocumentSystemSummary({ stats, loading }) {
     const ytd            = stats?.ytd            ?? { target: 0, actual: 0 };
     const summaryMonthly = stats?.summary_monthly ?? {};
     const summaryYearly  = stats?.summary_yearly  ?? {};
-
-    const ytdPercent = ytd.target > 0 ? Math.round((ytd.actual / ytd.target) * 100) : 0;
+    const ytdPercent     = ytd.target > 0 ? Math.round((ytd.actual / ytd.target) * 100) : 0;
 
     return (
         <>
@@ -123,106 +160,81 @@ export default function DocumentSystemSummary({ stats, loading }) {
                 }
             `}</style>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
 
-                {/* ── YTD Target vs Actual ─────────────────────────────────── */}
-                <div style={{
-                    backgroundColor: '#f8fafc',
-                    border: '1px solid #e2e8f0',
-                    borderRadius: '12px',
-                    padding: '14px 16px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '10px',
-                }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <FileText size={13} style={{ color: '#00552F' }} />
-                        <span style={{ fontSize: '11px', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                            YTD Target vs Aktual
+                {/* ── YTD — besar di atas ──────────────────────────────────── */}
+                {loading ? (
+                    <div style={{
+                        backgroundColor: '#00552F',
+                        borderRadius: '12px',
+                        padding: '16px 20px',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '10px',
+                        animation: 'docsummary-pulse 1.5s infinite',
+                    }}>
+                        <SkeletonBlock width="50%" height="11px" />
+                        <SkeletonBlock width="35%" height="36px" />
+                        <SkeletonBlock height="8px" radius="999px" />
+                    </div>
+                ) : (
+                    <div style={{
+                        background: 'linear-gradient(135deg, #153B73, #1E4E96)',
+                        borderRadius: '12px',
+                        padding: '16px 20px',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '8px',
+                        color: '#fff',
+                    }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <FileText size={13} style={{ color: 'rgba(255,255,255,0.7)' }} />
+                            <span style={{ fontSize: '11px', fontWeight: 700, color: 'rgba(255,255,255,0.8)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                                YTD — Target vs Aktual
+                            </span>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'baseline', gap: '10px' }}>
+                            <span style={{ fontSize: '36px', fontWeight: 800, lineHeight: 1 }}>
+                                {ytd.actual.toLocaleString('id-ID')}
+                            </span>
+                            <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.7)' }}>
+                                / {ytd.target.toLocaleString('id-ID')} target
+                            </span>
+                        </div>
+                        <div style={{ height: '6px', backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: '999px', overflow: 'hidden' }}>
+                            <div style={{
+                                width: `${ytdPercent}%`,
+                                height: '100%',
+                                backgroundColor: '#FF8C24',
+                                borderRadius: '999px',
+                                transition: 'width 0.6s ease',
+                            }} />
+                        </div>
+                        <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.7)', textAlign: 'right' }}>
+                            {ytdPercent}% dari target tahun ini
                         </span>
                     </div>
+                )}
 
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-                        <span style={{ fontSize: '26px', fontWeight: 800, color: '#00552F', lineHeight: 1 }}>
-                            {ytd.actual.toLocaleString('id-ID')}
-                        </span>
-                        <span style={{ fontSize: '13px', color: '#94a3b8' }}>
-                            Target: <strong style={{ color: '#475569' }}>{ytd.target.toLocaleString('id-ID')}</strong>
-                        </span>
-                    </div>
+                {/* ── This Month ───────────────────────────────────────────── */}
+                <KpiCard
+                    label="Bulan Ini"
+                    actual={summaryMonthly.this_month_done   ?? 0}
+                    target={summaryMonthly.this_month_target ?? 0}
+                    mark={summaryMonthly.this_month_mark}
+                    color="#153B73"
+                    loading={loading}
+                />
 
-                    <ProgressBar percent={ytdPercent} color="#00552F" />
-
-                    <span style={{ fontSize: '11px', color: '#94a3b8', textAlign: 'right' }}>
-                        {ytdPercent}% dari target tahun ini
-                    </span>
-                </div>
-
-                {/* ── Monthly Comparison ───────────────────────────────────── */}
-                <div style={{
-                    backgroundColor: '#f8fafc',
-                    border: '1px solid #e2e8f0',
-                    borderRadius: '12px',
-                    padding: '14px 16px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '12px',
-                }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ fontSize: '11px', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                            Perbandingan Bulanan
-                        </span>
-                        {summaryMonthly.this_month_mark && (
-                            <TrendBadge mark={summaryMonthly.this_month_mark} />
-                        )}
-                    </div>
-
-                    <ComparisonRow
-                        label="Bulan Ini"
-                        done={summaryMonthly.this_month_done   ?? 0}
-                        target={summaryMonthly.this_month_target ?? 0}
-                        percent={summaryMonthly.this_month_percent ?? 0}
-                    />
-                    <ComparisonRow
-                        label="Bulan Lalu"
-                        done={summaryMonthly.past_month_done   ?? 0}
-                        target={summaryMonthly.past_month_target ?? 0}
-                        percent={summaryMonthly.past_month_percent ?? 0}
-                    />
-                </div>
-
-                {/* ── Yearly Comparison ────────────────────────────────────── */}
-                <div style={{
-                    backgroundColor: '#f8fafc',
-                    border: '1px solid #e2e8f0',
-                    borderRadius: '12px',
-                    padding: '14px 16px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '12px',
-                }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ fontSize: '11px', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                            Perbandingan Tahunan
-                        </span>
-                        {summaryYearly.this_year_mark && (
-                            <TrendBadge mark={summaryYearly.this_year_mark} />
-                        )}
-                    </div>
-
-                    <ComparisonRow
-                        label="Tahun Ini"
-                        done={summaryYearly.this_year_done   ?? 0}
-                        target={summaryYearly.this_year_target ?? 0}
-                        percent={summaryYearly.this_year_percent ?? 0}
-                    />
-                    <ComparisonRow
-                        label="Tahun Lalu"
-                        done={summaryYearly.past_year_done   ?? 0}
-                        target={summaryYearly.past_year_target ?? 0}
-                        percent={summaryYearly.past_year_percent ?? 0}
-                    />
-                </div>
+                {/* ── This Year ────────────────────────────────────────────── */}
+                <KpiCard
+                    label="Tahun Ini"
+                    actual={summaryYearly.this_year_done   ?? 0}
+                    target={summaryYearly.this_year_target ?? 0}
+                    mark={summaryYearly.this_year_mark}
+                    color="#153B73"
+                    loading={loading}
+                />
 
             </div>
         </>
