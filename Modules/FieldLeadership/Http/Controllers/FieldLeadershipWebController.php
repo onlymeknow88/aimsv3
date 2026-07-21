@@ -29,52 +29,37 @@ class FieldLeadershipWebController extends Controller
     }
 
     /**
-     * Daftar semua observasi (PTO + TTT + HR).
+     * Listing Field Leadership (Active).
      */
     public function observations()
     {
-
         return inertia('FieldLeadership/Observations/Index', [
             'defaultType' => '',
         ]);
     }
 
     /**
-     * Daftar observasi PTO saja.
-     */
-    public function pto()
-    {
-        return inertia('FieldLeadership/Observations/Index', [
-            'defaultType' => 'Planned Task Observation',
-        ]);
-    }
-
-    /**
-     * Daftar observasi TTT saja.
-     */
-    public function ttt()
-    {
-        return inertia('FieldLeadership/Observations/Index', [
-            'defaultType' => 'Take Time Talk',
-        ]);
-    }
-
-    /**
-     * Daftar observasi Hazard Report saja.
-     */
-    public function hr()
-    {
-        return inertia('FieldLeadership/Observations/Index', [
-            'defaultType' => 'Hazard Report',
-        ]);
-    }
-
-    /**
      * Form buat observasi baru.
+     * Semua master data di-fetch oleh useObservationForm hook via API.
      */
     public function create()
     {
         return inertia('FieldLeadership/Observations/Create');
+    }
+
+    /**
+     * Form edit observasi yang sudah ada.
+     * Hanya pass editId — hook fetch semua data via API.
+     */
+    public function edit($id)
+    {
+        if (! DB::table('field_leaderships')->where('id', $id)->exists()) {
+            abort(404);
+        }
+
+        return inertia('FieldLeadership/Observations/Create', [
+            'editId' => $id,
+        ]);
     }
 
     /**
@@ -88,41 +73,43 @@ class FieldLeadershipWebController extends Controller
     }
 
     /**
-     * Daftar risk finding.
+     * Penanggung Jawab Area - Request Review.
      */
-    public function risks()
+    public function pjaRequestReview()
     {
-        return inertia('FieldLeadership/Risks/Index');
+        return inertia('FieldLeadership/Pja/Index', [
+            'defaultStatus' => 'On Review PJA',
+            'title' => 'PJA — Request Review'
+        ]);
     }
 
     /**
-
-     * Daftar corrective actions — redirect ke risks dengan filter.
+     * Penanggung Jawab Area - Draft.
      */
-    public function correctiveActions()
+    public function pjaDraft()
     {
-
-        return inertia('FieldLeadership/Risks/Index');
+        return inertia('FieldLeadership/Pja/Index', [
+            'defaultStatus' => 'Draft',
+            'title' => 'PJA — Draft'
+        ]);
     }
 
     /**
-     * Master data (categories, KTA/TTA, potency).
+     * Approval PJA.
      */
+    public function approvalPja()
+    {
+        return inertia('FieldLeadership/Pja/Index', [
+            'defaultStatus' => 'On Review Approval',
+            'title' => 'Approval PJA'
+        ]);
+    }
 
+    /**
+     * Master Library (Limit Parameter, Jenis KTA/TTA, Potensi Konsekuensi).
+     */
     public function master(Request $request)
     {
         return inertia('FieldLeadership/Master/Index');
-    }
-
-    /**
-     * Settings / parameters modul.
-     */
-    public function settings()
-    {
-        $params = DB::table('field_leadership_parameters')->first();
-
-        return inertia('FieldLeadership/Settings/Index', [
-            'params' => $params,
-        ]);
     }
 }

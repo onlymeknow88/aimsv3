@@ -1,11 +1,8 @@
 import React, { useMemo } from 'react';
-import { useReactTable, getCoreRowModel, getFilteredRowModel, flexRender } from '@tanstack/react-table';
+import { useReactTable, getCoreRowModel, flexRender } from '@tanstack/react-table';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
 import { Checkbox } from '@/components/ui/checkbox';
-import {
-    Pagination, PaginationContent, PaginationEllipsis,
-    PaginationItem, PaginationLink, PaginationNext, PaginationPrevious,
-} from '@/components/ui/pagination';
+import TablePagination from '@/Components/TablePagination';
 import { Eye } from 'lucide-react';
 
 const STATUS_CONFIG = {
@@ -15,6 +12,7 @@ const STATUS_CONFIG = {
     'On Review Approval':   { text: 'ON REVIEW APPRVL', color: 'var(--accent)',   bg: 'rgba(255,140,36,0.08)' },
     'Overdue':              { text: 'OVERDUE',           color: 'var(--danger)',   bg: 'rgba(239,68,68,0.08)'  },
     'Closed':               { text: 'CLOSED',            color: 'var(--success)',  bg: 'rgba(34,197,94,0.08)'  },
+    'Draft':                { text: 'DRAFT',             color: '#64748b',         bg: '#f1f5f9'               },
 };
 
 const TYPE_CONFIG = {
@@ -33,8 +31,6 @@ export default function ObservationsTable({
     onPageChange,
     limit = 10,
     onLimitChange,
-    columnFilters,
-    onColumnFilterChange,
     onView,
 }) {
     const isAllSelected = documents.length > 0 && selectedIds.length === documents.length;
@@ -47,6 +43,7 @@ export default function ObservationsTable({
         onSelectionChange(checked ? [...selectedIds, id] : selectedIds.filter(x => x !== id));
     };
 
+    // Columns matching legacy table-maker.blade.php
     const columns = useMemo(() => [
         {
             id: 'select',
@@ -59,10 +56,15 @@ export default function ObservationsTable({
             ),
         },
         {
+            id: 'company',
+            header: 'Company',
+            cell: ({ row }) => <span style={{ fontSize: '12px', fontWeight: 600 }}>{row.original.company_name || '—'}</span>,
+        },
+        {
             id: 'date',
-            header: 'Tanggal',
+            header: 'Date',
             cell: ({ row }) => (
-                <span style={{ fontSize: '12px', fontWeight: 600 }}>
+                <span style={{ fontSize: '12px' }}>
                     {row.original.date
                         ? new Date(row.original.date).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })
                         : '—'}
@@ -70,8 +72,38 @@ export default function ObservationsTable({
             ),
         },
         {
+            id: 'ccow',
+            header: 'CCOW',
+            cell: ({ row }) => <span style={{ fontSize: '12px' }}>{row.original.ccow_name || '—'}</span>,
+        },
+        {
+            id: 'detail_company',
+            header: 'Detail Company',
+            cell: ({ row }) => <span style={{ fontSize: '12px' }}>{row.original.detail_company || '—'}</span>,
+        },
+        {
+            id: 'department',
+            header: 'Department',
+            cell: ({ row }) => <span style={{ fontSize: '12px' }}>{row.original.department_name || '—'}</span>,
+        },
+        {
+            id: 'section',
+            header: 'Section',
+            cell: ({ row }) => <span style={{ fontSize: '12px' }}>{row.original.section_name || '—'}</span>,
+        },
+        {
+            id: 'location',
+            header: 'Location',
+            cell: ({ row }) => <span style={{ fontSize: '12px' }}>{row.original.area_location_name || '—'}</span>,
+        },
+        {
+            id: 'detail_location',
+            header: 'Detail Location',
+            cell: ({ row }) => <span style={{ fontSize: '12px' }}>{row.original.detail_location || '—'}</span>,
+        },
+        {
             id: 'type',
-            header: 'Tipe',
+            header: 'Type',
             cell: ({ row }) => {
                 const cfg = TYPE_CONFIG[row.original.type] ?? { text: row.original.type, color: '#64748b', bg: '#f1f5f9' };
                 return (
@@ -82,24 +114,24 @@ export default function ObservationsTable({
             },
         },
         {
-            id: 'company',
-            header: 'Company',
-            cell: ({ row }) => <span style={{ fontSize: '12px' }}>{row.original.company_name || '—'}</span>,
+            id: 'members',
+            header: 'Members',
+            cell: ({ row }) => <span style={{ fontSize: '12px' }}>{row.original.members_count || row.original.members?.length || '—'}</span>,
         },
         {
-            id: 'department',
-            header: 'Departemen',
-            cell: ({ row }) => <span style={{ fontSize: '12px' }}>{row.original.department_name || '—'}</span>,
+            id: 'positive_condition',
+            header: 'Positive Condition',
+            cell: ({ row }) => <span style={{ fontSize: '12px' }}>{row.original.positives_count || row.original.positives?.length || '—'}</span>,
         },
         {
-            id: 'job',
-            header: 'Pekerjaan',
-            cell: ({ row }) => <span style={{ fontSize: '12px' }}>{row.original.job || '—'}</span>,
+            id: 'risk_condition',
+            header: 'Risk Condition',
+            cell: ({ row }) => <span style={{ fontSize: '12px' }}>{row.original.risks_count || row.original.risks?.length || '—'}</span>,
         },
         {
-            id: 'created_by',
-            header: 'Dibuat Oleh',
-            cell: ({ row }) => <span style={{ fontSize: '12px' }}>{row.original.created_by_name || '—'}</span>,
+            id: 'repair_action',
+            header: 'Repair Action',
+            cell: ({ row }) => <span style={{ fontSize: '12px' }}>{row.original.repair_action || '—'}</span>,
         },
         {
             id: 'status',
@@ -135,14 +167,21 @@ export default function ObservationsTable({
     const columnVisibility = useMemo(() => {
         if (!visibleColumns) return {};
         return {
-            date:        visibleColumns['Tanggal']    ?? true,
-            type:        visibleColumns['Tipe']       ?? true,
-            company:     visibleColumns['Company']    ?? true,
-            department:  visibleColumns['Departemen'] ?? true,
-            job:         visibleColumns['Pekerjaan']  ?? true,
-            created_by:  visibleColumns['Dibuat Oleh']?? true,
-            status:      visibleColumns['Status']     ?? true,
-            actions:     visibleColumns['Aksi']       ?? true,
+            date:               visibleColumns['Date']               ?? true,
+            ccow:               visibleColumns['CCOW']               ?? true,
+            company:            visibleColumns['Company']            ?? true,
+            detail_company:     visibleColumns['Detail Company']     ?? true,
+            department:         visibleColumns['Department']         ?? true,
+            section:            visibleColumns['Section']            ?? true,
+            location:           visibleColumns['Location']           ?? true,
+            detail_location:    visibleColumns['Detail Location']    ?? true,
+            type:               visibleColumns['Type']               ?? true,
+            members:            visibleColumns['Members']            ?? true,
+            positive_condition: visibleColumns['Positive Condition'] ?? true,
+            risk_condition:     visibleColumns['Risk Condition']     ?? true,
+            repair_action:      visibleColumns['Repair Action']      ?? true,
+            status:             visibleColumns['Status']             ?? true,
+            actions:            visibleColumns['Aksi']               ?? true,
         };
     }, [visibleColumns]);
 
@@ -151,117 +190,59 @@ export default function ObservationsTable({
         columns,
         state: { columnVisibility },
         getCoreRowModel: getCoreRowModel(),
-        getFilteredRowModel: getFilteredRowModel(),
     });
 
-    const visibleColsCount = table.getVisibleFlatColumns().length;
 
-    const getPageNumbers = () => {
-        if (!pagination) return [];
-        const { current_page, last_page } = pagination;
-        const pages = [];
-        const start = Math.max(1, current_page - 2);
-        const end   = Math.min(last_page, current_page + 2);
-        if (start > 1) { pages.push(1); if (start > 2) pages.push('ellipsis'); }
-        for (let i = start; i <= end; i++) pages.push(i);
-        if (end < last_page) { if (end < last_page - 1) pages.push('ellipsis'); pages.push(last_page); }
-        return pages;
-    };
-
-    const searchableIds = ['company', 'department', 'job'];
 
     return (
-        <>
-            <div style={{ width: '100%', overflowX: 'auto', WebkitOverflowScrolling: 'touch', border: '1px solid var(--border-color)', borderRadius: '8px', marginBottom: '16px' }}>
-                <Table style={{ fontSize: '12px', minWidth: '900px' }}>
-                    <TableHeader>
-                        {table.getHeaderGroups().map(hg => (
-                            <TableRow key={hg.id}>
-                                {hg.headers.map(h => {
-                                    const isSearchable = searchableIds.includes(h.id);
-                                    return (
-                                        <TableHead key={h.id} style={{ fontWeight: 700, color: 'var(--text-secondary)', padding: '10px 12px', verticalAlign: 'top' }}>
-                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', minWidth: isSearchable ? '120px' : 'auto' }}>
-                                                <span>{flexRender(h.column.columnDef.header, h.getContext())}</span>
-                                                {isSearchable && onColumnFilterChange && (
-                                                    <input
-                                                        type="text"
-                                                        placeholder="Cari..."
-                                                        value={columnFilters?.[h.id] || ''}
-                                                        onChange={e => onColumnFilterChange(h.id, e.target.value)}
-                                                        onClick={e => e.stopPropagation()}
-                                                        style={{ width: '100%', padding: '4px 8px', fontSize: '11px', fontWeight: 'normal', border: '1px solid #e2e8f0', borderRadius: '4px', outline: 'none', boxSizing: 'border-box', color: '#334155', backgroundColor: '#fff' }}
-                                                    />
-                                                )}
-                                            </div>
-                                        </TableHead>
-                                    );
-                                })}
+        <div>
+            <div className="overflow-x-auto">
+                <Table>
+                    <TableHeader style={{ backgroundColor: 'var(--header-bg, #f8fafc)' }}>
+                        {table.getHeaderGroups().map(headerGroup => (
+                            <TableRow key={headerGroup.id}>
+                                {headerGroup.headers.map(header => (
+                                    <TableHead key={header.id} style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)', padding: '10px 14px', whiteSpace: 'nowrap' }}>
+                                        {flexRender(header.column.columnDef.header, header.getContext())}
+                                    </TableHead>
+                                ))}
                             </TableRow>
                         ))}
                     </TableHeader>
                     <TableBody>
                         {loading ? (
                             <TableRow>
-                                <TableCell colSpan={visibleColsCount} style={{ textAlign: 'center', padding: '40px 24px', color: 'var(--text-secondary)' }}>
-                                    Memuat data observasi...
+                                <TableCell colSpan={columns.length} className="text-center py-8 text-xs text-gray-400">
+                                    Memuat data Field Leadership...
                                 </TableCell>
                             </TableRow>
-                        ) : table.getRowModel().rows.length > 0 ? (
+                        ) : table.getRowModel().rows.length === 0 ? (
+                            <TableRow>
+                                <TableCell colSpan={columns.length} className="text-center py-8 text-xs text-gray-400">
+                                    Belum ada data Field Leadership.
+                                </TableCell>
+                            </TableRow>
+                        ) : (
                             table.getRowModel().rows.map(row => (
-                                <TableRow key={row.id}>
+                                <TableRow key={row.id} className="hover:bg-slate-50">
                                     {row.getVisibleCells().map(cell => (
-                                        <TableCell key={cell.id} style={{ padding: '10px 12px', whiteSpace: 'nowrap' }}>
+                                        <TableCell key={cell.id} style={{ padding: '10px 14px', whiteSpace: 'nowrap' }}>
                                             {flexRender(cell.column.columnDef.cell, cell.getContext())}
                                         </TableCell>
                                     ))}
                                 </TableRow>
                             ))
-                        ) : (
-                            <TableRow>
-                                <TableCell colSpan={visibleColsCount} style={{ padding: '32px', textAlign: 'center', color: 'var(--text-muted)' }}>
-                                    Belum ada data observasi.
-                                </TableCell>
-                            </TableRow>
                         )}
                     </TableBody>
                 </Table>
             </div>
 
-            {pagination && (
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 24px', borderTop: '1px solid #f1f5f9', backgroundColor: '#fafafa', fontSize: '13px', color: '#64748b', flexWrap: 'wrap', gap: '12px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
-                        <div>Halaman <strong>{pagination.current_page}</strong> dari <strong>{pagination.last_page}</strong> (Total <strong>{pagination.total}</strong>)</div>
-                        {onLimitChange && (
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                <span style={{ fontSize: '12px' }}>Baris:</span>
-                                <select value={limit} onChange={e => onLimitChange(Number(e.target.value))}
-                                    style={{ padding: '4px 24px 4px 8px', border: '1.5px solid #e2e8f0', borderRadius: '6px', backgroundColor: '#fff', fontSize: '12px', cursor: 'pointer', outline: 'none' }}>
-                                    {[10, 25, 50, 100].map(n => <option key={n} value={n}>{n}</option>)}
-                                </select>
-                            </div>
-                        )}
-                    </div>
-                    <Pagination className="mx-0 w-auto">
-                        <PaginationContent>
-                            <PaginationItem>
-                                <PaginationPrevious onClick={() => onPageChange(pagination.current_page - 1)}
-                                    disabled={pagination.current_page === 1}
-                                    style={{ opacity: pagination.current_page === 1 ? 0.5 : 1, cursor: pagination.current_page === 1 ? 'not-allowed' : 'pointer' }} />
-                            </PaginationItem>
-                            {getPageNumbers().map((p, idx) => p === 'ellipsis'
-                                ? <PaginationItem key={`e-${idx}`}><PaginationEllipsis /></PaginationItem>
-                                : <PaginationItem key={p}><PaginationLink isActive={p === pagination.current_page} onClick={() => onPageChange(p)}>{p}</PaginationLink></PaginationItem>
-                            )}
-                            <PaginationItem>
-                                <PaginationNext onClick={() => onPageChange(pagination.current_page + 1)}
-                                    disabled={pagination.current_page === pagination.last_page}
-                                    style={{ opacity: pagination.current_page === pagination.last_page ? 0.5 : 1, cursor: pagination.current_page === pagination.last_page ? 'not-allowed' : 'pointer' }} />
-                            </PaginationItem>
-                        </PaginationContent>
-                    </Pagination>
-                </div>
-            )}
-        </>
+            <TablePagination
+                pagination={pagination}
+                onPageChange={onPageChange}
+                limit={limit}
+                onLimitChange={onLimitChange}
+            />
+        </div>
     );
 }

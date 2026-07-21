@@ -41,17 +41,28 @@ class FieldLeadershipApiController extends Controller
         $dateTo     = $request->query('date_to', '');
 
         $query = DB::table('field_leaderships as fl')
-            ->leftJoin('companies as c',     'fl.company_id',   '=', 'c.id')
-            ->leftJoin('departments as d',   'fl.department_id','=', 'd.id')
-            ->leftJoin('employees as e',     'fl.created_by',   '=', 'e.id')
+            ->leftJoin('companies as ccow',   'fl.ccow_id',          '=', 'ccow.id')
+            ->leftJoin('companies as c',      'fl.company_id',       '=', 'c.id')
+            ->leftJoin('departments as d',    'fl.department_id',   '=', 'd.id')
+            ->leftJoin('sections as sec',     'fl.section_id',      '=', 'sec.id')
+            ->leftJoin('area_locations as loc','fl.area_location_id','=', 'loc.id')
+            ->leftJoin('employees as e',      'fl.created_by',       '=', 'e.id')
             ->select([
                 'fl.id', 'fl.date', 'fl.type', 'fl.status', 'fl.job',
                 'fl.detail_company', 'fl.detail_location', 'fl.visit_time',
                 'fl.is_area_suitable', 'fl.created_at', 'fl.updated_at',
                 'c.id as company_id',
+                DB::raw('COALESCE(ccow.company_name, \'—\') as ccow_name'),
                 DB::raw('COALESCE(c.company_name, fl.detail_company) as company_name'),
                 DB::raw('COALESCE(d.name, \'—\') as department_name'),
+                DB::raw('COALESCE(sec.name, \'—\') as section_name'),
+                DB::raw('COALESCE(loc.name, \'—\') as area_location_name'),
                 DB::raw('COALESCE(e.name, \'—\') as created_by_name'),
+                DB::raw('(SELECT count(*) FROM field_leadership_members WHERE fl_id = fl.id) as members_count'),
+                DB::raw('(SELECT count(*) FROM field_leadership_positives WHERE fl_id = fl.id) as positives_count'),
+                DB::raw('(SELECT count(*) FROM field_leadership_risks WHERE fl_id = fl.id) as risks_count'),
+                DB::raw('(SELECT risk_condition FROM field_leadership_risks WHERE fl_id = fl.id LIMIT 1) as risk_condition'),
+                DB::raw('(SELECT repair_action FROM field_leadership_risks WHERE fl_id = fl.id LIMIT 1) as repair_action'),
             ]);
 
         if ($search) {
@@ -128,7 +139,7 @@ class FieldLeadershipApiController extends Controller
         $questionPtos = DB::table('field_leadership_question_ptos')
             ->where('fl_id', $id)->get();
 
-        $risks = DB::table('field_leadership_risks as r')
+        $risksRaw = DB::table('field_leadership_risks as r')
             ->leftJoin('field_leadership_categories as cat', 'r.category_id', '=', 'cat.id')
             ->leftJoin('field_leadership_kta_and_ttas as kta', 'r.type_id', '=', 'kta.id')
             ->leftJoin('field_leadership_potency_and_consequnces as pot', 'r.potency_id', '=', 'pot.id')
@@ -140,6 +151,16 @@ class FieldLeadershipApiController extends Controller
                 DB::raw('COALESCE(pot.name, \'—\') as potency_name'),
             ])
             ->get();
+
+        // Attach files for each risk
+        $risks = $risksRaw->map(function ($risk) {
+            $files = DB::table('field_leadership_risk_files')
+                ->where('fl_risk_id', $risk->id)
+                ->select(['id', 'file', 'type', 'size', 'blob_url'])
+                ->get();
+            $risk->files = $files;
+            return $risk;
+        });
 
         $activities = DB::table('field_leadership_activities')
             ->where('fl_id', $id)
@@ -283,23 +304,32 @@ class FieldLeadershipApiController extends Controller
 
             // Risk conditions
             if ($request->filled('risks')) {
-                foreach ($request->risks as $r) {
+                foreach ($request->risks as $idx => $r) {
                     if (empty($r['description'])) continue;
+                    $riskId = (string) Str::uuid();
                     DB::table('field_leadership_risks')->insert([
-                        'id'           => (string) Str::uuid(),
-                        'fl_id'        => $id,
+                        'id'            => $riskId,
+                        'fl_id'         => $id,
                         'risk_condition'=> $r['description'],
-                        'category_id'  => $r['category_id'] ?? null,
-                        'type_id'      => $r['type_id'] ?? null,
-                        'potency_id'   => $r['potency_id'] ?? null,
-                        'repair_action'=> !empty($r['repaired']) ? ($r['repair_action'] ?? null) : null,
-                        'due_date'     => $r['due_date'],
-                        'type_action'  => !empty($r['repaired']) ? ($r['type_action'] ?? null) : null,
-                        'supervisor'   => !empty($r['repaired']) ? ($r['supervisor'] ?? null) : null,
-                        'status'       => $status,
-                        'created_at'   => now(),
-                        'updated_at'   => now(),
+                        'category_id'   => $r['category_id'] ?? null,
+                        'type_id'       => $r['type_id'] ?? null,
+                        'potency_id'    => $r['potency_id'] ?? null,
+                        'repair_action' => !empty($r['repaired']) ? ($r['repair_action'] ?? '') : '',
+                        'due_date'      => $r['due_date'],
+                        'type_action'   => !empty($r['repaired']) ? ($r['type_action'] ?? null) : null,
+                        'supervisor'    => !empty($r['repaired']) ? ($r['supervisor'] ?? null) : null,
+                        'status'        => $status,
+                        'created_at'    => now(),
+                        'updated_at'    => now(),
                     ]);
+
+                    // Upload lampiran temuan risiko
+                    $this->uploadRiskFiles($request, $idx, $riskId, 'files', 'Temuan Risiko');
+
+                    // Upload lampiran tindakan perbaikan (only when repaired)
+                    if (!empty($r['repaired'])) {
+                        $this->uploadRiskFiles($request, $idx, $riskId, 'filesCA', 'Tindakan Perbaikan');
+                    }
                 }
             }
 
@@ -399,26 +429,32 @@ class FieldLeadershipApiController extends Controller
             ->orderBy('company_name')
             ->get();
 
-        // Departments — filter by ccow if provided
-        $deptQuery = DB::table('departments')->select('id', 'name', 'company_id');
-        if ($ccowId) $deptQuery->where('company_id', $ccowId);
-        $departments = $deptQuery->orderBy('name')->get();
+        // Departments — no company_id column, return all
+        $departments = DB::table('departments')
+            ->select('id', 'name')
+            ->orderBy('name')->get();
 
         // Sections — filter by department if provided
         $sectionQuery = DB::table('sections')->select('id', 'name', 'department_id');
         if ($departmentId) $sectionQuery->where('department_id', $departmentId);
         $sections = $sectionQuery->orderBy('name')->get();
 
-        // Area locations — filter by section if provided
-        $areaQuery = DB::table('area_locations')->select('id', 'name', 'section_id');
-        if ($sectionId) $areaQuery->where('section_id', $sectionId);
-        $areaLocations = $areaQuery->orderBy('name')->get();
+        // Area locations — via pivot section_area_locations
+        $areaLocQuery = DB::table('area_locations as al')->select('al.id', 'al.name');
+        if ($sectionId) {
+            $areaLocQuery->join('section_area_locations as sal', 'sal.area_location_id', '=', 'al.id')
+                         ->where('sal.section_id', $sectionId);
+        }
+        $areaLocations = $areaLocQuery->orderBy('al.name')->get();
 
-        // Area managers — filter by section if provided
+        // Area managers — via pivot section_area_managers
         $pjaQuery = DB::table('area_managers as am')
             ->leftJoin('users as u', 'am.user_id', '=', 'u.id')
-            ->select('am.id', DB::raw('COALESCE(u.name, \'—\') as name'), 'am.section_id');
-        if ($sectionId) $pjaQuery->where('am.section_id', $sectionId);
+            ->select('am.id', DB::raw("COALESCE(u.name, '—') as name"), 'am.user_id');
+        if ($sectionId) {
+            $pjaQuery->join('section_area_managers as sam', 'sam.area_manager_id', '=', 'am.id')
+                     ->where('sam.section_id', $sectionId);
+        }
         $areaManagers = $pjaQuery->orderBy('u.name')->get();
 
         // Users for PJO/KTT
@@ -427,11 +463,9 @@ class FieldLeadershipApiController extends Controller
             ->orderBy('name')
             ->get();
 
-        // Employees — internal
+        // Employees — internal (employees.company_id → companies.type)
         $employeesInternal = DB::table('employees as e')
-            ->leftJoin('users as u', 'e.user_id', '=', 'u.id')
-            ->leftJoin('departments as d', 'u.department_id', '=', 'd.id')
-            ->leftJoin('companies as c', 'd.company_id', '=', 'c.id')
+            ->leftJoin('companies as c', 'e.company_id', '=', 'c.id')
             ->where('c.type', 'Internal')
             ->select('e.id', 'e.name')
             ->orderBy('e.name')
@@ -439,9 +473,7 @@ class FieldLeadershipApiController extends Controller
 
         // Employees — external (contractor / subcontractor)
         $employeesExternal = DB::table('employees as e')
-            ->leftJoin('users as u', 'e.user_id', '=', 'u.id')
-            ->leftJoin('departments as d', 'u.department_id', '=', 'd.id')
-            ->leftJoin('companies as c', 'd.company_id', '=', 'c.id')
+            ->leftJoin('companies as c', 'e.company_id', '=', 'c.id')
             ->whereIn('c.type', ['Contractor', 'SubContractor', 'Sub Contractor'])
             ->select('e.id', 'e.name')
             ->orderBy('e.name')
@@ -495,5 +527,125 @@ class FieldLeadershipApiController extends Controller
             'questions'          => $questions,
             'types'              => self::TYPES,
         ], 'Master data retrieved successfully');
+    }
+
+    // ── Preview risk file ─────────────────────────────────────────────────────
+    public function previewRiskFile(string $id)
+    {
+        $file = DB::table('field_leadership_risk_files')->where('id', $id)->first();
+        if (!$file) abort(404, 'File tidak ditemukan.');
+
+        $filePath = $file->file;
+        $fileName = basename($filePath);
+        $ext      = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
+        $mimeType = match($ext) {
+            'pdf'         => 'application/pdf',
+            'png'         => 'image/png',
+            'jpg','jpeg'  => 'image/jpeg',
+            default       => 'application/octet-stream',
+        };
+
+        // Try blob storage first
+        $sas = GetBlobSasUri('aims-cntr', $filePath);
+        $url = is_array($sas)
+            ? ($sas['blobUriSas'] ?? $sas['sasUri'] ?? $sas['url'] ?? $sas['blobUri'] ?? null)
+            : $sas;
+
+        if ($url) {
+            $contents = @file_get_contents($url);
+            if ($contents !== false) {
+                return response($contents, 200, [
+                    'Content-Type'        => $mimeType,
+                    'Content-Disposition' => 'inline; filename="' . addslashes($fileName) . '"',
+                    'Cache-Control'       => 'private, max-age=300',
+                ]);
+            }
+        }
+
+        // Fallback: local storage
+        $localPath = \Illuminate\Support\Facades\Storage::disk('public')->path($filePath);
+        if (file_exists($localPath)) {
+            return response()->file($localPath, [
+                'Content-Type'        => $mimeType,
+                'Content-Disposition' => 'inline; filename="' . addslashes($fileName) . '"',
+            ]);
+        }
+
+        abort(404, 'File tidak dapat diakses.');
+    }
+
+    // ── Download risk file ────────────────────────────────────────────────────
+    public function downloadRiskFile(string $id)
+    {
+        $file = DB::table('field_leadership_risk_files')->where('id', $id)->first();
+        if (!$file) abort(404, 'File tidak ditemukan.');
+
+        $filePath = $file->file;
+        $fileName = basename($filePath);
+
+        $sas = GetBlobSasUri('aims-cntr', $filePath);
+        $url = is_array($sas)
+            ? ($sas['blobUriSas'] ?? $sas['sasUri'] ?? $sas['url'] ?? $sas['blobUri'] ?? null)
+            : $sas;
+
+        if ($url) return redirect($url);
+
+        $localPath = \Illuminate\Support\Facades\Storage::disk('public')->path($filePath);
+        if (file_exists($localPath)) return response()->download($localPath, $fileName);
+
+        abort(404, 'File tidak ditemukan.');
+    }
+
+    // ── Upload risk files to blob storage ────────────────────────────────────
+    /**
+     * @param  \Illuminate\Http\Request $request
+     * @param  int                      $riskIdx   index in risks[] array
+     * @param  string                   $riskId    UUID of the saved risk row
+     * @param  string                   $fileKey   'files' | 'filesCA'
+     * @param  string                   $type      'Temuan Risiko' | 'Tindakan Perbaikan'
+     */
+    private function uploadRiskFiles($request, int $riskIdx, string $riskId, string $fileKey, string $type): void
+    {
+        $inputKey = "risks.{$riskIdx}.{$fileKey}";
+        $files    = $request->file($inputKey) ?? [];
+
+        foreach ($files as $file) {
+            try {
+                $originalName = $file->getClientOriginalName();
+                $size         = $this->formatFileSize($file->getSize());
+                $tmpPath      = $file->getRealPath();
+                $directPath   = 'field-leadership/risks';
+
+                $uploadResult = uploadToBlobStorage($originalName, $tmpPath, $directPath);
+
+                DB::table('field_leadership_risk_files')->insert([
+                    'id'           => (string) \Illuminate\Support\Str::uuid(),
+                    'fl_risk_id'   => $riskId,
+                    'file'         => $uploadResult['fileBlobPathName'] ?? $originalName,
+                    'type'         => $type,
+                    'size'         => $size,
+                    'blob_url'     => $uploadResult['fileBlobUrl'] ?? null,
+                    'blob_response'=> $uploadResult['blobResponse'] ? json_encode($uploadResult['blobResponse']) : null,
+                    'created_at'   => now(),
+                    'updated_at'   => now(),
+                ]);
+            } catch (\Throwable $e) {
+                \Log::error('FieldLeadership: failed to upload risk file', [
+                    'risk_id' => $riskId,
+                    'file'    => $file->getClientOriginalName() ?? null,
+                    'error'   => $e->getMessage(),
+                ]);
+            }
+        }
+    }
+
+    /**
+     * Format bytes to human-readable size string.
+     */
+    private function formatFileSize(int $bytes): string
+    {
+        if ($bytes >= 1048576) return round($bytes / 1048576, 2) . ' MB';
+        if ($bytes >= 1024)    return round($bytes / 1024, 2)    . ' KB';
+        return $bytes . ' B';
     }
 }

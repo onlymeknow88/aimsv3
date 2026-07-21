@@ -10,6 +10,69 @@ use Illuminate\Support\Str;
 
 class FieldLeadershipMasterApiController extends Controller
 {
+    // ── Dropdown helpers for forms ───────────────────────────────────────────
+
+    /**
+     * GET /api/field-leadership/masters/departments
+     * Optional: ?company_id=
+     */
+    public function getDepartments(Request $request)
+    {
+        // departments table has no company_id — return all, optionally filtered by name
+        $query = DB::table('departments')->select('id', 'name');
+        if ($request->filled('search')) {
+            $query->where('name', 'like', '%' . $request->query('search') . '%');
+        }
+        return ResponseFormatter::success($query->orderBy('name')->get(), 'Departments retrieved');
+    }
+
+    /**
+     * GET /api/field-leadership/masters/sections
+     * Optional: ?department_id=
+     */
+    public function getSections(Request $request)
+    {
+        $query = DB::table('sections')->select('id', 'name', 'department_id');
+        if ($request->filled('department_id')) {
+            $query->where('department_id', $request->query('department_id'));
+        }
+        return ResponseFormatter::success($query->orderBy('name')->get(), 'Sections retrieved');
+    }
+
+
+    /**
+     * GET /api/field-leadership/masters/locations
+     * Optional: ?section_id=
+     */
+    public function getLocations(Request $request)
+    {
+        // area_locations ↔ sections via pivot: section_area_locations
+        $query = DB::table('area_locations as al')->select('al.id', 'al.name');
+        if ($request->filled('section_id')) {
+            $query->join('section_area_locations as sal', 'sal.area_location_id', '=', 'al.id')
+                  ->where('sal.section_id', $request->query('section_id'));
+        }
+        return ResponseFormatter::success($query->orderBy('al.name')->get(), 'Locations retrieved');
+    }
+
+    /**
+     * GET /api/field-leadership/masters/pja
+     * Returns area managers (Penanggung Jawab Area).
+     * Optional: ?section_id=
+     */
+    public function getPja(Request $request)
+    {
+        // area_managers ↔ sections via pivot: section_area_managers
+        $query = DB::table('area_managers as am')
+            ->leftJoin('users as u', 'am.user_id', '=', 'u.id')
+            ->select('am.id', DB::raw("COALESCE(u.name, '—') as name"), 'am.user_id');
+        if ($request->filled('section_id')) {
+            $query->join('section_area_managers as sam', 'sam.area_manager_id', '=', 'am.id')
+                  ->where('sam.section_id', $request->query('section_id'));
+        }
+        return ResponseFormatter::success($query->orderBy('u.name')->get(), 'PJA retrieved');
+    }
+
     // ── Categories ────────────────────────────────────────────────────────────
 
     public function getCategories()

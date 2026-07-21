@@ -3,12 +3,13 @@ import { Head } from '@inertiajs/react';
 import { Database, Plus, Pencil, Trash2, X, Save } from 'lucide-react';
 import FieldLeadershipLayout from '@FLS/Layouts/FieldLeadershipLayout';
 import axios from 'axios';
+import DeleteConfirmModal from '@/Components/DeleteConfirmModal';
 
 // ── Reusable Modal ────────────────────────────────────────────────────────────
 function Modal({ title, onClose, onSave, saving, children }) {
     return (
         <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.4)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
-            <div style={{ backgroundColor: '#fff', borderRadius: '12px', width: '100%', maxWidth: '440px', boxShadow: '0 20px 60px rgba(0,0,0,0.2)' }}>
+            <div style={{ backgroundColor: '#fff', borderRadius: '12px', width: '100%', maxWidth: '480px', boxShadow: '0 20px 60px rgba(0,0,0,0.2)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 20px', borderBottom: '1px solid #f1f5f9' }}>
                     <h3 style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>{title}</h3>
                     <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}><X size={16} /></button>
@@ -28,7 +29,7 @@ function Modal({ title, onClose, onSave, saving, children }) {
 
 // ── Reusable Master Tab ───────────────────────────────────────────────────────
 function MasterTab({ title, data, loading, fields, onSave, onDelete }) {
-    const [modal, setModal]   = useState(null); // null | { mode: 'create'|'edit', item: {} }
+    const [modal, setModal]   = useState(null);
     const [form, setForm]     = useState({});
     const [saving, setSaving] = useState(false);
 
@@ -72,7 +73,7 @@ function MasterTab({ title, data, loading, fields, onSave, onDelete }) {
                     </thead>
                     <tbody>
                         {data.map((item, idx) => (
-                            <tr key={item.id} style={{ borderTop: idx > 0 ? '1px solid #f1f5f9' : 'none' }}>
+                            <tr key={item.id || idx} style={{ borderTop: idx > 0 ? '1px solid #f1f5f9' : 'none' }}>
                                 {fields.map(f => <td key={f.key} style={{ padding: '10px 16px', color: 'var(--text-primary)' }}>{item[f.key] ?? '—'}</td>)}
                                 <td style={{ padding: '10px 16px', textAlign: 'right' }}>
                                     <div style={{ display: 'inline-flex', gap: '6px' }}>
@@ -117,30 +118,45 @@ function MasterTab({ title, data, loading, fields, onSave, onDelete }) {
 }
 
 // ── Main Page ─────────────────────────────────────────────────────────────────
-const TABS = ['categories', 'kta-tta', 'potency'];
-const TAB_LABELS = { 'categories': 'Kategori', 'kta-tta': 'KTA & TTA', 'potency': 'Potensi & Konsekuensi' };
+const TABS = ['limit-parameter', 'jenis-kta-tta', 'potensi-konsekuensi'];
+const TAB_LABELS = {
+    'limit-parameter': 'Limit Parameter',
+    'jenis-kta-tta': 'Jenis KTA / TTA',
+    'potensi-konsekuensi': 'Potensi Konsekuensi'
+};
 
 export default function Index() {
     const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : new URLSearchParams();
-    const initialTab = TABS.includes(searchParams.get('tab')) ? searchParams.get('tab') : 'categories';
+    const tabParam = searchParams.get('tab');
+    const initialTab = TABS.includes(tabParam) ? tabParam : 'limit-parameter';
     const [activeTab, setActiveTab] = useState(initialTab);
 
-    const [categories, setCategories] = useState([]);
-    const [ktaTta, setKtaTta]         = useState([]);
-    const [potency, setPotency]       = useState([]);
-    const [loading, setLoading]       = useState(true);
+    const [limitParams, setLimitParams] = useState([]);
+    const [ktaTta, setKtaTta]           = useState([]);
+    const [potency, setPotency]         = useState([]);
+    const [loading, setLoading]         = useState(true);
+    const [pendingDelete, setPendingDelete] = useState(null); // { id, type, label }
+    const [deleting, setDeleting]           = useState(false);
+
+    useEffect(() => {
+        if (tabParam && TABS.includes(tabParam)) {
+            setActiveTab(tabParam);
+        }
+    }, [tabParam]);
 
     const fetchAll = useCallback(async () => {
         setLoading(true);
         try {
-            const [cat, kta, pot] = await Promise.all([
-                axios.get('/api/field-leadership/master/categories'),
-                axios.get('/api/field-leadership/master/kta-tta'),
-                axios.get('/api/field-leadership/master/potency'),
+            const [lim, kta, pot] = await Promise.all([
+                axios.get('/api/field-leadership/masters/limit-parameters').catch(() => ({ data: { result: null } })),
+                axios.get('/api/field-leadership/masters/kta-tta').catch(() => ({ data: { result: [] } })),
+                axios.get('/api/field-leadership/masters/potencies').catch(() => ({ data: { result: [] } })),
             ]);
-            setCategories(cat.data?.result ?? []);
-            setKtaTta(kta.data?.result ?? []);
-            setPotency(pot.data?.result ?? []);
+            // limit-parameters returns a single object (single-row table), normalise to array for display
+            const limResult = lim.data?.result ?? lim.data ?? null;
+            setLimitParams(limResult ? (Array.isArray(limResult) ? limResult : [limResult]) : []);
+            setKtaTta(Array.isArray(kta.data?.result) ? kta.data.result : []);
+            setPotency(Array.isArray(pot.data?.result) ? pot.data.result : []);
         } catch (err) {
             console.error('Master data fetch failed', err);
         } finally {
@@ -150,52 +166,68 @@ export default function Index() {
 
     useEffect(() => { fetchAll(); }, [fetchAll]);
 
-    // Category CRUD
-    const saveCategory = async (form, id) => {
-        if (id) await axios.put(`/api/field-leadership/master/categories/${id}`, form);
-        else    await axios.post('/api/field-leadership/master/categories', form);
+    // Limit Parameter — single-row upsert (no id needed, no delete)
+    const saveLimitParam = async (form, id) => {
+        await axios.put('/api/field-leadership/masters/limit-parameters', form);
         fetchAll();
     };
-    const deleteCategory = async (id) => {
-        if (!confirm('Hapus kategori ini?')) return;
-        await axios.delete(`/api/field-leadership/master/categories/${id}`);
-        fetchAll();
+    const deleteLimitParam = async () => {
+        // single-row table — delete not supported
+        alert('Parameter tidak dapat dihapus. Gunakan Edit untuk mengubah nilai.');
     };
 
     // KTA/TTA CRUD
     const saveKtaTta = async (form, id) => {
-        if (id) await axios.put(`/api/field-leadership/master/kta-tta/${id}`, form);
-        else    await axios.post('/api/field-leadership/master/kta-tta', form);
+        if (id) await axios.put(`/api/field-leadership/masters/kta-tta/${id}`, form);
+        else    await axios.post('/api/field-leadership/masters/kta-tta', form);
         fetchAll();
     };
     const deleteKtaTta = async (id) => {
-        if (!confirm('Hapus KTA/TTA ini?')) return;
-        await axios.delete(`/api/field-leadership/master/kta-tta/${id}`);
-        fetchAll();
+        setPendingDelete({ id, type: 'kta-tta', label: 'Jenis KTA/TTA' });
+    };
+    const confirmDeleteKtaTta = async () => {
+        if (!pendingDelete) return;
+        setDeleting(true);
+        try {
+            await axios.delete(`/api/field-leadership/masters/kta-tta/${pendingDelete.id}`);
+            fetchAll();
+        } finally {
+            setDeleting(false);
+            setPendingDelete(null);
+        }
     };
 
     // Potency CRUD
     const savePotency = async (form, id) => {
-        if (id) await axios.put(`/api/field-leadership/master/potency/${id}`, form);
-        else    await axios.post('/api/field-leadership/master/potency', form);
+        if (id) await axios.put(`/api/field-leadership/masters/potencies/${id}`, form);
+        else    await axios.post('/api/field-leadership/masters/potencies', form);
         fetchAll();
     };
     const deletePotency = async (id) => {
-        if (!confirm('Hapus potensi ini?')) return;
-        await axios.delete(`/api/field-leadership/master/potency/${id}`);
-        fetchAll();
+        setPendingDelete({ id, type: 'potency', label: 'Potensi Konsekuensi' });
+    };
+    const confirmDeletePotency = async () => {
+        if (!pendingDelete) return;
+        setDeleting(true);
+        try {
+            await axios.delete(`/api/field-leadership/masters/potencies/${pendingDelete.id}`);
+            fetchAll();
+        } finally {
+            setDeleting(false);
+            setPendingDelete(null);
+        }
     };
 
     return (
         <FieldLeadershipLayout>
-            <Head title="Master Data — Field Leadership" />
+            <Head title="Master Library — Field Leadership" />
 
             <div style={{ marginBottom: '24px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
                     <Database size={18} style={{ color: 'var(--primary)' }} />
-                    <h1 style={{ fontSize: '20px', fontWeight: 800, color: 'var(--primary)', margin: 0 }}>Master Data</h1>
+                    <h1 style={{ fontSize: '20px', fontWeight: 800, color: 'var(--primary)', margin: 0 }}>Master Library</h1>
                 </div>
-                <p style={{ color: 'var(--text-secondary)', fontSize: '11px', margin: 0 }}>Kelola data referensi untuk modul Field Leadership.</p>
+                <p style={{ color: 'var(--text-secondary)', fontSize: '11px', margin: 0 }}>Kelola data referensi &amp; parameter modul Field Leadership.</p>
             </div>
 
             {/* Tabs */}
@@ -208,31 +240,44 @@ export default function Index() {
                 ))}
             </div>
 
-            {activeTab === 'categories' && (
-                <MasterTab title="Kategori" data={categories} loading={loading}
-                    fields={[{ key: 'name', label: 'Nama Kategori', placeholder: 'Misal: Keselamatan' }]}
-                    onSave={saveCategory} onDelete={deleteCategory} />
+            {activeTab === 'limit-parameter' && (
+                <MasterTab title="Limit Parameter" data={limitParams} loading={loading}
+                    fields={[
+                        { key: 'max_item_member',             label: 'Maks. Anggota Tim',        placeholder: '5' },
+                        { key: 'max_item_positive_condition', label: 'Maks. Kondisi Positif',     placeholder: '5' },
+                        { key: 'max_item_risk_condition',     label: 'Maks. Kondisi Risiko',      placeholder: '10' },
+                        { key: 'max_item_corrective_action',  label: 'Maks. Tindakan Perbaikan',  placeholder: '5' },
+                    ]}
+                    onSave={saveLimitParam} onDelete={deleteLimitParam} />
             )}
 
-            {activeTab === 'kta-tta' && (
-                <MasterTab title="KTA & TTA" data={ktaTta} loading={loading}
+            {activeTab === 'jenis-kta-tta' && (
+                <MasterTab title="Jenis KTA / TTA" data={ktaTta} loading={loading}
                     fields={[
                         { key: 'code', label: 'Kode', placeholder: 'Misal: KTA-01' },
-                        { key: 'name', label: 'Nama', placeholder: 'Misal: Tidak Memakai APD' },
-                        { key: 'type', label: 'Tipe', type: 'select', options: ['Kondisi Tidak Aman', 'Tindakan Tidak Aman'] },
+                        { key: 'name', label: 'Nama KTA / TTA', placeholder: 'Misal: Tidak Memakai APD' },
+                        { key: 'type', label: 'Tipe', type: 'select', options: ['KTA', 'TTA'] },
                     ]}
                     onSave={saveKtaTta} onDelete={deleteKtaTta} />
             )}
 
-            {activeTab === 'potency' && (
-                <MasterTab title="Potensi & Konsekuensi" data={potency} loading={loading}
+            {activeTab === 'potensi-konsekuensi' && (
+                <MasterTab title="Potensi Konsekuensi" data={potency} loading={loading}
                     fields={[
                         { key: 'code', label: 'Kode', placeholder: 'Misal: P-01' },
-                        { key: 'name', label: 'Nama', placeholder: 'Misal: Luka Ringan' },
+                        { key: 'name', label: 'Nama Potensi', placeholder: 'Misal: Luka Ringan / Cedera' },
                     ]}
                     onSave={savePotency} onDelete={deletePotency} />
             )}
 
+            <DeleteConfirmModal
+                isOpen={!!pendingDelete}
+                onClose={() => setPendingDelete(null)}
+                onConfirm={pendingDelete?.type === 'kta-tta' ? confirmDeleteKtaTta : confirmDeletePotency}
+                deleting={deleting}
+                title={`Hapus ${pendingDelete?.label ?? 'Data'}`}
+                description={`Yakin ingin menghapus data ini? Tindakan ini tidak dapat dibatalkan.`}
+            />
         </FieldLeadershipLayout>
     );
 }
