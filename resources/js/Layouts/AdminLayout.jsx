@@ -1,9 +1,20 @@
-import React, { useState } from 'react';
-import { Head, Link, router } from '@inertiajs/react';
-import { 
-    Users, ShieldAlert, Landmark, Layers, MapPin, 
-    ArrowLeft, LogOut, ChevronDown, Menu, X, Settings, FolderOpen
+import {
+    ArrowLeft,
+    ChevronDown,
+    FolderOpen,
+    Landmark,
+    Layers,
+    LogOut,
+    MapPin,
+    Menu,
+    Settings,
+    Shield,
+    ShieldAlert,
+    Users,
+    X
 } from 'lucide-react';
+import { Head, Link, router } from '@inertiajs/react';
+import React, { useState } from 'react';
 
 export default function AdminLayout({ children, title = "Backoffice Admin" }) {
     const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -190,7 +201,7 @@ export default function AdminLayout({ children, title = "Backoffice Admin" }) {
                     top: 0,
                     zIndex: 90
                 }}>
-                    <button 
+                    <button
                         onClick={() => setSidebarOpen(!sidebarOpen)}
                         style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#475569' }}
                     >
@@ -199,19 +210,29 @@ export default function AdminLayout({ children, title = "Backoffice Admin" }) {
 
                     {/* User Panel */}
                     <div style={{ position: 'relative' }}>
-                        <button 
+                        <button
                             onClick={() => setUserDropdown(!userDropdown)}
                             style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'none', border: 'none', cursor: 'pointer', color: '#334155', fontWeight: 600, fontSize: '13px' }}
                         >
                             Administrator
                             <ChevronDown size={14} />
                         </button>
-                        
+
                         {userDropdown && (
-                            <div style={{ position: 'absolute', right: 0, marginTop: '8px', width: '160px', backgroundColor: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', overflow: 'hidden' }}>
-                                <Link 
-                                    href="/admin/logout" 
-                                    method="post" 
+
+                            <div style={{ position: 'absolute', right: 0, marginTop: '8px', width: '200px', backgroundColor: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', overflow: 'hidden' }}>
+                                <Link
+                                    href={route('two-factor.setup')}
+                                    style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 16px', fontSize: '13px', color: '#334155', background: 'none', border: 'none', textAlign: 'left', cursor: 'pointer', textDecoration: 'none' }}
+                                    onClick={() => setUserDropdown(false)}
+                                >
+                                    <Shield size={14} style={{ color: '#153B73' }} />
+                                    Setup 2FA
+                                </Link>
+                                <div style={{ borderTop: '1px solid #e2e8f0' }} />
+                                <Link
+                                    href="/admin/logout"
+                                    method="post"
                                     as="button"
                                     style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 16px', fontSize: '13px', color: '#ef4444', background: 'none', border: 'none', textAlign: 'left', cursor: 'pointer' }}
                                 >

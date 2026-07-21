@@ -26,10 +26,28 @@ class AuthenticatedSessionController extends Controller
 
     /**
      * Handle an incoming authentication request.
+     * Jika user punya 2FA aktif, redirect ke challenge page.
      */
     public function store(LoginRequest $request): RedirectResponse
     {
         $request->authenticate();
+
+        $user = Auth::user();
+
+        // Cek apakah 2FA aktif
+        if ($user->google2fa_enabled) {
+            // Simpan user ID di session untuk challenge
+            $request->session()->put('2fa_pending', true);
+            $request->session()->put('2fa_user_id', $user->id);
+
+            // Logout sementara — login baru setelah 2FA verified
+            Auth::logout();
+
+            // Regenerate session agar CSRF token tetap valid
+            $request->session()->regenerate();
+
+            return redirect()->route('two-factor.show');
+        }
 
         $request->session()->regenerate();
 

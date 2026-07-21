@@ -1,0 +1,11 @@
+{
+    "name": "FieldLeadership",
+    "alias": "fieldleadership",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\FieldLeadership\\App\\Providers\\FieldLeadershipServiceProvider"
+    ],
+    "files": []
+}

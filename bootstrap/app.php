@@ -26,12 +26,14 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->validateCsrfTokens(except: [
             'api/admin/*',
             'admin/*',
+            'logout',
         ]);
 
         $middleware->alias([
             'module.permission' => \App\Http\Middleware\CheckModulePermission::class,
-            'admin.auth' => \App\Http\Middleware\AdminMiddleware::class,
-            'admin.session' => \App\Http\Middleware\SetAdminSessionName::class,
+            'admin.auth'        => \App\Http\Middleware\AdminMiddleware::class,
+            'admin.session'     => \App\Http\Middleware\SetAdminSessionName::class,
+            '2fa'               => \App\Http\Middleware\RequireTwoFactor::class,
         ]);
 
         $middleware->prependToPriorityList(

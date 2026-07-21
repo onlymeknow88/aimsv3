@@ -115,4 +115,7 @@ Route::middleware(['web', 'auth'])->prefix('api')->group(function () {
 
     // ── Document System widget stats for the dashboard ────────────────────────
     Route::get('/portal/document-system/stats', [\Modules\DocumentSystem\Http\Controllers\Api\DocumentSystemWidgetController::class, 'stats']);
+
+    // ── Field Leadership widget stats for the dashboard ───────────────────────
+    Route::get('/dashboard/field-leadership/stats', [\App\Http\Controllers\Api\FieldLeadershipStatsController::class, 'index']);
 });

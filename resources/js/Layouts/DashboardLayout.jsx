@@ -1,12 +1,24 @@
-import React, { useState } from 'react';
-import { usePage } from '@inertiajs/react';
 import {
-    LayoutDashboard, Calendar, FileText, ShieldAlert, UserCheck,
-    Search, ShieldCheck, Layers, HeartPulse, HardHat, CheckSquare,
-    Activity, Award, Landmark
+    Activity,
+    Award,
+    Calendar,
+    CheckSquare,
+    FileText,
+    HardHat,
+    HeartPulse,
+    Landmark,
+    Layers,
+    LayoutDashboard,
+    Search,
+    ShieldAlert,
+    ShieldCheck,
+    UserCheck
 } from 'lucide-react';
-import Sidebar from './Partials/Sidebar';
+import React, { useState } from 'react';
+
 import Header from './Partials/Header';
+import Sidebar from './Partials/Sidebar';
+import { usePage } from '@inertiajs/react';
 
 export default function DashboardLayout({ children }) {
     const { auth } = usePage().props;
@@ -29,7 +41,7 @@ export default function DashboardLayout({ children }) {
         { name: 'Calendar of Event (CoE)', icon: Calendar, href: '/coe/calendar', active: currentPath.startsWith('/coe') },
         { name: 'Document System', icon: FileText, href: '/document-system', active: currentPath.startsWith('/document-system'), moduleSlug: 'document-system' },
         { name: 'Safety Accountability Program (SAP)', icon: ShieldAlert, href: '#', active: false, moduleSlug: 'sap' },
-        { name: 'Field Leadership', icon: UserCheck, href: '#', active: false, moduleSlug: 'field-leadership' },
+        { name: 'Field Leadership', icon: UserCheck, href: '/field-leadership', active: currentPath.startsWith('/field-leadership'), moduleSlug: 'field-leadership' },
         { name: 'Inspection / KPLH', icon: Search, href: '#', active: false, moduleSlug: 'inspection' },
         { name: 'Audit', icon: ShieldCheck, href: '#', active: false, moduleSlug: 'audit' },
         { name: 'Management Risk (IBPR & Bowtie)', icon: ShieldAlert, href: '#', active: false, moduleSlug: 'management-risk' },
@@ -109,7 +121,7 @@ export default function DashboardLayout({ children }) {
 
             {/* Mobile Sidebar Backdrop */}
             {sidebarOpen && (
-                <div 
+                <div
                     onClick={() => setSidebarOpen(false)}
                     style={{
                         position: 'fixed',

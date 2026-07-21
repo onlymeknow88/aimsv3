@@ -27,6 +27,7 @@ import CalendarOfEventStats from './Partials/Widget/CalendarOfEventStats';
 import CalendarofEvent from './Partials/Widget/CalendarofEvent';
 import DashboardLayout from '@/Layouts/DashboardLayout';
 import DocumentSystemWidget from './Partials/Widget/DocumentSystem/DocumentSystemWidget';
+import FieldLeadership from './Partials/Widget/FieldLeadership';
 import NewsUpdate from './Partials/Widget/NewsUpdate';
 import React from 'react';
 import SafetyKPI from './Partials/Widget/SafetyKPI';
@@ -177,7 +178,10 @@ export default function Dashboard({ coeEvents: initialEvents = [], slideshows: i
             {/* Section 4: Document System Widget */}
             <DocumentSystemWidget />
 
-            {/* Section 5: News & Update */}
+            {/* Section 5: Field Leadership Widget */}
+            <FieldLeadership />
+
+            {/* Section 6: News & Update */}
             <NewsUpdate newsItems={newsItems} loading={loading} />
 
         </DashboardLayout>
