@@ -23,6 +23,7 @@ import {
 import { Bar, Doughnut, Line } from 'react-chartjs-2';
 import { Head, Link } from '@inertiajs/react';
 
+import CalendarOfEventStats from './Partials/Widget/CalendarOfEventStats';
 import CalendarofEvent from './Partials/Widget/CalendarofEvent';
 import DashboardLayout from '@/Layouts/DashboardLayout';
 import DocumentSystemWidget from './Partials/Widget/DocumentSystem/DocumentSystemWidget';
@@ -51,6 +52,7 @@ export default function Dashboard({ coeEvents: initialEvents = [], slideshows: i
         loading,
         generalStats,
         newsItems,
+        coeStats,
     } = useDashboard(initialEvents, initialSlideshows);
 
     // KPI Cards — data dari API dashboard_general (lihat SafetyKPI widget)
@@ -139,7 +141,20 @@ export default function Dashboard({ coeEvents: initialEvents = [], slideshows: i
             <SafetyKPI generalStats={generalStats} loading={loading} />
 
             {/* Section 2: Hero Area */}
-            <div className="dashboard-grid-hero" style={{ display: 'grid', gridTemplateColumns: '1.8fr 1.2fr', gap: '24px', marginBottom: '32px' }}>
+            <style>{`
+                .dashboard-grid-hero {
+                    display: grid;
+                    grid-template-columns: 1.8fr 1.2fr;
+                    gap: 24px;
+                    margin-bottom: 32px;
+                }
+                @media (max-width: 768px) {
+                    .dashboard-grid-hero {
+                        grid-template-columns: 1fr;
+                    }
+                }
+            `}</style>
+            <div className="dashboard-grid-hero">
                 {/* Welcome Banner Slideshow Container */}
                 <SlideShow
                     loading={loading}
@@ -156,10 +171,13 @@ export default function Dashboard({ coeEvents: initialEvents = [], slideshows: i
                 <CalendarofEvent loading={loading} coeEvents={coeEvents} />
             </div>
 
-            {/* Section 3: Document System Widget */}
+            {/* Section 3: Calendar of Event Stats */}
+            <CalendarOfEventStats stats={coeStats} loading={loading} />
+
+            {/* Section 4: Document System Widget */}
             <DocumentSystemWidget />
 
-            {/* Section 4: News & Update */}
+            {/* Section 5: News & Update */}
             <NewsUpdate newsItems={newsItems} loading={loading} />
 
         </DashboardLayout>

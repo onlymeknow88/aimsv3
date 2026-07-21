@@ -101,12 +101,18 @@ Route::middleware(['admin.session', 'auth:admin', 'admin.auth'])
     });
 
 Route::middleware(['web', 'auth'])->prefix('api')->group(function () {
+    // ── Dashboard aggregator ──────────────────────────────────────────────────
     Route::get('/dashboard/data', [\App\Http\Controllers\Api\DashboardController::class, 'getData']);
 
-    // Portal public news endpoints (used by dashboard widget)
-    Route::get('/portal/news', [\Modules\DashboardPortal\Http\Controllers\Api\DashboardPortalController::class, 'newsIndex']);
-    Route::get('/portal/news/{id}', [\Modules\DashboardPortal\Http\Controllers\Api\DashboardPortalController::class, 'newsShow']);
+    // ── COE calendar, event detail & stats endpoints ────────────────────────────
+    Route::get('/dashboard/coe/calendar',        [\App\Http\Controllers\Api\DashboardController::class, 'coeCalendar']);
+    Route::get('/dashboard/coe/events/{id}',     [\App\Http\Controllers\Api\DashboardController::class, 'coeEventDetail']);
+    Route::get('/dashboard/coe/stats',           [\App\Http\Controllers\Api\DashboardController::class, 'coeStats']);
 
-    // Document System widget stats for the dashboard
+    // ── Portal public news endpoints (used by dashboard widget) ──────────────
+    Route::get('/portal/news',       [\Modules\DashboardPortal\Http\Controllers\Api\DashboardPortalController::class, 'newsIndex']);
+    Route::get('/portal/news/{id}',  [\Modules\DashboardPortal\Http\Controllers\Api\DashboardPortalController::class, 'newsShow']);
+
+    // ── Document System widget stats for the dashboard ────────────────────────
     Route::get('/portal/document-system/stats', [\Modules\DocumentSystem\Http\Controllers\Api\DocumentSystemWidgetController::class, 'stats']);
 });
