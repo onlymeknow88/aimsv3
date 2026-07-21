@@ -1,5 +1,6 @@
+import { Download, FileText, X } from 'lucide-react';
+
 import React from 'react';
-import { X, Download, FileText } from 'lucide-react';
 
 export default function BlobPreviewModal({ attachment, onClose }) {
     if (!attachment) return null;
@@ -8,18 +9,20 @@ export default function BlobPreviewModal({ attachment, onClose }) {
     const isJsa = attachment.type === 'jsa';
     const isJsaActivity = attachment.type === 'jsa_activity';
     const isPtw = attachment.type === 'ptw';
-    
+    const isUncontrolled = attachment.type === 'uncontrolled';
+
     // Construct query parameters cleanly
     const params = [];
     if (isActivity) params.push('type=activity');
     else if (isJsa) params.push('type=jsa');
     else if (isJsaActivity) params.push('type=jsa_activity');
     else if (isPtw) params.push('type=ptw');
-    
+    else if (isUncontrolled) params.push('type=uncontrolled');
+
     if (attachment.path) {
         params.push(`path=${encodeURIComponent(attachment.path)}`);
     }
-    
+
     const queryString = params.length > 0 ? `?${params.join('&')}` : '';
     const attachmentId = attachment.id || 'none';
     const previewUrl = `/api/document-system/attachments/${attachmentId}/preview${queryString}`;

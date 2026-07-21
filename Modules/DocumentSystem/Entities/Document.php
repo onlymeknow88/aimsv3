@@ -35,6 +35,12 @@ class Document extends Model
         'prefix_code',
         'file_path',
         'uncontrolled_file_path',
+        'uncontrolled_blob_url',
+        'uncontrolled_blob_respon',
+        'approved_by_crs',
+        'approved_at_crs',
+        'approved_by_pja',
+        'approved_at_pja',
         'doc_created',
         'is_obsolate',
     ];
@@ -97,5 +103,15 @@ class Document extends Model
     public function company()
     {
         return $this->belongsTo(\App\Models\Company::class, 'company_id');
+    }
+
+    public function approvedByCrsUser()
+    {
+        return $this->belongsTo(\App\Models\User::class, 'approved_by_crs');
+    }
+
+    public function approvedByPjaUser()
+    {
+        return $this->belongsTo(\App\Models\User::class, 'approved_by_pja');
     }
 }

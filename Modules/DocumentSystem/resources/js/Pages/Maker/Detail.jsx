@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import { Head } from '@inertiajs/react';
-import { ArrowLeft, User, Building, MapPin, Calendar, Layers, Eye, Download, Info, Users, Clock, Edit, FileText } from 'lucide-react';
-import StatusTimeline from '../OnGoing/Partials/Components/StatusTimeline';
-import useDetail from './Hooks/useDetail';
+import { ArrowLeft, Building, Calendar, Clock, Download, Edit, Eye, FileText, Info, Layers, MapPin, User, Users } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+
 import BlobPreviewModal from '@/Components/BlobPreviewModal';
 import ConfirmationModal from '@/Components/ConfirmationModal';
+import { Head } from '@inertiajs/react';
+import StatusTimeline from '../OnGoing/Partials/Components/StatusTimeline';
+import useDetail from './Hooks/useDetail';
 
 export default function Detail({ id }) {
     const [previewAttachment, setPreviewAttachment] = useState(null);
@@ -109,7 +110,7 @@ export default function Detail({ id }) {
                 )}
 
                 {['5', '7'].includes(String(document.status)) && !document.is_obsolate && (
-                    <button 
+                    <button
                         onClick={() => setIsConfirmRenewOpen(true)}
                         style={{
                             display: 'inline-flex',
@@ -287,7 +288,44 @@ export default function Detail({ id }) {
                     )}
 
                     {/* Attachments Card */}
-                    {document.attachments && document.attachments.length > 0 && (
+                    {/* Active documents (status 5/7): show uncontrolled watermarked copy if available */}
+                    {['5', '7'].includes(String(document.status)) && document.uncontrolled_file_path ? (
+                        <div style={{
+                            backgroundColor: 'var(--card-bg)',
+                            border: '1px solid var(--border-color)',
+                            borderRadius: '12px',
+                            padding: '24px',
+                            boxShadow: 'var(--shadow-sm)'
+                        }}>
+                            <h4 style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '4px' }}>Dokumen Resmi</h4>
+                            <p style={{ fontSize: '11px', color: 'var(--text-secondary)', marginBottom: '12px' }}>
+                                Ini adalah salinan <strong>Uncontrolled</strong> dari dokumen aktif (sudah diberi watermark).
+                            </p>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px', border: '1px solid var(--border-color)', borderRadius: '8px', backgroundColor: '#fafbfc' }}>
+                                <span
+                                    onClick={() => setPreviewAttachment({
+                                        id: 'uncontrolled',
+                                        file_name: `FINAL-${document.document_number} ${document.title}.pdf`,
+                                        file_type: 'pdf',
+                                        path: document.uncontrolled_file_path,
+                                        type: 'uncontrolled'
+                                    })}
+                                    style={{ fontSize: '12px', fontWeight: 600, color: 'var(--primary)', cursor: 'pointer', textDecoration: 'underline' }}
+                                    title="Klik untuk preview dokumen"
+                                >
+                                    FINAL-{document.document_number} {document.title}.pdf
+                                </span>
+                                <a
+                                    href={`/api/document-system/attachments/uncontrolled/download?type=uncontrolled&path=${encodeURIComponent(document.uncontrolled_file_path)}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', textDecoration: 'none', fontSize: '11px', fontWeight: 700, color: 'var(--primary)' }}
+                                >
+                                    <Download size={12} /> Download
+                                </a>
+                            </div>
+                        </div>
+                    ) : document.attachments && document.attachments.length > 0 && (
                         <div style={{
                             backgroundColor: 'var(--card-bg)',
                             border: '1px solid var(--border-color)',
@@ -299,7 +337,7 @@ export default function Detail({ id }) {
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                 {document.attachments.map(att => (
                                     <div key={att.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px', border: '1px solid var(--border-color)', borderRadius: '8px', backgroundColor: '#fafbfc' }}>
-                                        <span 
+                                        <span
                                             onClick={() => setPreviewAttachment(att)}
                                             style={{ fontSize: '12px', fontWeight: 600, color: 'var(--primary)', cursor: 'pointer', textDecoration: 'underline' }}
                                             title="Klik untuk preview lampiran"
@@ -486,7 +524,7 @@ export default function Detail({ id }) {
                         boxShadow: 'var(--shadow-sm)'
                     }}>
                         <h4 style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px', marginBottom: '12px', textTransform: 'uppercase' }}>Alur Persetujuan</h4>
-                        <StatusTimeline status={document.status} />
+                        <StatusTimeline status={document.status} document={document} />
                     </div>
 
                     <div style={{
@@ -559,8 +597,8 @@ export default function Detail({ id }) {
                 isOpen={isConfirmApproveOpen}
                 type="generic"
                 title={String(document.status) === '1' ? "Forward to Checker?" : "Publish Document?"}
-                description={String(document.status) === '1' 
-                    ? "This document will be forwarded to the final checker." 
+                description={String(document.status) === '1'
+                    ? "This document will be forwarded to the final checker."
                     : "This document will be active for 2 years and cannot be edited."}
                 confirmText="Yes"
                 cancelText="Cancel"
