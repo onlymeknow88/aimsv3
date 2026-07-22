@@ -79,16 +79,9 @@ export default function DetailRightSidebar({ bidding, onApproval }) {
     const confirmAction = () => {
         setProcessing(true);
         setError('');
-        fetch(`/api/csms/approval/${bidding.id}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]')?.content,
-            },
-            body: JSON.stringify({ action: modal.action, comment }),
-        })
-        .then(r => r.json())
-        .then(d => {
+        axios.post(`/api/csms/approval/${bidding.id}`, { action: modal.action, comment })
+        .then(res => {
+            const d = res.data;
             if (d?.meta?.code === 200 || d?.data) {
                 closeModal();
                 if (onApproval) onApproval();

@@ -1,4 +1,5 @@
-﻿import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import axios from 'axios';
 import CSMSLayout from '../../Layouts/CSMSLayout';
 import { FileText, CheckCircle, Clock, XCircle, RefreshCw } from 'lucide-react';
 
@@ -23,9 +24,8 @@ export default function Dashboard() {
     const [stats, setStats] = useState(null);
 
     useEffect(() => {
-        fetch('/api/csms/biddings?limit=1')
-            .then(r => r.json())
-            .then(d => setStats(d?.data ?? null))
+        axios.get('/api/csms/biddings?limit=1')
+            .then(res => setStats(res.data?.result ?? null))
             .catch(() => {});
     }, []);
 

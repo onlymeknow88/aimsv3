@@ -1,11 +1,13 @@
-import { Plus, RefreshCw, Search, Trash2, UserCog } from 'lucide-react';
-import React, { useCallback, useEffect, useState } from 'react';
+import { Plus, RefreshCw, Search, Trash2, UserCog, FileText } from 'lucide-react';
+import React, { useState } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 import CSMSLayout from '../../Layouts/CSMSLayout';
 import DeleteConfirmModal from '@/Components/DeleteConfirmModal';
 import { Head } from '@inertiajs/react';
+import PjoTable from './Partials/PjoTable';
 import TablePagination from '@/Components/TablePagination';
+import usePjo from './Hooks/usePjo';
 
 const btnStyle = { display: 'inline-flex', alignItems: 'center', gap: '6px', backgroundColor: '#fff', border: '1px solid var(--border-color)', borderRadius: '6px', padding: '8px 12px', fontSize: '11px', fontWeight: 600, color: 'var(--text-primary)', cursor: 'pointer' };
 
@@ -25,39 +27,23 @@ function PjoStatusBadge({ status }) {
 }
 
 export default function PjoIndex() {
-    const [pjos, setPjos]             = useState([]);
-    const [pagination, setPagination] = useState({ current_page: 1, last_page: 1, total: 0 });
-    const [loading, setLoading]       = useState(false);
-    const [search, setSearch]         = useState('');
-    const [status, setStatus]         = useState('');
-    const [limit, setLimit]           = useState(10);
-    const [page, setPage]             = useState(1);
+    const {
+        pjos, pagination, loading,
+        search, setSearch,
+        status, setStatus,
+        limit, setLimit,
+        page, setPage,
+        refresh, deletePjo
+    } = usePjo();
+
     const [deleteModal, setDeleteModal] = useState({ open: false, item: null });
     const [deleting, setDeleting]       = useState(false);
     const [deleteError, setDeleteError] = useState('');
 
-    const doFetch = useCallback(() => {
-        setLoading(true);
-        const params = new URLSearchParams({ search, status, limit, page });
-        fetch(`/api/csms/pjos?${params}`)
-            .then(r => r.json())
-            .then(d => {
-                setPjos(d?.data?.data ?? []);
-                setPagination({ current_page: d?.data?.current_page ?? 1, last_page: d?.data?.last_page ?? 1, total: d?.data?.total ?? 0 });
-            })
-            .catch(() => {})
-            .finally(() => setLoading(false));
-    }, [search, status, limit, page]);
-
-    useEffect(() => { doFetch(); }, [doFetch]);
-
     const confirmDelete = () => {
         setDeleting(true);
-        fetch(`/api/csms/pjos/${deleteModal.item.id}`, {
-            method: 'DELETE',
-            headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]')?.content },
-        })
-        .then(() => { setDeleteModal({ open: false, item: null }); doFetch(); })
+        deletePjo(deleteModal.item.id)
+        .then(() => { setDeleteModal({ open: false, item: null }); })
         .catch(e => setDeleteError(e?.message ?? 'Gagal menghapus'))
         .finally(() => setDeleting(false));
     };
@@ -89,7 +75,7 @@ export default function PjoIndex() {
                         <option value="On Going">On Going</option>
                         <option value="Inactive">Inactive</option>
                     </select>
-                    <button onClick={doFetch} style={btnStyle}><RefreshCw size={14} /></button>
+                    <button onClick={refresh} style={btnStyle}><RefreshCw size={14} /></button>
                     <a href="/csms/pjo/create" style={{ ...btnStyle, backgroundColor: 'var(--primary)', color: '#fff', border: 'none', textDecoration: 'none' }}>
                         <Plus size={14} /> Tambah PJO
                     </a>
@@ -97,50 +83,7 @@ export default function PjoIndex() {
             </div>
 
             <div style={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--border-color)', borderRadius: '12px', overflow: 'hidden', boxShadow: 'var(--shadow-sm)' }}>
-
-                    {loading ? (
-                        <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-secondary)', fontSize: '13px' }}>Memuat data...</div>
-                    ) : pjos.length === 0 ? (
-                        <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-secondary)', fontSize: '13px' }}>Tidak ada data PJO.</div>
-                    ) : (
-                        <div style={{ overflowX: 'auto' }}>
-                            <Table>
-                                <TableHeader>
-                                    <TableRow style={{ backgroundColor: '#f8fafc' }}>
-                                        <TableHead style={thStyle}>No</TableHead>
-                                        <TableHead style={thStyle}>No. PJO</TableHead>
-                                        <TableHead style={thStyle}>Nama PJO</TableHead>
-                                        <TableHead style={thStyle}>Perusahaan</TableHead>
-                                        <TableHead style={thStyle}>Telepon</TableHead>
-                                        <TableHead style={thStyle}>Tgl. Pengajuan</TableHead>
-                                        <TableHead style={thStyle}>Status</TableHead>
-                                        <TableHead style={{ ...thStyle, textAlign: 'center' }}>Aksi</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {pjos.map((p, i) => (
-                                        <TableRow key={p.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
-                                            <TableCell style={tdStyle}>{i + 1}</TableCell>
-                                            <TableCell style={tdStyle}>{p.number_pjo ?? '-'}</TableCell>
-                                            <TableCell style={{ ...tdStyle, fontWeight: 600, color: 'var(--text-primary)' }}>{p.name}</TableCell>
-                                            <TableCell style={tdStyle}>{p.company_name_resolved ?? '-'}</TableCell>
-                                            <TableCell style={tdStyle}>{p.phone ?? '-'}</TableCell>
-                                            <TableCell style={tdStyle}>{p.date_submission ? new Date(p.date_submission).toLocaleDateString('id-ID') : '-'}</TableCell>
-                                            <TableCell style={{ padding: '10px 12px' }}><PjoStatusBadge status={p.status} /></TableCell>
-                                            <TableCell style={{ padding: '10px 12px', textAlign: 'center' }}>
-                                                <div style={{ display: 'flex', gap: '6px', justifyContent: 'center' }}>
-                                                    <button title="Hapus" onClick={() => { setDeleteModal({ open: true, item: p }); setDeleteError(''); }}
-                                                        style={{ padding: '5px', borderRadius: '6px', backgroundColor: 'rgba(239,68,68,0.08)', border: 'none', cursor: 'pointer', display: 'inline-flex', color: '#ef4444' }}>
-                                                        <Trash2 size={13} />
-                                                    </button>
-                                                </div>
-                                            </TableCell>
-                                        </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
-                        </div>
-                    )}
+                <PjoTable pjos={pjos} loading={loading} onDelete={p => { setDeleteModal({ open: true, item: p }); setDeleteError(''); }} />
                 <TablePagination pagination={pagination} onPageChange={setPage} limit={limit} onLimitChange={v => { setLimit(v); setPage(1); }} />
             </div>
 

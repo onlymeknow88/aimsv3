@@ -11,6 +11,9 @@ class CSMSDatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // $this->call([]);
+        $this->call([
+            CSMSMasterBiddingChecklistTableSeeder::class,
+            CSMSDummySeeder::class,
+        ]);
     }
 }

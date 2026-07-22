@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Head } from '@inertiajs/react';
 import { ArrowLeft, HardHat, Save, Loader2 } from 'lucide-react';
+import axios from 'axios';
+import FileDropzone from '@/Components/FileDropzone';
 
 const S = {
     label: { fontSize: '10.5px', fontWeight: 700, color: 'var(--text-secondary)', marginBottom: '6px', display: 'block' },
@@ -16,41 +18,101 @@ export default function BiddingCreate() {
         company_name: '', address: '', company_site: '',
         license_number: '', service_criteria: '', classification: '',
         person_in_charge: '', date: '', business_entity_id: '',
+        ccow_id: '', parent_id: '', company_id: '',
     });
-    const [masterData, setMasterData] = useState({ service_criterias: [], classifications: [] });
+    const [masterData, setMasterData] = useState({ service_criterias: [], classifications: [], companies: [], business_entities: [] });
     const [errors, setErrors]         = useState({});
     const [saving, setSaving]         = useState(false);
+    const [checklists, setChecklists]         = useState([]);
+    const [checklistFiles, setChecklistFiles] = useState({});
     const [masterLoading, setMasterLoading] = useState(true);
 
     useEffect(() => {
-        fetch('/api/csms/master-data')
-            .then(r => r.json())
-            .then(d => setMasterData(d?.data ?? {}))
+        axios.get('/api/csms/master-data')
+            .then(res => {
+                const data = res.data?.result ?? {};
+                setMasterData(data);
+                if (data.master_checklists) {
+                    const filtered = (data.master_checklists ?? []).filter(mc => mc.criteria === 'Bidding');
+                    setChecklists(filtered.map(mc => ({
+                        id: mc.id,
+                        crtiteria: mc.crtiteria,
+                        sub_point: mc.sub_point,
+                        point: mc.point,
+                        legal_base: mc.legal_base,
+                        note: mc.note,
+                        value: '',
+                        comment: ''
+                    })));
+                }
+            })
             .finally(() => setMasterLoading(false));
     }, []);
 
-    const set = (field, val) => setForm(f => ({ ...f, [field]: val }));
+    const set = (field, val) => setForm(f => {
+        const updated = { ...f, [field]: val };
+        // If service criteria changes from SUBCONTRACTOR, clear parent_id/company_id
+        if (field === 'service_criteria' && val !== 'SUBCONTRACTOR') {
+            updated.parent_id = '';
+            updated.company_id = '';
+        }
+        // Sync company_id with parent_id for subcontractor parent reference
+        if (field === 'parent_id') {
+            updated.company_id = val;
+        }
+        return updated;
+    });
+
+    const setChecklist = (clId, field, val) => setChecklists(prev =>
+        prev.map(c => c.id === clId ? { ...c, [field]: val } : c)
+    );
+
+    const handleFileDrop = (clId, files) => {
+        setChecklistFiles(prev => ({
+            ...prev,
+            [clId]: [...(prev[clId] || []), ...files]
+        }));
+    };
+
+    const removeChecklistFile = (clId, fileIdx) => {
+        setChecklistFiles(prev => ({
+            ...prev,
+            [clId]: (prev[clId] || []).filter((_, i) => i !== fileIdx)
+        }));
+    };
 
     const handleSubmit = () => {
         setSaving(true);
         setErrors({});
-        fetch('/api/csms/biddings', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]')?.content,
-            },
-            body: JSON.stringify(form),
-        })
-        .then(r => r.json())
-        .then(d => {
-            if (d?.data?.id) {
-                window.location.href = `/csms/bidding/detail/${d.data.id}`;
-            } else if (d?.errors) {
-                setErrors(d.errors);
+
+        const fd = new FormData();
+        Object.entries(form).forEach(([k, v]) => {
+            if (v !== null && v !== undefined) fd.append(k, v);
+        });
+
+        checklists.forEach((cl, idx) => {
+            fd.append(`checklists[${idx}][id]`, cl.id);
+            fd.append(`checklists[${idx}][value]`, cl.value || '');
+            fd.append(`checklists[${idx}][comment]`, cl.comment || '');
+            
+            const files = checklistFiles[cl.id] || [];
+            files.forEach(file => {
+                fd.append(`checklists[${idx}][new_files][]`, file);
+            });
+        });
+
+        axios.post('/api/csms/biddings', fd)
+        .then(res => {
+            const data = res.data?.result;
+            if (data?.id) {
+                window.location.href = `/csms/bidding/detail/${data.id}`;
             }
         })
-        .catch(() => {})
+        .catch(err => {
+            if (err.response?.data?.errors) {
+                setErrors(err.response.data.errors);
+            }
+        })
         .finally(() => setSaving(false));
     };
 
@@ -63,6 +125,17 @@ export default function BiddingCreate() {
             </div>
         );
     }
+
+    const ccows = (masterData.companies ?? []).filter(c => c.type === 'Internal');
+    const parentCompanies = (masterData.companies ?? []).filter(c => c.type !== 'Internal');
+    const businessEntities = masterData.business_entities ?? [];
+
+    const groupedChecklists = checklists.reduce((groups, item) => {
+        const groupName = item.sub_point || '';
+        if (!groups[groupName]) groups[groupName] = [];
+        groups[groupName].push(item);
+        return groups;
+    }, {});
 
     return (
         <div style={{ backgroundColor: 'var(--bg-color)', minHeight: '100vh', padding: '40px 20px', boxSizing: 'border-box' }}>
@@ -93,14 +166,34 @@ export default function BiddingCreate() {
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                         <div style={row2}>
                             <div>
-                                <label style={S.label}>Nama Perusahaan <span style={{ color: '#ef4444' }}>*</span></label>
+                                <label style={S.label}>CCOW <span style={{ color: '#ef4444' }}>*</span></label>
+                                <select value={form.ccow_id} onChange={e => set('ccow_id', e.target.value)}
+                                    style={{ ...S.input, borderColor: errors.ccow_id ? '#ef4444' : 'var(--border-color)' }}>
+                                    <option value="">-- Pilih CCOW --</option>
+                                    {ccows.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                                </select>
+                                {errors.ccow_id && <span style={S.error}>{errors.ccow_id[0]}</span>}
+                            </div>
+                            <div>
+                                <label style={S.label}>Jenis Badan Usaha <span style={{ color: '#ef4444' }}>*</span></label>
+                                <select value={form.business_entity_id} onChange={e => set('business_entity_id', e.target.value)}
+                                    style={{ ...S.input, borderColor: errors.business_entity_id ? '#ef4444' : 'var(--border-color)' }}>
+                                    <option value="">-- Pilih Jenis --</option>
+                                    {businessEntities.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+                                </select>
+                                {errors.business_entity_id && <span style={S.error}>{errors.business_entity_id[0]}</span>}
+                            </div>
+                        </div>
+                        <div style={row2}>
+                            <div>
+                                <label style={S.label}>Nama Perusahaan <span style={{ color: '#ef4444' }}>*</span> (Sesuai Akta)</label>
                                 <input value={form.company_name} onChange={e => set('company_name', e.target.value)}
                                     style={{ ...S.input, borderColor: errors.company_name ? '#ef4444' : 'var(--border-color)' }}
                                     placeholder="PT. Nama Kontraktor" />
                                 {errors.company_name && <span style={S.error}>{errors.company_name[0]}</span>}
                             </div>
                             <div>
-                                <label style={S.label}>No. Lisensi <span style={{ color: '#ef4444' }}>*</span></label>
+                                <label style={S.label}>Nomor Ijin / Lisensi <span style={{ color: '#ef4444' }}>*</span></label>
                                 <input value={form.license_number} onChange={e => set('license_number', e.target.value)}
                                     style={{ ...S.input, borderColor: errors.license_number ? '#ef4444' : 'var(--border-color)' }}
                                     placeholder="SIUP-XXXX" />
@@ -137,7 +230,7 @@ export default function BiddingCreate() {
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                         <div style={row2}>
                             <div>
-                                <label style={S.label}>Kriteria Layanan <span style={{ color: '#ef4444' }}>*</span></label>
+                                <label style={S.label}>Kriteria Jasa Perusahaan <span style={{ color: '#ef4444' }}>*</span></label>
                                 <select value={form.service_criteria} onChange={e => set('service_criteria', e.target.value)}
                                     style={{ ...S.input, borderColor: errors.service_criteria ? '#ef4444' : 'var(--border-color)' }}>
                                     <option value="">-- Pilih Kriteria --</option>
@@ -145,22 +238,81 @@ export default function BiddingCreate() {
                                 </select>
                                 {errors.service_criteria && <span style={S.error}>{errors.service_criteria[0]}</span>}
                             </div>
-                            <div>
-                                <label style={S.label}>Klasifikasi</label>
-                                <select value={form.classification} onChange={e => set('classification', e.target.value)} style={S.input}>
-                                    <option value="">-- Pilih Klasifikasi --</option>
-                                    {(masterData.classifications ?? []).map(c => <option key={c} value={c}>{c}</option>)}
-                                </select>
-                            </div>
                         </div>
                         <div style={row2}>
                             <div>
                                 <label style={S.label}>Tanggal</label>
                                 <input type="date" value={form.date} onChange={e => set('date', e.target.value)} style={S.input} />
                             </div>
+                            {form.service_criteria === 'SUBCONTRACTOR' && (
+                                <div>
+                                    <label style={S.label}>Perusahaan Induk <span style={{ color: '#ef4444' }}>*</span></label>
+                                    <select value={form.parent_id} onChange={e => set('parent_id', e.target.value)} style={S.input}>
+                                        <option value="">-- Pilih Perusahaan Induk --</option>
+                                        {parentCompanies.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                                    </select>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
+
+                {/* Section: Checklist CSMS */}
+                {checklists.length > 0 && (
+                    <div style={{ marginBottom: '32px' }}>
+                        <h4 style={S.title}>Checklist Audit CSMS</h4>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                            {Object.entries(groupedChecklists).map(([subPoint, items]) => (
+                                <div key={subPoint} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                                    {subPoint && <h5 style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-primary)', margin: '10px 0 0', borderLeft: '3px solid var(--primary)', paddingLeft: '8px' }}>{subPoint}</h5>}
+                                    {items.map((cl, i) => (
+                                        <div key={cl.id} style={{ padding: '16px', backgroundColor: '#f8fafc', borderRadius: '10px', border: '1px solid var(--border-color)' }}>
+                                            <p style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-primary)', margin: '0 0 10px' }}>{i + 1}. {cl.crtiteria}</p>
+                                            {cl.legal_base && <p style={{ fontSize: '11px', color: '#1d4ed8', margin: '0 0 4px' }}><strong>Dasar Hukum:</strong> {cl.legal_base}</p>}
+                                            {cl.note && <p style={{ fontSize: '11px', color: '#810da8', margin: '0 0 4px' }}><strong>Panduan:</strong> {cl.note}</p>}
+                                            
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '10px' }}>
+                                                <select value={cl.value ?? ''} onChange={e => setChecklist(cl.id, 'value', e.target.value)}
+                                                    style={{ padding: '8px 10px', fontSize: '12px', border: '1px solid var(--border-color)', borderRadius: '6px', backgroundColor: '#fff', width: '100%' }}>
+                                                    <option value="">-- Pilih Pemenuhan --</option>
+                                                    <option value="Ya">Ya</option>
+                                                    <option value="Tidak">Tidak</option>
+                                                    <option value="N/A">N/A</option>
+                                                </select>
+                                                {cl.value === 'Tidak' && (
+                                                    <textarea value={cl.comment ?? ''} onChange={e => setChecklist(cl.id, 'comment', e.target.value)}
+                                                        placeholder="Tuliskan catatan/keterangan di sini..."
+                                                        style={{ padding: '8px 10px', fontSize: '12px', border: '1px solid var(--border-color)', borderRadius: '6px', backgroundColor: '#fff', width: '100%', minHeight: '60px', boxSizing: 'border-box' }} />
+                                                )}
+                                            </div>
+
+                                            {/* Upload attachment for this checklist item */}
+                                            <div style={{ borderTop: '1px dashed var(--border-color)', paddingTop: '10px', marginTop: '10px' }}>
+                                                <label style={{ ...S.label, fontSize: '11px', marginBottom: '8px' }}>Upload Dokumen Bukti</label>
+                                                <FileDropzone onFileDrop={(files) => handleFileDrop(cl.id, files)} accept=".pdf,.png,.jpeg,.jpg" />
+                                                
+                                                {/* Newly selected files */}
+                                                {(checklistFiles[cl.id] || []).length > 0 && (
+                                                    <div style={{ marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                                        {(checklistFiles[cl.id] || []).map((file, fileIdx) => (
+                                                            <div key={fileIdx} style={{ display: 'flex', alignItems: 'center', justifyContent: 'between', padding: '6px 10px', backgroundColor: '#fff', border: '1px solid var(--border-color)', borderRadius: '6px', fontSize: '11px' }}>
+                                                                <span style={{ textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap', maxWidth: '200px' }}>{file.name}</span>
+                                                                <button type="button" onClick={() => removeChecklistFile(cl.id, fileIdx)}
+                                                                    style={{ border: 'none', background: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '11px', fontWeight: 'bold' }}>
+                                                                    Hapus
+                                                                </button>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
 
                 {/* Footer */}
                 <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', paddingTop: '16px', borderTop: '1px solid var(--border-color)' }}>

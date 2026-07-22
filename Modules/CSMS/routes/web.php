@@ -34,6 +34,12 @@ Route::middleware(['web', 'auth'])->prefix('csms')->as('csms.')->group(function 
         Route::get('/lists', [CSMSController::class, 'postBiddingIndex'])
             ->middleware('module.permission:csms,can_view,csms.post-bidding')
             ->name('index');
+        Route::get('/create', [CSMSController::class, 'postBiddingCreate'])
+            ->middleware('module.permission:csms,can_create,csms.post-bidding')
+            ->name('create');
+        Route::get('/edit/{bidding}', [CSMSController::class, 'postBiddingEdit'])
+            ->middleware('module.permission:csms,can_edit,csms.post-bidding')
+            ->name('edit');
         Route::get('/detail/{bidding}', [CSMSController::class, 'postBiddingDetail'])
             ->middleware('module.permission:csms,can_view,csms.post-bidding')
             ->name('detail');
@@ -61,6 +67,12 @@ Route::middleware(['web', 'auth'])->prefix('csms')->as('csms.')->group(function 
         Route::get('/create', [CSMSController::class, 'pjoCreate'])
             ->middleware('module.permission:csms,can_create,csms.pjo')
             ->name('create');
+        Route::get('/edit/{pjo}', [CSMSController::class, 'pjoEdit'])
+            ->middleware('module.permission:csms,can_edit,csms.pjo')
+            ->name('edit');
+        Route::get('/detail/{pjo}', [CSMSController::class, 'pjoDetail'])
+            ->middleware('module.permission:csms,can_view,csms.pjo')
+            ->name('detail');
     });
 
     // Memo KTT
