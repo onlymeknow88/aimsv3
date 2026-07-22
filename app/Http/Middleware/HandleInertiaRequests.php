@@ -62,13 +62,28 @@ class HandleInertiaRequests extends Middleware
             }
         }
 
+        // CSMS menus — hanya di-load untuk halaman csms
+        $csmsMenus = [];
+        if ($request->is('csms*')) {
+            $moduleId = \DB::table('aims_modules')->where('slug', 'csms')->value('id');
+            if ($moduleId) {
+                $csmsMenus = \DB::table('aims_menus')
+                    ->where('module_id', $moduleId)
+                    ->orderBy('parent_id')
+                    ->orderBy('order_by')
+                    ->get()
+                    ->toArray();
+            }
+        }
+
         return [
             ...parent::share($request),
             'auth' => [
                 'user' => $user,
                 'modules' => $allowedModules,
             ],
-            'flsMenus' => $flsMenus,
+            'flsMenus'  => $flsMenus,
+            'csmsMenus' => $csmsMenus,
         ];
     }
 }

@@ -1,0 +1,11 @@
+{
+    "name": "CSMS",
+    "alias": "csms",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\CSMS\\App\\Providers\\CSMSServiceProvider"
+    ],
+    "files": []
+}

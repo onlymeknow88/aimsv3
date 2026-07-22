@@ -26,8 +26,8 @@ class CheckModulePermission
             return redirect()->route('login');
         }
 
-        // 2. Super admin gets bypass access
-        if ($user->role === 'super_admin') {
+        // 2. Super admin & system admin get bypass access
+        if (in_array($user->role, ['super_admin', 'system_admin'])) {
             return $next($request);
         }
 
