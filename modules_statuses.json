@@ -2,5 +2,6 @@
     "DocumentSystem": true,
     "Coe": true,
     "DashboardPortal": true,
-    "FieldLeadership": true
+    "FieldLeadership": true,
+    "CSMS": true
 }

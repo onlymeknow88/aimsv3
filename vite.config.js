@@ -22,7 +22,9 @@ export default defineConfig(async () => {
                 '@': '/resources/js',
                 '@DS': '/Modules/DocumentSystem/resources/js',
                 '@FLS': '/Modules/FieldLeadership/resources/js',
+                '@CSMS': '/Modules/CSMS/resources/js',
             },
+            extensions: ['.jsx', '.js', '.tsx', '.ts'],
         },
     };
 });

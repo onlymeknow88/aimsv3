@@ -47,7 +47,7 @@ export default function DashboardLayout({ children }) {
         { name: 'Management Risk (IBPR & Bowtie)', icon: ShieldAlert, href: '#', active: false, moduleSlug: 'management-risk' },
         { name: 'Compliance Regulation (KPP)', icon: Layers, href: '#', active: false, moduleSlug: 'compliance' },
         { name: 'Medical Check Up (MCU)', icon: HeartPulse, href: '#', active: false, moduleSlug: 'mcu' },
-        { name: 'Contractor Safety Management (CSMS)', icon: LandmarkIcon, href: '#', active: false, moduleSlug: 'csms' },
+        { name: 'Contractor Safety Management (CSMS)', icon: LandmarkIcon, href: '/csms/dashboard', active: currentPath.startsWith('/csms'), moduleSlug: 'csms' },
         { name: 'Safety Operation (KO)', icon: HardHat, href: '#', active: false, moduleSlug: 'safety-operation' },
         { name: 'PICA', icon: CheckSquare, href: '#', active: false, moduleSlug: 'pica' },
     ];
