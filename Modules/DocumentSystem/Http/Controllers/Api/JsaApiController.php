@@ -267,10 +267,10 @@ class JsaApiController extends Controller
     public function destroy(string $id)
     {
         $doc = JsaDocument::findOrFail($id);
-        
+
         // Also delete related attachments records
         JsaDocumentAttachment::where('jsa_document_id', $doc->id)->delete();
-        
+
         $doc->delete();
 
         return ResponseFormatter::success(null, 'JSA berhasil dihapus.');
@@ -347,6 +347,25 @@ class JsaApiController extends Controller
             'description'     => 'Dokumen dikirim untuk direview.',
         ]);
 
+        // Notify reviewers (invited people)
+        $doc->load(['people', 'user']);
+        $receivers = collect($doc->people)->pluck('email')->filter()->implode(';');
+        if ($receivers) {
+            $html = view('email_templates.document_system_review', [
+                'title'      => $doc->title,
+                'pic'        => $doc->user?->name ?? '-',
+                'action_url' => url('document-systems/login'),
+            ])->render();
+            sendPowerAutomateEmail([
+                'SendTo'        => $receivers,
+                'Title'         => 'JSA Submitted for Review: ' . $doc->title,
+                'MsgBody'       => $html,
+                'AttchmentPath' => '',
+                'AttchmentName' => '',
+                'SendCC'        => '',
+            ]);
+        }
+
         return ResponseFormatter::success($doc, 'Dokumen berhasil dikirim untuk review.');
     }
 
@@ -371,6 +390,25 @@ class JsaApiController extends Controller
             'status_document' => 'Document Approved',
             'description'     => $request->input('notes', 'Dokumen telah disetujui dan diaktifkan.'),
         ]);
+
+        // Notify maker & invited people: JSA approved
+        $doc->load(['people', 'user']);
+        $receivers = collect($doc->people)->pluck('email')->filter()->implode(';');
+        if ($receivers) {
+            $html = view('email_templates.document_system_review', [
+                'title'      => $doc->title,
+                'pic'        => $doc->user?->name ?? '-',
+                'action_url' => url('document-systems/login'),
+            ])->render();
+            sendPowerAutomateEmail([
+                'SendTo'        => $receivers,
+                'Title'         => 'JSA Disetujui & Aktif: ' . $doc->title,
+                'MsgBody'       => $html,
+                'AttchmentPath' => '',
+                'AttchmentName' => '',
+                'SendCC'        => '',
+            ]);
+        }
 
         return ResponseFormatter::success($doc, 'Dokumen berhasil disetujui.');
     }
@@ -397,6 +435,25 @@ class JsaApiController extends Controller
         $user = auth()->user() ?? auth('admin')->user() ?? auth('web')->user();
 
         $doc->update(['status' => JsaDocument::DRAFT]);
+
+        // Notify maker: JSA rejected/returned
+        $doc->load(['people', 'user']);
+        $receivers = collect($doc->people)->pluck('email')->filter()->implode(';');
+        if ($receivers) {
+            $html = view('email_templates.document_system_review', [
+                'title'      => $doc->title,
+                'pic'        => $doc->user?->name ?? '-',
+                'action_url' => url('document-systems/login'),
+            ])->render();
+            sendPowerAutomateEmail([
+                'SendTo'        => $receivers,
+                'Title'         => 'JSA Dikembalikan (Return): ' . $doc->title,
+                'MsgBody'       => $html,
+                'AttchmentPath' => '',
+                'AttchmentName' => '',
+                'SendCC'        => '',
+            ]);
+        }
 
         $uploadedAttachments = [];
         if ($request->hasFile('files')) {

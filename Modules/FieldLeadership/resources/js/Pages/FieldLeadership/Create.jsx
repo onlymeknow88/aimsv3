@@ -1,21 +1,21 @@
-import React from 'react';
-import { Loader2 } from 'lucide-react';
-import useObservationForm from './Hooks/useObservationForm';
+import CreateFooter           from './Partials/CreateFooter';
 import CreateHeader           from './Partials/CreateHeader';
-import SectionInfoUmum        from './Partials/SectionInfoUmum';
-import SectionPenanggungJawab from './Partials/SectionPenanggungJawab';
-import SectionPertanyaanPTO   from './Partials/SectionPertanyaanPTO';
+import { Loader2 } from 'lucide-react';
+import React from 'react';
 import SectionAnggotaTim      from './Partials/SectionAnggotaTim';
-import SectionWaktuKunjungan  from './Partials/SectionWaktuKunjungan';
+import SectionInfoUmum        from './Partials/SectionInfoUmum';
 import SectionKondisiPositif  from './Partials/SectionKondisiPositif';
 import SectionKondisiRisiko   from './Partials/SectionKondisiRisiko';
-import CreateFooter           from './Partials/CreateFooter';
+import SectionPenanggungJawab from './Partials/SectionPenanggungJawab';
+import SectionPertanyaanPTO   from './Partials/SectionPertanyaanPTO';
+import SectionWaktuKunjungan  from './Partials/SectionWaktuKunjungan';
+import useObservationForm from './Hooks/useObservationForm';
 
 const S = {
-    label:   { fontSize: '12px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '6px', display: 'block' },
+    label:   { fontSize: '10.5px', fontWeight: 700, color: 'var(--text-secondary)', marginBottom: '6px', display: 'block' },
     input:   { width: '100%', padding: '8px 12px', border: '1px solid var(--border-color)', borderRadius: '6px', fontSize: '12px', outline: 'none', backgroundColor: '#fff', boxSizing: 'border-box' },
-    title:   { fontSize: '13px', fontWeight: 700, color: 'var(--primary)', marginBottom: '14px', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px' },
-    card:    { backgroundColor: 'var(--card-bg)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '20px', marginBottom: '20px', boxShadow: 'var(--shadow-sm)' },
+    title:   { fontSize: '14px', fontWeight: 700, color: 'var(--primary)', marginBottom: '16px', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px' },
+    card:    { marginBottom: '32px' },
 };
 
 export default function Create({ editId = null }) {
@@ -33,10 +33,11 @@ export default function Create({ editId = null }) {
     const shared = { labelStyle: S.label, inputStyle: S.input, cardStyle: S.card, sectionTitleStyle: S.title };
 
     return (
-        <div style={{ padding: '24px 32px', backgroundColor: '#f8fafc', minHeight: '100vh', boxSizing: 'border-box' }}>
+        <div style={{ backgroundColor: 'var(--bg-color)', minHeight: '100vh', padding: '40px 20px', boxSizing: 'border-box' }}>
             <CreateHeader isEdit={f.isEdit} limitParam={f.limitParam} />
 
-            <div style={{ maxWidth: '900px', margin: '0 auto' }}>
+            <div style={{ display: 'flex', justifyContent: 'center' }}>
+            <div style={{ width: '100%', maxWidth: '1100px', backgroundColor: 'var(--card-bg)', border: '1px solid var(--border-color)', borderRadius: '16px', padding: '32px', boxShadow: 'var(--shadow-premium)' }}>
 
                 <SectionInfoUmum
                     {...shared}
@@ -56,6 +57,7 @@ export default function Create({ editId = null }) {
                     {...shared}
                     pjaId={f.pjaId} setPjaId={f.setPjaId} pjaList={f.pjaList} sectionId={f.sectionId}
                     isAreaSuitable={f.isAreaSuitable} setIsAreaSuitable={f.setIsAreaSuitable}
+                    isImmediateAction={f.isImmediateAction} setIsImmediateAction={f.setIsImmediateAction}
                     type={f.type} setType={f.setType}
                     personilOnReview={f.personilOnReview} setPersonilOnReview={f.setPersonilOnReview}
                     personilOnReviewName={f.personilOnReviewName} setPersonilOnReviewName={f.setPersonilOnReviewName}
@@ -76,6 +78,7 @@ export default function Create({ editId = null }) {
                     addMember={f.addMember} removeMember={f.removeMember} updateMember={f.updateMember}
                     memberInternals={f.memberInternals} memberExternals={f.memberExternals}
                     limitMember={f.limitMember}
+                    errors={f.errors}
                 />
 
                 <SectionWaktuKunjungan
@@ -114,6 +117,7 @@ export default function Create({ editId = null }) {
                     handleSubmit={f.handleSubmit}
                 />
 
+            </div>
             </div>
         </div>
     );

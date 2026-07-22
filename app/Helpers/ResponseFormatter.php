@@ -17,60 +17,60 @@ class ResponseFormatter
      *
      * @var array
      */
-    protected static $response = [
-        'meta' => [
-            'code' => 200,
-            'status' => 'success',
-            'message' => null,
-        ],
-        'result' => null,
-    ];
+    // Removed static $response to prevent state leaking between requests
 
     /**
      * Give success response.
      */
-    public static function success($data = null, $message = null, $resourceClass = null)
+    public static function success($data = null, $message = null, $resourceClassOrCode = null)
     {
-        self::$response['meta']['message'] = $message;
+        $httpCode      = 200;
+        $resourceClass = null;
 
-        // Check if $data is a paginated collection
-        if ($data instanceof \Illuminate\Contracts\Pagination\LengthAwarePaginator) {
-            self::$response['result'] = [
-                'current_page' => $data->currentPage(),
-                'data' => $resourceClass
-                ? $resourceClass::collection($data->items())
-                : $data->items(),
-                'first_page_url' => $data->url(1),
-                'from' => $data->firstItem(),
-                'last_page' => $data->lastPage(),
-                'last_page_url' => $data->url($data->lastPage()),
-                'links' => $data->linkCollection()->toArray(),
-                'next_page_url' => $data->nextPageUrl(),
-                'path' => $data->path(),
-                'per_page' => $data->perPage(),
-                'prev_page_url' => $data->previousPageUrl(),
-                'to' => $data->lastItem(),
-                'total' => $data->total(),
-            ];
-        } else {
-            // Standard response
-            self::$response['result'] = $data;
+        if (is_int($resourceClassOrCode)) {
+            $httpCode = $resourceClassOrCode;
+        } elseif (is_string($resourceClassOrCode)) {
+            $resourceClass = $resourceClassOrCode;
         }
 
-        return response()->json(self::$response, self::$response['meta']['code']);
-    }
+        $result = null;
+        if ($data instanceof \Illuminate\Contracts\Pagination\LengthAwarePaginator) {
+            $result = [
+                'current_page'   => $data->currentPage(),
+                'data'           => $resourceClass ? $resourceClass::collection($data->items()) : $data->items(),
+                'first_page_url' => $data->url(1),
+                'from'           => $data->firstItem(),
+                'last_page'      => $data->lastPage(),
+                'last_page_url'  => $data->url($data->lastPage()),
+                'links'          => $data->linkCollection()->toArray(),
+                'next_page_url'  => $data->nextPageUrl(),
+                'path'           => $data->path(),
+                'per_page'       => $data->perPage(),
+                'prev_page_url'  => $data->previousPageUrl(),
+                'to'             => $data->lastItem(),
+                'total'          => $data->total(),
+            ];
+        } else {
+            $result = $data;
+        }
 
+        return response()->json([
+            'meta'   => ['code' => $httpCode, 'status' => 'success', 'message' => $message],
+            'result' => $result,
+        ], $httpCode);
+    }
 
     /**
      * Give error response.
      */
     public static function error($message = null, $code = 400)
     {
-        self::$response['meta']['status'] = 'error';
-        self::$response['meta']['code'] = $code;
-        self::$response['meta']['message'] = $message;
+        $httpCode = (int) $code;
 
-        return response()->json(self::$response, self::$response['meta']['code']);
+        return response()->json([
+            'meta'   => ['code' => $httpCode, 'status' => 'error', 'message' => $message],
+            'result' => null,
+        ], $httpCode);
     }
 
 }

@@ -1,33 +1,31 @@
-import React from 'react';
+import { AlertTriangle, ArrowLeft } from 'lucide-react';
+
 import { Head } from '@inertiajs/react';
-import { ArrowLeft, AlertTriangle } from 'lucide-react';
+import React from 'react';
 
 export default function CreateHeader({ isEdit, limitParam }) {
     return (
         <>
             <Head title={isEdit ? 'Edit Field Leadership' : 'Buat Field Leadership Baru'} />
 
-            {/* Back + Title */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
+            {/* Back navigation — same style as Maker/Create.jsx */}
+            <div style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                marginBottom: '24px', borderBottom: '1px solid var(--border-color)',
+                paddingBottom: '12px', maxWidth: '1100px', margin: '0 auto 24px auto',
+            }}>
                 <a
-                    href="/field-leadership/observations"
+                    href="/field-leadership"
                     style={{
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        width: '32px', height: '32px', borderRadius: '8px',
-                        border: '1px solid var(--border-color)', backgroundColor: '#fff',
-                        color: 'var(--text-primary)', textDecoration: 'none', flexShrink: 0,
+                        display: 'inline-flex', alignItems: 'center', gap: '8px',
+                        color: 'var(--primary)', fontWeight: 700, textDecoration: 'none', fontSize: '12px',
                     }}
                 >
-                    <ArrowLeft size={16} />
+                    <ArrowLeft size={16} /> Kembali ke Field Leadership
                 </a>
-                <div>
-                    <h1 style={{ fontSize: '18px', fontWeight: 800, color: 'var(--primary)', margin: 0 }}>
-                        {isEdit ? 'Edit Field Leadership' : 'Buat Field Leadership Baru'}
-                    </h1>
-                    <p style={{ fontSize: '11px', color: 'var(--text-secondary)', margin: 0 }}>
-                        {isEdit ? 'Ubah data Field Leadership yang sudah ada' : 'Tambah Field Leadership baru'}
-                    </p>
-                </div>
+                <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                    {isEdit ? 'Siklus Pembaharuan Field Leadership' : 'Siklus Pembuatan Field Leadership Baru'}
+                </span>
             </div>
 
             {/* Warning: limit parameter not set */}

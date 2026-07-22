@@ -17,17 +17,19 @@ Route::prefix('field-leadership')->group(function () {
     // ── Master data for create/edit form (single endpoint) ───────────────────
     Route::get('/master-data',               [FieldLeadershipApiController::class, 'masterData']);
 
-    // ── Observations (CRUD) ───────────────────────────────────────────────────
-    Route::get('/observations',              [FieldLeadershipApiController::class, 'index']);
-    Route::post('/observations',             [FieldLeadershipApiController::class, 'store']);
-    Route::get('/observations/{id}',         [FieldLeadershipApiController::class, 'show']);
-    Route::put('/observations/{id}',         [FieldLeadershipApiController::class, 'update']);
-    Route::delete('/observations',           [FieldLeadershipApiController::class, 'destroy']);
+    // ── FieldLeadership (CRUD) ───────────────────────────────────────────────────
+    Route::get('/',              [FieldLeadershipApiController::class, 'index']);
+    Route::post('',             [FieldLeadershipApiController::class, 'store']);
+    Route::get('/{id}',         [FieldLeadershipApiController::class, 'show']);
+    Route::put('/{id}',         [FieldLeadershipApiController::class, 'update']);
+    Route::delete('',           [FieldLeadershipApiController::class, 'destroy']);
 
-    // ── Approval routing ─────────────────────────────────────────────────────
-    Route::post('/observations/{id}/submit',  [FieldLeadershipApprovalApiController::class, 'submit']);
-    Route::post('/observations/{id}/approve', [FieldLeadershipApprovalApiController::class, 'approve']);
-    Route::post('/observations/{id}/return',  [FieldLeadershipApprovalApiController::class, 'returnWithComment']);
+    // ── Approval routing (workflow baru) ────────────────────────────────────
+    Route::post('/{id}/submit',     [FieldLeadershipApprovalApiController::class, 'submit']);
+    Route::post('/{id}/pja-review', [FieldLeadershipApprovalApiController::class, 'pjaReview']);
+    Route::post('/{id}/crs-action', [FieldLeadershipApprovalApiController::class, 'crsAction']);
+    Route::post('/{id}/crs-verify', [FieldLeadershipApprovalApiController::class, 'crsVerify']);
+    Route::post('/{id}/return',     [FieldLeadershipApprovalApiController::class, 'returnWithComment']);
 
     // ── Risks ─────────────────────────────────────────────────────────────────
     Route::get('/risks',         [FieldLeadershipRisksApiController::class, 'index']);
@@ -41,8 +43,12 @@ Route::prefix('field-leadership')->group(function () {
     Route::get('/masters/pja',           [FieldLeadershipMasterApiController::class, 'getPja']);
 
     // ── Risk Files (preview/download) ─────────────────────────────────────────
-    Route::get('/risk-files/{id}/preview',   [FieldLeadershipApiController::class, 'previewRiskFile']);
-    Route::get('/risk-files/{id}/download',  [FieldLeadershipApiController::class, 'downloadRiskFile']);
+    Route::get('/risk-files/{id}/preview',      [FieldLeadershipApiController::class, 'previewRiskFile']);
+    Route::get('/risk-files/{id}/download',     [FieldLeadershipApiController::class, 'downloadRiskFile']);
+
+    // ── Activity Files (preview/download) ────────────────────────────────────
+    Route::get('/activity-files/{id}/preview',  [FieldLeadershipApiController::class, 'previewActivityFile']);
+    Route::get('/activity-files/{id}/download', [FieldLeadershipApiController::class, 'downloadActivityFile']);
 
     // ── Master Library CRUD ───────────────────────────────────────────────────
     // Limit Parameters (single-row upsert — no {id} needed on PUT)

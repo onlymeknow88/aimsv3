@@ -75,7 +75,8 @@ export default function useCompany() {
                 axios.get('/api/admin/users'),
                 axios.get(BASE_URL, { params: { limit: 1000 } }),
             ]);
-            setUsers(usersRes.data?.result || []);
+            const usersData = usersRes.data?.result;
+            setUsers(Array.isArray(usersData) ? usersData : (usersData?.data || []));
             setAllCompanies(companiesRes.data?.result?.data || []);
         } catch (e) {
             console.error('Gagal mengambil data dropdown:', e);

@@ -1,6 +1,7 @@
-import { useState, useEffect, useCallback } from 'react';
-import { router } from '@inertiajs/react';
+import { useCallback, useEffect, useState } from 'react';
+
 import axios from 'axios';
+import { router } from '@inertiajs/react';
 
 export const PTO_QUESTIONS = [
     { key: 'q1', text: 'Apakah risiko yang ada di area Anda yang dapat membahayakan nyawa Anda?',                          has_answer: true  },
@@ -31,7 +32,7 @@ function blankRisk(categories = [], isHazardReport = false) {
  * useObservationForm
  *
  * Handles master data loading, form state, cascading dropdowns,
- * create (POST) and edit (PUT) submission for Field Leadership observations.
+ * create (POST) and edit (PUT) submission for Field Leadership FieldLeadership.
  *
  * @param {string|null} editId  - UUID of the observation to edit, or null for create
  */
@@ -67,6 +68,7 @@ export default function useObservationForm(editId = null) {
     const [pjaId,                 setPjaId]                 = useState('');
     const [pjoId,                 setPjoId]                 = useState('');
     const [isAreaSuitable,        setIsAreaSuitable]        = useState(false);
+    const [isImmediateAction,     setIsImmediateAction]     = useState(false);
     const [type,                  setType]                  = useState('Planned Task Observation');
     const [job,                   setJob]                   = useState('');
     const [visitTime,             setVisitTime]             = useState('');
@@ -120,7 +122,7 @@ export default function useObservationForm(editId = null) {
     useEffect(() => {
         if (!isEdit) return;
 
-        axios.get(`/api/field-leadership/observations/${editId}`)
+        axios.get(`/api/field-leadership/${editId}`)
             .then(res => {
                 const d = res.data?.result;
                 if (!d) return;
@@ -139,6 +141,7 @@ export default function useObservationForm(editId = null) {
                 setPjaId(obs.pja_id ?? '');
                 setPjoId(obs.pjo_id ?? '');
                 setIsAreaSuitable(!!obs.is_area_suitable);
+                setIsImmediateAction(!!obs.is_immediate_action);
                 setType(obs.type ?? 'Planned Task Observation');
                 setJob(obs.job ?? '');
                 setVisitTime(obs.visit_time ? String(obs.visit_time) : '');
@@ -223,11 +226,14 @@ export default function useObservationForm(editId = null) {
         }).catch(() => {});
     }, [sectionId]);
 
-    // Auto-fill detailCompany when companyId changes
+    // Auto-fill detailCompany dan pjoId ketika companyId berubah
     useEffect(() => {
-        if (!companyId) { setDetailCompany(''); return; }
+        if (!companyId) { setDetailCompany(''); setPjoId(''); return; }
         const comp = companies.find(c => String(c.id) === String(companyId));
-        if (comp) setDetailCompany(comp.company_name ?? comp.name ?? '');
+        if (comp) {
+            setDetailCompany(comp.company_name ?? comp.name ?? '');
+            if (comp.user_id) setPjoId(comp.user_id);
+        }
     }, [companyId, companies]);
 
     // ── 4. Member helpers ─────────────────────────────────────────────────────
@@ -288,6 +294,21 @@ export default function useObservationForm(editId = null) {
      */
     const handleSubmit = useCallback(async (submitType) => {
         setSubmitting(true);
+
+        // ── Frontend validation ───────────────────────────────────────────────
+        const frontendErrors = {};
+        if (!date)      frontendErrors.date       = ['Tanggal wajib diisi.'];
+        if (!ccowId)    frontendErrors.ccow_id    = ['CCOW wajib dipilih.'];
+        if (!companyId) frontendErrors.company_id = ['Perusahaan wajib dipilih.'];
+        if (!pjaId)     frontendErrors.pja_id     = ['Penanggung Jawab Area wajib dipilih.'];
+
+        if (Object.keys(frontendErrors).length > 0) {
+            setErrors(frontendErrors);
+            setSubmitting(false);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            return;
+        }
+
         setErrors({});
 
         // Build questions array (only for PTO)
@@ -333,6 +354,7 @@ export default function useObservationForm(editId = null) {
         append('job',                     job              || '');
         append('visit_time',              visitTime ? parseInt(visitTime, 10) : '');
         append('is_area_suitable',        isAreaSuitable ? '1' : '0');
+        append('is_immediate_action',     isImmediateAction ? '1' : '0');
         append('personil_on_review',      personilOnReview     ? parseInt(personilOnReview, 10) : '');
         append('personil_on_review_name', personilOnReviewName || '');
         append('publish',                 submitType === 'Draft' ? 'Draft' : 'Publish');
@@ -376,11 +398,11 @@ export default function useObservationForm(editId = null) {
 
         try {
             if (isEdit) {
-                await axios.post(`/api/field-leadership/observations/${editId}?_method=PUT`, form, { headers });
+                await axios.post(`/api/field-leadership/${editId}?_method=PUT`, form, { headers });
             } else {
-                await axios.post('/api/field-leadership/observations', form, { headers });
+                await axios.post('/api/field-leadership', form, { headers });
             }
-            router.visit('/field-leadership/observations');
+            router.visit('/field-leadership');
         } catch (err) {
             if (err.response?.status === 422) {
                 setErrors(err.response.data?.errors ?? {});
@@ -395,7 +417,7 @@ export default function useObservationForm(editId = null) {
     }, [
         isEdit, editId, isPTO, isHazardReport,
         date, ccowId, companyId, detailCompany, departmentId, sectionId,
-        areaLocationId, detailLocation, pjaId, pjoId, isAreaSuitable, type,
+        areaLocationId, detailLocation, pjaId, pjoId, isAreaSuitable, isImmediateAction, type,
         job, visitTime, personilOnReview, personilOnReviewName,
         answers, members, positiveConditions, riskConditions, categories,
     ]);
@@ -438,6 +460,7 @@ export default function useObservationForm(editId = null) {
         pjaId,          setPjaId,
         pjoId,          setPjoId,
         isAreaSuitable, setIsAreaSuitable,
+        isImmediateAction, setIsImmediateAction,
         type,           setType,
         job,            setJob,
         visitTime,      setVisitTime,

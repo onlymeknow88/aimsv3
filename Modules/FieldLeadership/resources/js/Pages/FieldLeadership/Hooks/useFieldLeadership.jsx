@@ -1,4 +1,5 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+
 import axios from 'axios';
 
 export default function useObservations(defaultType = '') {
@@ -23,7 +24,7 @@ export default function useObservations(defaultType = '') {
 
     const fetchDocs = useCallback(() => {
         setLoading(true);
-        axios.get('/api/field-leadership/observations', {
+        axios.get('/api/field-leadership', {
             params: {
                 search,
                 page,
@@ -69,7 +70,7 @@ export default function useObservations(defaultType = '') {
     const confirmDelete = useCallback(async () => {
         setDeleting(true);
         try {
-            await axios.delete('/api/field-leadership/observations', { data: { ids: selectedIds } });
+            await axios.delete('/api/field-leadership', { data: { ids: selectedIds } });
             setSelectedIds([]);
             setDeleteConfirmOpen(false);
             fetchDocs();

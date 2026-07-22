@@ -11,6 +11,7 @@ export default function BlobPreviewModal({ attachment, onClose }) {
     const isPtw = attachment.type === 'ptw';
     const isUncontrolled = attachment.type === 'uncontrolled';
     const isFlRisk = attachment.type === 'fl_risk';
+    const isFlActivity = attachment.type === 'fl_activity';
 
     // Construct query parameters cleanly
     const params = [];
@@ -28,10 +29,14 @@ export default function BlobPreviewModal({ attachment, onClose }) {
     const attachmentId = attachment.id || 'none';
     const previewUrl = isFlRisk
         ? `/api/field-leadership/risk-files/${attachmentId}/preview`
-        : `/api/document-system/attachments/${attachmentId}/preview${queryString}`;
+        : isFlActivity
+            ? `/api/field-leadership/activity-files/${attachmentId}/preview`
+            : `/api/document-system/attachments/${attachmentId}/preview${queryString}`;
     const downloadUrl = isFlRisk
         ? `/api/field-leadership/risk-files/${attachmentId}/download`
-        : `/api/document-system/attachments/${attachmentId}/download${queryString}`;
+        : isFlActivity
+            ? `/api/field-leadership/activity-files/${attachmentId}/download`
+            : `/api/document-system/attachments/${attachmentId}/download${queryString}`;
     const fileExtension = (attachment.file_type || (attachment.name ? attachment.name.split('.').pop() : '') || (attachment.file_name ? attachment.file_name.split('.').pop() : '') || (attachment.file_path ? attachment.file_path.split('.').pop() : '') || '').toLowerCase();
     const isImage = ['png', 'jpg', 'jpeg', 'gif'].includes(fileExtension);
     const isPdf = fileExtension === 'pdf';

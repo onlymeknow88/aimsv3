@@ -74,7 +74,7 @@ class NewsAndUpdateController extends Controller
             $uploadResult = uploadToBlobStorage($fileName, $file->getRealPath(), 'news-and-update');
 
             if (!$uploadResult || empty($uploadResult['fileBlobPathName'])) {
-                return ResponseFormatter::error(null, 'Gagal mengunggah file ke Blob Storage.', 500);
+                return ResponseFormatter::error('Gagal mengunggah file ke Blob Storage.', 500);
             }
 
             $data['attc']          = $file->getClientOriginalName();
@@ -117,7 +117,7 @@ class NewsAndUpdateController extends Controller
             $uploadResult = uploadToBlobStorage($fileName, $file->getRealPath(), 'news-and-update');
 
             if (!$uploadResult || empty($uploadResult['fileBlobPathName'])) {
-                return ResponseFormatter::error(null, 'Gagal mengunggah file ke Blob Storage.', 500);
+                return ResponseFormatter::error('Gagal mengunggah file ke Blob Storage.', 500);
             }
 
             $data['attc']          = $file->getClientOriginalName();

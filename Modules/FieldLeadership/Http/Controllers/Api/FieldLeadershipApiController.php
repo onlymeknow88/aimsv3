@@ -104,26 +104,32 @@ class FieldLeadershipApiController extends Controller
     public function show(string $id)
     {
         $fl = DB::table('field_leaderships as fl')
+            ->leftJoin('companies as ccow',    'fl.ccow_id',         '=', 'ccow.id')
             ->leftJoin('companies as c',       'fl.company_id',      '=', 'c.id')
+            ->leftJoin('users as pjo',         'fl.pjo_id',          '=', 'pjo.id')
+            ->leftJoin('users as pjo_company', 'c.user_id',          '=', 'pjo_company.id')
             ->leftJoin('departments as d',     'fl.department_id',   '=', 'd.id')
             ->leftJoin('sections as s',        'fl.section_id',      '=', 's.id')
             ->leftJoin('area_locations as al', 'fl.area_location_id','=', 'al.id')
-            ->leftJoin('employees as e',       'fl.created_by',      '=', 'e.id')
-            ->leftJoin('users as pjo',         'fl.pjo_id',          '=', 'pjo.id')
+            ->leftJoin('users as creator',     'fl.created_by',      '=', 'creator.id')
+            ->leftJoin('area_managers as am',  'fl.pja_id',          '=', 'am.id')
+            ->leftJoin('users as pja_user',    'am.user_id',         '=', 'pja_user.id')
             ->where('fl.id', $id)
             ->select([
                 'fl.*',
+                DB::raw('COALESCE(ccow.company_name, \'—\') as ccow_name'),
                 DB::raw('COALESCE(c.company_name, fl.detail_company) as company_name'),
                 DB::raw('COALESCE(d.name, \'—\') as department_name'),
                 DB::raw('COALESCE(s.name, \'—\') as section_name'),
                 DB::raw('COALESCE(al.name, \'—\') as area_location_name'),
-                DB::raw('COALESCE(e.name, \'—\') as created_by_name'),
-                DB::raw('COALESCE(pjo.name, \'—\') as pjo_name'),
+                DB::raw('COALESCE(creator.name, \'—\') as created_by_name'),
+                DB::raw('COALESCE(pjo.name, pjo_company.name, \'—\') as pjo_name'),
+                DB::raw('COALESCE(pja_user.name, \'—\') as pja_name'),
             ])
             ->first();
 
         if (!$fl) {
-            return ResponseFormatter::error(null, 'Observation not found', 404);
+            return ResponseFormatter::error('Observation not found', 404);
         }
 
         // Load child data
@@ -162,10 +168,18 @@ class FieldLeadershipApiController extends Controller
             return $risk;
         });
 
-        $activities = DB::table('field_leadership_activities')
+        $activitiesRaw = DB::table('field_leadership_activities')
             ->where('fl_id', $id)
             ->orderBy('created_at', 'asc')
             ->get();
+
+        $activities = $activitiesRaw->map(function ($act) {
+            $act->files = DB::table('field_leadership_activity_files')
+                ->where('fl_activity_id', $act->id)
+                ->select(['id', 'file', 'type_file', 'size', 'blob_url'])
+                ->get();
+            return $act;
+        });
 
         return ResponseFormatter::success([
             'observation'  => $fl,
@@ -183,7 +197,19 @@ class FieldLeadershipApiController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
+        // Convert empty strings to null for all UUID / nullable fields
+        // so that Laravel's nullable|uuid rule works correctly with FormData
+        $request->merge([
+            'ccow_id'          => $request->ccow_id          ?: null,
+            'company_id'       => $request->company_id       ?: null,
+            'department_id'    => $request->department_id    ?: null,
+            'section_id'       => $request->section_id       ?: null,
+            'area_location_id' => $request->area_location_id ?: null,
+            'pja_id'           => $request->pja_id           ?: null,
+            'pjo_id'           => $request->pjo_id           ?: null,
+        ]);
+
+        $validator = \Validator::make($request->all(), [
             'date'                    => 'required|date',
             'ccow_id'                 => 'nullable|uuid',
             'company_id'              => 'nullable|uuid',
@@ -201,19 +227,15 @@ class FieldLeadershipApiController extends Controller
             'personil_on_review'      => 'nullable|integer',
             'personil_on_review_name' => 'nullable|string|max:255',
             'publish'                 => 'nullable|in:Draft,Publish',
-            // Members
             'members'                 => 'nullable|array',
             'members.*.type'          => 'required_with:members|string',
             'members.*.employee_id'   => 'required_with:members|uuid',
-            // Positive conditions
             'positives'               => 'nullable|array',
             'positives.*.description' => 'required_with:positives|string',
-            // Questions (PTO only)
             'questions'               => 'nullable|array',
             'questions.*.question'    => 'required_with:questions|string',
             'questions.*.answer'      => 'nullable|string',
             'questions.*.description' => 'nullable|string',
-            // Risk conditions
             'risks'                   => 'nullable|array',
             'risks.*.description'     => 'required_with:risks|string',
             'risks.*.category_id'     => 'nullable|uuid',
@@ -224,7 +246,28 @@ class FieldLeadershipApiController extends Controller
             'risks.*.repair_action'   => 'nullable|string',
             'risks.*.type_action'     => 'nullable|string',
             'risks.*.supervisor'      => 'nullable|string',
+        ], [
+            'date.required'                         => 'Tanggal wajib diisi.',
+            'pja_id.required'                       => 'Penanggung Jawab Area wajib dipilih.',
+            'pja_id.uuid'                           => 'Penanggung Jawab Area tidak valid.',
+            'detail_company.required'               => 'Detail perusahaan wajib diisi.',
+            'type.required'                         => 'Jenis Field Leadership wajib dipilih.',
+            'type.in'                               => 'Jenis Field Leadership tidak valid.',
+            'members.*.type.required_with'          => 'Tipe anggota tim wajib diisi.',
+            'members.*.employee_id.required_with'   => 'Nama anggota tim wajib dipilih.',
+            'positives.*.description.required_with' => 'Deskripsi kondisi positif wajib diisi.',
+            'questions.*.question.required_with'    => 'Pertanyaan PTO wajib diisi.',
+            'risks.*.description.required_with'     => 'Deskripsi temuan risiko wajib diisi.',
+            'risks.*.due_date.required_with'        => 'Tanggal rencana perbaikan wajib diisi.',
+            'risks.*.due_date.date'                 => 'Format tanggal rencana perbaikan tidak valid.',
         ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'Data tidak valid.',
+                'errors'  => $validator->errors(),
+            ], 422);
+        }
 
         DB::beginTransaction();
         try {
@@ -244,7 +287,7 @@ class FieldLeadershipApiController extends Controller
                 'personil_on_review'      => $request->personil_on_review,
                 'personil_on_review_name' => $request->personil_on_review_name,
                 'pja_id'                  => $request->pja_id,
-                'pjo_id'                  => $request->pjo_id,
+                'pjo_id'                  => $request->pjo_id ?: null,
                 'type'                    => $request->type,
                 'job'                     => $request->job,
                 'visit_time'              => $request->visit_time,
@@ -348,7 +391,7 @@ class FieldLeadershipApiController extends Controller
 
         } catch (\Throwable $e) {
             DB::rollBack();
-            return ResponseFormatter::error(null, 'Gagal menyimpan: ' . $e->getMessage(), 500);
+            return ResponseFormatter::error('Gagal menyimpan: ' . $e->getMessage(), 500);
         }
     }
 
@@ -360,30 +403,53 @@ class FieldLeadershipApiController extends Controller
     {
         $fl = DB::table('field_leaderships')->where('id', $id)->first();
         if (!$fl) {
-            return ResponseFormatter::error(null, 'Observation not found', 404);
+            return ResponseFormatter::error('Observation not found', 404);
         }
 
-        $validated = $request->validate([
-            'date'           => 'sometimes|date',
-            'company_id'     => 'nullable|uuid',
-            'detail_company' => 'sometimes|string|max:255',
-            'department_id'  => 'nullable|uuid',
-            'section_id'     => 'nullable|uuid',
-            'area_location_id'=> 'nullable|uuid',
-            'detail_location'=> 'nullable|string',
-            'pja_id'         => 'sometimes|uuid',
-            'pjo_id'         => 'sometimes|uuid',
-            'type'           => 'sometimes|in:Planned Task Observation,Take Time Talk,Hazard Report',
-            'job'            => 'nullable|string|max:255',
-            'visit_time'     => 'nullable|integer',
-            'is_area_suitable'=> 'boolean',
-            'status'         => 'sometimes|in:Open,On Review PICA,On Review PJA,On Review Approval,Overdue,Closed',
+        // Convert empty strings to null for UUID fields
+        $request->merge([
+            'ccow_id'          => $request->ccow_id          ?: null,
+            'company_id'       => $request->company_id       ?: null,
+            'department_id'    => $request->department_id    ?: null,
+            'section_id'       => $request->section_id       ?: null,
+            'area_location_id' => $request->area_location_id ?: null,
+            'pja_id'           => $request->pja_id           ?: null,
+            'pjo_id'           => $request->pjo_id           ?: null,
         ]);
 
-        DB::table('field_leaderships')->where('id', $id)->update(array_merge(
-            $validated,
-            ['updated_at' => now()]
-        ));
+        $validated = $request->validate([
+            'date'             => 'sometimes|date',
+            'ccow_id'          => 'nullable|uuid',
+            'company_id'       => 'nullable|uuid',
+            'detail_company'   => 'sometimes|string|max:255',
+            'department_id'    => 'nullable|uuid',
+            'section_id'       => 'nullable|uuid',
+            'area_location_id' => 'nullable|uuid',
+            'detail_location'  => 'nullable|string',
+            'pja_id'           => 'nullable|uuid',
+            'pjo_id'           => 'nullable|uuid',
+            'type'             => 'sometimes|in:Planned Task Observation,Take Time Talk,Hazard Report',
+            'job'              => 'nullable|string|max:255',
+            'visit_time'       => 'nullable|integer',
+            'is_area_suitable' => 'boolean',
+            'personil_on_review'      => 'nullable|integer',
+            'personil_on_review_name' => 'nullable|string|max:255',
+            'status'           => 'sometimes|in:Open,On Review PICA,On Review PJA,On Review Approval,Overdue,Closed',
+        ]);
+
+        // Handle boolean and nullable fields explicitly
+        $updateData = array_merge($validated, [
+            'is_area_suitable' => $request->boolean('is_area_suitable', false),
+            'published'        => $request->input('publish', $fl->published ?? 'Draft'),
+            'updated_at'       => now(),
+        ]);
+
+        // Remove status from update data unless explicitly provided
+        if (!$request->has('status')) {
+            unset($updateData['status']);
+        }
+
+        DB::table('field_leaderships')->where('id', $id)->update($updateData);
 
         return ResponseFormatter::success(['id' => $id], 'Observation updated successfully');
     }
@@ -397,7 +463,7 @@ class FieldLeadershipApiController extends Controller
     {
         $ids = $request->input('ids', []);
         if (empty($ids)) {
-            return ResponseFormatter::error(null, 'No IDs provided', 422);
+            return ResponseFormatter::error('No IDs provided', 422);
         }
 
         DB::table('field_leaderships')->whereIn('id', $ids)->delete();
@@ -527,6 +593,70 @@ class FieldLeadershipApiController extends Controller
             'questions'          => $questions,
             'types'              => self::TYPES,
         ], 'Master data retrieved successfully');
+    }
+
+    // ── Preview activity file ──────────────────────────────────────────────────
+    public function previewActivityFile(string $id)
+    {
+        $file = DB::table('field_leadership_activity_files')->where('id', $id)->first();
+        if (!$file) abort(404, 'File tidak ditemukan.');
+
+        $filePath = $file->file;
+        $fileName = basename($filePath);
+        $ext      = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
+        $mimeType = match($ext) {
+            'pdf'        => 'application/pdf',
+            'png'        => 'image/png',
+            'jpg','jpeg' => 'image/jpeg',
+            default      => 'application/octet-stream',
+        };
+
+        $sas = GetBlobSasUri('aims-cntr', $filePath);
+        $url = is_array($sas)
+            ? ($sas['blobUriSas'] ?? $sas['sasUri'] ?? $sas['url'] ?? $sas['blobUri'] ?? null)
+            : $sas;
+
+        if ($url) {
+            $contents = @file_get_contents($url);
+            if ($contents !== false) {
+                return response($contents, 200, [
+                    'Content-Type'        => $mimeType,
+                    'Content-Disposition' => 'inline; filename="' . addslashes($fileName) . '"',
+                    'Cache-Control'       => 'private, max-age=300',
+                ]);
+            }
+        }
+
+        $localPath = \Illuminate\Support\Facades\Storage::disk('public')->path($filePath);
+        if (file_exists($localPath)) {
+            return response()->file($localPath, [
+                'Content-Type'        => $mimeType,
+                'Content-Disposition' => 'inline; filename="' . addslashes($fileName) . '"',
+            ]);
+        }
+
+        abort(404, 'File tidak dapat diakses.');
+    }
+
+    public function downloadActivityFile(string $id)
+    {
+        $file = DB::table('field_leadership_activity_files')->where('id', $id)->first();
+        if (!$file) abort(404, 'File tidak ditemukan.');
+
+        $filePath = $file->file;
+        $fileName = basename($filePath);
+
+        $sas = GetBlobSasUri('aims-cntr', $filePath);
+        $url = is_array($sas)
+            ? ($sas['blobUriSas'] ?? $sas['sasUri'] ?? $sas['url'] ?? $sas['blobUri'] ?? null)
+            : $sas;
+
+        if ($url) return redirect($url);
+
+        $localPath = \Illuminate\Support\Facades\Storage::disk('public')->path($filePath);
+        if (file_exists($localPath)) return response()->download($localPath, $fileName);
+
+        abort(404, 'File tidak ditemukan.');
     }
 
     // ── Preview risk file ─────────────────────────────────────────────────────

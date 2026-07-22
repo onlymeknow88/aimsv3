@@ -2,9 +2,7 @@
 
 namespace Modules\DocumentSystem\Jobs;
 
-use Modules\DocumentSystem\Entities\Document;
 use Modules\DocumentSystem\Entities\JsaDocument;
-use App\Services\EmailService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -37,30 +35,33 @@ class NotifyExpireJsaDocumentJob implements ShouldQueue
      */
     public function handle()
     {
-        if (
-            count($this->ids) > 0 &&
-            count($this->receiver) > 0
-        ) {
-            $data = [];
-            for ($a = 0; $a < count($this->ids); $a++) {
-                $document = JsaDocument::select(
-                    'title',
-                    'id',
-                    'document_number',
-                    'department_id',
-                )
-                    ->find($this->ids[$a]);
-                $data[] = [
-                    'title' => $document->title,
-                    'document_number' => $document->document_number,
-                ];
-            }
-            $email = new EmailService();
-            $email->sendEmail([
-                'receiver' => $this->receiver,
-                'type' => 'expire_document',
-                'documents' => $data,
-            ]);
+        if (empty($this->ids) || empty($this->receiver)) {
+            return;
         }
+
+        $data = JsaDocument::select('title', 'id', 'document_number', 'department_id')
+            ->whereIn('id', $this->ids)
+            ->get()
+            ->map(fn($doc) => [
+                'title'           => $doc->title,
+                'document_number' => $doc->document_number,
+            ])->all();
+
+        $receiver = is_array($this->receiver)
+            ? implode(';', $this->receiver)
+            : $this->receiver;
+
+        $html = view('email_templates.expire_document', [
+            'documents' => $data,
+        ])->render();
+
+        sendPowerAutomateEmail([
+            'SendTo'        => $receiver,
+            'Title'         => 'Expire JSA Document',
+            'MsgBody'       => $html,
+            'AttchmentPath' => '',
+            'AttchmentName' => '',
+            'SendCC'        => '',
+        ]);
     }
 }

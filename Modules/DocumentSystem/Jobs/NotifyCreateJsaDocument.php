@@ -2,10 +2,7 @@
 
 namespace Modules\DocumentSystem\Jobs;
 
-use Modules\DocumentSystem\Entities\Document;
 use Modules\DocumentSystem\Entities\JsaDocument;
-use App\Notifications\NewJsaDocumentNotification;
-use App\Services\EmailService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -40,21 +37,30 @@ class NotifyCreateJsaDocument implements ShouldQueue
             'peoples:document_id,email',
             'attachments:document_id,path',
             'user:id,name'
-        ])
-            ->find($this->document_id);
+        ])->find($this->document_id);
 
-        $peoples = $document->peoples;
-        $documents = $document->attachments;
-        $payload = [
-            'type' => 'new_document_jsa',
-            'receiver' => collect($peoples)->pluck('email')->all(),
-            'title' => $document->title,
-            'pic' => $document->user->name,
-            'has_attachments' => true,
-            'files' => collect($documents)->pluck('path')->all(),
-        ];
+        if (! $document) {
+            return;
+        }
 
-        $email = new EmailService();
-        $email->sendEmail($payload);
+        $receiver = collect($document->peoples)->pluck('email')->implode(';');
+        $attachments = $document->attachments;
+        $attachmentPath = $attachments->isNotEmpty() ? $attachments->first()->path : '';
+        $attachmentName = $attachmentPath ? basename($attachmentPath) : '';
+
+        $html = view('email_templates.document_system_review', [
+            'title'      => $document->title,
+            'pic'        => $document->user->name,
+            'action_url' => url('document-systems/login'),
+        ])->render();
+
+        sendPowerAutomateEmail([
+            'SendTo'        => $receiver,
+            'Title'         => 'New JSA Document: ' . $document->title,
+            'MsgBody'       => $html,
+            'AttchmentPath' => $attachmentPath,
+            'AttchmentName' => $attachmentName,
+            'SendCC'        => '',
+        ]);
     }
 }

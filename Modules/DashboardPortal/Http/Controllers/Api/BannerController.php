@@ -56,7 +56,7 @@ class BannerController extends Controller
         ]);
 
         if (!$request->hasFile('file')) {
-            return ResponseFormatter::error(null, 'File gambar wajib diunggah.', 400);
+            return ResponseFormatter::error('File gambar wajib diunggah.', 400);
         }
 
         $file = $request->file('file');
@@ -66,7 +66,7 @@ class BannerController extends Controller
         $uploadResult = uploadToBlobStorage($fileName, $file->getRealPath(), 'banner');
 
         if (!$uploadResult || empty($uploadResult['fileBlobPathName'])) {
-            return ResponseFormatter::error(null, 'Gagal mengunggah gambar ke Blob Storage.', 500);
+            return ResponseFormatter::error('Gagal mengunggah gambar ke Blob Storage.', 500);
         }
 
         $banner = Banner::create([
@@ -111,7 +111,7 @@ class BannerController extends Controller
                 $data['blob_url'] = $uploadResult['fileBlobUrl'];
                 $data['blob_response'] = $uploadResult['blobResponse'];
             } else {
-                return ResponseFormatter::error(null, 'Gagal mengunggah gambar ke Blob Storage.', 500);
+                return ResponseFormatter::error('Gagal mengunggah gambar ke Blob Storage.', 500);
             }
         }
 

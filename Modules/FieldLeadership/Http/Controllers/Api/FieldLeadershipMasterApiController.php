@@ -65,7 +65,15 @@ class FieldLeadershipMasterApiController extends Controller
         // area_managers ↔ sections via pivot: section_area_managers
         $query = DB::table('area_managers as am')
             ->leftJoin('users as u', 'am.user_id', '=', 'u.id')
-            ->select('am.id', DB::raw("COALESCE(u.name, '—') as name"), 'am.user_id');
+            ->leftJoin('area_manager_locations as aml', 'aml.area_manager_id', '=', 'am.id')
+            ->leftJoin('area_locations as al', 'al.id', '=', 'aml.area_location_id')
+            ->select(
+                'am.id',
+                DB::raw("COALESCE(u.name, '—') as name"),
+                'am.user_id',
+                DB::raw("GROUP_CONCAT(al.name ORDER BY al.name SEPARATOR ', ') as area_name")
+            )
+            ->groupBy('am.id', 'u.name', 'am.user_id');
         if ($request->filled('section_id')) {
             $query->join('section_area_managers as sam', 'sam.area_manager_id', '=', 'am.id')
                   ->where('sam.section_id', $request->query('section_id'));
@@ -97,7 +105,7 @@ class FieldLeadershipMasterApiController extends Controller
         $validated = $request->validate(['name' => 'required|string|max:255']);
         $updated = DB::table('field_leadership_categories')->where('id', $id)
             ->update(['name' => $validated['name'], 'updated_at' => now()]);
-        if (!$updated) return ResponseFormatter::error(null, 'Category not found', 404);
+        if (!$updated) return ResponseFormatter::error('Category not found', 404);
         return ResponseFormatter::success(['id' => $id], 'Category updated');
     }
 
@@ -139,7 +147,7 @@ class FieldLeadershipMasterApiController extends Controller
         ]);
         $updated = DB::table('field_leadership_kta_and_ttas')->where('id', $id)
             ->update(array_merge($validated, ['updated_at' => now()]));
-        if (!$updated) return ResponseFormatter::error(null, 'KTA/TTA not found', 404);
+        if (!$updated) return ResponseFormatter::error('KTA/TTA not found', 404);
         return ResponseFormatter::success(['id' => $id], 'KTA/TTA updated');
     }
 
@@ -178,7 +186,7 @@ class FieldLeadershipMasterApiController extends Controller
         ]);
         $updated = DB::table('field_leadership_potency_and_consequnces')->where('id', $id)
             ->update(array_merge($validated, ['updated_at' => now()]));
-        if (!$updated) return ResponseFormatter::error(null, 'Potency not found', 404);
+        if (!$updated) return ResponseFormatter::error('Potency not found', 404);
         return ResponseFormatter::success(['id' => $id], 'Potency updated');
     }
 

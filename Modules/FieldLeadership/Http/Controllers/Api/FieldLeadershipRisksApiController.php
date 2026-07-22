@@ -87,7 +87,7 @@ class FieldLeadershipRisksApiController extends Controller
             ->first();
 
         if (!$risk) {
-            return ResponseFormatter::error(null, 'Risk not found', 404);
+            return ResponseFormatter::error('Risk not found', 404);
         }
 
         $files = DB::table('field_leadership_risk_files')
@@ -107,7 +107,7 @@ class FieldLeadershipRisksApiController extends Controller
     {
         $risk = DB::table('field_leadership_risks')->where('id', $id)->first();
         if (!$risk) {
-            return ResponseFormatter::error(null, 'Risk not found', 404);
+            return ResponseFormatter::error('Risk not found', 404);
         }
 
         $validated = $request->validate([

@@ -1,10 +1,11 @@
-import React from 'react';
 import { ArrowLeft, ChevronDown, ChevronUp, HardHat } from 'lucide-react';
+
+import React from 'react';
 import { usePage } from '@inertiajs/react';
 
 const SLUG_URL = {
-    'fls.dashboard':                     '/field-leadership',
-    'fls.observations':                  '/field-leadership/observations',
+    'fls.dashboard':                     '/field-leadership/dashboard',
+    'fls.field-leadership':               '/field-leadership',
     'fls.pja':                           null,
     'fls.pja.request-review':            '/field-leadership/pja/request-review',
     'fls.pja.draft':                     '/field-leadership/pja/draft',
@@ -18,7 +19,7 @@ const SLUG_URL = {
 function isActivePath(slug, currentPath, currentSearch) {
     const url = SLUG_URL[slug];
     if (!url) return false;
-    if (slug === 'fls.dashboard') return currentPath === '/field-leadership';
+    if (slug === 'fls.dashboard') return currentPath === '/field-leadership/dashboard';
     if (url.includes('?')) {
         return `${currentPath}${currentSearch}` === url;
     }
