@@ -58,11 +58,15 @@ export default function DetailLeftSidebar({ bidding }) {
             <div style={card}>
                 <h4 style={sectionTitle}>Perusahaan</h4>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                    <MetaRow icon={Building} label="Nama Perusahaan"  value={bidding.company_name} />
-                    <MetaRow icon={Building} label="No. Lisensi"      value={bidding.license_number} />
-                    <MetaRow icon={Building} label="Alamat"           value={bidding.address} />
-                    <MetaRow icon={Building} label="Site / Lokasi"    value={bidding.company_site} />
-                    <MetaRow icon={Building} label="Klasifikasi"      value={bidding.classification} />
+                    <MetaRow icon={Building} label="Nama Perusahaan"      value={bidding.company_name} />
+                    <MetaRow icon={Building} label="Jenis Badan Usaha"    value={bidding.business_entity_name} />
+                    <MetaRow icon={Building} label="No. Lisensi"          value={bidding.license_number} />
+                    <MetaRow icon={Building} label="Alamat"               value={bidding.address} />
+                    <MetaRow icon={Building} label="Site / Lokasi"        value={bidding.company_site} />
+                    <MetaRow icon={Building} label="Klasifikasi"          value={bidding.classification} />
+                    {bidding.classification === 'Sub-Kontraktor' && (
+                        <MetaRow icon={Building} label="Perusahaan Induk" value={bidding.parent_name} />
+                    )}
                 </div>
             </div>
 
@@ -70,6 +74,7 @@ export default function DetailLeftSidebar({ bidding }) {
             <div style={card}>
                 <h4 style={sectionTitle}>Kriteria & Dokumen</h4>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    <MetaRow icon={FileText} label="CCOW"               value={bidding.ccow_name} />
                     <MetaRow icon={FileText} label="Kriteria Layanan"   value={bidding.service_criteria} />
                     <MetaRow icon={FileText} label="Kategori Risiko"    value={bidding.risk_category} />
                     <MetaRow icon={FileText} label="No. Dokumen CSMS"   value={bidding.csms_doc_number} />

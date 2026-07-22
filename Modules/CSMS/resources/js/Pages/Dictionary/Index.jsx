@@ -2,9 +2,13 @@ import { BookOpen, Plus, RefreshCw, Search, X } from 'lucide-react';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
+import axios from 'axios';
 import CSMSLayout from '../../Layouts/CSMSLayout';
 import { Head } from '@inertiajs/react';
 import TablePagination from '@/Components/TablePagination';
+
+import useDictionary from './Hooks/useDictionary';
+import DictionaryTable from './Partials/DictionaryTable';
 
 const modalOverlay = { position: 'fixed', inset: 0, backgroundColor: 'rgba(15,23,42,0.45)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '16px' };
 const modalBox    = { backgroundColor: '#fff', borderRadius: '14px', width: '100%', maxWidth: '500px', boxShadow: '0 20px 40px rgba(0,0,0,0.15)' };
@@ -15,30 +19,17 @@ const thStyle = { fontSize: '11px', fontWeight: 700, color: 'var(--text-primary)
 const tdStyle = { fontSize: '12px', padding: '10px 12px', color: 'var(--text-secondary)' };
 
 export default function DictionaryIndex() {
-    const [items, setItems]           = useState([]);
-    const [pagination, setPagination] = useState({ current_page: 1, last_page: 1, total: 0 });
-    const [loading, setLoading]       = useState(false);
-    const [search, setSearch]         = useState('');
-    const [limit, setLimit]           = useState(10);
-    const [page, setPage]             = useState(1);
+    const {
+        items, pagination, loading,
+        search, setSearch,
+        limit, setLimit,
+        page, setPage,
+        refresh
+    } = useDictionary();
+
     const [showCreate, setShowCreate] = useState(false);
     const [createForm, setCreateForm] = useState({ term: '', definition: '' });
     const [creating, setCreating]     = useState(false);
-
-    const doFetch = useCallback(() => {
-        setLoading(true);
-        const params = new URLSearchParams({ search, limit, page });
-        fetch(`/api/csms/dictionaries?${params}`)
-            .then(r => r.json())
-            .then(d => {
-                setItems(d?.data?.data ?? []);
-                setPagination({ current_page: d?.data?.current_page ?? 1, last_page: d?.data?.last_page ?? 1, total: d?.data?.total ?? 0 });
-            })
-            .catch(() => {})
-            .finally(() => setLoading(false));
-    }, [search, limit, page]);
-
-    useEffect(() => { doFetch(); }, [doFetch]);
 
     return (
         <CSMSLayout>
@@ -59,7 +50,7 @@ export default function DictionaryIndex() {
                         style={{ width: '100%', padding: '8px 12px 8px 36px', border: '1px solid var(--border-color)', borderRadius: '6px', fontSize: '11px', outline: 'none', boxSizing: 'border-box' }} />
                 </div>
                 <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                    <button onClick={doFetch} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', backgroundColor: '#fff', border: '1px solid var(--border-color)', borderRadius: '6px', padding: '8px 12px', fontSize: '11px', fontWeight: 600, color: 'var(--text-primary)', cursor: 'pointer' }}><RefreshCw size={14} /></button>
+                    <button onClick={refresh} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', backgroundColor: '#fff', border: '1px solid var(--border-color)', borderRadius: '6px', padding: '8px 12px', fontSize: '11px', fontWeight: 600, color: 'var(--text-primary)', cursor: 'pointer' }}><RefreshCw size={14} /></button>
                     <button onClick={() => setShowCreate(true)} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', backgroundColor: 'var(--primary)', border: 'none', borderRadius: '6px', padding: '8px 12px', fontSize: '11px', fontWeight: 600, color: '#fff', cursor: 'pointer' }}>
                         <Plus size={14} /> Tambah Istilah
                     </button>
@@ -67,38 +58,7 @@ export default function DictionaryIndex() {
             </div>
 
             <div style={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--border-color)', borderRadius: '12px', overflow: 'hidden', boxShadow: 'var(--shadow-sm)' }}>
-
-                    {loading ? (
-                        <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-secondary)', fontSize: '13px' }}>Memuat data...</div>
-                    ) : items.length === 0 ? (
-                        <div style={{ padding: '60px 40px', textAlign: 'center' }}>
-                            <BookOpen size={40} style={{ color: 'var(--border-color)', marginBottom: '12px' }} />
-                            <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: 0 }}>Belum ada data kamus CSMS.</p>
-                        </div>
-                    ) : (
-                        <div style={{ overflowX: 'auto' }}>
-                            <Table>
-                                <TableHeader>
-                                    <TableRow style={{ backgroundColor: '#f8fafc' }}>
-                                        <TableHead style={thStyle}>No</TableHead>
-                                        <TableHead style={thStyle}>Istilah</TableHead>
-                                        <TableHead style={thStyle}>Definisi</TableHead>
-                                        <TableHead style={thStyle}>Tanggal</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {items.map((item, i) => (
-                                        <TableRow key={item.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
-                                            <TableCell style={tdStyle}>{i + 1}</TableCell>
-                                            <TableCell style={{ ...tdStyle, fontWeight: 700, color: 'var(--text-primary)' }}>{item.term}</TableCell>
-                                            <TableCell style={{ ...tdStyle, maxWidth: '500px', lineHeight: '1.5' }}>{item.definition}</TableCell>
-                                            <TableCell style={tdStyle}>{item.created_at ? new Date(item.created_at).toLocaleDateString('id-ID') : '-'}</TableCell>
-                                        </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
-                        </div>
-                    )}
+                <DictionaryTable items={items} loading={loading} />
                 <TablePagination pagination={pagination} onPageChange={setPage} limit={limit} onLimitChange={v => { setLimit(v); setPage(1); }} />
             </div>
             {showCreate && (
@@ -127,11 +87,8 @@ export default function DictionaryIndex() {
                             <button disabled={creating || !createForm.term.trim() || !createForm.definition.trim()}
                                 onClick={() => {
                                     setCreating(true);
-                                    fetch('/api/csms/dictionaries', {
-                                        method: 'POST',
-                                        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]')?.content },
-                                        body: JSON.stringify(createForm),
-                                    }).then(() => { setShowCreate(false); setCreateForm({ term: '', definition: '' }); doFetch(); })
+                                    axios.post('/api/csms/dictionaries', createForm)
+                                    .then(() => { setShowCreate(false); setCreateForm({ term: '', definition: '' }); refresh(); })
                                     .finally(() => setCreating(false));
                                 }}
                                 style={{ padding: '8px 16px', border: 'none', borderRadius: '6px', fontSize: '12px', fontWeight: 700, backgroundColor: 'var(--primary)', color: '#fff', cursor: creating ? 'not-allowed' : 'pointer', opacity: creating ? 0.7 : 1 }}>

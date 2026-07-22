@@ -45,6 +45,19 @@ class CSMSController extends Controller
         return Inertia::render('CSMS/PostBidding/Index');
     }
 
+    public function postBiddingCreate(): Response
+    {
+        return Inertia::render('CSMS/PostBidding/Create');
+    }
+
+    public function postBiddingEdit($id): Response
+    {
+        if (!DB::table('biddings')->where('id', $id)->exists()) {
+            abort(404);
+        }
+        return Inertia::render('CSMS/PostBidding/Edit', ['id' => $id]);
+    }
+
     public function postBiddingDetail($id): Response
     {
         if (!DB::table('biddings')->where('id', $id)->exists()) {
@@ -71,6 +84,22 @@ class CSMSController extends Controller
     public function pjoCreate(): Response
     {
         return Inertia::render('CSMS/Pjo/Create');
+    }
+
+    public function pjoEdit($id): Response
+    {
+        if (!DB::table('csms_pjos')->where('id', $id)->exists()) {
+            abort(404);
+        }
+        return Inertia::render('CSMS/Pjo/Edit', ['id' => $id]);
+    }
+
+    public function pjoDetail($id): Response
+    {
+        if (!DB::table('csms_pjos')->where('id', $id)->exists()) {
+            abort(404);
+        }
+        return Inertia::render('CSMS/Pjo/Detail', ['id' => $id]);
     }
 
     public function memoKttIndex(): Response

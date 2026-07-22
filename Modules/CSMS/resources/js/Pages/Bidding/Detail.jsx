@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { usePage, Head } from '@inertiajs/react';
+import axios from 'axios';
 import { AlertCircle, ArrowLeft, Edit } from 'lucide-react';
 import DetailLeftSidebar  from './Partials/Detail/DetailLeftSidebar';
 import DetailCenter       from './Partials/Detail/DetailCenter';
@@ -31,10 +32,9 @@ export default function BiddingDetail() {
     const loadDetail = useCallback(() => {
         if (!id) return;
         setLoading(true);
-        fetch(`/api/csms/biddings/${id}`)
-            .then(r => r.json())
-            .then(d => {
-                if (d?.data) setData(d.data);
+        axios.get(`/api/csms/biddings/${id}`)
+            .then(res => {
+                if (res.data?.result) setData(res.data.result);
                 else setError(true);
             })
             .catch(() => setError(true))
@@ -67,21 +67,26 @@ export default function BiddingDetail() {
     const status  = STATUS_CONFIG[bidding.status] ?? { text: bidding.status, color: '#64748b', bg: '#f1f5f9' };
     const canEdit = bidding.status === 'Draft';
 
+    const isPostBidding = bidding.criteria === 'PostBidding';
+    const backLink = isPostBidding ? '/csms/post-bidding/lists' : '/csms/bidding/lists';
+    const backText = isPostBidding ? 'Kembali ke Post Bidding' : 'Kembali ke Bidding';
+    const editLink = isPostBidding ? `/csms/post-bidding/edit/${id}` : `/csms/bidding/edit/${id}`;
+
     return (
         <div style={{ backgroundColor: 'var(--bg-color)', minHeight: '100vh', padding: '40px 20px' }}>
             <Head title={`Detail Bidding: ${bidding.company_name ?? ''}`} />
 
             {/* Top Bar */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px', borderBottom: '1px solid var(--border-color)', paddingBottom: '12px', flexWrap: 'wrap', gap: '10px' }}>
-                <a href="/csms/bidding/lists" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', color: 'var(--primary)', fontWeight: 700, textDecoration: 'none', fontSize: '12px' }}>
-                    <ArrowLeft size={16} /> Kembali ke Bidding
+                <a href={backLink} style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', color: 'var(--primary)', fontWeight: 700, textDecoration: 'none', fontSize: '12px' }}>
+                    <ArrowLeft size={16} /> {backText}
                 </a>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <span style={{ fontSize: '11px', fontWeight: 700, backgroundColor: status.bg, color: status.color, padding: '2px 10px', borderRadius: '12px' }}>
                         {status.text}
                     </span>
                     {canEdit && (
-                        <a href={`/csms/bidding/edit/${id}`} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', backgroundColor: 'var(--primary)', color: '#fff', borderRadius: '6px', padding: '6px 14px', fontSize: '11px', fontWeight: 700, textDecoration: 'none' }}>
+                        <a href={editLink} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', backgroundColor: 'var(--primary)', color: '#fff', borderRadius: '6px', padding: '6px 14px', fontSize: '11px', fontWeight: 700, textDecoration: 'none' }}>
                             <Edit size={12} /> Edit
                         </a>
                     )}

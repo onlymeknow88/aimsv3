@@ -15,6 +15,10 @@ Route::prefix('csms')->group(function () {
         ->middleware('module.permission:csms,can_edit,csms.bidding');
     Route::delete('/biddings/{id}', [CSMSApiController::class, 'destroyBidding'])
         ->middleware('module.permission:csms,can_delete,csms.bidding');
+    Route::post('/biddings/bulk-delete', [CSMSApiController::class, 'bulkDestroyBiddings'])
+        ->middleware('module.permission:csms,can_delete,csms.bidding');
+    Route::get('/approved-biddings', [CSMSApiController::class, 'getApprovedBiddings'])
+        ->middleware('module.permission:csms,can_create,csms.post-bidding');
 
     // Post-Bidding CRUD
     Route::get('/post-biddings', [CSMSApiController::class, 'indexPostBiddings'])
@@ -28,6 +32,8 @@ Route::prefix('csms')->group(function () {
 
     // PJO CRUD
     Route::get('/pjos', [CSMSApiController::class, 'indexPjos'])
+        ->middleware('module.permission:csms,can_view,csms.pjo');
+    Route::get('/pjos/{id}', [CSMSApiController::class, 'showPjo'])
         ->middleware('module.permission:csms,can_view,csms.pjo');
     Route::post('/pjos', [CSMSApiController::class, 'storePjo'])
         ->middleware('module.permission:csms,can_create,csms.pjo');

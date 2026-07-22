@@ -20,22 +20,48 @@ export default function BiddingIndex() {
         biddings, pagination, loading,
         search, setSearch, status, setStatus,
         limit, setLimit, page, setPage,
-        refresh, deleteBidding, submitApproval,
+        refresh, deleteBidding, bulkDeleteBidding, submitApproval,
     } = useBidding('Bidding');
 
-    const [deleteModal, setDeleteModal] = useState({ open: false, item: null });
+    const [deleteModal, setDeleteModal] = useState({ open: false, item: null, isBulk: false });
     const [deleting, setDeleting]       = useState(false);
     const [deleteError, setDeleteError] = useState('');
     const [submitModal, setSubmitModal] = useState({ open: false, id: null });
     const [submitting, setSubmitting]   = useState(false);
+    const [selectedIds, setSelectedIds] = useState([]);
 
-    const handleDelete = (item) => { setDeleteModal({ open: true, item }); setDeleteError(''); };
+    const handleSelectAll = () => {
+        if (selectedIds.length === biddings.length) {
+            setSelectedIds([]);
+        } else {
+            setSelectedIds(biddings.map(b => b.id));
+        }
+    };
+
+    const handleSelectRow = (id) => {
+        setSelectedIds(prev =>
+            prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+        );
+    };
+
+    const handleDelete = (item) => { setDeleteModal({ open: true, item, isBulk: false }); setDeleteError(''); };
+    const handleBulkDelete = () => { setDeleteModal({ open: true, item: null, isBulk: true }); setDeleteError(''); };
     const confirmDelete = () => {
         setDeleting(true);
-        deleteBidding(deleteModal.item.id)
-            .then(() => setDeleteModal({ open: false, item: null }))
-            .catch(e => setDeleteError(e?.message ?? 'Gagal menghapus'))
-            .finally(() => setDeleting(false));
+        if (deleteModal.isBulk) {
+            bulkDeleteBidding(selectedIds)
+                .then(() => {
+                    setDeleteModal({ open: false, item: null, isBulk: false });
+                    setSelectedIds([]);
+                })
+                .catch(e => setDeleteError(e?.response?.data?.message ?? e?.message ?? 'Gagal menghapus data terpilih'))
+                .finally(() => setDeleting(false));
+        } else {
+            deleteBidding(deleteModal.item.id)
+                .then(() => setDeleteModal({ open: false, item: null, isBulk: false }))
+                .catch(e => setDeleteError(e?.message ?? 'Gagal menghapus'))
+                .finally(() => setDeleting(false));
+        }
     };
 
     const handleSubmit = (id) => setSubmitModal({ open: true, id });
@@ -87,6 +113,16 @@ export default function BiddingIndex() {
                 </div>
             </div>
 
+            {selectedIds.length > 0 && (
+                <div style={{ marginBottom: '16px', padding: '12px 16px', backgroundColor: '#fef2f2', border: '1px solid #fecaca', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <span style={{ fontSize: '13px', fontWeight: 600, color: '#991b1b' }}>{selectedIds.length} Baris Terpilih</span>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                        <button onClick={() => setSelectedIds([])} style={{ fontSize: '12px', padding: '4px 10px', backgroundColor: '#fff', border: '1px solid #fecaca', borderRadius: '6px', cursor: 'pointer', color: '#991b1b', fontWeight: 600 }}>Batal</button>
+                        <button onClick={handleBulkDelete} style={{ fontSize: '12px', padding: '4px 10px', backgroundColor: '#ef4444', border: 'none', borderRadius: '6px', cursor: 'pointer', color: '#fff', fontWeight: 600 }}>Hapus Terpilih</button>
+                    </div>
+                </div>
+            )}
+
             {/* Table Card */}
             <div style={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--border-color)', borderRadius: '12px', overflow: 'hidden', boxShadow: 'var(--shadow-sm)' }}>
                 <BiddingTable
@@ -96,6 +132,9 @@ export default function BiddingIndex() {
                     onSubmit={handleSubmit}
                     canEdit
                     canDelete
+                    selectedIds={selectedIds}
+                    onSelectAll={handleSelectAll}
+                    onSelectRow={handleSelectRow}
                 />
                 <TablePagination
                     pagination={pagination}
@@ -107,11 +146,11 @@ export default function BiddingIndex() {
 
             <DeleteConfirmModal
                 isOpen={deleteModal.open}
-                itemName={deleteModal.item?.company_name}
+                itemName={deleteModal.isBulk ? `${selectedIds.length} data bidding terpilih` : deleteModal.item?.company_name}
                 deleting={deleting}
                 errorMessage={deleteError}
                 onConfirm={confirmDelete}
-                onClose={() => setDeleteModal({ open: false, item: null })}
+                onClose={() => setDeleteModal({ open: false, item: null, isBulk: false })}
             />
 
             <ConfirmationModal
