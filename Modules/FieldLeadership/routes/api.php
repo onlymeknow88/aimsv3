@@ -24,10 +24,12 @@ Route::prefix('field-leadership')->group(function () {
     Route::put('/{id}',         [FieldLeadershipApiController::class, 'update']);
     Route::delete('',           [FieldLeadershipApiController::class, 'destroy']);
 
-    // ── Approval routing ─────────────────────────────────────────────────────
-    Route::post('/{id}/submit',  [FieldLeadershipApprovalApiController::class, 'submit']);
-    Route::post('/{id}/approve', [FieldLeadershipApprovalApiController::class, 'approve']);
-    Route::post('/{id}/return',  [FieldLeadershipApprovalApiController::class, 'returnWithComment']);
+    // ── Approval routing (workflow baru) ────────────────────────────────────
+    Route::post('/{id}/submit',     [FieldLeadershipApprovalApiController::class, 'submit']);
+    Route::post('/{id}/pja-review', [FieldLeadershipApprovalApiController::class, 'pjaReview']);
+    Route::post('/{id}/crs-action', [FieldLeadershipApprovalApiController::class, 'crsAction']);
+    Route::post('/{id}/crs-verify', [FieldLeadershipApprovalApiController::class, 'crsVerify']);
+    Route::post('/{id}/return',     [FieldLeadershipApprovalApiController::class, 'returnWithComment']);
 
     // ── Risks ─────────────────────────────────────────────────────────────────
     Route::get('/risks',         [FieldLeadershipRisksApiController::class, 'index']);

@@ -57,6 +57,7 @@ export default function Create({ editId = null }) {
                     {...shared}
                     pjaId={f.pjaId} setPjaId={f.setPjaId} pjaList={f.pjaList} sectionId={f.sectionId}
                     isAreaSuitable={f.isAreaSuitable} setIsAreaSuitable={f.setIsAreaSuitable}
+                    isImmediateAction={f.isImmediateAction} setIsImmediateAction={f.setIsImmediateAction}
                     type={f.type} setType={f.setType}
                     personilOnReview={f.personilOnReview} setPersonilOnReview={f.setPersonilOnReview}
                     personilOnReviewName={f.personilOnReviewName} setPersonilOnReviewName={f.setPersonilOnReviewName}

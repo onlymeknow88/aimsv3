@@ -68,6 +68,7 @@ export default function useObservationForm(editId = null) {
     const [pjaId,                 setPjaId]                 = useState('');
     const [pjoId,                 setPjoId]                 = useState('');
     const [isAreaSuitable,        setIsAreaSuitable]        = useState(false);
+    const [isImmediateAction,     setIsImmediateAction]     = useState(false);
     const [type,                  setType]                  = useState('Planned Task Observation');
     const [job,                   setJob]                   = useState('');
     const [visitTime,             setVisitTime]             = useState('');
@@ -140,6 +141,7 @@ export default function useObservationForm(editId = null) {
                 setPjaId(obs.pja_id ?? '');
                 setPjoId(obs.pjo_id ?? '');
                 setIsAreaSuitable(!!obs.is_area_suitable);
+                setIsImmediateAction(!!obs.is_immediate_action);
                 setType(obs.type ?? 'Planned Task Observation');
                 setJob(obs.job ?? '');
                 setVisitTime(obs.visit_time ? String(obs.visit_time) : '');
@@ -352,6 +354,7 @@ export default function useObservationForm(editId = null) {
         append('job',                     job              || '');
         append('visit_time',              visitTime ? parseInt(visitTime, 10) : '');
         append('is_area_suitable',        isAreaSuitable ? '1' : '0');
+        append('is_immediate_action',     isImmediateAction ? '1' : '0');
         append('personil_on_review',      personilOnReview     ? parseInt(personilOnReview, 10) : '');
         append('personil_on_review_name', personilOnReviewName || '');
         append('publish',                 submitType === 'Draft' ? 'Draft' : 'Publish');
@@ -414,7 +417,7 @@ export default function useObservationForm(editId = null) {
     }, [
         isEdit, editId, isPTO, isHazardReport,
         date, ccowId, companyId, detailCompany, departmentId, sectionId,
-        areaLocationId, detailLocation, pjaId, pjoId, isAreaSuitable, type,
+        areaLocationId, detailLocation, pjaId, pjoId, isAreaSuitable, isImmediateAction, type,
         job, visitTime, personilOnReview, personilOnReviewName,
         answers, members, positiveConditions, riskConditions, categories,
     ]);
@@ -457,6 +460,7 @@ export default function useObservationForm(editId = null) {
         pjaId,          setPjaId,
         pjoId,          setPjoId,
         isAreaSuitable, setIsAreaSuitable,
+        isImmediateAction, setIsImmediateAction,
         type,           setType,
         job,            setJob,
         visitTime,      setVisitTime,

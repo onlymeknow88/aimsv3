@@ -5,6 +5,7 @@ export default function SectionPenanggungJawab({
     labelStyle, inputStyle, cardStyle, sectionTitleStyle,
     pjaId, setPjaId, pjaList, sectionId,
     isAreaSuitable, setIsAreaSuitable,
+    isImmediateAction, setIsImmediateAction,
     type, setType,
     personilOnReview, setPersonilOnReview,
     personilOnReviewName, setPersonilOnReviewName,
@@ -77,17 +78,39 @@ export default function SectionPenanggungJawab({
 
             </div>
 
-            {/* Checkbox Area Suitable */}
-            <div style={{ marginBottom: '16px' }}>
+            {/* Checkbox: Tindak Lanjut Saat Itu */}
+            <div style={{ marginBottom: '12px' }}>
                 <label style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '12px', color: 'var(--text-primary)' }}>
                     <input
                         type="checkbox"
-                        checked={isAreaSuitable}
-                        onChange={e => setIsAreaSuitable(e.target.checked)}
+                        checked={isImmediateAction}
+                        onChange={e => setIsImmediateAction(e.target.checked)}
                     />
-                    Apakah Area Kerja Sesuai dengan PJA yang Ditunjuk?
+                    Apakah tindak lanjut dilakukan saat itu juga?
                 </label>
+                <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '3px', marginLeft: '20px' }}>
+                    Centang jika tindakan korektif langsung dilakukan di tempat saat observasi.
+                </div>
             </div>
+
+            {/* Checkbox Area Suitable — tampil hanya jika is_immediate_action = true */}
+            {isImmediateAction && (
+                <div style={{ marginBottom: '16px', padding: '10px 12px', backgroundColor: 'rgba(21,59,115,0.04)', borderRadius: '8px', border: '1px solid rgba(21,59,115,0.1)' }}>
+                    <label style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '12px', color: 'var(--text-primary)' }}>
+                        <input
+                            type="checkbox"
+                            checked={isAreaSuitable}
+                            onChange={e => setIsAreaSuitable(e.target.checked)}
+                        />
+                        Apakah Area Kerja Sesuai dengan PJA yang Ditunjuk?
+                    </label>
+                    {!isAreaSuitable && (
+                        <div style={{ marginTop: '6px', marginLeft: '20px', fontSize: '11px', color: 'var(--danger)', fontWeight: 600 }}>
+                            ⚠ Area tidak sesuai — dokumen akan dikirim ke CRS untuk ganti PJA setelah disubmit.
+                        </div>
+                    )}
+                </div>
+            )}
 
             {/* Tugas / SOP */}
             <div>
