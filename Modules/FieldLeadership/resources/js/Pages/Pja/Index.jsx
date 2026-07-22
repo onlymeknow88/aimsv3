@@ -1,26 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { Head } from '@inertiajs/react';
-import { Search, Plus, Trash2, X, SlidersHorizontal, ClipboardList } from 'lucide-react';
+import { Search, Trash2, X, SlidersHorizontal, UserCheck } from 'lucide-react';
 import FieldLeadershipLayout from '@FLS/Layouts/FieldLeadershipLayout';
-import useObservations from './Hooks/useObservations';
-import ObservationsTable from './Partials/ObservationsTable';
 import DeleteConfirmModal from '@/Components/DeleteConfirmModal';
+import usePja from './Hooks/usePja';
+import PjaTable from './Partials/PjaTable';
 import {
     DropdownMenu, DropdownMenuTrigger, DropdownMenuContent,
     DropdownMenuCheckboxItem, DropdownMenuGroup, DropdownMenuLabel, DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 
-const TYPE_LABELS = {
-    'Planned Task Observation': 'PTO',
-    'Take Time Talk': 'TTT',
-    'Hazard Report': 'HR',
-};
-
 const STATUS_OPTIONS = [
-    'Open', 'On Review PICA', 'On Review PJA', 'On Review Approval', 'Overdue', 'Closed',
+    'Open', 'On Review PICA', 'On Review PJA', 'On Review Approval', 'Overdue', 'Closed', 'Draft'
 ];
 
-export default function Index({ defaultType = '' }) {
+export default function Index({ defaultStatus = 'On Review PJA', title = 'Penanggung Jawab Area' }) {
     const {
         docs, loading,
         search, setSearch,
@@ -32,7 +26,7 @@ export default function Index({ defaultType = '' }) {
         requestDelete, confirmDelete, cancelDelete,
         deleteConfirmOpen, deleting,
         openDrawer,
-    } = useObservations(defaultType);
+    } = usePja(defaultStatus);
 
     const [isMobile, setIsMobile] = useState(false);
     useEffect(() => {
@@ -42,21 +36,9 @@ export default function Index({ defaultType = '' }) {
     }, []);
 
     const [visibleColumns, setVisibleColumns] = useState({
-        'Date': true,
-        'CCOW': true,
-        'Company': true,
-        'Detail Company': true,
-        'Department': true,
-        'Section': true,
-        'Location': true,
-        'Detail Location': true,
-        'Type': true,
-        'Members': true,
-        'Positive Condition': true,
-        'Risk Condition': true,
-        'Repair Action': true,
-        'Status': true,
-        'Aksi': true,
+        'Tanggal': true, 'Tipe': true, 'Company': true,
+        'Departemen': true, 'Pekerjaan': true, 'Dibuat Oleh': true,
+        'Status': true, 'Aksi': true,
     });
     const toggleColumn = col => setVisibleColumns(prev => ({ ...prev, [col]: !prev[col] }));
 
@@ -67,23 +49,21 @@ export default function Index({ defaultType = '' }) {
         fontSize: '11px', fontWeight: 600, color: 'var(--text-primary)', cursor: 'pointer',
     };
 
-    const pageTitle = defaultType ? `Field Leadership — ${TYPE_LABELS[defaultType] ?? defaultType}` : 'Field Leadership';
-
     return (
         <FieldLeadershipLayout>
-            <Head title={pageTitle} />
+            <Head title={title} />
 
             <div style={{ marginBottom: '20px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                    <ClipboardList size={18} style={{ color: 'var(--primary)' }} />
-                    <h1 style={{ fontSize: '20px', fontWeight: 800, color: 'var(--primary)', margin: 0 }}>{pageTitle}</h1>
+                    <UserCheck size={18} style={{ color: 'var(--primary)' }} />
+                    <h1 style={{ fontSize: '20px', fontWeight: 800, color: 'var(--primary)', margin: 0 }}>{title}</h1>
                 </div>
                 <p style={{ color: 'var(--text-secondary)', fontSize: '11px', margin: 0 }}>
-                    Daftar Field Leadership — PTO, TTT, dan Hazard Report.
+                    Daftar request review dan verifikasi dokumen oleh Penanggung Jawab Area (PJA).
                 </p>
             </div>
 
-            {/* Filter bar — type & status */}
+            {/* Filter bar */}
             <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', flexWrap: 'wrap' }}>
                 <select
                     value={columnFilters.type}
@@ -152,7 +132,8 @@ export default function Index({ defaultType = '' }) {
                                 <SlidersHorizontal size={14} /> Columns
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="w-48 bg-white border border-gray-200 shadow-lg rounded-md p-1">
-                                <DropdownMenuGroup><DropdownMenuLabel style={{ padding: '8px 12px' }}>Toggle Columns</DropdownMenuLabel>
+                                <DropdownMenuGroup>
+                                <DropdownMenuLabel style={{ padding: '8px 12px' }}>Toggle Columns</DropdownMenuLabel>
                                 <DropdownMenuSeparator />
                                 {Object.keys(visibleColumns).map(col => (
                                     <DropdownMenuCheckboxItem key={col} checked={visibleColumns[col]}
@@ -164,16 +145,12 @@ export default function Index({ defaultType = '' }) {
                                 </DropdownMenuGroup>
                             </DropdownMenuContent>
                         </DropdownMenu>
-                        <a href="/field-leadership/observations/create"
-                            style={{ ...btnStyle, backgroundColor: 'var(--primary)', color: '#fff', border: 'none', textDecoration: 'none' }}>
-                            <Plus size={14} /> Buat Field Leadership
-                        </a>
                     </div>
                 </div>
             )}
 
             <div style={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--border-color)', borderRadius: '12px', overflow: 'hidden', boxShadow: 'var(--shadow-sm)' }}>
-                <ObservationsTable
+                <PjaTable
                     documents={docs}
                     selectedIds={selectedIds}
                     onSelectionChange={setSelectedIds}
@@ -183,9 +160,7 @@ export default function Index({ defaultType = '' }) {
                     onPageChange={setPage}
                     limit={limit}
                     onLimitChange={setLimit}
-                    columnFilters={columnFilters}
-                    onColumnFilterChange={(colId, val) => setColumnFilters(prev => ({ ...prev, [colId]: val }))}
-                    onView={(item) => window.location.href = `/field-leadership/observations/${item.id}`}
+                    onView={(doc) => window.location.href = `/field-leadership/observations/${doc.id}`}
                 />
             </div>
             <DeleteConfirmModal
@@ -194,7 +169,7 @@ export default function Index({ defaultType = '' }) {
                 onConfirm={confirmDelete}
                 deleting={deleting}
                 title="Hapus Field Leadership"
-                description={`Hapus ${selectedIds.length} Field Leadership terpilih? Tindakan ini tidak dapat dibatalkan.`}
+                description={`Hapus ${selectedIds.length} item terpilih? Tindakan ini tidak dapat dibatalkan.`}
             />
         </FieldLeadershipLayout>
     );

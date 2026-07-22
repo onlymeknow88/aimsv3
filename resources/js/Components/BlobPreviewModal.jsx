@@ -10,6 +10,7 @@ export default function BlobPreviewModal({ attachment, onClose }) {
     const isJsaActivity = attachment.type === 'jsa_activity';
     const isPtw = attachment.type === 'ptw';
     const isUncontrolled = attachment.type === 'uncontrolled';
+    const isFlRisk = attachment.type === 'fl_risk';
 
     // Construct query parameters cleanly
     const params = [];
@@ -25,8 +26,12 @@ export default function BlobPreviewModal({ attachment, onClose }) {
 
     const queryString = params.length > 0 ? `?${params.join('&')}` : '';
     const attachmentId = attachment.id || 'none';
-    const previewUrl = `/api/document-system/attachments/${attachmentId}/preview${queryString}`;
-    const downloadUrl = `/api/document-system/attachments/${attachmentId}/download${queryString}`;
+    const previewUrl = isFlRisk
+        ? `/api/field-leadership/risk-files/${attachmentId}/preview`
+        : `/api/document-system/attachments/${attachmentId}/preview${queryString}`;
+    const downloadUrl = isFlRisk
+        ? `/api/field-leadership/risk-files/${attachmentId}/download`
+        : `/api/document-system/attachments/${attachmentId}/download${queryString}`;
     const fileExtension = (attachment.file_type || (attachment.name ? attachment.name.split('.').pop() : '') || (attachment.file_name ? attachment.file_name.split('.').pop() : '') || (attachment.file_path ? attachment.file_path.split('.').pop() : '') || '').toLowerCase();
     const isImage = ['png', 'jpg', 'jpeg', 'gif'].includes(fileExtension);
     const isPdf = fileExtension === 'pdf';

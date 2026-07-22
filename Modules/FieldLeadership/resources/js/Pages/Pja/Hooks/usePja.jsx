@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import axios from 'axios';
 
-export default function useObservations(defaultType = '') {
+export default function usePja(defaultStatus = 'On Review PJA') {
     const [search, setSearch]         = useState('');
     const [page, setPage]             = useState(1);
     const [limit, setLimit]           = useState(10);
@@ -13,12 +13,12 @@ export default function useObservations(defaultType = '') {
     const [selectedItem, setSelectedItem] = useState(null);
 
     const [columnFilters, setColumnFilters] = useState({
-        type:       defaultType,
-        status:     '',
-        company:    '',
-        department: '',
-        date_from:  '',
-        date_to:    '',
+        type:        '',
+        status:      defaultStatus,
+        company:     '',
+        department:  '',
+        date_from:   '',
+        date_to:     '',
     });
 
     const fetchDocs = useCallback(() => {
@@ -49,7 +49,7 @@ export default function useObservations(defaultType = '') {
                     setPagination({ current_page: 1, last_page: 1, total: 0 });
                 }
             })
-            .catch(err => console.error('Fetch observations failed', err))
+            .catch(err => console.error('Fetch PJA observations failed', err))
             .finally(() => setLoading(false));
     }, [search, page, limit, columnFilters]);
 

@@ -5,13 +5,10 @@ import FieldLeadershipLayout from '@FLS/Layouts/FieldLeadershipLayout';
 import useRisks from './Hooks/useRisks';
 import { useReactTable, getCoreRowModel, getFilteredRowModel, flexRender } from '@tanstack/react-table';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
-import {
-    Pagination, PaginationContent, PaginationEllipsis,
-    PaginationItem, PaginationLink, PaginationNext, PaginationPrevious,
-} from '@/components/ui/pagination';
+import TablePagination from '@/Components/TablePagination';
 import {
     DropdownMenu, DropdownMenuTrigger, DropdownMenuContent,
-    DropdownMenuCheckboxItem, DropdownMenuLabel, DropdownMenuSeparator,
+    DropdownMenuCheckboxItem, DropdownMenuGroup, DropdownMenuLabel, DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 
 const RISK_STATUS_CONFIG = {
@@ -102,17 +99,7 @@ function RisksTable({ documents, visibleColumns, loading, pagination, onPageChan
 
     const visibleColsCount = table.getVisibleFlatColumns().length;
 
-    const getPageNumbers = () => {
-        if (!pagination) return [];
-        const { current_page, last_page } = pagination;
-        const pages = [];
-        const start = Math.max(1, current_page - 2);
-        const end   = Math.min(last_page, current_page + 2);
-        if (start > 1) { pages.push(1); if (start > 2) pages.push('ellipsis'); }
-        for (let i = start; i <= end; i++) pages.push(i);
-        if (end < last_page) { if (end < last_page - 1) pages.push('ellipsis'); pages.push(last_page); }
-        return pages;
-    };
+
 
     return (
         <>
@@ -146,29 +133,12 @@ function RisksTable({ documents, visibleColumns, loading, pagination, onPageChan
                     </TableBody>
                 </Table>
             </div>
-            {pagination && (
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 24px', borderTop: '1px solid #f1f5f9', backgroundColor: '#fafafa', fontSize: '13px', color: '#64748b', flexWrap: 'wrap', gap: '12px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                        <div>Halaman <strong>{pagination.current_page}</strong> dari <strong>{pagination.last_page}</strong> (Total <strong>{pagination.total}</strong>)</div>
-                        {onLimitChange && (
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                <span style={{ fontSize: '12px' }}>Baris:</span>
-                                <select value={limit} onChange={e => onLimitChange(Number(e.target.value))}
-                                    style={{ padding: '4px 24px 4px 8px', border: '1.5px solid #e2e8f0', borderRadius: '6px', backgroundColor: '#fff', fontSize: '12px', cursor: 'pointer', outline: 'none' }}>
-                                    {[10, 25, 50, 100].map(n => <option key={n} value={n}>{n}</option>)}
-                                </select>
-                            </div>
-                        )}
-                    </div>
-                    <Pagination className="mx-0 w-auto">
-                        <PaginationContent>
-                            <PaginationItem><PaginationPrevious onClick={() => onPageChange(pagination.current_page - 1)} disabled={pagination.current_page === 1} style={{ opacity: pagination.current_page === 1 ? 0.5 : 1, cursor: pagination.current_page === 1 ? 'not-allowed' : 'pointer' }} /></PaginationItem>
-                            {getPageNumbers().map((p, idx) => p === 'ellipsis' ? <PaginationItem key={`e-${idx}`}><PaginationEllipsis /></PaginationItem> : <PaginationItem key={p}><PaginationLink isActive={p === pagination.current_page} onClick={() => onPageChange(p)}>{p}</PaginationLink></PaginationItem>)}
-                            <PaginationItem><PaginationNext onClick={() => onPageChange(pagination.current_page + 1)} disabled={pagination.current_page === pagination.last_page} style={{ opacity: pagination.current_page === pagination.last_page ? 0.5 : 1, cursor: pagination.current_page === pagination.last_page ? 'not-allowed' : 'pointer' }} /></PaginationItem>
-                        </PaginationContent>
-                    </Pagination>
-                </div>
-            )}
+            <TablePagination
+                pagination={pagination}
+                onPageChange={onPageChange}
+                limit={limit}
+                onLimitChange={onLimitChange}
+            />
         </>
     );
 }
@@ -229,11 +199,13 @@ export default function Index() {
                 <DropdownMenu>
                     <DropdownMenuTrigger style={btnStyle}><SlidersHorizontal size={14} /> Columns</DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-48 bg-white border border-gray-200 shadow-lg rounded-md p-1">
+                        <DropdownMenuGroup>
                         <DropdownMenuLabel style={{ padding: '8px 12px' }}>Toggle Columns</DropdownMenuLabel>
                         <DropdownMenuSeparator />
                         {Object.keys(visibleColumns).map(col => (
                             <DropdownMenuCheckboxItem key={col} checked={visibleColumns[col]} onCheckedChange={() => toggleColumn(col)} style={{ padding: '8px 12px', cursor: 'pointer' }}>{col}</DropdownMenuCheckboxItem>
                         ))}
+                        </DropdownMenuGroup>
                     </DropdownMenuContent>
                 </DropdownMenu>
             </div>

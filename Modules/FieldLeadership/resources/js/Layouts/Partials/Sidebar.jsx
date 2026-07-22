@@ -3,23 +3,25 @@ import { ArrowLeft, ChevronDown, ChevronUp, HardHat } from 'lucide-react';
 import { usePage } from '@inertiajs/react';
 
 const SLUG_URL = {
-    'fls.dashboard':          '/field-leadership',
-    'fls.observasi':          null,
-    'fls.pto':                '/field-leadership/pto',
-    'fls.ttt':                '/field-leadership/ttt',
-    'fls.hr':                 '/field-leadership/hr',
-    'fls.observations':       '/field-leadership/observations',
-    'fls.risk':               null,
-    'fls.risks':              '/field-leadership/risks',
-    'fls.corrective-actions': '/field-leadership/corrective-actions',
-    'fls.master':             '/field-leadership/master',
-    'fls.settings':           '/field-leadership/settings',
+    'fls.dashboard':                     '/field-leadership',
+    'fls.observations':                  '/field-leadership/observations',
+    'fls.pja':                           null,
+    'fls.pja.request-review':            '/field-leadership/pja/request-review',
+    'fls.pja.draft':                     '/field-leadership/pja/draft',
+    'fls.approval-pja':                  '/field-leadership/approval-pja',
+    'fls.master':                        '/field-leadership/master',
+    'fls.master.limit-parameter':        '/field-leadership/master?tab=limit-parameter',
+    'fls.master.jenis-kta-tta':          '/field-leadership/master?tab=jenis-kta-tta',
+    'fls.master.potensi-konsekuensi':    '/field-leadership/master?tab=potensi-konsekuensi',
 };
 
-function isActivePath(slug, currentPath) {
+function isActivePath(slug, currentPath, currentSearch) {
     const url = SLUG_URL[slug];
     if (!url) return false;
     if (slug === 'fls.dashboard') return currentPath === '/field-leadership';
+    if (url.includes('?')) {
+        return `${currentPath}${currentSearch}` === url;
+    }
     return currentPath === url;
 }
 
@@ -38,9 +40,8 @@ export default function Sidebar({
     const { flsMenus = [] } = usePage().props;
 
     const dropdownState = {
-        'fls.observasi': { open: openObservation, setOpen: setOpenObservation },
-        'fls.risk':      { open: openRisk,        setOpen: setOpenRisk },
-        'fls.master':    { open: openMaster,      setOpen: setOpenMaster },
+        'fls.pja':    { open: openRisk,   setOpen: setOpenRisk },
+        'fls.master': { open: openMaster, setOpen: setOpenMaster },
     };
 
     const parentMenus = flsMenus
@@ -98,7 +99,7 @@ export default function Sidebar({
                 <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
                     {parentMenus.map(menu => {
                         const url        = SLUG_URL[menu.slug];
-                        const active     = isActivePath(menu.slug, currentPath);
+                        const active     = isActivePath(menu.slug, currentPath, currentSearch);
                         const dd         = dropdownState[menu.slug];
                         const isDropdown = hasChildren(menu.id) && dd;
 
@@ -132,7 +133,7 @@ export default function Sidebar({
                                         <ul style={{ listStyle: 'none', margin: '4px 0 0 0', paddingLeft: '28px' }}>
                                             {childMenus(menu.id).map(child => {
                                                 const childUrl    = SLUG_URL[child.slug] ?? '#';
-                                                const childActive = isActivePath(child.slug, currentPath);
+                                                const childActive = isActivePath(child.slug, currentPath, currentSearch);
                                                 return (
                                                     <li key={child.id}>
                                                         <a
