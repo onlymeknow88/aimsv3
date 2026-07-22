@@ -21,7 +21,7 @@ const TYPE_CONFIG = {
     'Hazard Report':            { text: 'HR',  color: 'var(--danger)',   bg: 'rgba(239,68,68,0.08)'  },
 };
 
-export default function ObservationsTable({
+export default function FieldLeadershipTable({
     documents = [],
     selectedIds = [],
     onSelectionChange,

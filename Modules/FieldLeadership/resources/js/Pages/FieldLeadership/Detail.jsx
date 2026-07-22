@@ -1,11 +1,12 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { AlertCircle, ArrowLeft, Edit } from 'lucide-react';
+import React, { useCallback, useEffect, useState } from 'react';
+
+import DetailCenter       from './Partials/DetailCenter';
+import DetailLeftSidebar  from './Partials/DetailLeftSidebar';
+import DetailRightSidebar from './Partials/DetailRightSidebar';
 import { Head } from '@inertiajs/react';
-import { ArrowLeft, AlertCircle, Edit } from 'lucide-react';
 import axios from 'axios';
 import useApproval from './Hooks/useApproval';
-import DetailLeftSidebar  from './Partials/DetailLeftSidebar';
-import DetailCenter       from './Partials/DetailCenter';
-import DetailRightSidebar from './Partials/DetailRightSidebar';
 
 const STATUS_CONFIG = {
     'Open':               { text: 'OPEN',             color: 'var(--accent)',  bg: 'rgba(255,140,36,0.1)'  },
@@ -32,7 +33,7 @@ export default function Detail({ id }) {
     const loadDetail = useCallback(() => {
         if (!id) return;
         setLoading(true);
-        axios.get(`/api/field-leadership/observations/${id}`)
+        axios.get(`/api/field-leadership/${id}`)
             .then(res => {
                 if (res.data?.result) setData(res.data.result);
                 else setError(true);
@@ -60,7 +61,7 @@ export default function Detail({ id }) {
                 <Head title="Detail Field Leadership" />
                 <AlertCircle size={32} style={{ color: 'var(--danger)' }} />
                 <p style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>Field Leadership tidak ditemukan.</p>
-                <a href="/field-leadership/observations" style={{ color: 'var(--primary)', fontSize: '13px' }}>← Kembali ke daftar</a>
+                <a href="/field-leadership" style={{ color: 'var(--primary)', fontSize: '13px' }}>← Kembali ke daftar</a>
             </div>
         );
     }
@@ -84,7 +85,7 @@ export default function Detail({ id }) {
                 flexWrap: 'wrap',
                 gap: '10px',
             }}>
-                <a href="/field-leadership/observations" style={{
+                <a href="/field-leadership" style={{
                     display: 'inline-flex', alignItems: 'center', gap: '8px',
                     color: 'var(--primary)', fontWeight: 700, textDecoration: 'none', fontSize: '12px',
                 }}>
@@ -101,7 +102,7 @@ export default function Detail({ id }) {
                     </span>
 
                     {canEdit && (
-                        <a href={`/field-leadership/observations/${id}/edit`} style={{
+                        <a href={`/field-leadership/${id}/edit`} style={{
                             display: 'inline-flex', alignItems: 'center', gap: '6px',
                             backgroundColor: 'var(--primary)', color: '#fff',
                             borderRadius: '6px', padding: '6px 14px',

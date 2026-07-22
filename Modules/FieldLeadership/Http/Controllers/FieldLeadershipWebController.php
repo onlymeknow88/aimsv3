@@ -31,9 +31,9 @@ class FieldLeadershipWebController extends Controller
     /**
      * Listing Field Leadership (Active).
      */
-    public function observations()
+    public function fieldLeadership()
     {
-        return inertia('FieldLeadership/Observations/Index', [
+        return inertia('FieldLeadership/FieldLeadership/Index', [
             'defaultType' => '',
         ]);
     }
@@ -44,7 +44,7 @@ class FieldLeadershipWebController extends Controller
      */
     public function create()
     {
-        return inertia('FieldLeadership/Observations/Create');
+        return inertia('FieldLeadership/FieldLeadership/Create');
     }
 
     /**
@@ -57,7 +57,7 @@ class FieldLeadershipWebController extends Controller
             abort(404);
         }
 
-        return inertia('FieldLeadership/Observations/Create', [
+        return inertia('FieldLeadership/FieldLeadership/Create', [
             'editId' => $id,
         ]);
     }
@@ -67,7 +67,7 @@ class FieldLeadershipWebController extends Controller
      */
     public function detail($id)
     {
-        return inertia('FieldLeadership/Observations/Detail', [
+        return inertia('FieldLeadership/FieldLeadership/Detail', [
             'id' => $id,
         ]);
     }

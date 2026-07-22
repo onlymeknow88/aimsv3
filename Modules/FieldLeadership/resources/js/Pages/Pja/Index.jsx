@@ -1,14 +1,20 @@
-import React, { useState, useEffect } from 'react';
-import { Head } from '@inertiajs/react';
-import { Search, Trash2, X, SlidersHorizontal, UserCheck } from 'lucide-react';
-import FieldLeadershipLayout from '@FLS/Layouts/FieldLeadershipLayout';
-import DeleteConfirmModal from '@/Components/DeleteConfirmModal';
-import usePja from './Hooks/usePja';
-import PjaTable from './Partials/PjaTable';
 import {
-    DropdownMenu, DropdownMenuTrigger, DropdownMenuContent,
-    DropdownMenuCheckboxItem, DropdownMenuGroup, DropdownMenuLabel, DropdownMenuSeparator,
+    DropdownMenu,
+    DropdownMenuCheckboxItem,
+    DropdownMenuContent,
+    DropdownMenuGroup,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import React, { useEffect, useState } from 'react';
+import { Search, SlidersHorizontal, Trash2, UserCheck, X } from 'lucide-react';
+
+import DeleteConfirmModal from '@/Components/DeleteConfirmModal';
+import FieldLeadershipLayout from '@FLS/Layouts/FieldLeadershipLayout';
+import { Head } from '@inertiajs/react';
+import PjaTable from './Partials/PjaTable';
+import usePja from './Hooks/usePja';
 
 const STATUS_OPTIONS = [
     'Open', 'On Review PICA', 'On Review PJA', 'On Review Approval', 'Overdue', 'Closed', 'Draft'
@@ -160,7 +166,7 @@ export default function Index({ defaultStatus = 'On Review PJA', title = 'Penang
                     onPageChange={setPage}
                     limit={limit}
                     onLimitChange={setLimit}
-                    onView={(doc) => window.location.href = `/field-leadership/observations/${doc.id}`}
+                    onView={(doc) => window.location.href = `/field-leadership/${doc.id}`}
                 />
             </div>
             <DeleteConfirmModal

@@ -1,4 +1,5 @@
-import { useState, useCallback } from 'react';
+import { useCallback, useState } from 'react';
+
 import axios from 'axios';
 
 /**
@@ -36,8 +37,8 @@ export default function useApproval(id, { onSuccess } = {}) {
         setError(null);
         try {
             const endpoint = pendingApproval.action === 'submit'
-                ? `/api/field-leadership/observations/${id}/submit`
-                : `/api/field-leadership/observations/${id}/approve`;
+                ? `/api/field-leadership/${id}/submit`
+                : `/api/field-leadership/${id}/approve`;
             const res = await axios.post(endpoint);
             const newStatus = res.data?.result?.status;
             setStatus(newStatus);
@@ -68,13 +69,13 @@ export default function useApproval(id, { onSuccess } = {}) {
                 form.append('comment', comment.trim());
                 files.forEach(f => form.append('files[]', f));
                 res = await axios.post(
-                    `/api/field-leadership/observations/${id}/return`,
+                    `/api/field-leadership/${id}/return`,
                     form,
                     { headers: { 'Content-Type': 'multipart/form-data' } }
                 );
             } else {
                 res = await axios.post(
-                    `/api/field-leadership/observations/${id}/return`,
+                    `/api/field-leadership/${id}/return`,
                     { comment: comment.trim() }
                 );
             }
@@ -134,5 +135,5 @@ export function canApprove(currentStatus) {
  * Returns true if the current status can be returned/rolled back.
  */
 export function canReturn(currentStatus) {
-    return ['On Review PICA', 'On Review PJA', 'On Review Approval', 'Closed'].includes(currentStatus);
+    return ['On Review PICA', 'On Review PJA', 'On Review Approval'].includes(currentStatus);
 }

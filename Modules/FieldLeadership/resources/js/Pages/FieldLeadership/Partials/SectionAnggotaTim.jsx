@@ -6,6 +6,7 @@ export default function SectionAnggotaTim({
     members, addMember, removeMember, updateMember,
     memberInternals, memberExternals,
     limitMember,
+    errors = {},
 }) {
     const atLimit = limitMember > 0 && members.length >= limitMember;
 
@@ -29,6 +30,9 @@ export default function SectionAnggotaTim({
                                 <option value="Contractor">Contractor</option>
                                 <option value="SubContractor">SubContractor</option>
                             </select>
+                            {errors[`members.${idx}.type`] && (
+                                <span style={{ color: 'var(--danger)', fontSize: '11px' }}>Tipe anggota wajib dipilih.</span>
+                            )}
                         </div>
 
                         {/* Employee */}
@@ -44,6 +48,9 @@ export default function SectionAnggotaTim({
                                     <option key={m.id} value={m.id}>{m.name}</option>
                                 ))}
                             </select>
+                            {errors[`members.${idx}.employee_id`] && (
+                                <span style={{ color: 'var(--danger)', fontSize: '11px' }}>Nama anggota wajib dipilih.</span>
+                            )}
                         </div>
 
                         {/* Remove */}

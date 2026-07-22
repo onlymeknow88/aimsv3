@@ -1,14 +1,20 @@
-import React, { useState, useEffect } from 'react';
-import { Head } from '@inertiajs/react';
-import { Search, Plus, Trash2, X, SlidersHorizontal, ClipboardList } from 'lucide-react';
-import FieldLeadershipLayout from '@FLS/Layouts/FieldLeadershipLayout';
-import useObservations from './Hooks/useObservations';
-import ObservationsTable from './Partials/ObservationsTable';
-import DeleteConfirmModal from '@/Components/DeleteConfirmModal';
+import { ClipboardList, Plus, Search, SlidersHorizontal, Trash2, X } from 'lucide-react';
 import {
-    DropdownMenu, DropdownMenuTrigger, DropdownMenuContent,
-    DropdownMenuCheckboxItem, DropdownMenuGroup, DropdownMenuLabel, DropdownMenuSeparator,
+    DropdownMenu,
+    DropdownMenuCheckboxItem,
+    DropdownMenuContent,
+    DropdownMenuGroup,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import React, { useEffect, useState } from 'react';
+
+import DeleteConfirmModal from '@/Components/DeleteConfirmModal';
+import FieldLeadershipLayout from '@FLS/Layouts/FieldLeadershipLayout';
+import FieldLeadershipTable from './Partials/FieldLeadershipTable';
+import { Head } from '@inertiajs/react';
+import useFieldLeadership from './Hooks/useFieldLeadership';
 
 const TYPE_LABELS = {
     'Planned Task Observation': 'PTO',
@@ -32,7 +38,7 @@ export default function Index({ defaultType = '' }) {
         requestDelete, confirmDelete, cancelDelete,
         deleteConfirmOpen, deleting,
         openDrawer,
-    } = useObservations(defaultType);
+    } = useFieldLeadership(defaultType);
 
     const [isMobile, setIsMobile] = useState(false);
     useEffect(() => {
@@ -164,7 +170,7 @@ export default function Index({ defaultType = '' }) {
                                 </DropdownMenuGroup>
                             </DropdownMenuContent>
                         </DropdownMenu>
-                        <a href="/field-leadership/observations/create"
+                        <a href="/field-leadership/create"
                             style={{ ...btnStyle, backgroundColor: 'var(--primary)', color: '#fff', border: 'none', textDecoration: 'none' }}>
                             <Plus size={14} /> Buat Field Leadership
                         </a>
@@ -173,7 +179,7 @@ export default function Index({ defaultType = '' }) {
             )}
 
             <div style={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--border-color)', borderRadius: '12px', overflow: 'hidden', boxShadow: 'var(--shadow-sm)' }}>
-                <ObservationsTable
+                <FieldLeadershipTable
                     documents={docs}
                     selectedIds={selectedIds}
                     onSelectionChange={setSelectedIds}
@@ -185,7 +191,7 @@ export default function Index({ defaultType = '' }) {
                     onLimitChange={setLimit}
                     columnFilters={columnFilters}
                     onColumnFilterChange={(colId, val) => setColumnFilters(prev => ({ ...prev, [colId]: val }))}
-                    onView={(item) => window.location.href = `/field-leadership/observations/${item.id}`}
+                    onView={(item) => window.location.href = `/field-leadership/${item.id}`}
                 />
             </div>
             <DeleteConfirmModal

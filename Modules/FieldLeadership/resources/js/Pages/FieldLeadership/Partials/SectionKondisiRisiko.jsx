@@ -1,6 +1,8 @@
-import React from 'react';
 import { Plus, X } from 'lucide-react';
+
 import FileDropzone from '@/Components/FileDropzone';
+import React from 'react';
+import SearchableSelect from '@/Components/SearchableSelect';
 
 export default function SectionKondisiRisiko({
     inputStyle, cardStyle, sectionTitleStyle,
@@ -27,12 +29,15 @@ export default function SectionKondisiRisiko({
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '16px' }}>
                 {riskConditions.map((risk, idx) => {
                     const selectedCat = categories.find(c => String(c.id) === String(risk.category_id));
-                    const filteredTypes = typeKtaTta.filter(t => {
-                        if (!selectedCat) return true;
-                        if (selectedCat.name === 'Kondisi Tidak Aman')  return t.type === 'KTA' || t.type === 'Kondisi Tidak Aman';
-                        if (selectedCat.name === 'Tindakan Tidak Aman') return t.type === 'TTA' || t.type === 'Tindakan Tidak Aman';
-                        return true;
-                    });
+                    const CAT_TO_TYPE = {
+                        'Kondisi Tidak Aman':  'KTA',
+                        'Tindakan Tidak Aman': 'TTA',
+                    };
+                    const filteredTypes = selectedCat
+                        ? typeKtaTta.filter(t => t.type === CAT_TO_TYPE[selectedCat.name])
+                        : isHazardReport
+                            ? typeKtaTta.filter(t => t.type === 'KTA')
+                            : [];
 
                     return (
                         <div
@@ -95,35 +100,38 @@ export default function SectionKondisiRisiko({
                                             style={{ ...inputStyle, backgroundColor: '#e2e8f0', color: 'var(--text-muted)' }}
                                         />
                                     ) : (
-                                        <select
-                                            value={risk.category_id}
-                                            onChange={e => updateRiskCondition(idx, 'category_id', e.target.value)}
-                                            style={inputStyle}
-                                        >
-                                            <option value="">— Pilih Kategori —</option>
-                                            {categories
+                                        <SearchableSelect
+                                            options={categories
                                                 .filter(c => ['Kondisi Tidak Aman', 'Tindakan Tidak Aman'].includes(c.name))
-                                                .map(c => <option key={c.id} value={c.id}>{c.name}</option>)
+                                                .map(c => ({ id: c.id, name: c.name }))
                                             }
-                                        </select>
+                                            value={risk.category_id}
+                                            onChange={val => {
+                                                updateRiskCondition(idx, 'category_id', val);
+                                                updateRiskCondition(idx, 'type_id', '');
+                                            }}
+                                            placeholder="— Pilih Kategori —"
+                                        />
+                                    )}
+                                    {errors[`risks.${idx}.category_id`] && (
+                                        <span style={{ color: 'var(--danger)', fontSize: '11px' }}>{errors[`risks.${idx}.category_id`][0]}</span>
                                     )}
                                 </div>
 
                                 <div>
                                     <label style={labelStyle}>Jenis KTA / TTA</label>
-                                    <select
+                                    <SearchableSelect
+                                        options={filteredTypes.map(t => ({
+                                            id: t.id,
+                                            name: t.code ? `${t.code} — ${t.name}` : t.name,
+                                        }))}
                                         value={risk.type_id}
-                                        onChange={e => updateRiskCondition(idx, 'type_id', e.target.value)}
-                                        disabled={!risk.category_id && !isHazardReport}
-                                        style={{ ...inputStyle, backgroundColor: (!risk.category_id && !isHazardReport) ? '#f8fafc' : '#fff' }}
-                                    >
-                                        <option value="">— Pilih Jenis —</option>
-                                        {filteredTypes.map(t => (
-                                            <option key={t.id} value={t.id}>
-                                                {t.code ? `${t.code} — ` : ''}{t.name}
-                                            </option>
-                                        ))}
-                                    </select>
+                                        onChange={val => updateRiskCondition(idx, 'type_id', val)}
+                                        placeholder={(!risk.category_id && !isHazardReport) ? 'Pilih Kategori dulu' : (filteredTypes.length === 0 ? 'Tidak ada data' : '— Pilih Jenis —')}
+                                    />
+                                    {errors[`risks.${idx}.type_id`] && (
+                                        <span style={{ color: 'var(--danger)', fontSize: '11px' }}>{errors[`risks.${idx}.type_id`][0]}</span>
+                                    )}
                                 </div>
 
                                 <div>
@@ -136,6 +144,9 @@ export default function SectionKondisiRisiko({
                                         <option value="">— Pilih Potensi —</option>
                                         {potencies.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                                     </select>
+                                    {errors[`risks.${idx}.potency_id`] && (
+                                        <span style={{ color: 'var(--danger)', fontSize: '11px' }}>{errors[`risks.${idx}.potency_id`][0]}</span>
+                                    )}
                                 </div>
                             </div>
 
@@ -153,7 +164,7 @@ export default function SectionKondisiRisiko({
                                 />
                                 {errors[`risks.${idx}.due_date`] && (
                                     <span style={{ color: 'var(--danger)', fontSize: '11px' }}>
-                                        {errors[`risks.${idx}.due_date`][0]}
+                                        Tanggal pemenuhan perbaikan wajib diisi.
                                     </span>
                                 )}
                             </div>

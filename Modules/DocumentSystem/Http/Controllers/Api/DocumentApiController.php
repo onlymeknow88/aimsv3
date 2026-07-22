@@ -243,6 +243,28 @@ class DocumentApiController extends Controller
                 }
             }
 
+            // Notify reviewers when submitted for review (status = 1)
+            if ($doc->status === '1' && $request->has('invited_emails')) {
+                $receivers = collect($request->input('invited_emails', []))
+                    ->filter()
+                    ->implode(';');
+                if ($receivers) {
+                    $html = view('email_templates.document_system_review', [
+                        'title'      => $doc->title,
+                        'pic'        => optional(\App\Models\User::find($doc->user_id))->name ?? '-',
+                        'action_url' => url('document-systems/login'),
+                    ])->render();
+                    sendPowerAutomateEmail([
+                        'SendTo'        => $receivers,
+                        'Title'         => 'Dokumen Submitted for Review: ' . $doc->title,
+                        'MsgBody'       => $html,
+                        'AttchmentPath' => '',
+                        'AttchmentName' => '',
+                        'SendCC'        => '',
+                    ]);
+                }
+            }
+
             DB::commit();
 
             return ResponseFormatter::success($doc, 'Document created successfully');
@@ -375,6 +397,27 @@ class DocumentApiController extends Controller
                 }
             }
 
+            // Notify reviewers when submitted for review (status = 1)
+            if ($doc->status === '1' && $request->has('invited_emails')) {
+                $doc->load('invitedPeople');
+                $receivers = collect($doc->invitedPeople)->pluck('email')->filter()->implode(';');
+                if ($receivers) {
+                    $html = view('email_templates.document_system_review', [
+                        'title'      => $doc->title,
+                        'pic'        => optional(\App\Models\User::find($doc->user_id))->name ?? '-',
+                        'action_url' => url('document-systems/login'),
+                    ])->render();
+                    sendPowerAutomateEmail([
+                        'SendTo'        => $receivers,
+                        'Title'         => 'Dokumen Submitted for Review: ' . $doc->title,
+                        'MsgBody'       => $html,
+                        'AttchmentPath' => '',
+                        'AttchmentName' => '',
+                        'SendCC'        => '',
+                    ]);
+                }
+            }
+
             DB::commit();
 
             return ResponseFormatter::success($doc, 'Document updated successfully');
@@ -475,6 +518,25 @@ class DocumentApiController extends Controller
 
         if ($request->level == 1) {
             $doc->update(['status' => '3', 'approved_by_crs' => $userId, 'approved_at_crs' => now()]);
+
+            // Notify maker & invited people: Level 1 approved, routing to next approval
+            $doc->load(['owner', 'invitedPeople']);
+            $receivers = collect($doc->invitedPeople)->pluck('email')->filter()->implode(';');
+            if ($receivers) {
+                $html = view('email_templates.document_system_review', [
+                    'title'      => $doc->title,
+                    'pic'        => $doc->owner?->name ?? '-',
+                    'action_url' => url('document-systems/login'),
+                ])->render();
+                sendPowerAutomateEmail([
+                    'SendTo'        => $receivers,
+                    'Title'         => 'Dokumen Disetujui Level 1 (Routing): ' . $doc->title,
+                    'MsgBody'       => $html,
+                    'AttchmentPath' => '',
+                    'AttchmentName' => '',
+                    'SendCC'        => '',
+                ]);
+            }
         } else {
             // ── Level 2 (PJA / Final Approval) ───────────────────────────────
             // 1. Apply watermark BEFORE renaming so we use the original blob path
@@ -561,6 +623,25 @@ class DocumentApiController extends Controller
                 $updatePayload['uncontrolled_blob_respon']  = $uncontrolledBlobRespon ?? null;
             }
             $doc->update($updatePayload);
+
+            // Notify maker & invited people: Final approval (Active)
+            $doc->load(['owner', 'invitedPeople']);
+            $receivers = collect($doc->invitedPeople)->pluck('email')->filter()->implode(';');
+            if ($receivers) {
+                $html = view('email_templates.document_system_review', [
+                    'title'      => $doc->title,
+                    'pic'        => $doc->owner?->name ?? '-',
+                    'action_url' => url('document-systems/login'),
+                ])->render();
+                sendPowerAutomateEmail([
+                    'SendTo'        => $receivers,
+                    'Title'         => 'Dokumen Disetujui & Aktif: ' . $doc->title,
+                    'MsgBody'       => $html,
+                    'AttchmentPath' => $uncontrolledPath ?? '',
+                    'AttchmentName' => $uncontrolledPath ? basename($uncontrolledPath) : '',
+                    'SendCC'        => '',
+                ]);
+            }
         }
 
         // Log activity
@@ -634,6 +715,25 @@ class DocumentApiController extends Controller
                         ]);
                     }
                 }
+            }
+
+            // Notify maker: document rejected/returned
+            $doc->load(['owner', 'invitedPeople']);
+            $receivers = collect($doc->invitedPeople)->pluck('email')->filter()->implode(';');
+            if ($receivers) {
+                $html = view('email_templates.document_system_review', [
+                    'title'      => $doc->title,
+                    'pic'        => $doc->owner?->name ?? '-',
+                    'action_url' => url('document-systems/login'),
+                ])->render();
+                sendPowerAutomateEmail([
+                    'SendTo'        => $receivers,
+                    'Title'         => 'Dokumen Dikembalikan (Return): ' . $doc->title,
+                    'MsgBody'       => $html,
+                    'AttchmentPath' => '',
+                    'AttchmentName' => '',
+                    'SendCC'        => '',
+                ]);
             }
 
             DB::commit();

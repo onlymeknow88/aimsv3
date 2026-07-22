@@ -4,7 +4,6 @@ namespace Modules\DocumentSystem\Jobs;
 
 use Modules\DocumentSystem\Entities\Document;
 use Modules\DocumentSystem\Entities\InvitedPeople;
-use App\Services\EmailService;
 use Carbon\Carbon;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
@@ -120,21 +119,29 @@ class NotifyAlmostExpireDocumentJob implements ShouldQueue
     }
 
     /**
-     * Function to send email
+     * Function to send email via Power Automate
      */
     private function notify($emails, $documents, $day)
     {
         try {
             if (count($emails) > 0) {
-                $email = new EmailService();
-                $payload = [
-                    'type' => 'almost_expire_document',
-                    'receiver' => $emails,
+                $receiver = is_array($emails)
+                    ? implode(';', $emails)
+                    : $emails;
+
+                $html = view('email_templates.almost_expire_document', [
                     'documents' => $documents,
-                    'day' => $day,
-                    'has_attachments' => false,
-                ];
-                $email->sendEmail($payload);
+                    'day'       => $day,
+                ])->render();
+
+                sendPowerAutomateEmail([
+                    'SendTo'        => $receiver,
+                    'Title'         => 'Reminder: Document Will Expire in ' . $day . ' Day(s)',
+                    'MsgBody'       => $html,
+                    'AttchmentPath' => '',
+                    'AttchmentName' => '',
+                    'SendCC'        => '',
+                ]);
             }
             return 'success';
         } catch (\Throwable $th) {

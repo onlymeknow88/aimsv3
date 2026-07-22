@@ -1,4 +1,5 @@
 import React from 'react';
+import SearchableSelect from '@/Components/SearchableSelect';
 
 export default function SectionInfoUmum({
     labelStyle, inputStyle, cardStyle, sectionTitleStyle,
@@ -17,7 +18,7 @@ export default function SectionInfoUmum({
         <div style={cardStyle}>
             <h3 style={sectionTitleStyle}>Informasi Umum</h3>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '16px', marginBottom: '16px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px', marginBottom: '16px' }}>
 
                 {/* Tanggal */}
                 <div>
@@ -34,30 +35,24 @@ export default function SectionInfoUmum({
                 {/* CCOW */}
                 <div>
                     <label style={labelStyle}>CCOW <span style={{ color: 'var(--danger)' }}>*</span></label>
-                    <select
+                    <SearchableSelect
+                        options={ccows.map(c => ({ id: c.id, name: c.company_name || c.name }))}
                         value={ccowId}
-                        onChange={e => setCcowId(e.target.value)}
-                        disabled={masterLoading}
-                        style={inputStyle}
-                    >
-                        <option value="">{masterLoading ? 'Memuat...' : '— Pilih CCOW —'}</option>
-                        {ccows.map(c => <option key={c.id} value={c.id}>{c.company_name || c.name}</option>)}
-                    </select>
+                        onChange={setCcowId}
+                        placeholder={masterLoading ? 'Memuat...' : '— Pilih CCOW —'}
+                    />
                     {errors.ccow_id && <span style={{ color: 'var(--danger)', fontSize: '11px' }}>{errors.ccow_id[0]}</span>}
                 </div>
 
                 {/* Perusahaan */}
                 <div>
                     <label style={labelStyle}>Perusahaan <span style={{ color: 'var(--danger)' }}>*</span></label>
-                    <select
+                    <SearchableSelect
+                        options={companies.map(c => ({ id: c.id, name: c.company_name || c.name }))}
                         value={companyId}
-                        onChange={e => setCompanyId(e.target.value)}
-                        disabled={masterLoading}
-                        style={inputStyle}
-                    >
-                        <option value="">{masterLoading ? 'Memuat...' : '— Pilih Perusahaan —'}</option>
-                        {companies.map(c => <option key={c.id} value={c.id}>{c.company_name || c.name}</option>)}
-                    </select>
+                        onChange={setCompanyId}
+                        placeholder={masterLoading ? 'Memuat...' : '— Pilih Perusahaan —'}
+                    />
                     {errors.company_id && <span style={{ color: 'var(--danger)', fontSize: '11px' }}>{errors.company_id[0]}</span>}
                 </div>
 
@@ -76,45 +71,36 @@ export default function SectionInfoUmum({
                 {/* Department */}
                 <div>
                     <label style={labelStyle}>Department</label>
-                    <select
+                    <SearchableSelect
+                        options={departmentsList.map(d => ({ id: d.id, name: d.name }))}
                         value={departmentId}
-                        onChange={e => setDepartmentId(e.target.value)}
-                        style={{ ...inputStyle, backgroundColor: masterLoading ? '#f8fafc' : '#fff' }}
-                        disabled={masterLoading}
-                    >
-                        <option value="">— Pilih Department —</option>
-                        {departmentsList.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
-                    </select>
+                        onChange={setDepartmentId}
+                        placeholder={masterLoading ? 'Memuat...' : '— Pilih Department —'}
+                    />
                     {errors.department_id && <span style={{ color: 'var(--danger)', fontSize: '11px' }}>{errors.department_id[0]}</span>}
                 </div>
 
                 {/* Section */}
                 <div>
                     <label style={labelStyle}>Section</label>
-                    <select
+                    <SearchableSelect
+                        options={sectionsList.map(s => ({ id: s.id, name: s.name }))}
                         value={sectionId}
-                        onChange={e => setSectionId(e.target.value)}
-                        disabled={!departmentId}
-                        style={{ ...inputStyle, backgroundColor: !departmentId ? '#f8fafc' : '#fff' }}
-                    >
-                        <option value="">— Pilih Section —</option>
-                        {sectionsList.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-                    </select>
+                        onChange={setSectionId}
+                        placeholder={!departmentId ? 'Pilih Department dulu' : '— Pilih Section —'}
+                    />
                     {errors.section_id && <span style={{ color: 'var(--danger)', fontSize: '11px' }}>{errors.section_id[0]}</span>}
                 </div>
 
                 {/* Area Location */}
                 <div>
                     <label style={labelStyle}>Area Lokasi</label>
-                    <select
+                    <SearchableSelect
+                        options={areaLocationsList.map(l => ({ id: l.id, name: l.name }))}
                         value={areaLocationId}
-                        onChange={e => setAreaLocationId(e.target.value)}
-                        disabled={!sectionId}
-                        style={{ ...inputStyle, backgroundColor: !sectionId ? '#f8fafc' : '#fff' }}
-                    >
-                        <option value="">— Pilih Area Lokasi —</option>
-                        {areaLocationsList.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
-                    </select>
+                        onChange={setAreaLocationId}
+                        placeholder={!sectionId ? 'Pilih Section dulu' : '— Pilih Area Lokasi —'}
+                    />
                     {errors.area_location_id && <span style={{ color: 'var(--danger)', fontSize: '11px' }}>{errors.area_location_id[0]}</span>}
                 </div>
 

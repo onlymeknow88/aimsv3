@@ -23,7 +23,7 @@ export default function usePja(defaultStatus = 'On Review PJA') {
 
     const fetchDocs = useCallback(() => {
         setLoading(true);
-        axios.get('/api/field-leadership/observations', {
+        axios.get('/api/field-leadership', {
             params: {
                 search,
                 page,
@@ -69,7 +69,7 @@ export default function usePja(defaultStatus = 'On Review PJA') {
     const confirmDelete = useCallback(async () => {
         setDeleting(true);
         try {
-            await axios.delete('/api/field-leadership/observations', { data: { ids: selectedIds } });
+            await axios.delete('/api/field-leadership', { data: { ids: selectedIds } });
             setSelectedIds([]);
             setDeleteConfirmOpen(false);
             fetchDocs();

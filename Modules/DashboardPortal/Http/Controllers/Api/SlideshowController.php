@@ -56,7 +56,7 @@ class SlideshowController extends Controller
         ]);
 
         if (!$request->hasFile('file')) {
-            return ResponseFormatter::error(null, 'File video wajib diunggah.', 400);
+            return ResponseFormatter::error('File video wajib diunggah.', 400);
         }
 
         $file = $request->file('file');
@@ -66,7 +66,7 @@ class SlideshowController extends Controller
         $uploadResult = uploadToBlobStorage($fileName, $file->getRealPath(), 'slideshow');
 
         if (!$uploadResult || empty($uploadResult['fileBlobPathName'])) {
-            return ResponseFormatter::error(null, 'Gagal mengunggah video ke Blob Storage.', 500);
+            return ResponseFormatter::error('Gagal mengunggah video ke Blob Storage.', 500);
         }
 
         $slideshow = Slideshow::create([
@@ -111,7 +111,7 @@ class SlideshowController extends Controller
                 $data['blob_url'] = $uploadResult['fileBlobUrl'];
                 $data['blob_response'] = $uploadResult['blobResponse'];
             } else {
-                return ResponseFormatter::error(null, 'Gagal mengunggah video ke Blob Storage.', 500);
+                return ResponseFormatter::error('Gagal mengunggah video ke Blob Storage.', 500);
             }
         }
 

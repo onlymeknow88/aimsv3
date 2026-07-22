@@ -1,5 +1,6 @@
+import { AlertCircle, CheckCircle2, ClipboardList, Download, Paperclip, Users } from 'lucide-react';
 import React, { useState } from 'react';
-import { ClipboardList, CheckCircle2, AlertCircle, Users, Paperclip, Download } from 'lucide-react';
+
 import BlobPreviewModal from '@/Components/BlobPreviewModal';
 
 const cardStyle = {
@@ -162,14 +163,22 @@ export default function DetailCenter({ obs, members, positives, risks, questionP
                                             <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: 600, marginBottom: '2px' }}>Due Date</div>
                                             <div style={{ fontSize: '12px', color: 'var(--text-primary)' }}>{r.due_date ? new Date(r.due_date).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'}</div>
                                         </div>
-                                        <div>
-                                            <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: 600, marginBottom: '2px' }}>Supervisor PIC</div>
-                                            <div style={{ fontSize: '12px', color: 'var(--text-primary)' }}>{r.supervisor || '—'}</div>
-                                        </div>
-                                        <div style={{ gridColumn: '1 / -1' }}>
-                                            <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: 600, marginBottom: '4px' }}>Tindakan Perbaikan</div>
-                                            <div style={{ fontSize: '12px', color: 'var(--text-primary)', backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '5px', padding: '8px 10px' }}>{r.repair_action || '—'}</div>
-                                        </div>
+                                        {r.repair_action && (
+                                            <>
+                                                <div>
+                                                    <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: 600, marginBottom: '2px' }}>Supervisor PIC</div>
+                                                    <div style={{ fontSize: '12px', color: 'var(--text-primary)' }}>{r.supervisor || '—'}</div>
+                                                </div>
+                                                <div>
+                                                    <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: 600, marginBottom: '2px' }}>Jenis Tindakan Perbaikan</div>
+                                                    <div style={{ fontSize: '12px', color: 'var(--text-primary)' }}>{r.type_action || '—'}</div>
+                                                </div>
+                                                <div style={{ gridColumn: '1 / -1' }}>
+                                                    <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: 600, marginBottom: '4px' }}>Tindakan Perbaikan</div>
+                                                    <div style={{ fontSize: '12px', color: 'var(--text-primary)', backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '5px', padding: '8px 10px' }}>{r.repair_action}</div>
+                                                </div>
+                                            </>
+                                        )}
                                     </div>
                                     {/* File attachments */}
                                     <div style={{ padding: '0 14px 12px' }}>

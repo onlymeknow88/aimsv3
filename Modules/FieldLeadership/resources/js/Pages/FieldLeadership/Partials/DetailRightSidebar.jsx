@@ -1,6 +1,8 @@
+import { Activity, CheckCircle, Clock, Paperclip, RotateCcw, Send, X } from 'lucide-react';
 import React, { useState } from 'react';
-import { Activity, Send, CheckCircle, RotateCcw, X, Paperclip, Clock } from 'lucide-react';
 import { approveLabel, canApprove, canReturn } from '../Hooks/useApproval';
+
+import BlobPreviewModal from '@/Components/BlobPreviewModal';
 import ConfirmationModal from '@/Components/ConfirmationModal';
 
 const STATUS_STEPS = [
@@ -51,6 +53,7 @@ export default function DetailRightSidebar({ obs, activities, approval }) {
     const [returnComment, setReturnComment] = useState('');
     const [returnFiles,   setReturnFiles]   = useState([]);
     const [showModal,     setShowModal]     = useState(false);
+    const [previewFile,   setPreviewFile]   = useState(null);
 
     const handleReturn = async () => {
         if (!returnComment.trim()) { alert('Catatan pengembalian wajib diisi.'); return; }
@@ -120,12 +123,39 @@ export default function DetailRightSidebar({ obs, activities, approval }) {
                 ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                         {activities.map(act => (
-                            <div key={act.id} style={{ borderBottom: '1px solid #f8fafc', paddingBottom: '8px', fontSize: '11px' }}>
+                            <div key={act.id} style={{ borderBottom: '1px solid #f8fafc', paddingBottom: '10px', fontSize: '11px' }}>
                                 <div style={{ fontWeight: 700, color: 'var(--text-primary)', marginBottom: '2px' }}>{act.description}</div>
                                 <div style={{ fontSize: '9px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px', marginTop: '4px' }}>
                                     <Clock size={9} />
                                     {act.created_at ? new Date(act.created_at).toLocaleString('id-ID', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: 'short' }) : ''}
                                 </div>
+                                {act.files && act.files.length > 0 && (
+                                    <div style={{ marginTop: '6px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                        {act.files.map(f => (
+                                            <button
+                                                key={f.id}
+                                                type="button"
+                                                onClick={() => setPreviewFile({
+                                                    id: f.id,
+                                                    type: 'fl_activity',
+                                                    file_name: f.file ? f.file.split('/').pop() : 'Lampiran',
+                                                    file_type: f.type_file || '',
+                                                })}
+                                                style={{
+                                                    display: 'inline-flex', alignItems: 'center', gap: '5px',
+                                                    fontSize: '10px', fontWeight: 600, color: 'var(--primary)',
+                                                    background: 'rgba(21,59,115,0.05)', cursor: 'pointer',
+                                                    border: '1px solid rgba(21,59,115,0.15)',
+                                                    padding: '3px 8px', borderRadius: '4px',
+                                                }}
+                                            >
+                                                <Paperclip size={9} />
+                                                {f.file ? f.file.split('/').pop() : 'Lampiran'}
+                                                {f.size ? ` (${f.size})` : ''}
+                                            </button>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
                         ))}
                     </div>
@@ -196,6 +226,13 @@ export default function DetailRightSidebar({ obs, activities, approval }) {
                         </div>
                     </div>
                 </div>
+            )}
+
+            {previewFile && (
+                <BlobPreviewModal
+                    attachment={previewFile}
+                    onClose={() => setPreviewFile(null)}
+                />
             )}
 
             {/* ConfirmationModal untuk Submit & Approve */}

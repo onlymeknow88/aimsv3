@@ -10,7 +10,7 @@ import {
     PointElement,
     Tooltip,
 } from 'chart.js';
-import { Bar, Doughnut, Line } from 'react-chartjs-2';
+import { Bar, Doughnut } from 'react-chartjs-2';
 
 import React from 'react';
 
@@ -18,6 +18,8 @@ ChartJS.register(
     ArcElement, BarElement, CategoryScale, Filler,
     Legend, LineElement, LinearScale, PointElement, Tooltip
 );
+
+const FLS_SECONDARY = '#FF8C24';
 
 // ── Skeleton ──────────────────────────────────────────────────────────────────
 function SkeletonCircle({ size = 120 }) {
@@ -93,8 +95,8 @@ function DonutGauge({ label, percent, color, trackColor = '#f1f5f9' }) {
     );
 }
 
-// ── Monthly line chart: actual vs target ────────────────────────────────────
-function MonthlyLineChart({ summaryMonthly, summaryYearly }) {
+// ── Monthly bar chart: actual vs target ────────────────────────────────────
+function MonthlyBarChart({ summaryMonthly, summaryYearly }) {
     // Build 12-month labels dengan actual & target dari summary
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
     const now = new Date();
@@ -127,25 +129,20 @@ function MonthlyLineChart({ summaryMonthly, summaryYearly }) {
             {
                 label: 'Actual',
                 data: actualData,
-                borderColor: '#153B73',
-                backgroundColor: 'rgba(21, 59, 115, 0.08)',
-                fill: true,
-                tension: 0.4,
-                pointRadius: 4,
-                pointBackgroundColor: '#153B73',
-                spanGaps: false,
+                backgroundColor: '#153B73',
+                // borderColor: '#153B73',
+                // borderWidth: 1,
+                borderRadius: 4,
+                borderSkipped: false,
             },
             {
                 label: 'Target',
                 data: targetData,
-                borderColor: '#FF8C24',
-                backgroundColor: 'rgba(255, 140, 36, 0.08)',
-                fill: true,
-                tension: 0.4,
-                borderDash: [4, 4],
-                pointRadius: 4,
-                pointBackgroundColor: '#FF8C24',
-                spanGaps: false,
+                backgroundColor: '#FF8C24',
+                // borderColor: '#FF8C24',
+                // borderWidth: 1,
+                borderRadius: 4,
+                borderSkipped: false,
             },
         ],
     };
@@ -167,7 +164,7 @@ function MonthlyLineChart({ summaryMonthly, summaryYearly }) {
         },
         scales: {
             x: {
-                grid: { color: '#f8fafc' },
+                grid: { display: false },
                 ticks: { font: { size: 10 }, color: '#94a3b8' },
             },
             y: {
@@ -177,11 +174,12 @@ function MonthlyLineChart({ summaryMonthly, summaryYearly }) {
             },
         },
         animation: { duration: 800, easing: 'easeInOutQuart' },
+        skipNull: true,
     };
 
     return (
         <div style={{ height: '170px', width: '100%' }}>
-            <Line data={data} options={options} />
+            <Bar data={data} options={options} />
         </div>
     );
 }
@@ -306,7 +304,7 @@ export default function DocumentSystemDoughnut({ stats, loading }) {
                             {loading ? (
                                 <SkeletonBlock width="100%" height="150px" />
                             ) : (
-                                <MonthlyLineChart
+                                <MonthlyBarChart
                                     summaryMonthly={stats?.summary_monthly}
                                     summaryYearly={stats?.summary_yearly}
                                 />

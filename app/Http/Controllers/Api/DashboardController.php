@@ -66,7 +66,7 @@ class DashboardController extends Controller
     public function coeEventDetail(string $id)
     {
         if (!class_exists('Modules\Coe\Entities\Event')) {
-            return ResponseFormatter::error(null, 'Event not found', 404);
+            return ResponseFormatter::error('Event not found', 404);
         }
 
         $event = \Modules\Coe\Entities\Event::with(['category', 'section.department'])

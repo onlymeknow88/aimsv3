@@ -92,7 +92,7 @@ class PtwController extends Controller
 
             return ResponseFormatter::success($documents, 'PTW documents retrieved successfully');
         } catch (\Exception $e) {
-            return ResponseFormatter::error($e->getMessage(), 500);
+            return ResponseFormatter::error('Terjadi kesalahan: ' . $e->getMessage(), 500);
         }
     }
 
@@ -317,6 +317,25 @@ class PtwController extends Controller
             'notes'           => 'Dokumen dikirim untuk direview.',
         ]);
 
+        // Notify reviewers (invited people)
+        $doc->load(['peoples', 'user']);
+        $receivers = collect($doc->peoples)->pluck('email')->filter()->implode(';');
+        if ($receivers) {
+            $html = view('email_templates.document_system_review', [
+                'title'      => $doc->title,
+                'pic'        => $doc->user?->name ?? '-',
+                'action_url' => url('document-systems/login'),
+            ])->render();
+            sendPowerAutomateEmail([
+                'SendTo'        => $receivers,
+                'Title'         => 'PTW Submitted for Review: ' . $doc->title,
+                'MsgBody'       => $html,
+                'AttchmentPath' => '',
+                'AttchmentName' => '',
+                'SendCC'        => '',
+            ]);
+        }
+
         return ResponseFormatter::success($doc, 'Dokumen berhasil dikirim untuk review.');
     }
 
@@ -341,6 +360,25 @@ class PtwController extends Controller
             'activity'        => 'Document Approved',
             'notes'           => $request->input('notes', 'Dokumen telah disetujui dan diaktifkan.'),
         ]);
+
+        // Notify maker & invited people: PTW approved
+        $doc->load(['peoples', 'user']);
+        $receivers = collect($doc->peoples)->pluck('email')->filter()->implode(';');
+        if ($receivers) {
+            $html = view('email_templates.document_system_review', [
+                'title'      => $doc->title,
+                'pic'        => $doc->user?->name ?? '-',
+                'action_url' => url('document-systems/login'),
+            ])->render();
+            sendPowerAutomateEmail([
+                'SendTo'        => $receivers,
+                'Title'         => 'PTW Disetujui & Aktif: ' . $doc->title,
+                'MsgBody'       => $html,
+                'AttchmentPath' => '',
+                'AttchmentName' => '',
+                'SendCC'        => '',
+            ]);
+        }
 
         return ResponseFormatter::success($doc, 'Dokumen berhasil disetujui.');
     }
@@ -370,6 +408,25 @@ class PtwController extends Controller
             'activity'        => 'Document Rejected',
             'notes'           => $request->input('description'),
         ]);
+
+        // Notify maker: PTW rejected/returned
+        $doc->load(['peoples', 'user']);
+        $receivers = collect($doc->peoples)->pluck('email')->filter()->implode(';');
+        if ($receivers) {
+            $html = view('email_templates.document_system_review', [
+                'title'      => $doc->title,
+                'pic'        => $doc->user?->name ?? '-',
+                'action_url' => url('document-systems/login'),
+            ])->render();
+            sendPowerAutomateEmail([
+                'SendTo'        => $receivers,
+                'Title'         => 'PTW Dikembalikan (Return): ' . $doc->title,
+                'MsgBody'       => $html,
+                'AttchmentPath' => '',
+                'AttchmentName' => '',
+                'SendCC'        => '',
+            ]);
+        }
 
         return ResponseFormatter::success($doc, 'Dokumen dikembalikan ke draft.');
     }

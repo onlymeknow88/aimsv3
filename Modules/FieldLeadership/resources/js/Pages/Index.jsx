@@ -122,7 +122,7 @@ export default function Index({ stats: serverStats = {} }) {
             icon: ClipboardList,
             color: FLS_PRIMARY,
             bg: 'rgba(0,85,47,0.08)',
-            href: '/field-leadership/observations',
+            href: '/field-leadership',
         },
         {
             title: 'Open',
@@ -130,7 +130,7 @@ export default function Index({ stats: serverStats = {} }) {
             icon: AlertCircle,
             color: '#f59e0b',
             bg: 'rgba(245,158,11,0.08)',
-            href: '/field-leadership/observations',
+            href: '/field-leadership',
         },
         {
             title: 'Closed',
@@ -138,7 +138,7 @@ export default function Index({ stats: serverStats = {} }) {
             icon: CheckCircle2,
             color: FLS_SECONDARY,
             bg: 'rgba(145,186,95,0.08)',
-            href: '/field-leadership/observations',
+            href: '/field-leadership',
         },
         {
             title: 'Overdue',
@@ -146,7 +146,7 @@ export default function Index({ stats: serverStats = {} }) {
             icon: XCircle,
             color: '#ef4444',
             bg: 'rgba(239,68,68,0.08)',
-            href: '/field-leadership/observations',
+            href: '/field-leadership',
         },
     ];
 
@@ -211,7 +211,7 @@ export default function Index({ stats: serverStats = {} }) {
                     </div>
                 </div>
                 <a
-                    href="/field-leadership/observations/create"
+                    href="/field-leadership/create"
                     style={{
                         display: 'inline-flex', alignItems: 'center', gap: '8px',
                         backgroundColor: '#fff', color: FLS_PRIMARY,
@@ -280,7 +280,7 @@ export default function Index({ stats: serverStats = {} }) {
                 gap: '16px',
             }}>
                 {[
-                    { label: 'Lihat Semua Observasi', href: '/field-leadership/observations', icon: ClipboardList },
+                    { label: 'Lihat Semua Observasi', href: '/field-leadership', icon: ClipboardList },
                     { label: 'Risk Finding',           href: '/field-leadership/risks',        icon: ShieldAlert },
                     { label: 'Master Data',            href: '/field-leadership/master',       icon: Timer },
                 ].map((link, i) => (

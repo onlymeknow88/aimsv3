@@ -1,4 +1,5 @@
 import React from 'react';
+import SearchableSelect from '@/Components/SearchableSelect';
 
 export default function SectionPenanggungJawab({
     labelStyle, inputStyle, cardStyle, sectionTitleStyle,
@@ -14,24 +15,22 @@ export default function SectionPenanggungJawab({
         <div style={cardStyle}>
             <h3 style={sectionTitleStyle}>Penanggung Jawab &amp; Field Leadership</h3>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '16px', marginBottom: '16px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px', marginBottom: '16px' }}>
 
                 {/* PJA */}
                 <div>
                     <label style={labelStyle}>
                         Penanggung Jawab Area (PJA) <span style={{ color: 'var(--danger)' }}>*</span>
                     </label>
-                    <select
+                    <SearchableSelect
+                        options={pjaList.map(p => ({
+                            id: p.id,
+                            name: p.name + (p.area_name && p.area_name !== '—' ? ` — ${p.area_name}` : ''),
+                        }))}
                         value={pjaId}
-                        onChange={e => setPjaId(e.target.value)}
-                        disabled={!sectionId}
-                        style={{ ...inputStyle, backgroundColor: !sectionId ? '#f8fafc' : '#fff' }}
-                    >
-                        <option value="">— Pilih PJA —</option>
-                        {pjaList.map(p => (
-                            <option key={p.id} value={p.id}>{p.name}</option>
-                        ))}
-                    </select>
+                        onChange={setPjaId}
+                        placeholder={!sectionId ? 'Pilih Section dulu' : '— Pilih PJA —'}
+                    />
                     {!sectionId && (
                         <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Pilih Section terlebih dahulu</span>
                     )}

@@ -43,12 +43,11 @@ class FieldLeadershipApprovalApiController extends Controller
         $fl = DB::table('field_leaderships')->where('id', $id)->first();
 
         if (! $fl) {
-            return ResponseFormatter::error(null, 'Observation not found', 404);
+            return ResponseFormatter::error('Observation not found', 404);
         }
 
         if ($fl->status !== 'Open') {
             return ResponseFormatter::error(
-                null,
                 "Dokumen harus berstatus 'Open' untuk dapat disubmit. Status saat ini: {$fl->status}",
                 422
             );
@@ -77,14 +76,13 @@ class FieldLeadershipApprovalApiController extends Controller
         $fl = DB::table('field_leaderships')->where('id', $id)->first();
 
         if (! $fl) {
-            return ResponseFormatter::error(null, 'Observation not found', 404);
+            return ResponseFormatter::error('Observation not found', 404);
         }
 
         $nextStatus = self::NEXT_STATUS[$fl->status] ?? null;
 
         if (! $nextStatus) {
             return ResponseFormatter::error(
-                null,
                 "Status '{$fl->status}' tidak dapat di-approve lebih lanjut.",
                 422
             );
@@ -134,21 +132,22 @@ class FieldLeadershipApprovalApiController extends Controller
         $fl = DB::table('field_leaderships')->where('id', $id)->first();
 
         if (! $fl) {
-            return ResponseFormatter::error(null, 'Observation not found', 404);
+            return ResponseFormatter::error('Observation not found', 404);
         }
 
         $prevStatus = self::PREV_STATUS[$fl->status] ?? null;
 
         if (! $prevStatus) {
             return ResponseFormatter::error(
-                null,
                 "Status '{$fl->status}' tidak dapat dikembalikan.",
                 422
             );
         }
 
         $request->validate([
-            'comment' => 'required|string|max:1000',
+            'comment'   => 'required|string|max:1000',
+            'files'     => 'nullable|array',
+            'files.*'   => 'file|max:20480',
         ]);
 
         DB::table('field_leaderships')->where('id', $id)->update([
@@ -156,8 +155,50 @@ class FieldLeadershipApprovalApiController extends Controller
             'updated_at' => now(),
         ]);
 
-        $comment = $request->input('comment');
-        $this->logActivity($id, "Dokumen dikembalikan dari '{$fl->status}' ke '{$prevStatus}'. Catatan: {$comment}");
+        $comment    = $request->input('comment');
+        $activityId = (string) Str::uuid();
+
+        DB::table('field_leadership_activities')->insert([
+            'id'          => $activityId,
+            'fl_id'       => $id,
+            'description' => "Dokumen dikembalikan dari '{$fl->status}' ke '{$prevStatus}'. Catatan: {$comment}",
+            'user_id'     => (string) auth()->id(),
+            'created_at'  => now(),
+            'updated_at'  => now(),
+        ]);
+
+        // Upload attachment files jika ada
+        if ($request->hasFile('files')) {
+            foreach ($request->file('files') as $file) {
+                try {
+                    $originalName = $file->getClientOriginalName();
+                    $ext          = strtolower($file->getClientOriginalExtension());
+                    $size         = $file->getSize() >= 1048576
+                        ? round($file->getSize() / 1048576, 2) . ' MB'
+                        : round($file->getSize() / 1024, 2) . ' KB';
+
+                    $uploadResult = uploadToBlobStorage(
+                        $originalName,
+                        $file->getRealPath(),
+                        'field-leadership/activities'
+                    );
+
+                    DB::table('field_leadership_activity_files')->insert([
+                        'id'              => (string) Str::uuid(),
+                        'fl_activity_id'  => $activityId,
+                        'file'            => $uploadResult['fileBlobPathName'] ?? $originalName,
+                        'blob_url'        => $uploadResult['fileBlobUrl'] ?? null,
+                        'blob_response'   => $uploadResult['blobResponse'] ? json_encode($uploadResult['blobResponse']) : null,
+                        'type_file'       => $ext,
+                        'size'            => $size,
+                        'created_at'      => now(),
+                        'updated_at'      => now(),
+                    ]);
+                } catch (\Throwable $e) {
+                    \Log::error('Failed to upload return activity file: ' . $e->getMessage());
+                }
+            }
+        }
 
         return ResponseFormatter::success(
             ['id' => $id, 'status' => $prevStatus],
