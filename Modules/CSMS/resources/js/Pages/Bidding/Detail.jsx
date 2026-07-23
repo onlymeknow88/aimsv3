@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { usePage, Head } from '@inertiajs/react';
 import axios from 'axios';
-import { AlertCircle, ArrowLeft, Edit } from 'lucide-react';
+import { AlertCircle, ArrowLeft, Edit, RefreshCw, Ban } from 'lucide-react';
+import PageLoader from '@/Components/PageLoader';
+import ConfirmationModal from '@/Components/ConfirmationModal';
 import DetailLeftSidebar  from './Partials/Detail/DetailLeftSidebar';
 import DetailCenter       from './Partials/Detail/DetailCenter';
 import DetailRightSidebar from './Partials/Detail/DetailRightSidebar';
@@ -21,6 +23,10 @@ export default function BiddingDetail() {
     const [loading,  setLoading]  = useState(true);
     const [error,    setError]    = useState(false);
     const [isMobile, setIsMobile] = useState(false);
+    const [renewing, setRenewing]       = useState(false);
+    const [showRenewConfirm, setShowRenewConfirm] = useState(false);
+    const [deactivating, setDeactivating]             = useState(false);
+    const [showDeactivateConfirm, setShowDeactivateConfirm] = useState(false);
 
     useEffect(() => {
         const check = () => setIsMobile(window.innerWidth <= 768);
@@ -43,12 +49,40 @@ export default function BiddingDetail() {
 
     useEffect(() => { loadDetail(); }, [loadDetail]);
 
+    const handleRenew = () => {
+        setRenewing(true);
+        axios.post(`/api/csms/biddings/${id}/renew`)
+            .then(() => {
+                setShowRenewConfirm(false);
+                window.location.href = '/csms/renewal/lists';
+            })
+            .catch(err => {
+                setShowRenewConfirm(false);
+                alert(err.response?.data?.message || 'Gagal mengajukan perpanjangan.');
+            })
+            .finally(() => setRenewing(false));
+    };
+
+    const handleDeactivate = () => {
+        setDeactivating(true);
+        axios.post(`/api/csms/biddings/${id}/deactivate`)
+            .then(() => {
+                setShowDeactivateConfirm(false);
+                window.location.href = backLink;
+            })
+            .catch(err => {
+                setShowDeactivateConfirm(false);
+                alert(err.response?.data?.message || 'Gagal menonaktifkan.');
+            })
+            .finally(() => setDeactivating(false));
+    };
+
     if (loading) {
         return (
-            <div style={{ backgroundColor: 'var(--bg-color)', minHeight: '100vh', padding: '40px 20px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <>
                 <Head title="Detail Bidding CSMS" />
-                <p style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Memuat detail Bidding CSMS...</p>
-            </div>
+                <PageLoader title="Memuat detail Bidding CSMS..." />
+            </>
         );
     }
 
@@ -71,6 +105,8 @@ export default function BiddingDetail() {
     const backLink = isPostBidding ? '/csms/post-bidding/lists' : '/csms/bidding/lists';
     const backText = isPostBidding ? 'Kembali ke Post Bidding' : 'Kembali ke Bidding';
     const editLink = isPostBidding ? `/csms/post-bidding/edit/${id}` : `/csms/bidding/edit/${id}`;
+    const showRenewButton = isPostBidding && bidding.status === 'Approved';
+    const showDeactivateButton = (bidding.criteria === 'PostBidding' || bidding.criteria === 'Renewal') && bidding.status === 'Approved';
 
     return (
         <div style={{ backgroundColor: 'var(--bg-color)', minHeight: '100vh', padding: '40px 20px' }}>
@@ -90,6 +126,16 @@ export default function BiddingDetail() {
                             <Edit size={12} /> Edit
                         </a>
                     )}
+                    {showRenewButton && (
+                        <button onClick={() => setShowRenewConfirm(true)} disabled={renewing} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', backgroundColor: 'var(--success, #22c55e)', color: '#fff', borderRadius: '6px', padding: '6px 14px', fontSize: '11px', fontWeight: 700, border: 'none', cursor: 'pointer' }}>
+                            <RefreshCw size={12} style={{ animation: renewing ? 'spin 1s linear infinite' : 'none' }} /> {renewing ? 'Memproses...' : 'Ajukan Perpanjangan'}
+                        </button>
+                    )}
+                    {showDeactivateButton && (
+                        <button onClick={() => setShowDeactivateConfirm(true)} disabled={deactivating} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', backgroundColor: 'var(--danger, #ef4444)', color: '#fff', borderRadius: '6px', padding: '6px 14px', fontSize: '11px', fontWeight: 700, border: 'none', cursor: 'pointer' }}>
+                            <Ban size={12} /> Nonaktifkan
+                        </button>
+                    )}
                 </div>
             </div>
 
@@ -105,6 +151,30 @@ export default function BiddingDetail() {
                     <DetailRightSidebar bidding={bidding} onApproval={loadDetail} />
                 </aside>
             </div>
+
+            <ConfirmationModal
+                isOpen={showRenewConfirm}
+                type="generic"
+                title="Ajukan Perpanjangan?"
+                description="Data Post Bidding ini akan diajukan sebagai Renewal CSMS baru. Proses tidak dapat dibatalkan setelah disubmit."
+                confirmText="Ya, Ajukan"
+                cancelText="Batal"
+                loading={renewing}
+                onConfirm={handleRenew}
+                onCancel={() => setShowRenewConfirm(false)}
+            />
+
+            <ConfirmationModal
+                isOpen={showDeactivateConfirm}
+                type="generic"
+                title="Nonaktifkan CSMS Kontraktor?"
+                description="Kualifikasi CSMS kontraktor ini akan dinonaktifkan (status Inactive) dan tidak dapat digunakan untuk tender baru."
+                confirmText="Ya, Nonaktifkan"
+                cancelText="Batal"
+                loading={deactivating}
+                onConfirm={handleDeactivate}
+                onCancel={() => setShowDeactivateConfirm(false)}
+            />
         </div>
     );
 }

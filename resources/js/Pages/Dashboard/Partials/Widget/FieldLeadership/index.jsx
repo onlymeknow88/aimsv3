@@ -8,99 +8,7 @@ import FieldLeadershipSummary from './FieldLeadershipSummary';
 import React from 'react';
 import useFieldLeadership from './useFieldLeadership';
 
-// ── Loading skeleton ──────────────────────────────────────────────────────────
-function LoadingSkeleton() {
-    return (
-        <>
-            <style>{`
-                @keyframes flswidget-pulse {
-                    0%, 100% { opacity: 1; }
-                    50%       { opacity: 0.4; }
-                }
-            `}</style>
-            {/* Row 1: summary + detail */}
-            <div className="flswidget-grid-top">
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                    {[1, 2, 3].map(i => (
-                        <div key={i} style={{
-                            backgroundColor: '#f8fafc', border: '1px solid #e2e8f0',
-                            borderRadius: '12px', padding: '14px 16px',
-                            display: 'flex', flexDirection: 'column', gap: '10px',
-                            animation: 'flswidget-pulse 1.5s infinite',
-                        }}>
-                            <div style={{ height: '11px', backgroundColor: '#e2e8f0', borderRadius: '4px', width: '60%' }} />
-                            <div style={{ height: '26px', backgroundColor: '#e2e8f0', borderRadius: '6px', width: '40%' }} />
-                            <div style={{ height: '8px',  backgroundColor: '#e2e8f0', borderRadius: '999px' }} />
-                        </div>
-                    ))}
-                </div>
-                <div style={{
-                    backgroundColor: '#f8fafc', border: '1px solid #e2e8f0',
-                    borderRadius: '12px', overflow: 'hidden',
-                    animation: 'flswidget-pulse 1.5s infinite',
-                }}>
-                    {[1, 2, 3, 4].map(i => (
-                        <div key={i} style={{
-                            padding: '10px 12px', borderBottom: '1px solid #f1f5f9',
-                            display: 'flex', gap: '12px',
-                        }}>
-                            <div style={{ flex: 1, height: '11px', backgroundColor: '#e2e8f0', borderRadius: '4px' }} />
-                            <div style={{ width: '40px', height: '11px', backgroundColor: '#e2e8f0', borderRadius: '4px' }} />
-                            <div style={{ width: '24px', height: '11px', backgroundColor: '#e2e8f0', borderRadius: '4px' }} />
-                            <div style={{ width: '32px', height: '11px', backgroundColor: '#e2e8f0', borderRadius: '4px' }} />
-                        </div>
-                    ))}
-                </div>
-            </div>
 
-            {/* Row 2: bar chart */}
-            <div style={{
-                backgroundColor: '#f8fafc', border: '1px solid #e2e8f0',
-                borderRadius: '12px', padding: '16px',
-                animation: 'flswidget-pulse 1.5s infinite',
-            }}>
-                <div style={{ height: '11px', backgroundColor: '#e2e8f0', borderRadius: '4px', width: '30%', marginBottom: '16px' }} />
-                <div style={{
-                    height: '180px', display: 'flex', alignItems: 'flex-end', gap: '6px',
-                }}>
-                    {[60, 80, 45, 90, 70, 55, 75, 95, 65, 50, 85, 40].map((h, i) => (
-                        <div key={i} style={{
-                            flex: 1, height: `${h}%`,
-                            backgroundColor: '#e2e8f0', borderRadius: '4px 4px 0 0',
-                        }} />
-                    ))}
-                </div>
-            </div>
-
-            {/* Row 3: donuts + progress */}
-            <div className="flswidget-grid-bottom">
-                {[1, 2].map(i => (
-                    <div key={i} style={{
-                        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px',
-                        animation: 'flswidget-pulse 1.5s infinite',
-                    }}>
-                        <div style={{ width: 130, height: 130, borderRadius: '50%', backgroundColor: '#e2e8f0' }} />
-                        <div style={{ width: '80px', height: '11px', backgroundColor: '#e2e8f0', borderRadius: '4px' }} />
-                    </div>
-                ))}
-                <div style={{
-                    display: 'flex', flexDirection: 'column', gap: '14px',
-                    animation: 'flswidget-pulse 1.5s infinite',
-                }}>
-                    {[1, 2, 3].map(i => (
-                        <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                <div style={{ width: '80px', height: '11px', backgroundColor: '#e2e8f0', borderRadius: '4px' }} />
-                                <div style={{ width: '32px', height: '11px', backgroundColor: '#e2e8f0', borderRadius: '4px' }} />
-                            </div>
-                            <div style={{ height: '8px', backgroundColor: '#e2e8f0', borderRadius: '999px' }} />
-                        </div>
-                    ))}
-                </div>
-            </div>
-        </>
-    );
-}
 
 // ── Error state ───────────────────────────────────────────────────────────────
 function ErrorState({ onRetry }) {
@@ -224,39 +132,18 @@ export default function FieldLeadership({ filters = {} }) {
                 )}
             </div>
 
-            {/* ── Content ─────────────────────────────────────────────────── */}
             {error ? (
                 <ErrorState onRetry={refetch} />
             ) : loading ? (
-                <LoadingSkeleton />
+                <div className="flswidget-grid-top">
+                    <FieldLeadershipSummary stats={stats} loading={true} />
+                </div>
             ) : isEmpty ? (
                 <EmptyState />
             ) : (
-                <>
-                    {/* Row 1: Summary (left) + Detail comparison (right) */}
-                    <div className="flswidget-grid-top">
-                        <FieldLeadershipSummary stats={stats} loading={false} />
-                        <FieldLeadershipDetail  stats={stats} loading={false} />
-                    </div>
-
-                    {/* Row 2: Monthly bar chart — full width */}
-                    <div style={{
-                        backgroundColor: '#f8fafc',
-                        border: '1px solid #e2e8f0',
-                        borderRadius: '12px',
-                        padding: '16px',
-                    }}>
-                        <FieldLeadershipMonthlyChart stats={stats} loading={false} />
-                    </div>
-
-                    {/* Row 3: Donut charts (span 2 cols) + Category progress (1 col) */}
-                    <div className="flswidget-grid-bottom">
-                        <div style={{ gridColumn: 'span 2' }}>
-                            <FieldLeadershipDonutCharts stats={stats} loading={false} />
-                        </div>
-                        <FieldLeadershipCategoryProgress stats={stats} loading={false} />
-                    </div>
-                </>
+                <div className="flswidget-grid-top">
+                    <FieldLeadershipSummary stats={stats} loading={false} />
+                </div>
             )}
         </div>
     );

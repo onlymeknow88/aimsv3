@@ -1,8 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import { Head } from '@inertiajs/react';
-import { ArrowLeft, ClipboardCheck, Save, Loader2, FileText, Upload, X } from 'lucide-react';
-import axios from 'axios';
+import { ArrowLeft, ClipboardCheck, FileText, Loader2, Save, Upload, X } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+
+import ConfirmationModal from '@/Components/ConfirmationModal';
+import PageLoader from '@/Components/PageLoader';
 import FileDropzone from '@/Components/FileDropzone';
+import { Head } from '@inertiajs/react';
+import axios from 'axios';
 
 const S = {
     label: { fontSize: '10.5px', fontWeight: 700, color: 'var(--text-secondary)', marginBottom: '6px', display: 'block' },
@@ -21,9 +24,10 @@ export default function PostBiddingEdit({ id }) {
     const [checklistFiles, setChecklistFiles] = useState({});
     const [questionnaireFile, setQuestionnaireFile] = useState(null);
     const [classifications, setClassifications] = useState([]);
-    
+
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
+    const [showConfirm, setShowConfirm] = useState(false);
     const [errors, setErrors] = useState({});
 
     useEffect(() => {
@@ -35,7 +39,7 @@ export default function PostBiddingEdit({ id }) {
             const data = biddingRes.data?.result ?? {};
             setClassifications(masterRes.data?.result?.classifications ?? []);
             const bid = data.bidding ?? {};
-            
+
             let parsedQuest = {
                     company_nickname: '',
                     scope_of_business: '',
@@ -68,7 +72,8 @@ export default function PostBiddingEdit({ id }) {
                     service_criteria: bid.service_criteria ?? '',
                     classification: bid.classification ?? '',
                     ccow_id: bid.ccow_id ?? '',
-                    business_entity_id: bid.business_entity_id ?? 1,
+                    business_entity_id: bid.business_entity_id ?? '',
+                    csms_doc_number: bid.csms_doc_number ?? '',
                     company_id: bid.company_id ?? '',
                     parent_id: bid.parent_id ?? '',
                     person_in_charge: bid.person_in_charge ?? '',
@@ -128,13 +133,14 @@ export default function PostBiddingEdit({ id }) {
         fd.append('classification', form.classification);
         fd.append('business_entity_id', form.business_entity_id);
         fd.append('risk_category', form.risk_category);
-        
+
+        if (form.csms_doc_number) fd.append('csms_doc_number', form.csms_doc_number);
         if (form.ccow_id) fd.append('ccow_id', form.ccow_id);
         if (form.company_id) fd.append('company_id', form.company_id);
         if (form.parent_id) fd.append('parent_id', form.parent_id);
         if (form.person_in_charge) fd.append('person_in_charge', form.person_in_charge);
         if (questionnaireFile) fd.append('questionnaire_file', questionnaireFile);
-        
+
         fd.append('questionnaire', JSON.stringify(form.questionnaire));
 
         // Append checklists and files
@@ -142,7 +148,7 @@ export default function PostBiddingEdit({ id }) {
             fd.append(`checklists[${i}][id]`, cl.id);
             fd.append(`checklists[${i}][value]`, cl.value || '');
             fd.append(`checklists[${i}][comment]`, cl.comment || '');
-            
+
             const files = checklistFiles[cl.id] || [];
             files.forEach(f => {
                 fd.append(`checklists[${i}][new_files][]`, f);
@@ -172,18 +178,17 @@ export default function PostBiddingEdit({ id }) {
 
     if (loading || !form) {
         return (
-            <div style={{ backgroundColor: 'var(--bg-color)', minHeight: '100vh', padding: '40px 20px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', color: 'var(--text-secondary)', fontSize: '13px' }}>
+            <>
                 <Head title="Edit Post Bidding" />
-                <Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }} />
-                Memuat data Post Bidding...
-            </div>
+                <PageLoader title="Memuat data Post Bidding..." />
+            </>
         );
     }
 
     return (
         <div style={{ backgroundColor: 'var(--bg-color)', minHeight: '100vh', padding: '40px 20px', boxSizing: 'border-box' }}>
             <Head title={`Edit Post Bidding: ${form.company_name}`} />
-            
+
             {/* Top Bar */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px', borderBottom: '1px solid var(--border-color)', paddingBottom: '12px', flexWrap: 'wrap', gap: '10px' }}>
                 <a href={`/csms/post-bidding/detail/${id}`} style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', color: 'var(--primary)', fontWeight: 700, textDecoration: 'none', fontSize: '12px' }}>
@@ -202,7 +207,7 @@ export default function PostBiddingEdit({ id }) {
 
             <div style={{ display: 'flex', justifyContent: 'center' }}>
                 <div style={{ width: '100%', maxWidth: '900px', backgroundColor: 'var(--card-bg)', border: '1px solid var(--border-color)', borderRadius: '16px', padding: '32px', boxShadow: 'var(--shadow-premium, 0 4px 24px rgba(0,0,0,0.06))' }}>
-                    
+
                     {/* Section 1: Company Details */}
                     <div style={{ marginBottom: '32px' }}>
                         <h4 style={S.title}>Detail Perusahaan</h4>
@@ -333,9 +338,9 @@ export default function PostBiddingEdit({ id }) {
                                 <label style={S.label}>File Scan Kuesioner CSMS</label>
                                 <FileDropzone onFileDrop={(files) => setQuestionnaireFile(files[0])} accept=".pdf,.png,.jpeg,.jpg" />
                                 {questionnaireFile && (
-                                    <div style={{ marginTop: '8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 12px', backgroundColor: '#f8fafc', border: '1px solid var(--border-color)', borderRadius: '6px', fontSize: '11px' }}>
-                                        <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{questionnaireFile.name}</span>
-                                        <button type="button" onClick={() => setQuestionnaireFile(null)} style={{ border: 'none', background: 'none', color: '#ef4444', cursor: 'pointer', fontWeight: 'bold' }}>Hapus</button>
+                                    <div style={{ marginTop: '8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', padding: '6px 12px', backgroundColor: '#f8fafc', border: '1px solid var(--border-color)', borderRadius: '6px', fontSize: '11px' }}>
+                                        <span style={{ flex: 1, color: 'var(--text-primary)', fontWeight: 600, textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap', minWidth: 0 }}>{questionnaireFile.name}</span>
+                                        <button type="button" onClick={() => setQuestionnaireFile(null)} style={{ flexShrink: 0, border: '1px solid #fca5a5', background: '#fef2f2', color: '#ef4444', cursor: 'pointer', fontSize: '11px', fontWeight: 600, padding: '2px 8px', borderRadius: '4px', lineHeight: '16px' }}>Hapus</button>
                                     </div>
                                 )}
                                 {form.questionnaire.questionnaire_file_url && !questionnaireFile && (
@@ -363,7 +368,7 @@ export default function PostBiddingEdit({ id }) {
                                                 <p style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-primary)', margin: '0 0 10px' }}>{cl.ordinal_number ?? i + 1}. {cl.crtiteria}</p>
                                                 {cl.legal_base && <p style={{ fontSize: '11px', color: '#1d4ed8', margin: '0 0 4px' }}><strong>Dasar Hukum:</strong> {cl.legal_base}</p>}
                                                 {cl.note && <p style={{ fontSize: '11px', color: '#810da8', margin: '0 0 4px' }}><strong>Panduan:</strong> {cl.note}</p>}
-                                                
+
                                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '10px' }}>
                                                     <select value={cl.value ?? ''} onChange={e => setChecklist(cl.id, 'value', e.target.value)}
                                                         style={{ padding: '8px 10px', fontSize: '12px', border: '1px solid var(--border-color)', borderRadius: '6px', backgroundColor: '#fff', width: '100%' }}>
@@ -383,14 +388,14 @@ export default function PostBiddingEdit({ id }) {
                                                 <div style={{ borderTop: '1px dashed var(--border-color)', paddingTop: '10px', marginTop: '10px' }}>
                                                     <label style={{ ...S.label, fontSize: '11px', marginBottom: '8px' }}>Upload Dokumen Bukti</label>
                                                     <FileDropzone onFileDrop={(files) => handleFileDrop(cl.id, files)} accept=".pdf,.png,.jpeg,.jpg" />
-                                                    
+
                                                     {/* Newly selected files */}
                                                     {(checklistFiles[cl.id] || []).length > 0 && (
                                                         <div style={{ marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                                             {(checklistFiles[cl.id] || []).map((file, fIdx) => (
-                                                                <div key={fIdx} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px 8px', backgroundColor: '#fff', border: '1px solid var(--border-color)', borderRadius: '4px', fontSize: '10px' }}>
-                                                                    <span style={{ color: '#334155', display: 'inline-flex', alignItems: 'center', gap: '4px' }}><Upload size={10} /> {file.name}</span>
-                                                                    <button onClick={() => removeChecklistFile(cl.id, fIdx)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}><X size={12} style={{ color: '#ef4444' }} /></button>
+                                                                <div key={fIdx} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', padding: '6px 10px', backgroundColor: '#fff', border: '1px solid var(--border-color)', borderRadius: '6px', fontSize: '11px' }}>
+                                                                    <span style={{ flex: 1, color: '#334155', display: 'inline-flex', alignItems: 'center', gap: '4px', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}><Upload size={10} /> {file.name}</span>
+                                                                    <button onClick={() => removeChecklistFile(cl.id, fIdx)} style={{ flexShrink: 0, border: '1px solid #fca5a5', background: '#fef2f2', color: '#ef4444', cursor: 'pointer', fontSize: '11px', fontWeight: 600, padding: '2px 8px', borderRadius: '4px', lineHeight: '16px' }}>✕</button>
                                                                 </div>
                                                             ))}
                                                         </div>
@@ -421,11 +426,20 @@ export default function PostBiddingEdit({ id }) {
                     {/* Footer Actions */}
                     <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', paddingTop: '16px', borderTop: '1px solid var(--border-color)' }}>
                         <a href={`/csms/post-bidding/detail/${id}`} style={{ padding: '9px 20px', border: '1px solid var(--border-color)', borderRadius: '6px', fontSize: '12px', fontWeight: 600, backgroundColor: '#fff', color: 'var(--text-secondary)', textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}>Batal</a>
-                        <button onClick={handleSubmit} disabled={saving}
+                        <button onClick={() => setShowConfirm(true)} disabled={saving}
                             style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '9px 20px', backgroundColor: 'var(--primary)', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '12px', fontWeight: 700, cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.7 : 1 }}>
                             {saving ? <Loader2 size={13} style={{ animation: 'spin 1s linear infinite' }} /> : <Save size={13} />}
                             {saving ? 'Menyimpan...' : 'Simpan Post Bidding'}
                         </button>
+                        <ConfirmationModal
+                            isOpen={showConfirm}
+                            type="draft"
+                            confirmText="Simpan"
+                            cancelText="Batal"
+                            loading={saving}
+                            onConfirm={handleSubmit}
+                            onCancel={() => setShowConfirm(false)}
+                        />
                     </div>
                 </div>
             </div>

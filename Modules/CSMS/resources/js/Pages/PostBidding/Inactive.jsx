@@ -1,31 +1,27 @@
-import { Eye, RefreshCw, RotateCcw, Search } from 'lucide-react';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { ClipboardCheck, RefreshCw, Search } from 'lucide-react';
 
 import CSMSLayout from '../../Layouts/CSMSLayout';
 import { Head } from '@inertiajs/react';
-import StatusBadge from '../Bidding/Partials/Components/StatusBadge';
+import PostBiddingTable from './Partials/PostBiddingTable';
+import React from 'react';
 import TablePagination from '@/Components/TablePagination';
 import useBidding from '../Bidding/Hooks/useBidding';
-import RenewalTable from './Partials/RenewalTable';
 
 const btnStyle = { display: 'inline-flex', alignItems: 'center', gap: '6px', backgroundColor: '#fff', border: '1px solid var(--border-color)', borderRadius: '6px', padding: '8px 12px', fontSize: '11px', fontWeight: 600, color: 'var(--text-primary)', cursor: 'pointer' };
 
-const thStyle = { fontSize: '11px', fontWeight: 700, color: 'var(--text-primary)', padding: '10px 12px', textTransform: 'uppercase', letterSpacing: '0.03em' };
-const tdStyle = { fontSize: '12px', padding: '10px 12px', color: 'var(--text-secondary)' };
-
-export default function RenewalIndex() {
-    const { biddings, pagination, loading, search, setSearch, status, setStatus, limit, setLimit, page, setPage, refresh } = useBidding('Renewal', 'Approved');
+export default function PostBiddingInactive() {
+    const { biddings, pagination, loading, search, setSearch, limit, setLimit, page, setPage, refresh } = useBidding('PostBidding', 'Inactive');
 
     return (
         <CSMSLayout>
-            <Head title="Renewal CSMS" />
+            <Head title="Post-Bidding Inactive - CSMS" />
 
             <div style={{ marginBottom: '20px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                    <RotateCcw size={18} style={{ color: 'var(--primary)' }} />
-                    <h1 style={{ fontSize: '20px', fontWeight: 800, color: 'var(--primary)', margin: 0 }}>Renewal CSMS</h1>
+                    <ClipboardCheck size={18} style={{ color: 'var(--primary)' }} />
+                    <h1 style={{ fontSize: '20px', fontWeight: 800, color: 'var(--primary)', margin: 0 }}>Post-Bidding Inactive</h1>
                 </div>
-                <p style={{ color: 'var(--text-secondary)', fontSize: '11px', margin: 0 }}>Perpanjangan dokumen & sertifikat CSMS</p>
+                <p style={{ color: 'var(--text-secondary)', fontSize: '11px', margin: 0 }}>Daftar kontraktor Post-Bidding yang sudah dinonaktifkan</p>
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px', gap: '16px', flexWrap: 'wrap' }}>
@@ -35,16 +31,12 @@ export default function RenewalIndex() {
                         style={{ width: '100%', padding: '8px 12px 8px 36px', border: '1px solid var(--border-color)', borderRadius: '6px', fontSize: '11px', outline: 'none', boxSizing: 'border-box' }} />
                 </div>
                 <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                    <select value={status} disabled
-                        style={{ padding: '7px 12px', border: '1px solid var(--border-color)', borderRadius: '6px', fontSize: '12px', outline: 'none', backgroundColor: '#f1f5f9', color: '#64748b', cursor: 'not-allowed' }}>
-                        <option value="Approved">Approved</option>
-                    </select>
                     <button onClick={refresh} style={btnStyle}><RefreshCw size={14} /></button>
                 </div>
             </div>
 
             <div style={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--border-color)', borderRadius: '12px', overflow: 'hidden', boxShadow: 'var(--shadow-sm)' }}>
-                <RenewalTable biddings={biddings} loading={loading} />
+                <PostBiddingTable biddings={biddings} loading={loading} />
                 <TablePagination pagination={pagination} onPageChange={setPage} limit={limit} onLimitChange={v => { setLimit(v); setPage(1); }} />
             </div>
         </CSMSLayout>

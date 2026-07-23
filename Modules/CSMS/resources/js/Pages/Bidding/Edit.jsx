@@ -3,6 +3,7 @@ import { usePage, Head } from '@inertiajs/react';
 import CSMSLayout from '../../Layouts/CSMSLayout';
 import axios from 'axios';
 import ConfirmationModal from '@/Components/ConfirmationModal';
+import PageLoader from '@/Components/PageLoader';
 import FileDropzone from '@/Components/FileDropzone';
 import { Save, ArrowLeft, Upload, X, FileText } from 'lucide-react';
 
@@ -90,7 +91,7 @@ export default function BiddingEdit() {
             fd.append(`checklists[${idx}][id]`, cl.id);
             fd.append(`checklists[${idx}][value]`, cl.value || '');
             fd.append(`checklists[${idx}][comment]`, cl.comment || '');
-            
+
             const files = checklistFiles[cl.id] || [];
             files.forEach(file => {
                 fd.append(`checklists[${idx}][new_files][]`, file);
@@ -109,7 +110,7 @@ export default function BiddingEdit() {
         .finally(() => { setSaving(false); setShowConfirm(false); });
     };
 
-    if (loading || !form) return <CSMSLayout><div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-secondary)' }}>Memuat data...</div></CSMSLayout>;
+    if (loading || !form) return <PageLoader title="Memuat data Bidding..." />;
 
     const ccows = (masterData.companies ?? []).filter(c => c.type === 'Internal');
     const parentCompanies = (masterData.companies ?? []).filter(c => c.type !== 'Internal');
@@ -220,7 +221,7 @@ export default function BiddingEdit() {
                                             <p style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-primary)', margin: '0 0 10px' }}>{i + 1}. {cl.crtiteria}</p>
                                             {cl.legal_base && <p style={{ fontSize: '11px', color: '#1d4ed8', margin: '0 0 4px' }}><strong>Dasar Hukum:</strong> {cl.legal_base}</p>}
                                             {cl.note && <p style={{ fontSize: '11px', color: '#810da8', margin: '0 0 4px' }}><strong>Panduan:</strong> {cl.note}</p>}
-                                            
+
                                             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                                                 <select value={cl.value ?? ''} onChange={e => setChecklist(cl.id, 'value', e.target.value)}
                                                     style={{ padding: '8px 10px', fontSize: '12px', border: '1px solid var(--border-color)', borderRadius: '6px', backgroundColor: '#fff', width: '100%' }}>
@@ -240,14 +241,14 @@ export default function BiddingEdit() {
                                             <div style={{ borderTop: '1px dashed var(--border-color)', paddingTop: '10px', marginTop: '10px' }}>
                                                 <label style={{ ...labelStyle, fontSize: '11px', marginBottom: '8px' }}>Upload Dokumen Bukti</label>
                                                 <FileDropzone onFileDrop={(files) => handleFileDrop(cl.id, files)} accept=".pdf,.png,.jpeg,.jpg" />
-                                                
+
                                                 {/* Newly selected files */}
                                                 {(checklistFiles[cl.id] || []).length > 0 && (
                                                     <div style={{ marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                                         {(checklistFiles[cl.id] || []).map((file, fIdx) => (
-                                                            <div key={fIdx} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px 8px', backgroundColor: '#fff', border: '1px solid var(--border-color)', borderRadius: '4px', fontSize: '10px' }}>
-                                                                <span style={{ color: '#334155', display: 'inline-flex', alignItems: 'center', gap: '4px' }}><Upload size={10} /> {file.name}</span>
-                                                                <button onClick={() => removeChecklistFile(cl.id, fIdx)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}><X size={12} style={{ color: '#ef4444' }} /></button>
+                                                            <div key={fIdx} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', padding: '6px 10px', backgroundColor: '#fff', border: '1px solid var(--border-color)', borderRadius: '6px', fontSize: '11px' }}>
+                                                                <span style={{ flex: 1, color: '#334155', display: 'inline-flex', alignItems: 'center', gap: '4px', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}><Upload size={10} /> {file.name}</span>
+                                                                <button onClick={() => removeChecklistFile(cl.id, fIdx)} style={{ flexShrink: 0, border: '1px solid #fca5a5', background: '#fef2f2', color: '#ef4444', cursor: 'pointer', fontSize: '11px', fontWeight: 600, padding: '2px 8px', borderRadius: '4px', lineHeight: '16px' }}>✕</button>
                                                             </div>
                                                         ))}
                                                     </div>

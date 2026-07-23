@@ -3,6 +3,7 @@ import { usePage, Head } from '@inertiajs/react';
 import { ArrowLeft, Save, Loader2, FileText, Upload, X } from 'lucide-react';
 import axios from 'axios';
 import ConfirmationModal from '@/Components/ConfirmationModal';
+import PageLoader from '@/Components/PageLoader';
 
 const sectionStyle = { backgroundColor: '#fff', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '20px', marginBottom: '24px', boxShadow: '0 1px 3px rgba(0,0,0,0.02)' };
 const labelStyle   = { fontSize: '12px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '6px', display: 'block' };
@@ -85,7 +86,7 @@ export default function PjoEdit() {
         .finally(() => { setSaving(false); setShowConfirm(false); });
     };
 
-    if (loading || !form) return <div style={{ backgroundColor: 'var(--bg-color)', minHeight: '100vh', padding: '40px 20px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)' }}>Memuat data...</div>;
+    if (loading || !form) return <PageLoader title="Memuat data PJO..." />;
 
     const ccows = companies.filter(c => c.type === 'Internal');
     const regularCompanies = companies.filter(c => c.type !== 'Internal');
