@@ -76,6 +76,20 @@ class HandleInertiaRequests extends Middleware
             }
         }
 
+        // PICA menus — hanya di-load untuk halaman pica
+        $picaMenus = [];
+        if ($request->is('pica*')) {
+            $moduleId = \DB::table('aims_modules')->where('slug', 'pica')->value('id');
+            if ($moduleId) {
+                $picaMenus = \DB::table('aims_menus')
+                    ->where('module_id', $moduleId)
+                    ->orderBy('parent_id')
+                    ->orderBy('order_by')
+                    ->get()
+                    ->toArray();
+            }
+        }
+
         return [
             ...parent::share($request),
             'auth' => [
@@ -84,6 +98,7 @@ class HandleInertiaRequests extends Middleware
             ],
             'flsMenus'  => $flsMenus,
             'csmsMenus' => $csmsMenus,
+            'picaMenus' => $picaMenus,
         ];
     }
 }
