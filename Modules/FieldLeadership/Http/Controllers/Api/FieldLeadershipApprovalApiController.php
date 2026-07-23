@@ -4,6 +4,7 @@ namespace Modules\FieldLeadership\Http\Controllers\Api;
 
 use App\Helpers\ResponseFormatter;
 use App\Http\Controllers\Controller;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -85,6 +86,11 @@ class FieldLeadershipApprovalApiController extends Controller
 
         $this->logActivity($id, $logMsg);
 
+        // Auto-create PICA jika FL langsung ke On Review CRS
+        if ($nextStatus === self::STATUS_ON_REVIEW_CRS) {
+            $this->createPicaDocumentsForFl($fl);
+        }
+
         return ResponseFormatter::success(
             ['id' => $id, 'status' => $nextStatus],
             "Dokumen berhasil disubmit. Status: {$nextStatus}"
@@ -127,6 +133,12 @@ class FieldLeadershipApprovalApiController extends Controller
         ]);
 
         $this->logActivity($id, $logMsg);
+
+        // Auto-create PICA jika PJA menyatakan area sesuai → On Review CRS
+        if ($nextStatus === self::STATUS_ON_REVIEW_CRS) {
+            $fl = DB::table('field_leaderships')->where('id', $id)->first();
+            $this->createPicaDocumentsForFl($fl);
+        }
 
         return ResponseFormatter::success(
             ['id' => $id, 'status' => $nextStatus],
@@ -214,7 +226,7 @@ class FieldLeadershipApprovalApiController extends Controller
                 ->where('status', '!=', 'Closed')
                 ->update(['status' => 'Closed', 'updated_at' => now()]);
             $this->logActivity($id, 'CRS memverifikasi perbaikan — Field Leadership CLOSED (Case Closed)');
-            // TODO: trigger integrasi PICA closed → PicaService::closeByFlId($id);
+            $this->closePicaDocumentsForFl($id);
             return ResponseFormatter::success(
                 ['id' => $id, 'status' => self::STATUS_CLOSED],
                 'Field Leadership ditutup. Case Closed.'
@@ -303,6 +315,110 @@ class FieldLeadershipApprovalApiController extends Controller
             ['id' => $id, 'status' => $prevStatus],
             "Dokumen dikembalikan. Status: {$prevStatus}"
         );
+    }
+
+    // ── PICA integration ──────────────────────────────────────────────────────
+
+    /**
+     * Auto-create pica_documents untuk setiap risk FL yang memiliki repair_action & due_date.
+     * Dipanggil saat FL masuk ke status On Review CRS.
+     * Guard: skip jika PICA untuk risk tersebut sudah ada.
+     */
+    private function createPicaDocumentsForFl(object $fl): void
+    {
+        $risks = DB::table('field_leadership_risks')
+            ->where('fl_id', $fl->id)
+            ->whereNotNull('repair_action')
+            ->whereNotNull('due_date')
+            ->get();
+
+        foreach ($risks as $risk) {
+            // Guard: jangan double-create
+            $exists = DB::table('pica_documents')
+                ->where('source', 'Field Leadership')
+                ->where('source_id', $risk->id)
+                ->exists();
+            if ($exists) continue;
+
+            $identityId = $this->generatePicaIdentityId('Field Leadership');
+
+            DB::table('pica_documents')->insert([
+                'id'                     => (string) Str::uuid(),
+                'identity_id'            => $identityId,
+                'source'                 => 'Field Leadership',
+                'source_id'              => $risk->id,
+                'type'                   => $fl->type ?? null,
+                'date'                   => $fl->date,
+                'ccow_id'                => $fl->ccow_id ?? null,
+                'company_id'             => $fl->company_id ?? null,
+                'section_id'             => $fl->section_id ?? null,
+                'location_id'            => $fl->area_location_id ?? null,
+                'location_detail'        => $fl->detail_location ?? null,
+                'company_detail'         => $fl->detail_company ?? null,
+                'pja_id'                 => $fl->pja_id ?? null,
+                'pjo_id'                 => $fl->pjo_id ?? null,
+                'auditor'                => auth()->user()?->name,
+                'non_compliance'         => $risk->risk_condition ?? null,
+                'non_compliance_root_cause' => $fl->non_compliance_root ?? null,
+                'corrective_action'      => $risk->repair_action,
+                'target_settlement_date' => $risk->due_date,
+                'status'                 => 'On Review CRS',
+                'published'              => 'Publish',
+                'requested'              => 'Requested CRS',
+                'created_by'             => (string) auth()->id(),
+                'created_at'             => now(),
+                'updated_at'             => now(),
+            ]);
+        }
+    }
+
+    /**
+     * Close semua pica_documents yang source_id-nya adalah risk dari FL ini.
+     * Dipanggil saat CRS approve → FL Closed.
+     */
+    private function closePicaDocumentsForFl(string $flId): void
+    {
+        $riskIds = DB::table('field_leadership_risks')
+            ->where('fl_id', $flId)
+            ->pluck('id');
+
+        if ($riskIds->isEmpty()) return;
+
+        DB::table('pica_documents')
+            ->where('source', 'Field Leadership')
+            ->whereIn('source_id', $riskIds)
+            ->where('status', '!=', 'Closed')
+            ->update([
+                'status'          => 'Closed',
+                'settlement_date' => now()->toDateString(),
+                'updated_at'      => now(),
+            ]);
+    }
+
+    /**
+     * Generate identity ID untuk PICA berdasarkan source.
+     * Format: {PREFIX}{mmYYYY}-{PREFIX}{6digit}
+     */
+    private function generatePicaIdentityId(string $source): string
+    {
+        $prefixMap = [
+            'Field Leadership' => 'FL',
+            'Inspeksi KPLH'    => 'KP',
+            'Audit'            => 'AU',
+            'CSMS'             => 'CS',
+            'Manual'           => 'MA',
+        ];
+
+        $code  = $prefixMap[$source] ?? 'PC';
+        $date  = Carbon::now()->format('mY');
+        $count = DB::table('pica_documents')->where('source', $source)->count();
+
+        do {
+            $count++;
+            $identityId = $code . $date . '-' . $code . str_pad($count, 6, '0', STR_PAD_LEFT);
+        } while (DB::table('pica_documents')->where('identity_id', $identityId)->exists());
+
+        return $identityId;
     }
 
     // ── Private helper ────────────────────────────────────────────────────────
