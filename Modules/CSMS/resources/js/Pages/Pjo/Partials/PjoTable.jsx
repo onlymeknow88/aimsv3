@@ -1,5 +1,7 @@
 import { Trash2, FileText, Eye, Edit } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import BlobPreviewModal from '@/Components/BlobPreviewModal';
+import { useState } from 'react';
 
 const thStyle = { fontSize: '11px', fontWeight: 700, color: 'var(--text-primary)', padding: '10px 12px', textTransform: 'uppercase', letterSpacing: '0.03em' };
 const tdStyle = { fontSize: '12px', padding: '10px 12px', color: 'var(--text-secondary)' };
@@ -17,8 +19,10 @@ function PjoStatusBadge({ status }) {
 }
 
 export default function PjoTable({ pjos, loading, onDelete }) {
+    const [preview, setPreview] = useState(null);
+
     return (
-        <div style={{ overflowX: 'auto' }}>
+        <div>
             <Table>
                 <TableHeader>
                     <TableRow style={{ backgroundColor: '#f8fafc' }}>
@@ -55,13 +59,20 @@ export default function PjoTable({ pjos, loading, onDelete }) {
                                 <TableCell style={tdStyle}>{p.company_name_resolved ?? '-'}</TableCell>
                                 <TableCell style={tdStyle}>{p.phone ?? '-'}</TableCell>
                                 <TableCell style={tdStyle}>{p.date_submission ? new Date(p.date_submission).toLocaleDateString('id-ID') : '-'}</TableCell>
-                                <TableCell style={tdStyle}>
+                                <TableCell style={{ ...tdStyle, whiteSpace: 'normal', minWidth: '120px' }}>
                                     {p.files && p.files.length > 0 ? (
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                             {p.files.map(file => (
-                                                <a key={file.id} href={file.blob_url} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--primary)', textDecoration: 'underline', fontSize: '11px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                                                <button key={file.id} onClick={() => setPreview({
+                                                    id: file.id,
+                                                    type: 'csms_pjo_file',
+                                                    name: file.name,
+                                                    file_name: file.name,
+                                                    file_type: file.name?.split('.').pop() ?? '',
+                                                })}
+                                                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--primary)', textDecoration: 'underline', fontSize: '11px', display: 'inline-flex', alignItems: 'center', gap: '4px', padding: 0 }}>
                                                     <FileText size={12} /> {file.name}
-                                                </a>
+                                                </button>
                                             ))}
                                         </div>
                                     ) : (
@@ -90,6 +101,12 @@ export default function PjoTable({ pjos, loading, onDelete }) {
                     )}
                 </TableBody>
             </Table>
+            {preview && (
+                <BlobPreviewModal
+                    attachment={preview}
+                    onClose={() => setPreview(null)}
+                />
+            )}
         </div>
     );
 }

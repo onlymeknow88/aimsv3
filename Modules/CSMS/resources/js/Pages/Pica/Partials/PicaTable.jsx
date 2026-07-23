@@ -18,7 +18,7 @@ function PicaStatusBadge({ status }) {
 
 export default function PicaTable({ picas, loading }) {
     return (
-        <div style={{ overflowX: 'auto' }}>
+        <div>
             <Table>
                 <TableHeader>
                     <TableRow style={{ backgroundColor: '#f8fafc' }}>
@@ -47,7 +47,7 @@ export default function PicaTable({ picas, loading }) {
                         picas.map((p, i) => (
                             <TableRow key={p.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
                                 <TableCell style={tdStyle}>{i + 1}</TableCell>
-                                <TableCell style={{ ...tdStyle, fontWeight: 600, color: 'var(--text-primary)', maxWidth: '300px' }}>{p.description ?? '-'}</TableCell>
+                                <TableCell style={{ ...tdStyle, fontWeight: 600, color: 'var(--text-primary)', whiteSpace: 'normal', maxWidth: '300px' }}>{p.description ?? '-'}</TableCell>
                                 <TableCell style={tdStyle}>{p.company_name ?? '-'}</TableCell>
                                 <TableCell style={{ ...tdStyle, color: p.status === 'Overdue' ? '#ef4444' : 'var(--text-secondary)' }}>
                                     {p.due_date ? new Date(p.due_date).toLocaleDateString('id-ID') : '-'}

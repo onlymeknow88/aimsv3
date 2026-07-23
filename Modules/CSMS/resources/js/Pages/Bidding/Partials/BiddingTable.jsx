@@ -10,7 +10,7 @@ const tdBold  = { ...tdStyle, fontWeight: 600, color: 'var(--text-primary)' };
 
 export default function BiddingTable({ biddings, loading, onDelete, canEdit, canDelete, selectedIds = [], onSelectAll, onSelectRow }) {
     return (
-        <div style={{ overflowX: 'auto' }}>
+        <div>
             <Table>
                 <TableHeader>
                     <TableRow style={{ backgroundColor: '#f8fafc' }}>

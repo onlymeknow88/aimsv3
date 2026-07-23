@@ -17,8 +17,7 @@ class CSMSBiddingApiController extends CSMSBaseApiController
     public function index(Request $request)
     {
         $search   = $request->query('search', '');
-        $page     = max(1, (int) $request->query('page', 1));
-        $limit    = min(100, max(1, (int) $request->query('limit', 10)));
+        $perPage  = min(100, max(1, (int) $request->query('limit', 10)));
         $status   = $request->query('status', '');
         $criteria = $request->query('criteria', self::CRITERIA_BIDDING);
 
@@ -38,16 +37,14 @@ class CSMSBiddingApiController extends CSMSBaseApiController
 
         $query->orderBy('created_at', 'desc');
 
-        $total    = $query->count();
-        $lastPage = max(1, (int) ceil($total / $limit));
-        $items    = $query->offset(($page - 1) * $limit)->limit($limit)->get();
+        $paginated = $query->paginate($perPage);
 
         return ResponseFormatter::success([
-            'data'         => $items,
-            'current_page' => $page,
-            'last_page'    => $lastPage,
-            'total'        => $total,
-            'per_page'     => $limit,
+            'data'         => $paginated->items(),
+            'current_page' => $paginated->currentPage(),
+            'last_page'    => $paginated->lastPage(),
+            'total'        => $paginated->total(),
+            'per_page'     => $paginated->perPage(),
         ], 'Biddings retrieved successfully');
     }
 
@@ -419,21 +416,20 @@ class CSMSBiddingApiController extends CSMSBaseApiController
     // ── RENEW (Buat Renewal dari PostBidding) ──────────────────────────────────
     public function renew(string $id)
     {
-        $source = DB::table('biddings')->where('id', $id)->first();
+        $parent = Bidding::find($id);
 
-        if (!$source) {
+        if (!$parent) {
             return ResponseFormatter::error('Data tidak ditemukan', 404);
         }
-        if ($source->criteria !== self::CRITERIA_POST_BIDDING) {
+        if ($parent->criteria !== self::CRITERIA_POST_BIDDING) {
             return ResponseFormatter::error('Hanya Post Bidding yang dapat diperpanjang', 422);
         }
-        if ($source->status !== self::STATUS_APPROVED) {
+        if ($parent->status !== self::STATUS_APPROVED) {
             return ResponseFormatter::error('Hanya Post Bidding berstatus Approved yang dapat diperpanjang', 422);
         }
 
         // Cek apakah sudah ada Renewal yang sedang berjalan untuk PostBidding ini
-        $existingRenewal = DB::table('biddings')
-            ->where('parent_id', $id)
+        $existingRenewal = Bidding::where('parent_id', $id)
             ->where('criteria', self::CRITERIA_RENEWAL)
             ->whereNotIn('status', [self::STATUS_APPROVED, self::STATUS_INACTIVE])
             ->first();
@@ -442,56 +438,48 @@ class CSMSBiddingApiController extends CSMSBaseApiController
             return ResponseFormatter::error('Sudah ada Renewal yang sedang diproses untuk data ini', 422);
         }
 
-        $newId = (string) Str::uuid();
+        DB::beginTransaction();
+        try {
+            $newId   = (string) Str::uuid();
+            $renewal = $parent->replicate();
+            $renewal->id            = $newId;
+            $renewal->maker_id      = (string) auth()->id();
+            $renewal->criteria      = self::CRITERIA_RENEWAL;
+            $renewal->parent_id     = $parent->id;
+            $renewal->grand_parent_id = $parent->grand_parent_id ?? $parent->parent_id;
+            $renewal->status        = self::STATUS_ON_REVIEW_OHS;
+            $renewal->requested     = 'Requested OHS';
+            $renewal->published     = false;
+            $renewal->is_obsolate   = false;
+            $renewal->date          = now()->toDateString();
+            $renewal->created_at    = now();
+            $renewal->updated_at    = now();
+            $renewal->save();
 
-        DB::table('biddings')->insert([
-            'id'                 => $newId,
-            'maker_id'           => (string) auth()->id(),
-            'criteria'           => self::CRITERIA_RENEWAL,
-            'status'             => self::STATUS_ON_REVIEW_OHS,
-            'requested'          => 'Requested OHS',
-            'parent_id'          => $id,
-            'company_name'       => $source->company_name,
-            'address'            => $source->address,
-            'company_site'       => $source->company_site,
-            'license_number'     => $source->license_number,
-            'service_criteria'   => $source->service_criteria,
-            'classification'     => $source->classification,
-            'business_entity_id' => $source->business_entity_id,
-            'person_in_charge'   => $source->person_in_charge,
-            'risk_category'      => $source->risk_category,
-            'questionnaire'      => $source->questionnaire,
-            'ccow_id'            => $source->ccow_id,
-            'company_id'         => $source->company_id,
-            'grand_parent_id'    => $source->grand_parent_id ?? $source->parent_id,
-            'date'               => now()->toDateString(),
-            'is_obsolate'        => false,
-            'created_at'         => now(),
-            'updated_at'         => now(),
-        ]);
+            // Salin checklist dari PostBidding ke Renewal (reset value & comment)
+            $checklists = CsmsChecklist::where('bidding_id', $parent->id)
+                ->orderBy('ordinal_number')
+                ->get();
 
-        // Salin checklist dari PostBidding ke Renewal
-        $sourceChecklists = DB::table('csms_checklists')
-            ->where('bidding_id', $id)
-            ->orderBy('ordinal_number')
-            ->get();
+            foreach ($checklists as $cl) {
+                $newCl             = $cl->replicate();
+                $newCl->id         = (string) Str::uuid();
+                $newCl->bidding_id = $newId;
+                $newCl->value      = null;
+                $newCl->comment    = null;
+                $newCl->save();
+            }
 
-        foreach ($sourceChecklists as $cl) {
-            DB::table('csms_checklists')->insert([
-                'id'             => (string) Str::uuid(),
-                'bidding_id'     => $newId,
-                'question_id'    => $cl->question_id,
-                'value'          => null,
-                'comment'        => null,
-                'ordinal_number' => $cl->ordinal_number,
-            ]);
+            DB::commit();
+            return ResponseFormatter::success(
+                ['id' => $newId],
+                'Pengajuan perpanjangan CSMS berhasil dibuat',
+                201
+            );
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            return ResponseFormatter::error('Gagal membuat perpanjangan: ' . $e->getMessage(), 500);
         }
-
-        return ResponseFormatter::success(
-            ['id' => $newId],
-            'Pengajuan perpanjangan CSMS berhasil dibuat',
-            201
-        );
     }
 
     // ── PREVIEW CHECKLIST FILE ────────────────────────────────────────────────
@@ -538,56 +526,6 @@ class CSMSBiddingApiController extends CSMSBaseApiController
         $url = is_array($sas) ? ($sas['blobUriSas'] ?? $sas['sasUri'] ?? null) : $sas;
         if ($url) return redirect($url);
         abort(404, 'File tidak ditemukan.');
-    }
-
-    // ── INITIATE RENEWAL ──────────────────────────────────────────────────────
-    public function renew(string $id)
-    {
-        $parent = Bidding::find($id);
-        if (!$parent) return ResponseFormatter::error('PostBidding not found', 404);
-        if ($parent->status !== self::STATUS_APPROVED) {
-            return ResponseFormatter::error('Hanya PostBidding yang Approved yang dapat diperpanjang', 422);
-        }
-
-        DB::beginTransaction();
-        try {
-            $newId = (string) Str::uuid();
-            $renewal = $parent->replicate();
-            $renewal->id = $newId;
-            $renewal->criteria = self::CRITERIA_RENEWAL;
-            $renewal->parent_id = $parent->id;
-            $renewal->status = self::STATUS_ON_REVIEW_OHS;
-            $renewal->requested = 'Requested OHS';
-            $renewal->published = false;
-            $renewal->is_obsolate = false;
-            $renewal->created_at = now();
-            $renewal->updated_at = now();
-            $renewal->save();
-
-            // Replicate checklists
-            $checklists = CsmsChecklist::where('bidding_id', $parent->id)->get();
-            foreach ($checklists as $cl) {
-                $newCl = $cl->replicate();
-                $newCl->id = (string) Str::uuid();
-                $newCl->bidding_id = $newId;
-                $newCl->save();
-
-                // Replicate attachments
-                $attachments = CsmsChecklistAttachment::where('checklist_id', $cl->id)->get();
-                foreach ($attachments as $att) {
-                    $newAtt = $att->replicate();
-                    $newAtt->id = (string) Str::uuid();
-                    $newAtt->checklist_id = $newCl->id;
-                    $newAtt->save();
-                }
-            }
-
-            DB::commit();
-            return ResponseFormatter::success(['id' => $newId], 'Renewal created successfully');
-        } catch (\Throwable $e) {
-            DB::rollBack();
-            return ResponseFormatter::error('Gagal membuat perpanjangan: ' . $e->getMessage(), 500);
-        }
     }
 
     // ── DEACTIVATE (INACTIVE) ──────────────────────────────────────────────────

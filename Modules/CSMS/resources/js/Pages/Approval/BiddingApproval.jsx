@@ -26,7 +26,7 @@ export default function BiddingApproval() {
 
     return (
         <CSMSLayout>
-            <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+            <div>
                 <div style={{ marginBottom: '20px' }}>
                     <h2 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>Approval Bidding CSMS</h2>
                     <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '4px' }}>Panel review dan persetujuan bertingkat OHS / D/H OHS / KTT</p>
@@ -58,7 +58,7 @@ export default function BiddingApproval() {
                     ) : biddings.length === 0 ? (
                         <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-secondary)', fontSize: '13px' }}>Tidak ada data yang perlu disetujui.</div>
                     ) : (
-                        <div style={{ overflowX: 'auto' }}>
+                        <div>
                             <Table>
                                 <TableHeader>
                                     <TableRow style={{ backgroundColor: '#f8fafc' }}>
@@ -75,7 +75,7 @@ export default function BiddingApproval() {
                                     {biddings.map((b, i) => (
                                         <TableRow key={b.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
                                             <TableCell style={tdStyle}>{i + 1}</TableCell>
-                                            <TableCell style={{ ...tdStyle, fontWeight: 600, color: 'var(--text-primary)' }}>{b.company_name}</TableCell>
+                                            <TableCell style={{ ...tdStyle, fontWeight: 600, color: 'var(--text-primary)', whiteSpace: 'normal' }}>{b.company_name}</TableCell>
                                             <TableCell style={tdStyle}>{b.license_number}</TableCell>
                                             <TableCell style={tdStyle}>{b.service_criteria}</TableCell>
                                             <TableCell style={{ padding: '10px 12px' }}><StatusBadge status={b.status} /></TableCell>

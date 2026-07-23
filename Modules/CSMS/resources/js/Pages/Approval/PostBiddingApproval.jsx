@@ -27,7 +27,7 @@ export default function PostBiddingApproval() {
 
     return (
         <CSMSLayout>
-            <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+            <div>
                 <div style={{ marginBottom: '20px' }}>
                     <h2 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>Approval Post-Bidding CSMS</h2>
                     <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '4px' }}>Panel review persetujuan bertingkat untuk penerbitan sertifikat CSMS</p>
@@ -59,7 +59,7 @@ export default function PostBiddingApproval() {
                     ) : biddings.length === 0 ? (
                         <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-secondary)', fontSize: '13px' }}>Tidak ada data post-bidding yang perlu disetujui.</div>
                     ) : (
-                        <div style={{ overflowX: 'auto' }}>
+                        <div>
                             <Table>
                                 <TableHeader>
                                     <TableRow style={{ backgroundColor: '#f8fafc' }}>
@@ -76,7 +76,7 @@ export default function PostBiddingApproval() {
                                     {biddings.map((b, i) => (
                                         <TableRow key={b.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
                                             <TableCell style={tdStyle}>{i + 1}</TableCell>
-                                            <TableCell style={{ ...tdStyle, fontWeight: 600, color: 'var(--text-primary)' }}>{b.company_name}</TableCell>
+                                            <TableCell style={{ ...tdStyle, fontWeight: 600, color: 'var(--text-primary)', whiteSpace: 'normal' }}>{b.company_name}</TableCell>
                                             <TableCell style={tdStyle}>{b.csms_doc_number ?? '-'}</TableCell>
                                             <TableCell style={tdStyle}>{b.service_criteria}</TableCell>
                                             <TableCell style={tdStyle}>{b.risk_category ?? '-'}</TableCell>

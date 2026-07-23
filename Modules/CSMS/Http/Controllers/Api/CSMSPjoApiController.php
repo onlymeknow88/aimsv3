@@ -6,16 +6,16 @@ use App\Helpers\ResponseFormatter;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Modules\CSMS\Entities\CsmsPjo;
+use Modules\CSMS\Entities\CsmsPjoFile;
 
 class CSMSPjoApiController extends CSMSBaseApiController
 {
     // ── INDEX ─────────────────────────────────────────────────────────────────
     public function index(Request $request)
     {
-        $search = $request->query('search', '');
-        $page   = max(1, (int) $request->query('page', 1));
-        $limit  = min(100, max(1, (int) $request->query('limit', 10)));
-        $status = $request->query('status', '');
+        $search  = $request->query('search', '');
+        $perPage = min(100, max(1, (int) $request->query('limit', 10)));
+        $status  = $request->query('status', '');
 
         $query = CsmsPjo::with(['company', 'files']);
 
@@ -29,29 +29,18 @@ class CSMSPjoApiController extends CSMSBaseApiController
         if ($status) $query->where('status', $status);
 
         $query->orderBy('created_at', 'desc');
-        $total    = $query->count();
-        $lastPage = max(1, (int) ceil($total / $limit));
-        $items    = $query->offset(($page - 1) * $limit)->limit($limit)->get();
 
-        $items = $items->map(function ($pjo) {
-            $pjo->files->map(function ($f) {
-                if ($f->file) {
-                    $sas = GetBlobSasUri('aims-cntr', $f->file);
-                    $f->blob_url = is_array($sas)
-                        ? ($sas['blobUriSas'] ?? $f->blob_url)
-                        : ($sas ?: $f->blob_url);
-                }
-                return $f;
-            });
-            return $pjo;
-        });
+        $paginated = $query->paginate($perPage);
+
+        // SAS URL tidak di-generate di index untuk menghindari N*M HTTP calls ke Azure.
+        // blob_url akan di-generate on-demand saat user membuka detail atau preview file.
 
         return ResponseFormatter::success([
-            'data'         => $items,
-            'current_page' => $page,
-            'last_page'    => $lastPage,
-            'total'        => $total,
-            'per_page'     => $limit,
+            'data'         => $paginated->items(),
+            'current_page' => $paginated->currentPage(),
+            'last_page'    => $paginated->lastPage(),
+            'total'        => $paginated->total(),
+            'per_page'     => $paginated->perPage(),
         ], 'PJOs retrieved successfully');
     }
 
@@ -152,6 +141,52 @@ class CSMSPjoApiController extends CSMSBaseApiController
             DB::rollBack();
             return ResponseFormatter::error('Gagal memperbarui PJO: ' . $e->getMessage(), 500);
         }
+    }
+
+    // ── PREVIEW PJO FILE ─────────────────────────────────────────────────────
+    public function previewFile(string $id)
+    {
+        $file = CsmsPjoFile::find($id);
+        if (!$file) abort(404, 'File tidak ditemukan.');
+
+        $filePath = $file->file;
+        $fileName = basename($filePath);
+        $ext      = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
+        $mimeType = match ($ext) {
+            'pdf'         => 'application/pdf',
+            'png'         => 'image/png',
+            'jpg', 'jpeg' => 'image/jpeg',
+            default       => 'application/octet-stream',
+        };
+
+        $sas = GetBlobSasUri('aims-cntr', $filePath, 60);
+        $url = is_array($sas)
+            ? ($sas['blobUriSas'] ?? $sas['sasUri'] ?? $sas['url'] ?? null)
+            : $sas;
+
+        if ($url) {
+            $contents = @file_get_contents($url);
+            if ($contents !== false) {
+                return response($contents, 200, [
+                    'Content-Type'        => $mimeType,
+                    'Content-Disposition' => 'inline; filename="' . addslashes($fileName) . '"',
+                    'Cache-Control'       => 'private, max-age=300',
+                ]);
+            }
+        }
+        abort(404, 'File tidak dapat diakses.');
+    }
+
+    // ── DOWNLOAD PJO FILE ────────────────────────────────────────────────────
+    public function downloadFile(string $id)
+    {
+        $file = CsmsPjoFile::find($id);
+        if (!$file) abort(404, 'File tidak ditemukan.');
+
+        $sas = GetBlobSasUri('aims-cntr', $file->file, 60);
+        $url = is_array($sas) ? ($sas['blobUriSas'] ?? $sas['sasUri'] ?? null) : $sas;
+        if ($url) return redirect($url);
+        abort(404, 'File tidak ditemukan.');
     }
 
     // ── DESTROY ───────────────────────────────────────────────────────────────
