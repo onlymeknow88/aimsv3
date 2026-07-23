@@ -6,8 +6,9 @@ import {
     LinearScale,
     Tooltip,
 } from 'chart.js';
-import React from 'react';
+
 import { Bar } from 'react-chartjs-2';
+import React from 'react';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend);
 
@@ -51,11 +52,12 @@ function buildBar2(series, c1 = C.primary, c2 = C.orange) {
     };
 }
 
-function ChartCard({ title, height = 180, loading, children }) {
+function ChartCard({ title, height = 160, loading, children }) {
     return (
         <div style={{
             backgroundColor: C.bgInner, border: `1px solid ${C.border}`,
             borderRadius: '12px', padding: '12px',
+            width: '100%', boxSizing: 'border-box', overflowX: 'hidden',
         }}>
             {title && (
                 <p style={{
@@ -82,7 +84,7 @@ function ChartCard({ title, height = 180, loading, children }) {
 
 export default function CsmsBarChart({ stats, loading }) {
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '100%', boxSizing: 'border-box', overflowX: 'hidden' }}>
             {/* Post Bidding Trend */}
             <ChartCard title="Post Bidding" loading={loading}>
                 <Bar data={buildBar2(stats?.postBidding)} options={barOpts} />

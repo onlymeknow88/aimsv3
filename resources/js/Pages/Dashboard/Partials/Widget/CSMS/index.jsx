@@ -1,10 +1,22 @@
 import { HardHat, RefreshCw } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
 
 import CsmsBarChart from './CsmsBarChart';
 import CsmsDonutStatus from './CsmsDonutStatus';
 import CsmsKpiCards from './CsmsKpiCards';
-import React from 'react';
 import useCsmsWidget from './Hooks/useCsmsWidget';
+
+function useIsMobile(breakpoint = 768) {
+    const [isMobile, setIsMobile] = useState(
+        typeof window !== 'undefined' ? window.innerWidth <= breakpoint : false
+    );
+    useEffect(() => {
+        const handler = () => setIsMobile(window.innerWidth <= breakpoint);
+        window.addEventListener('resize', handler);
+        return () => window.removeEventListener('resize', handler);
+    }, [breakpoint]);
+    return isMobile;
+}
 
 const C = {
     primary:   '#153B73',
@@ -62,6 +74,7 @@ function EmptyState() {
  */
 export default function CsmsWidget({ filters = {} }) {
     const { stats, loading, error, refetch } = useCsmsWidget(filters);
+    const isMobile = useIsMobile(768);
 
     const isEmpty = !loading && !error && (
         (stats?.summary?.totalBidding ?? 0) === 0 &&
@@ -76,6 +89,9 @@ export default function CsmsWidget({ filters = {} }) {
             padding: '24px',
             boxShadow: 'var(--shadow-sm, 0 1px 3px rgba(0,0,0,0.06))',
             marginBottom: '32px',
+            width: '100%',
+            boxSizing: 'border-box',
+            overflowX: 'hidden',
         }}>
             <style>{`
                 @keyframes csms-widget-pulse {
@@ -86,15 +102,7 @@ export default function CsmsWidget({ filters = {} }) {
                     from { transform: rotate(0deg); }
                     to   { transform: rotate(360deg); }
                 }
-                .csms-widget-grid {
-                    display: grid;
-                    grid-template-columns: 1fr 1fr;
-                    gap: 16px;
-                    margin-top: 16px;
-                }
-                @media (max-width: 900px) {
-                    .csms-widget-grid { grid-template-columns: 1fr; }
-                }
+
             `}</style>
 
             {/* Header */}
@@ -102,10 +110,10 @@ export default function CsmsWidget({ filters = {} }) {
                 display: 'flex', justifyContent: 'space-between',
                 alignItems: 'center', marginBottom: '20px',
             }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <HardHat size={16} style={{ color: C.primary }} />
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
+                    <HardHat size={16} style={{ color: C.primary, flexShrink: 0 }} />
                     <h4 style={{
-                        fontSize: '14.5px', fontWeight: 700,
+                        fontSize: '13px', fontWeight: 700,
                         color: 'var(--text-primary, #1e293b)', margin: 0,
                         textTransform: 'uppercase', letterSpacing: '0.3px',
                     }}>
@@ -145,7 +153,12 @@ export default function CsmsWidget({ filters = {} }) {
                     <CsmsKpiCards summary={stats?.summary} loading={loading} />
 
                     {/* Bottom: donut (kiri) + bar charts (kanan) */}
-                    <div className="csms-widget-grid">
+                    <div style={{
+                        display: 'grid',
+                        gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
+                        gap: '16px',
+                        marginTop: '4px',
+                    }}>
                         <CsmsDonutStatus donut={stats?.donutPJO} loading={loading} />
                         <CsmsBarChart stats={stats} loading={loading} />
                     </div>

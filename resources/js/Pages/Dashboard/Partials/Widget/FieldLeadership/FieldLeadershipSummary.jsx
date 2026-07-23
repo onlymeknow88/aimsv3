@@ -191,8 +191,20 @@ export default function FieldLeadershipSummary({ stats, loading }) {
                     0%, 100% { opacity: 1; }
                     50%       { opacity: 0.45; }
                 }
+                .fls-summary-grid {
+                    display: grid;
+                    grid-template-columns: minmax(200px, 1fr) minmax(0, 2fr);
+                    gap: 24px;
+                    align-items: start;
+                }
+                @media (max-width: 768px) {
+                    .fls-summary-grid {
+                        grid-template-columns: 1fr;
+                    }
+                }
             `}</style>
 
+            <div className="fls-summary-grid">
             <div
                 style={{
                     display: "flex",
@@ -312,28 +324,19 @@ export default function FieldLeadershipSummary({ stats, loading }) {
                     loading={loading}
                 />
 
-                <FieldLeadershipDetail  stats={stats} loading={loading} />
+                <FieldLeadershipDetail stats={stats} loading={loading} />
             </div>
 
-            <div  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: "16px",
-                }}>
+            {/* Kolom kanan */}
+            <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
                 <FieldLeadershipDonutCharts stats={stats} loading={loading} />
-
-                <div
-                    style={{
-                        padding: "16px",
-                    }}
-                >
-                    <FieldLeadershipMonthlyChart
-                        stats={stats}
-                        loading={loading}
-                    />
+                <div style={{ padding: "4px 0" }}>
+                    <FieldLeadershipMonthlyChart stats={stats} loading={loading} />
                 </div>
                 <FieldLeadershipCategoryProgress stats={stats} loading={loading} />
             </div>
+
+            </div>{/* end fls-summary-grid */}
         </>
     );
 }

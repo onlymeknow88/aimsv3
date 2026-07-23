@@ -1,73 +1,106 @@
 import { ArcElement, Chart as ChartJS, Legend, Tooltip } from 'chart.js';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+
 import { Doughnut } from 'react-chartjs-2';
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
+function useIsMobile(bp = 640) {
+    const [v, setV] = useState(typeof window !== 'undefined' ? window.innerWidth <= bp : false);
+    useEffect(() => {
+        const h = () => setV(window.innerWidth <= bp);
+        window.addEventListener('resize', h);
+        return () => window.removeEventListener('resize', h);
+    }, [bp]);
+    return v;
+}
+
 const C = {
-    primary: '#153B73',
-    orange:  '#FF8C24',
-    border:  '#e2e8f0',
-    bgInner: '#f8fafc',
-    textMuted: '#64748b',
+    primary:    '#153B73',
+    orange:     '#FF8C24',
+    green:      '#16a34a',
+    border:     '#e2e8f0',
+    bgInner:    '#f8fafc',
+    textMuted:  '#64748b',
+    textPrimary:'#1e293b',
 };
 
 const donutOpts = {
     responsive: true,
     maintainAspectRatio: false,
-    cutout: '72%',
+    cutout: '75%',
     plugins: {
         legend: { display: false },
-        tooltip: { intersect: true },
+        tooltip: {
+            callbacks: {
+                label: (ctx) => ` ${ctx.label}: ${ctx.parsed}%`,
+            },
+        },
     },
 };
 
 function ProgressBar({ percent, color }) {
     return (
-        <div style={{ height: '7px', backgroundColor: '#f1f5f9', borderRadius: '999px', overflow: 'hidden' }}>
+        <div style={{ height: '6px', backgroundColor: '#e2e8f0', borderRadius: '999px', overflow: 'hidden' }}>
             <div style={{
                 width: `${Math.min(100, Math.max(0, percent))}%`,
                 height: '100%', backgroundColor: color,
-                borderRadius: '999px', transition: 'width 0.6s ease',
+                borderRadius: '999px', transition: 'width 0.8s cubic-bezier(0.4,0,0.2,1)',
             }} />
         </div>
     );
 }
 
 export default function CsmsDonutStatus({ donut, loading }) {
-    const actual = donut?.actual ?? 0;
-    const target = donut?.target ?? 0;
+    const isMobile = useIsMobile(640);
+    const valid   = donut?.actual ?? 0;
+    const expired = donut?.target ?? 0;
+    const total   = valid + expired;
 
     const chartData = {
         labels: ['Valid / Approved', 'Expired / Inactive'],
         datasets: [{
-            data: actual === 0 && target === 0 ? [1, 0] : [actual, target],
+            data: total === 0 ? [1, 0] : [valid, expired],
             backgroundColor: [C.primary, C.orange],
-            borderWidth: 2,
-            borderColor: ['#fff', '#fff'],
+            borderWidth: 3,
+            borderColor: '#fff',
+            hoverBorderColor: '#fff',
+            hoverOffset: 4,
         }],
     };
 
     const items = [
-        { color: C.primary, label: 'Valid',   val: actual },
-        { color: C.orange,  label: 'Expired', val: target },
+        {
+            color: C.primary,
+            label: 'Valid / Approved',
+            val: valid,
+            sub: 'Sertifikat aktif',
+        },
+        {
+            color: C.orange,
+            label: 'Expired / Inactive',
+            val: expired,
+            sub: 'Perlu perpanjangan',
+        },
     ];
 
     if (loading) {
         return (
             <div style={{
                 backgroundColor: C.bgInner, border: `1px solid ${C.border}`,
-                borderRadius: '12px', padding: '16px',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                gap: '24px', flexWrap: 'wrap', minHeight: '140px',
+                borderRadius: '12px', padding: '20px',
+                display: 'flex', flexDirection: 'column',
+                alignItems: 'center', gap: '16px',
                 animation: 'csms-widget-pulse 1.8s infinite',
             }}>
-                <div style={{ width: '100px', height: '100px', borderRadius: '50%', backgroundColor: '#e2e8f0' }} />
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                    <div style={{ height: '11px', width: '120px', backgroundColor: '#e2e8f0', borderRadius: '4px' }} />
-                    <div style={{ height: '7px',  width: '120px', backgroundColor: '#e2e8f0', borderRadius: '999px' }} />
-                    <div style={{ height: '11px', width: '120px', backgroundColor: '#e2e8f0', borderRadius: '4px' }} />
-                    <div style={{ height: '7px',  width: '120px', backgroundColor: '#e2e8f0', borderRadius: '999px' }} />
+                <div style={{ width: '130px', height: '130px', borderRadius: '50%', backgroundColor: '#e2e8f0' }} />
+                <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    {[1, 2].map(i => (
+                        <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                            <div style={{ height: '11px', backgroundColor: '#e2e8f0', borderRadius: '4px', width: '70%' }} />
+                            <div style={{ height: '6px', backgroundColor: '#e2e8f0', borderRadius: '999px' }} />
+                        </div>
+                    ))}
                 </div>
             </div>
         );
@@ -76,59 +109,91 @@ export default function CsmsDonutStatus({ donut, loading }) {
     return (
         <div style={{
             backgroundColor: C.bgInner, border: `1px solid ${C.border}`,
-            borderRadius: '12px', padding: '16px',
+            borderRadius: '12px',
+            padding: isMobile ? '12px' : '16px 20px',
+            display: 'flex', flexDirection: 'column',
+            width: '100%', boxSizing: 'border-box', overflowX: 'hidden',
         }}>
+            {/* Title */}
             <p style={{
                 fontSize: '10px', fontWeight: 700, color: C.textMuted,
                 textTransform: 'uppercase', letterSpacing: '0.5px',
-                margin: '0 0 12px',
+                margin: '0 0 16px',
             }}>
                 Status Sertifikat CSMS
             </p>
+
+            {/* Donut — centered */}
             <div style={{
-                display: 'flex', alignItems: 'center',
-                justifyContent: 'center', gap: '24px', flexWrap: 'wrap',
+                display: 'flex', justifyContent: 'center',
+                marginBottom: '16px',
             }}>
-                {/* Donut */}
-                <div style={{ position: 'relative', width: '100px', height: '100px', flexShrink: 0 }}>
+                <div style={{ position: 'relative', width: isMobile ? '140px' : '160px', height: isMobile ? '140px' : '160px', maxWidth: '100%' }}>
                     <Doughnut data={chartData} options={donutOpts} />
+                    {/* Center label */}
                     <div style={{
                         position: 'absolute', top: '50%', left: '50%',
-                        transform: 'translate(-50%,-50%)',
+                        transform: 'translate(-50%, -50%)',
                         textAlign: 'center', pointerEvents: 'none',
                     }}>
-                        <div style={{ fontSize: '20px', fontWeight: 800, color: C.primary, lineHeight: 1 }}>
-                            {actual}%
+                        <div style={{
+                            fontSize: '32px', fontWeight: 800,
+                            color: C.primary, lineHeight: 1,
+                        }}>
+                            {valid}%
                         </div>
-                        <div style={{ fontSize: '9px', color: C.textMuted, fontWeight: 700, letterSpacing: '0.5px' }}>
+                        <div style={{
+                            fontSize: '10px', fontWeight: 700,
+                            color: C.textMuted, letterSpacing: '0.6px',
+                            marginTop: '4px',
+                        }}>
                             VALID
                         </div>
                     </div>
                 </div>
+            </div>
 
-                {/* Legend + progress */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', flex: 1, minWidth: '120px' }}>
-                    {items.map((item, i) => (
-                        <div key={i}>
+            {/* Legend rows */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
+                {items.map((item, i) => (
+                    <div key={i} style={{
+                        display: 'flex', flexDirection: 'column',
+                        padding: '12px 0',
+                        borderTop: `1px solid ${C.border}`,
+                    }}>
+                        {/* Label row */}
+                        <div style={{
+                            display: 'flex', alignItems: 'center',
+                            gap: '10px', marginBottom: '8px',
+                        }}>
                             <div style={{
-                                display: 'flex', alignItems: 'center',
-                                gap: '6px', marginBottom: '5px',
-                            }}>
+                                width: '14px', height: '14px', borderRadius: '4px',
+                                backgroundColor: item.color, flexShrink: 0,
+                            }} />
+                            <div style={{ flex: 1, minWidth: 0 }}>
                                 <div style={{
-                                    width: '10px', height: '10px',
-                                    borderRadius: '3px', backgroundColor: item.color, flexShrink: 0,
-                                }} />
-                                <span style={{ fontSize: '11px', color: '#475569', fontWeight: 500, flex: 1 }}>
+                                    fontSize: '12px', fontWeight: 600,
+                                    color: C.textPrimary,
+                                    whiteSpace: 'nowrap', overflow: 'hidden',
+                                    textOverflow: 'ellipsis',
+                                }}>
                                     {item.label}
-                                </span>
-                                <strong style={{ fontSize: '14px', fontWeight: 800, color: C.primary }}>
-                                    {item.val}%
-                                </strong>
+                                </div>
+                                <div style={{ fontSize: '10px', color: C.textMuted, marginTop: '1px' }}>
+                                    {item.sub}
+                                </div>
                             </div>
-                            <ProgressBar percent={item.val} color={item.color} />
+                            <strong style={{
+                                fontSize: '22px', fontWeight: 800,
+                                color: item.color, flexShrink: 0,
+                            }}>
+                                {item.val}%
+                            </strong>
                         </div>
-                    ))}
-                </div>
+                        {/* Progress bar */}
+                        <ProgressBar percent={item.val} color={item.color} />
+                    </div>
+                ))}
             </div>
         </div>
     );
