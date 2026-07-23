@@ -1,0 +1,11 @@
+{
+    "name": "Pica",
+    "alias": "pica",
+    "description": "Problem Identification & Corrective Action",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\Pica\\App\\Providers\\PicaServiceProvider"
+    ],
+    "files": []
+}

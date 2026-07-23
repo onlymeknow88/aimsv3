@@ -49,7 +49,7 @@ export default function DashboardLayout({ children }) {
         { name: 'Medical Check Up (MCU)', icon: HeartPulse, href: '#', active: false, moduleSlug: 'mcu' },
         { name: 'Contractor Safety Management (CSMS)', icon: LandmarkIcon, href: '/csms/dashboard', active: currentPath.startsWith('/csms'), moduleSlug: 'csms' },
         { name: 'Safety Operation (KO)', icon: HardHat, href: '#', active: false, moduleSlug: 'safety-operation' },
-        { name: 'PICA', icon: CheckSquare, href: '#', active: false, moduleSlug: 'pica' },
+        { name: 'PICA', icon: CheckSquare, href: '/pica/dashboard', active: currentPath.startsWith('/pica'), moduleSlug: 'pica' },
     ];
 
     function LandmarkIcon(props) {
