@@ -8,8 +8,6 @@ import FieldLeadershipSummary from './FieldLeadershipSummary';
 import React from 'react';
 import useFieldLeadership from './useFieldLeadership';
 
-
-
 // ── Error state ───────────────────────────────────────────────────────────────
 function ErrorState({ onRetry }) {
     return (
@@ -72,6 +70,9 @@ export default function FieldLeadership({ filters = {} }) {
             padding: '24px',
             boxShadow: 'var(--shadow-sm, 0 1px 3px rgba(0,0,0,0.06))',
             marginBottom: '32px',
+            width: '100%',
+            boxSizing: 'border-box',
+            overflowX: 'hidden',
         }}>
             <style>{`
                 @keyframes flswidget-spin {
@@ -96,7 +97,7 @@ export default function FieldLeadership({ filters = {} }) {
                     padding-top: 24px;
                     border-top: 1px solid #f1f5f9;
                 }
-                @media (max-width: 900px) {
+                @media (max-width: 768px) {
                     .flswidget-grid-top {
                         grid-template-columns: 1fr;
                     }
@@ -113,37 +114,34 @@ export default function FieldLeadership({ filters = {} }) {
             <div style={{
                 display: 'flex', justifyContent: 'space-between',
                 alignItems: 'center', marginBottom: '20px',
+                gap: '8px',
             }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <HardHat size={16} style={{ color: 'var(--primary)' }} />
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
+                    <HardHat size={16} style={{ color: 'var(--primary)', flexShrink: 0 }} />
                     <h4 style={{
-                        fontSize: '14.5px', fontWeight: 700,
+                        fontSize: '13px', fontWeight: 700,
                         color: 'var(--text-primary, #1e293b)', margin: 0,
+                        textTransform: 'uppercase', letterSpacing: '0.3px',
+                        overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                     }}>
-                        FIELD LEADERSHIP
+                        Field Leadership
                     </h4>
                 </div>
 
                 {loading && (
                     <RefreshCw
                         size={14}
-                        style={{ color: '#94a3b8', animation: 'flswidget-spin 1s linear infinite' }}
+                        style={{ color: '#94a3b8', animation: 'flswidget-spin 1s linear infinite', flexShrink: 0 }}
                     />
                 )}
             </div>
 
             {error ? (
                 <ErrorState onRetry={refetch} />
-            ) : loading ? (
-                <div className="flswidget-grid-top">
-                    <FieldLeadershipSummary stats={stats} loading={true} />
-                </div>
             ) : isEmpty ? (
                 <EmptyState />
             ) : (
-                <div className="flswidget-grid-top">
-                    <FieldLeadershipSummary stats={stats} loading={false} />
-                </div>
+                <FieldLeadershipSummary stats={stats} loading={loading} />
             )}
         </div>
     );

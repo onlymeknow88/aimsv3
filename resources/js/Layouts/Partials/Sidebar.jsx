@@ -1,5 +1,6 @@
+import { ChevronDown, Menu, RefreshCw, X } from 'lucide-react';
+
 import React from 'react';
-import { X, Menu, ChevronDown, RefreshCw } from 'lucide-react';
 
 export default function Sidebar({
     sidebarOpen,
@@ -21,7 +22,8 @@ export default function Sidebar({
             <div
                 className="sidebar-container"
                 style={{
-                    width: '280px',
+                    width: sidebarOpen ? '280px' : '0px',
+                    minWidth: sidebarOpen ? '280px' : '0px',
                     backgroundColor: 'var(--sidebar-bg)',
                     color: '#a9b9d0',
                     display: 'flex',
@@ -30,10 +32,11 @@ export default function Sidebar({
                     position: 'sticky',
                     top: 0,
                     left: 0,
-                    transition: 'transform 0.3s ease-in-out',
-                    borderRight: '1px solid rgba(255,255,255,0.05)',
-                    overflowY: 'auto',
-                    flexShrink: 0
+                    transition: 'width 0.3s ease-in-out, min-width 0.3s ease-in-out',
+                    borderRight: sidebarOpen ? '1px solid rgba(255,255,255,0.05)' : 'none',
+                    overflowY: sidebarOpen ? 'auto' : 'hidden',
+                    overflowX: 'hidden',
+                    flexShrink: 0,
                 }}
             >
                 {/* Logo Area */}
@@ -44,9 +47,9 @@ export default function Sidebar({
                     gap: '12px',
                     borderBottom: '1px solid rgba(255, 255, 255, 0.05)'
                 }}>
-                    <img 
-                        src="/images/Alamtri Geo Logo - Full Color 1.png" 
-                        alt="Alamtri Logo" 
+                    <img
+                        src="/images/Alamtri Geo Logo - Full Color 1.png"
+                        alt="Alamtri Logo"
                         style={{
                             width: '40px',
                             height: '40px',

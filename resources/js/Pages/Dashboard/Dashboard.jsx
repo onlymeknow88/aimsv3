@@ -25,6 +25,7 @@ import { Head, Link } from '@inertiajs/react';
 
 import CalendarOfEventStats from './Partials/Widget/CalendarOfEventStats';
 import CalendarofEvent from './Partials/Widget/CalendarofEvent';
+import CsmsWidget from './Partials/Widget/CSMS';
 import DashboardLayout from '@/Layouts/DashboardLayout';
 import DocumentSystemWidget from './Partials/Widget/DocumentSystem/DocumentSystemWidget';
 import FieldLeadership from './Partials/Widget/FieldLeadership';
@@ -181,7 +182,10 @@ export default function Dashboard({ coeEvents: initialEvents = [], slideshows: i
             {/* Section 5: Field Leadership Widget */}
             <FieldLeadership />
 
-            {/* Section 6: News & Update */}
+            {/* Section 6: CSMS Widget */}
+            <CsmsWidget />
+
+            {/* Section 7: News & Update */}
             <NewsUpdate newsItems={newsItems} loading={loading} />
 
         </DashboardLayout>
