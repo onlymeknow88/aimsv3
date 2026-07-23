@@ -206,9 +206,11 @@ class CSMSDummySeeder extends Seeder
         $licenseNumbers = collect($dummyBiddings)->pluck('license_number')->toArray();
         DB::table('biddings')->whereIn('license_number', $licenseNumbers)->delete();
 
+        $seededBiddings = [];
         foreach ($dummyBiddings as $bid) {
             if (!DB::table('biddings')->where('license_number', $bid['license_number'])->exists()) {
                 DB::table('biddings')->insert($bid);
+                $seededBiddings[] = $bid;
 
                 $masterChecklists = DB::table('csms_master_data_checklists')
                     ->where('criteria', $bid['criteria'])
@@ -224,7 +226,132 @@ class CSMSDummySeeder extends Seeder
                         'ordinal_number' => null,
                     ]);
                 }
+            } else {
+                $seededBiddings[] = (array) DB::table('biddings')->where('license_number', $bid['license_number'])->first();
             }
+        }
+
+        // 4. Seed PJO (Penanggung Jawab Operasional)
+        DB::table('csms_pjo_files')->truncate();
+        DB::table('csms_pjos')->delete();
+
+        foreach ($companies as $index => $comp) {
+            $companyDb = DB::table('companies')->where('company_name', $comp['company_name'])->first();
+            if (!$companyDb) continue;
+
+            $statuses = ['Draft', 'On Review Evaluator', 'Approved'];
+            foreach ($statuses as $status) {
+                $pjoId = (string) Str::uuid();
+                DB::table('csms_pjos')->insert([
+                    'id' => $pjoId,
+                    'company_id' => $companyDb->id,
+                    'criteria' => 'PJO',
+                    'ccow_id' => $ccowCompany?->id,
+                    'submission' => collect(['Baru', 'Perpanjangan'])->random(),
+                    'number_pjo' => 'PJO/CSMS/' . rand(100, 999) . '/' . date('Y'),
+                    'name' => 'PJO User ' . rand(1, 100),
+                    'date_of_birth' => '1990-01-01',
+                    'phone' => '08123456789' . rand(0, 9),
+                    'email' => 'pjo.user' . rand(1, 100) . '@gmail.com',
+                    'date_submission' => now()->toDateString(),
+                    'date_approved' => $status === 'Approved' ? now()->toDateString() : null,
+                    'status' => $status,
+                    'published' => 'Published',
+                    'requested' => $status === 'On Review Evaluator' ? 'Requested Evaluator' : null,
+                    'created_by' => $makerId,
+                    'created_at' => now(),
+                    'updated_at' => now()
+                ]);
+
+                // PJO Files
+                DB::table('csms_pjo_files')->insert([
+                    'id' => (string) Str::uuid(),
+                    'pjo_id' => $pjoId,
+                    'file' => 'dummy_document.pdf',
+                    'name' => 'SK PJO / Sertifikat Kompetensi',
+                    'size' => '102400',
+                    'created_at' => now(),
+                    'updated_at' => now()
+                ]);
+            }
+        }
+
+        // 5. Seed Memo KTT
+        DB::table('csms_memo_ktt_files')->truncate();
+        DB::table('csms_memo_ktts')->delete();
+
+        for ($i = 1; $i <= 5; $i++) {
+            $memoId = (string) Str::uuid();
+            DB::table('csms_memo_ktts')->insert([
+                'id' => $memoId,
+                'ccow_id' => $ccowCompany?->id,
+                'ktt_id' => $makerId,
+                'memo_number' => 'MEMO/KTT/' . date('Y') . '/00' . $i,
+                'title' => 'Memo KTT Kepatuhan CSMS Tahap ' . $i,
+                'date' => now()->toDateString(),
+                'description' => 'Ini adalah deskripsi dummy untuk memo KTT yang berisi instruksi keselamatan kerja.',
+                'status' => collect(['Draft', 'Published'])->random(),
+                'created_at' => now(),
+                'updated_at' => now()
+            ]);
+
+            DB::table('csms_memo_ktt_files')->insert([
+                'id' => (string) Str::uuid(),
+                'memo_id' => $memoId,
+                'file' => 'dummy_memo_' . $i . '.pdf',
+                'name' => 'Dokumen Memo KTT Tahap ' . $i . '.pdf',
+                'size' => '204800',
+                'created_at' => now(),
+                'updated_at' => now()
+            ]);
+        }
+
+        // 6. Seed Surat Edaran (Letters)
+        DB::table('csms_letter_files')->truncate();
+        DB::table('csms_letters')->delete();
+
+        for ($i = 1; $i <= 5; $i++) {
+            $letterId = (string) Str::uuid();
+            DB::table('csms_letters')->insert([
+                'id' => $letterId,
+                'title' => 'Surat Edaran Sosialisasi CSMS Versi ' . $i . '.0',
+                'status' => collect(['Draft', 'Published'])->random(),
+                'created_at' => now(),
+                'updated_at' => now()
+            ]);
+
+            DB::table('csms_letter_files')->insert([
+                'id' => (string) Str::uuid(),
+                'letter_id' => $letterId,
+                'file' => 'surat_edaran_' . $i . '.pdf',
+                'name' => 'Dokumen Surat Edaran V' . $i . '.pdf',
+                'size' => '153600',
+                'created_at' => now(),
+                'updated_at' => now()
+            ]);
+        }
+
+        // 7. Seed Kamus CSMS (Dictionaries)
+        DB::table('csms_dictionaries')->delete();
+        $dictionaries = [
+            ['id' => (string) Str::uuid(), 'term' => 'CSMS', 'definition' => 'Contractor Safety Management System adalah sistem terstruktur untuk mengelola aspek K3LL kontraktor.', 'created_at' => now(), 'updated_at' => now()],
+            ['id' => (string) Str::uuid(), 'term' => 'KTT', 'definition' => 'Kepala Teknik Tambang adalah seseorang yang memimpin dan bertanggung jawab atas terlaksananya serta ditaatinya peraturan perundang-undangan K3 di area tambang.', 'created_at' => now(), 'updated_at' => now()],
+            ['id' => (string) Str::uuid(), 'term' => 'PJO', 'definition' => 'Penanggung Jawab Operasional adalah orang yang menduduki jabatan tertinggi dalam struktur organisasi perusahaan jasa pertambangan di site.', 'created_at' => now(), 'updated_at' => now()],
+            ['id' => (string) Str::uuid(), 'term' => 'PICA', 'definition' => 'Problem Identification and Corrective Action adalah metode penyelesaian masalah untuk mencari akar penyebab dan tindakan perbaikan.', 'created_at' => now(), 'updated_at' => now()],
+        ];
+        DB::table('csms_dictionaries')->insert($dictionaries);
+
+        // 8. Seed PICA
+        DB::table('csms_picas')->delete();
+        foreach ($seededBiddings as $bid) {
+            DB::table('csms_picas')->insert([
+                'id' => (string) Str::uuid(),
+                'bidding_id' => $bid['id'],
+                'description' => 'Temuan hasil review CSMS: Mohon melengkapi sertifikasi kompetensi PJO dan hasil inspeksi peralatan kerja untuk perusahaan ' . $bid['company_name'] . '.',
+                'status' => collect(['Open', 'Closed'])->random(),
+                'created_at' => now(),
+                'updated_at' => now()
+            ]);
         }
     }
 }
