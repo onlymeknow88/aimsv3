@@ -3,6 +3,7 @@ import { usePage, Head } from '@inertiajs/react';
 import { ArrowLeft, User, Calendar, Mail, Phone, Building, FileText, Edit, Trash2 } from 'lucide-react';
 
 import axios from 'axios';
+import PageLoader from '@/Components/PageLoader';
 
 const cardStyle = { backgroundColor: '#fff', border: '1px solid var(--border-color)', borderRadius: '16px', padding: '32px', boxShadow: '0 4px 24px rgba(0,0,0,0.04)' };
 const sectionTitle = { fontSize: '13px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '16px', borderBottom: '1px solid #f1f5f9', paddingBottom: '8px', marginTop: 0 };
@@ -33,7 +34,7 @@ export default function PjoDetail() {
             .finally(() => setLoading(false));
     }, [id]);
 
-    if (loading || !data) return <div style={{ backgroundColor: 'var(--bg-color)', minHeight: '100vh', padding: '40px 20px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)' }}>Memuat detail PJO...</div>;
+    if (loading || !data) return <PageLoader title="Memuat detail PJO..." />;
 
     const { pjo, files = [] } = data;
 

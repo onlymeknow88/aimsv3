@@ -1,77 +1,96 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use Modules\CSMS\Http\Controllers\Api\CSMSApiController;
+use Modules\CSMS\Http\Controllers\Api\CSMSBiddingApiController;
+use Modules\CSMS\Http\Controllers\Api\CSMSPjoApiController;
+use Modules\CSMS\Http\Controllers\Api\CSMSSupportApiController;
+use Modules\CSMS\Http\Controllers\Api\CSMSDashboardApiController;
 
 Route::prefix('csms')->group(function () {
+
+    // Dashboard Stats
+    Route::get('/dashboard-stats', [CSMSDashboardApiController::class, 'stats']);
+
     // Bidding CRUD
-    Route::get('/biddings', [CSMSApiController::class, 'indexBiddings'])
+    Route::get('/biddings', [CSMSBiddingApiController::class, 'index'])
         ->middleware('module.permission:csms,can_view,csms.bidding');
-    Route::get('/biddings/{id}', [CSMSApiController::class, 'showBidding'])
+    Route::get('/biddings/{id}', [CSMSBiddingApiController::class, 'show'])
         ->middleware('module.permission:csms,can_view,csms.bidding');
-    Route::post('/biddings', [CSMSApiController::class, 'storeBidding'])
+    Route::post('/biddings', [CSMSBiddingApiController::class, 'store'])
         ->middleware('module.permission:csms,can_create,csms.bidding');
-    Route::put('/biddings/{id}', [CSMSApiController::class, 'updateBidding'])
+    Route::put('/biddings/{id}', [CSMSBiddingApiController::class, 'update'])
         ->middleware('module.permission:csms,can_edit,csms.bidding');
-    Route::delete('/biddings/{id}', [CSMSApiController::class, 'destroyBidding'])
+    Route::delete('/biddings/{id}', [CSMSBiddingApiController::class, 'destroy'])
         ->middleware('module.permission:csms,can_delete,csms.bidding');
-    Route::post('/biddings/bulk-delete', [CSMSApiController::class, 'bulkDestroyBiddings'])
+    Route::post('/biddings/bulk-delete', [CSMSBiddingApiController::class, 'bulkDestroy'])
         ->middleware('module.permission:csms,can_delete,csms.bidding');
-    Route::get('/approved-biddings', [CSMSApiController::class, 'getApprovedBiddings'])
+    Route::get('/approved-biddings', [CSMSBiddingApiController::class, 'approved'])
         ->middleware('module.permission:csms,can_create,csms.post-bidding');
 
-    // Post-Bidding CRUD
-    Route::get('/post-biddings', [CSMSApiController::class, 'indexPostBiddings'])
-        ->middleware('module.permission:csms,can_view,csms.post-bidding');
-    Route::get('/post-biddings/{id}', [CSMSApiController::class, 'showPostBidding'])
+    // Post-Bidding (reuses Bidding index/show with criteria=PostBidding)
+    Route::get('/post-biddings', function (\Illuminate\Http\Request $request) {
+        $request->merge(['criteria' => 'PostBidding']);
+        return app(CSMSBiddingApiController::class)->index($request);
+    })->middleware('module.permission:csms,can_view,csms.post-bidding');
+
+    Route::get('/post-biddings/{id}', [CSMSBiddingApiController::class, 'show'])
         ->middleware('module.permission:csms,can_view,csms.post-bidding');
 
-    // Renewal CRUD
-    Route::get('/renewals', [CSMSApiController::class, 'indexRenewals'])
-        ->middleware('module.permission:csms,can_view,csms.renewal');
+    // Renewal (reuses Bidding index with criteria=Renewal)
+    Route::get('/renewals', function (\Illuminate\Http\Request $request) {
+        $request->merge(['criteria' => 'Renewal']);
+        return app(CSMSBiddingApiController::class)->index($request);
+    })->middleware('module.permission:csms,can_view,csms.renewal');
+
+    // Approval
+    Route::post('/approval/{id}', [CSMSBiddingApiController::class, 'processApproval'])
+        ->middleware('module.permission:csms,can_approval,csms.approval');
+
+    Route::post('/biddings/{id}/renew', [CSMSBiddingApiController::class, 'renew'])
+        ->middleware('module.permission:csms,can_create,csms.renewal');
+
+    Route::post('/biddings/{id}/deactivate', [CSMSBiddingApiController::class, 'deactivate'])
+        ->middleware('module.permission:csms,can_edit,csms.post-bidding');
+
+    // Checklist Attachments
+    Route::get('/checklist-attachments/{id}/preview', [CSMSBiddingApiController::class, 'previewChecklistFile']);
+    Route::get('/checklist-attachments/{id}/download', [CSMSBiddingApiController::class, 'downloadChecklistFile']);
 
     // PJO CRUD
-    Route::get('/pjos', [CSMSApiController::class, 'indexPjos'])
+    Route::get('/pjos', [CSMSPjoApiController::class, 'index'])
         ->middleware('module.permission:csms,can_view,csms.pjo');
-    Route::get('/pjos/{id}', [CSMSApiController::class, 'showPjo'])
+    Route::get('/pjos/{id}', [CSMSPjoApiController::class, 'show'])
         ->middleware('module.permission:csms,can_view,csms.pjo');
-    Route::post('/pjos', [CSMSApiController::class, 'storePjo'])
+    Route::post('/pjos', [CSMSPjoApiController::class, 'store'])
         ->middleware('module.permission:csms,can_create,csms.pjo');
-    Route::put('/pjos/{id}', [CSMSApiController::class, 'updatePjo'])
+    Route::put('/pjos/{id}', [CSMSPjoApiController::class, 'update'])
         ->middleware('module.permission:csms,can_edit,csms.pjo');
-    Route::delete('/pjos/{id}', [CSMSApiController::class, 'destroyPjo'])
+    Route::delete('/pjos/{id}', [CSMSPjoApiController::class, 'destroy'])
         ->middleware('module.permission:csms,can_delete,csms.pjo');
 
     // Memo KTT
-    Route::get('/memo-ktts', [CSMSApiController::class, 'indexMemoKtts'])
+    Route::get('/memo-ktts', [CSMSSupportApiController::class, 'indexMemoKtts'])
         ->middleware('module.permission:csms,can_view,csms.memo');
-    Route::post('/memo-ktts', [CSMSApiController::class, 'storeMemoKtt'])
+    Route::post('/memo-ktts', [CSMSSupportApiController::class, 'storeMemoKtt'])
         ->middleware('module.permission:csms,can_create,csms.memo');
 
     // Letters (Surat Edaran)
-    Route::get('/letters', [CSMSApiController::class, 'indexLetters'])
+    Route::get('/letters', [CSMSSupportApiController::class, 'indexLetters'])
         ->middleware('module.permission:csms,can_view,csms.letter');
-    Route::post('/letters', [CSMSApiController::class, 'storeLetter'])
+    Route::post('/letters', [CSMSSupportApiController::class, 'storeLetter'])
         ->middleware('module.permission:csms,can_create,csms.letter');
 
     // Dictionaries (Kamus CSMS)
-    Route::get('/dictionaries', [CSMSApiController::class, 'indexDictionaries'])
+    Route::get('/dictionaries', [CSMSSupportApiController::class, 'indexDictionaries'])
         ->middleware('module.permission:csms,can_view,csms.dictionary');
-    Route::post('/dictionaries', [CSMSApiController::class, 'storeDictionary'])
+    Route::post('/dictionaries', [CSMSSupportApiController::class, 'storeDictionary'])
         ->middleware('module.permission:csms,can_create,csms.dictionary');
 
     // PICA
-    Route::get('/picas', [CSMSApiController::class, 'indexPicas'])
+    Route::get('/picas', [CSMSSupportApiController::class, 'indexPicas'])
         ->middleware('module.permission:csms,can_view,csms.pica');
 
-    // Approval Action
-    Route::post('/approval/{id}', [CSMSApiController::class, 'processApproval'])
-        ->middleware('module.permission:csms,can_approval,csms.approval');
+    // Master Data
+    Route::get('/master-data', [CSMSSupportApiController::class, 'masterData']);
 
-    // Master Data for Forms
-    Route::get('/master-data', [CSMSApiController::class, 'masterData']);
-
-    // Checklist Attachment Preview/Download
-    Route::get('/checklist-attachments/{id}/preview', [CSMSApiController::class, 'previewChecklistFile']);
-    Route::get('/checklist-attachments/{id}/download', [CSMSApiController::class, 'downloadChecklistFile']);
 });

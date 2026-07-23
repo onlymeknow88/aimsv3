@@ -4,19 +4,21 @@ import React from 'react';
 import { usePage } from '@inertiajs/react';
 
 const SLUG_URL = {
-    'csms.dashboard':    '/csms/dashboard',
-    'csms.bidding':      '/csms/bidding/lists',
-    'csms.post-bidding': '/csms/post-bidding/lists',
-    'csms.renewal':      '/csms/renewal/lists',
-    'csms.pica':         '/csms/pica/lists',
-    'csms.pjo':          null,
-    'csms.pjo.active':   '/csms/pjo/lists?status=Active',
-    'csms.pjo.ongoing':  '/csms/pjo/lists?status=On Going',
-    'csms.pjo.draft':    '/csms/pjo/lists?status=Draft',
-    'csms.memo':         '/csms/memo-ktt/lists',
-    'csms.letter':       '/csms/letter/lists',
-    'csms.dictionary':   '/csms/dictionary/lists',
-    'csms.approval':     '/csms/approval/bidding',
+    'csms.dashboard':              '/csms/dashboard',
+    'csms.bidding':                '/csms/bidding/lists',
+    'csms.post-bidding':           null,
+    'csms.post-bidding.active':    '/csms/post-bidding/active',
+    'csms.post-bidding.inactive':  '/csms/post-bidding/inactive',
+    'csms.renewal':                '/csms/renewal/lists',
+    'csms.pica':                   '/csms/pica/lists',
+    'csms.pjo':                    null,
+    'csms.pjo.active':             '/csms/pjo/lists?status=Active',
+    'csms.pjo.ongoing':            '/csms/pjo/lists?status=On Going',
+    'csms.pjo.draft':              '/csms/pjo/lists?status=Draft',
+    'csms.memo':                   '/csms/memo-ktt/lists',
+    'csms.letter':                 '/csms/letter/lists',
+    'csms.dictionary':             '/csms/dictionary/lists',
+    'csms.approval':               '/csms/approval/bidding',
 };
 
 function isActivePath(slug, currentPath, currentSearch) {
@@ -26,11 +28,12 @@ function isActivePath(slug, currentPath, currentSearch) {
     return currentPath === url || currentPath.startsWith(url.replace('/lists', ''));
 }
 
-export default function Sidebar({ sidebarOpen, isMobile, currentPath, currentSearch, openPjo, setOpenPjo }) {
+export default function Sidebar({ sidebarOpen, isMobile, currentPath, currentSearch, openPjo, setOpenPjo, openPostBidding, setOpenPostBidding }) {
     const { csmsMenus = [] } = usePage().props;
 
     const dropdownState = {
-        'csms.pjo': { open: openPjo, setOpen: setOpenPjo },
+        'csms.pjo':          { open: openPjo,          setOpen: setOpenPjo },
+        'csms.post-bidding': { open: openPostBidding, setOpen: setOpenPostBidding },
     };
 
     const parentMenus = csmsMenus.filter(m => !m.parent_id).sort((a, b) => a.order_by - b.order_by);

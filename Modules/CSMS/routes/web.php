@@ -34,6 +34,12 @@ Route::middleware(['web', 'auth'])->prefix('csms')->as('csms.')->group(function 
         Route::get('/lists', [CSMSController::class, 'postBiddingIndex'])
             ->middleware('module.permission:csms,can_view,csms.post-bidding')
             ->name('index');
+        Route::get('/active', [CSMSController::class, 'postBiddingActive'])
+            ->middleware('module.permission:csms,can_view,csms.post-bidding.active')
+            ->name('active');
+        Route::get('/inactive', [CSMSController::class, 'postBiddingInactive'])
+            ->middleware('module.permission:csms,can_view,csms.post-bidding.inactive')
+            ->name('inactive');
         Route::get('/create', [CSMSController::class, 'postBiddingCreate'])
             ->middleware('module.permission:csms,can_create,csms.post-bidding')
             ->name('create');

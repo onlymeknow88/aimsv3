@@ -22,6 +22,7 @@ export default function CSMSLayout({ children }) {
 
     // Dropdown collapse states — diinisialisasi dari currentPath
     const [openPjo, setOpenPjo] = useState(currentPath.includes('/pjo'));
+    const [openPostBidding, setOpenPostBidding] = useState(currentPath.includes('/post-bidding'));
 
     return (
         <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: 'var(--bg-color)', position: 'relative' }}>
@@ -51,6 +52,8 @@ export default function CSMSLayout({ children }) {
                 currentSearch={currentSearch}
                 openPjo={openPjo}
                 setOpenPjo={setOpenPjo}
+                openPostBidding={openPostBidding}
+                setOpenPostBidding={setOpenPostBidding}
             />
 
             {/* Main Area */}

@@ -41,10 +41,22 @@ class CsmsMenuSeeder extends Seeder
             'created_at' => $now, 'updated_at' => $now,
         ]);
 
-        // 4. Post Bidding
-        $menuIds[] = DB::table('aims_menus')->insertGetId([
+        // 4. Post Bidding (Parent)
+        $postBiddingParentId = DB::table('aims_menus')->insertGetId([
             'module_id'  => $moduleId, 'parent_id' => null, 'order_by' => 3,
             'name' => 'Post Bidding', 'slug' => 'csms.post-bidding',
+            'created_at' => $now, 'updated_at' => $now,
+        ]);
+        $menuIds[] = $postBiddingParentId;
+
+        $menuIds[] = DB::table('aims_menus')->insertGetId([
+            'module_id'  => $moduleId, 'parent_id' => $postBiddingParentId, 'order_by' => 1,
+            'name' => 'Active', 'slug' => 'csms.post-bidding.active',
+            'created_at' => $now, 'updated_at' => $now,
+        ]);
+        $menuIds[] = DB::table('aims_menus')->insertGetId([
+            'module_id'  => $moduleId, 'parent_id' => $postBiddingParentId, 'order_by' => 2,
+            'name' => 'Inactive', 'slug' => 'csms.post-bidding.inactive',
             'created_at' => $now, 'updated_at' => $now,
         ]);
 

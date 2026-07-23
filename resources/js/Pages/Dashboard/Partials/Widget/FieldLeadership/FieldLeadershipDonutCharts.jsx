@@ -5,7 +5,7 @@ import React from 'react';
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
-const FLS_PRIMARY   = 'var(--primary)';
+const FLS_PRIMARY = '#153B73';
 const FLS_SECONDARY = '#FF8C24';
 
 // ── Skeleton circle ───────────────────────────────────────────────────────────
@@ -111,7 +111,7 @@ function DonutGauge({ label, completePercent, loading }) {
 export default function FieldLeadershipDonutCharts({ stats, loading }) {
     const donutActual = stats?.donutChartByActual ?? {
         target: { complete: 0, ongoing: 100 },
-        actual:  { complete: 0, ongoing: 100 },
+        actual: { complete: 0, ongoing: 100 },
     };
 
     return (
