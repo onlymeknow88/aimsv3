@@ -29,7 +29,7 @@ export default function Header({
                     className="mobile-toggle"
                     onClick={() => setSidebarOpen(!sidebarOpen)}
                     style={{
-                        display: 'none',
+                        display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
                         padding: '8px',
@@ -37,7 +37,8 @@ export default function Header({
                         borderRadius: '8px',
                         background: 'transparent',
                         color: 'var(--text-primary)',
-                        cursor: 'pointer'
+                        cursor: 'pointer',
+                        flexShrink: 0,
                     }}
                 >
                     <Menu size={20} />
