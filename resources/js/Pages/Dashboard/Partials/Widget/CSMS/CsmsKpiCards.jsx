@@ -23,12 +23,12 @@ const C = {
 };
 
 const KPI_CONFIG = [
-    { key: 'totalBidding',  label: 'Total Bidding',  icon: FileText,    gradient: 'linear-gradient(135deg, #153B73, #1E4E96)', sub: 'Total kontraktor terdaftar'   },
-    { key: 'totalPB',       label: 'Post Bidding',   icon: BarChart2,   gradient: 'linear-gradient(135deg, #1d4ed8, #2563eb)', sub: 'Penilaian kelayakan CSMS'     },
-    { key: 'totalRenewal',  label: 'Renewal',        icon: RefreshCw,   gradient: 'linear-gradient(135deg, #0369a1, #0284c7)', sub: 'Perpanjangan sertifikat'      },
-    { key: 'totalApproved', label: 'Approved',       icon: CheckCircle, gradient: 'linear-gradient(135deg, #b45309, #d97706)', sub: 'Sertifikat disetujui'         },
-    { key: 'totalOnReview', label: 'On Review',      icon: Clock,       gradient: 'linear-gradient(135deg, #a16207, #ca8a04)', sub: 'Sedang dalam proses review'   },
-    { key: 'totalDraft',    label: 'Draft',          icon: XCircle,     gradient: 'linear-gradient(135deg, #475569, #64748b)', sub: 'Belum disubmit'              },
+    { key: 'totalBidding',  label: 'Total Bidding',  icon: FileText,    gradient: 'linear-gradient(135deg, #153B73, #1E4E96)', textColor: '#fff',     sub: 'Total kontraktor terdaftar'  },
+    { key: 'totalPB',       label: 'Post Bidding',   icon: BarChart2,   gradient: null,                                        textColor: '#153B73',  sub: 'Penilaian kelayakan CSMS'    },
+    { key: 'totalRenewal',  label: 'Renewal',        icon: RefreshCw,   gradient: null,                                        textColor: '#153B73',  sub: 'Perpanjangan sertifikat'     },
+    { key: 'totalApproved', label: 'Approved',       icon: CheckCircle, gradient: 'linear-gradient(135deg, #FF8C24, #f97316)', textColor: '#fff',     sub: 'Sertifikat disetujui'        },
+    { key: 'totalOnReview', label: 'On Review',      icon: Clock,       gradient: null,                                        textColor: '#153B73',  sub: 'Sedang dalam proses review'  },
+    { key: 'totalDraft',    label: 'Draft',          icon: XCircle,     gradient: null,                                        textColor: '#153B73',  sub: 'Belum disubmit'              },
 ];
 
 function SkeletonCard() {
@@ -72,35 +72,40 @@ export default function CsmsKpiCards({ summary, loading }) {
             {KPI_CONFIG.map((kpi) => {
                 const Icon = kpi.icon;
                 const value = summary?.[kpi.key] ?? 0;
+                const isColored = !!kpi.gradient;
+
                 return (
                     <div key={kpi.key} style={{
-                        background: kpi.gradient,
+                        background: isColored ? kpi.gradient : C.bgCard,
+                        border: isColored ? 'none' : `1px solid ${C.border}`,
                         borderRadius: '12px',
-                        padding: '16px',
+                        padding: '14px 16px',
                         display: 'flex',
                         flexDirection: 'column',
                         gap: '6px',
-                        color: '#fff',
                     }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            <Icon size={13} style={{ color: 'rgba(255,255,255,0.75)' }} />
+                            <Icon
+                                size={13}
+                                style={{ color: isColored ? 'rgba(255,255,255,0.75)' : kpi.textColor }}
+                            />
                             <span style={{
-                                fontSize: '11px', fontWeight: 700,
-                                color: 'rgba(255,255,255,0.85)',
+                                fontSize: '12px', fontWeight: 700,
+                                color: isColored ? 'rgba(255,255,255,0.85)' : C.gray,
                                 textTransform: 'uppercase', letterSpacing: '0.5px',
                             }}>
                                 {kpi.label}
                             </span>
                         </div>
                         <span style={{
-                            fontSize: '32px', fontWeight: 800,
-                            lineHeight: 1, color: '#fff',
+                            fontSize: '36px', fontWeight: 800, lineHeight: 1,
+                            color: isColored ? '#fff' : kpi.textColor,
                         }}>
                             {value.toLocaleString('id-ID')}
                         </span>
                         <span style={{
-                            fontSize: '10px',
-                            color: 'rgba(255,255,255,0.6)',
+                            fontSize: '12px',
+                            color: isColored ? 'rgba(255,255,255,0.6)' : C.gray,
                         }}>
                             {kpi.sub}
                         </span>

@@ -108,7 +108,7 @@ export default function CsmsDonutStatus({ donut, loading }) {
 
     return (
         <div style={{
-            backgroundColor: C.bgInner, border: `1px solid ${C.border}`,
+            // backgroundColor: C.bgInner, border: `1px solid ${C.border}`,
             borderRadius: '12px',
             padding: isMobile ? '12px' : '16px 20px',
             display: 'flex', flexDirection: 'column',

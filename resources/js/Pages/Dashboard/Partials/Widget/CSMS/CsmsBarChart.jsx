@@ -55,7 +55,7 @@ function buildBar2(series, c1 = C.primary, c2 = C.orange) {
 function ChartCard({ title, height = 160, loading, children }) {
     return (
         <div style={{
-            backgroundColor: C.bgInner, border: `1px solid ${C.border}`,
+            // backgroundColor: C.bgInner, border: `1px solid ${C.border}`,
             borderRadius: '12px', padding: '12px',
             width: '100%', boxSizing: 'border-box', overflowX: 'hidden',
         }}>
