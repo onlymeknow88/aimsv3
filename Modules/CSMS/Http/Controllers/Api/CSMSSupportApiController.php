@@ -76,17 +76,11 @@ class CSMSSupportApiController extends CSMSBaseApiController
 
         $data = $q->paginate($request->limit ?? 10);
 
+        // Attach files tanpa generate SAS — SAS di-generate on-demand via endpoint preview/download
         foreach ($data->items() as $item) {
-            $files = CsmsMemoKttFile::where('memo_id', $item->id)->get();
-            foreach ($files as $file) {
-                if ($file->file) {
-                    $sas = GetBlobSasUri('aims-cntr', $file->file);
-                    $file->blob_url = is_array($sas)
-                        ? ($sas['blobUriSas'] ?? $sas['sasUri'] ?? $file->blob_url)
-                        : $sas;
-                }
-            }
-            $item->files = $files;
+            $item->files = CsmsMemoKttFile::where('memo_id', $item->id)
+                ->select(['id', 'memo_id', 'name', 'size', 'file'])
+                ->get();
         }
 
         return ResponseFormatter::success($data);
@@ -141,6 +135,51 @@ class CSMSSupportApiController extends CSMSBaseApiController
             ->first();
 
         return ResponseFormatter::success($memoUpdated, 'Memo KTT berhasil dibuat.', 201);
+    }
+
+    // ── MEMO KTT FILE PREVIEW & DOWNLOAD ────────────────────────────────────
+    public function previewMemoKttFile(string $id)
+    {
+        $file = CsmsMemoKttFile::find($id);
+        if (!$file) abort(404, 'File tidak ditemukan.');
+
+        $filePath = $file->file;
+        $fileName = basename($filePath);
+        $ext      = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
+        $mimeType = match ($ext) {
+            'pdf'         => 'application/pdf',
+            'png'         => 'image/png',
+            'jpg', 'jpeg' => 'image/jpeg',
+            default       => 'application/octet-stream',
+        };
+
+        $sas = GetBlobSasUri('aims-cntr', $filePath, 60);
+        $url = is_array($sas)
+            ? ($sas['blobUriSas'] ?? $sas['sasUri'] ?? $sas['url'] ?? null)
+            : $sas;
+
+        if ($url) {
+            $contents = @file_get_contents($url);
+            if ($contents !== false) {
+                return response($contents, 200, [
+                    'Content-Type'        => $mimeType,
+                    'Content-Disposition' => 'inline; filename="' . addslashes($fileName) . '"',
+                    'Cache-Control'       => 'private, max-age=300',
+                ]);
+            }
+        }
+        abort(404, 'File tidak dapat diakses.');
+    }
+
+    public function downloadMemoKttFile(string $id)
+    {
+        $file = CsmsMemoKttFile::find($id);
+        if (!$file) abort(404, 'File tidak ditemukan.');
+
+        $sas = GetBlobSasUri('aims-cntr', $file->file, 60);
+        $url = is_array($sas) ? ($sas['blobUriSas'] ?? $sas['sasUri'] ?? null) : $sas;
+        if ($url) return redirect($url);
+        abort(404, 'File tidak ditemukan.');
     }
 
     // ── LETTERS — INDEX ───────────────────────────────────────────────────────

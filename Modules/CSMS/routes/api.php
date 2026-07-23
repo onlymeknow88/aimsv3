@@ -90,6 +90,14 @@ Route::prefix('csms')->group(function () {
     Route::get('/picas', [CSMSSupportApiController::class, 'indexPicas'])
         ->middleware('module.permission:csms,can_view,csms.pica');
 
+    // PJO File Preview & Download
+    Route::get('/pjo-files/{id}/preview', [CSMSPjoApiController::class, 'previewFile']);
+    Route::get('/pjo-files/{id}/download', [CSMSPjoApiController::class, 'downloadFile']);
+
+    // Memo KTT File Preview & Download
+    Route::get('/memo-ktt-files/{id}/preview', [CSMSSupportApiController::class, 'previewMemoKttFile']);
+    Route::get('/memo-ktt-files/{id}/download', [CSMSSupportApiController::class, 'downloadMemoKttFile']);
+
     // Master Data
     Route::get('/master-data', [CSMSSupportApiController::class, 'masterData']);
 

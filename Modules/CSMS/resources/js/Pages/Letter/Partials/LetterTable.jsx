@@ -7,7 +7,7 @@ const tdStyle = { fontSize: '12px', padding: '10px 12px', color: 'var(--text-sec
 
 export default function LetterTable({ letters, loading }) {
     return (
-        <div style={{ overflowX: 'auto' }}>
+        <div>
             <Table>
                 <TableHeader>
                     <TableRow style={{ backgroundColor: '#f8fafc' }}>

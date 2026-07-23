@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { Head } from "@inertiajs/react";
-import { ArrowLeft, UserPlus, Save, Loader2, FileText, X } from "lucide-react";
+import { ArrowLeft, UserPlus, Save, Loader2, FileText, Upload } from "lucide-react";
 import axios from "axios";
 import ConfirmationModal from "@/Components/ConfirmationModal";
 import PageLoader from "@/Components/PageLoader";
+import FileDropzone from "@/Components/FileDropzone";
 
 const S = {
     label: {
@@ -69,18 +70,11 @@ export default function PjoCreate() {
 
     const set = (field, val) => setForm((f) => ({ ...f, [field]: val }));
 
-    const handleFileChange = (e) => {
-        if (e.target.files) {
-            setSelectedFiles((prev) => [
-                ...prev,
-                ...Array.from(e.target.files),
-            ]);
-        }
-    };
+    const handleFileDrop = (files) =>
+        setSelectedFiles((prev) => [...prev, ...files]);
 
-    const removeFile = (idx) => {
+    const removeFile = (idx) =>
         setSelectedFiles((prev) => prev.filter((_, i) => i !== idx));
-    };
 
     const handleSubmit = () => {
         setSaving(true);
@@ -428,22 +422,20 @@ export default function PjoCreate() {
                                     marginTop: "10px",
                                 }}
                             >
-                                <label style={S.label}>
+                                <label style={{ ...S.label, marginBottom: "8px" }}>
                                     Upload File Berkas Pendukung
                                 </label>
-                                <input
-                                    type="file"
-                                    multiple
-                                    onChange={handleFileChange}
-                                    style={{ fontSize: "12px" }}
+                                <FileDropzone
+                                    onFileDrop={handleFileDrop}
+                                    accept=".pdf,.png,.jpeg,.jpg,.doc,.docx"
                                 />
                                 {selectedFiles.length > 0 && (
                                     <div
                                         style={{
-                                            marginTop: "10px",
+                                            marginTop: "8px",
                                             display: "flex",
                                             flexDirection: "column",
-                                            gap: "6px",
+                                            gap: "4px",
                                         }}
                                     >
                                         {selectedFiles.map((f, idx) => (
@@ -452,10 +444,10 @@ export default function PjoCreate() {
                                                 style={{
                                                     display: "flex",
                                                     alignItems: "center",
-                                                    justifyContent:
-                                                        "space-between",
+                                                    justifyContent: "space-between",
+                                                    gap: "8px",
                                                     padding: "6px 10px",
-                                                    backgroundColor: "#f8fafc",
+                                                    backgroundColor: "#fff",
                                                     border: "1px solid var(--border-color)",
                                                     borderRadius: "6px",
                                                     fontSize: "11px",
@@ -463,35 +455,36 @@ export default function PjoCreate() {
                                             >
                                                 <span
                                                     style={{
+                                                        flex: 1,
+                                                        color: "#334155",
                                                         display: "inline-flex",
                                                         alignItems: "center",
-                                                        gap: "6px",
-                                                        color: "#334155",
+                                                        gap: "4px",
+                                                        minWidth: 0,
+                                                        overflow: "hidden",
+                                                        textOverflow: "ellipsis",
+                                                        whiteSpace: "nowrap",
                                                     }}
                                                 >
-                                                    <FileText
-                                                        size={14}
-                                                        color="var(--primary)"
-                                                    />{" "}
-                                                    {f.name}
+                                                    <Upload size={10} /> {f.name}
                                                 </span>
                                                 <button
-                                                    onClick={() =>
-                                                        removeFile(idx)
-                                                    }
+                                                    type="button"
+                                                    onClick={() => removeFile(idx)}
                                                     style={{
-                                                        background: "none",
-                                                        border: "none",
+                                                        flexShrink: 0,
+                                                        border: "1px solid #fca5a5",
+                                                        background: "#fef2f2",
+                                                        color: "#ef4444",
                                                         cursor: "pointer",
-                                                        padding: 0,
+                                                        fontSize: "11px",
+                                                        fontWeight: 600,
+                                                        padding: "2px 8px",
+                                                        borderRadius: "4px",
+                                                        lineHeight: "16px",
                                                     }}
                                                 >
-                                                    <X
-                                                        size={14}
-                                                        style={{
-                                                            color: "#ef4444",
-                                                        }}
-                                                    />
+                                                    Hapus
                                                 </button>
                                             </div>
                                         ))}
