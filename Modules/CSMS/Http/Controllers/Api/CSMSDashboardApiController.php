@@ -28,7 +28,8 @@ class CSMSDashboardApiController extends CSMSBaseApiController
         // ── YTD summary — dari CsmsChecklist (sama persis aims lama) ─────────
         // YTD = total checklist rows untuk tahun tsb
         // complete = checklist yang point-nya POST KUALIFIKASI
-        $ytd      = CsmsChecklist::whereRaw("YEAR(created_at) IN ({$safeYears})")->count();
+        $ytd      = CsmsChecklist::whereRaw("YEAR(created_at) IN ({$safeYears})")
+            ->whereNotNull('point')->where('point', '!=', '')->count();
         $complete = CsmsChecklist::whereRaw("YEAR(created_at) IN ({$safeYears})")
             ->where('point', 'POST KUALIFIKASI')
             ->count();
@@ -90,6 +91,8 @@ class CSMSDashboardApiController extends CSMSBaseApiController
 
         // ── Category: group by point dari CsmsChecklist (sama persis aims lama)
         $categoryGroups = CsmsChecklist::groupBy('point')
+            ->whereNotNull('point')
+            ->where('point', '!=', '')
             ->get([\DB::raw('point as name')]);
 
         $category = [];
