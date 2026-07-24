@@ -12,14 +12,15 @@ class CsmsChecklist extends Model
 
     protected $table = 'csms_checklists';
 
-    public $timestamps = false;
+    public $timestamps = true;
 
     protected $fillable = [
         'bidding_id',
         'question_id',
         'value',
         'comment',
-        'ordinal_number'
+        'point',
+        'ordinal_number',
     ];
 
     public function bidding()

@@ -133,6 +133,7 @@ class CsmsMenuSeeder extends Seeder
             ['name' => 'Dept Head OHS', 'slug' => 'csms_dhohs_reviewer','is_system' => true],
             ['name' => 'KTT Reviewer',  'slug' => 'csms_ktt_reviewer',  'is_system' => true],
             ['name' => 'CSMS Vendor',   'slug' => 'csms_vendor',        'is_system' => true],
+            ['name' => 'System Admin',  'slug' => 'system_admin',       'is_system' => false],
         ];
 
         $roleIds = [];
@@ -153,7 +154,7 @@ class CsmsMenuSeeder extends Seeder
         }
 
         // 4. Permissions
-        $privileged = ['csms_admin', 'csms_ohs_reviewer', 'csms_dhohs_reviewer', 'csms_ktt_reviewer'];
+        $privileged = ['csms_admin', 'csms_ohs_reviewer', 'csms_dhohs_reviewer', 'csms_ktt_reviewer', 'system_admin'];
         foreach ($privileged as $slug) {
             if (!isset($roleIds[$slug])) continue;
             foreach ($menuIds as $menuId) {

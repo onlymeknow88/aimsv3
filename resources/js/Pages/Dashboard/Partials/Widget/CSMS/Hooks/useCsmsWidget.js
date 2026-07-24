@@ -1,34 +1,35 @@
 import { useCallback, useEffect, useState } from 'react';
+
 import axios from 'axios';
 
 /**
  * useCsmsWidget
  *
  * Fetch summary stats CSMS untuk widget di main dashboard.
- * Endpoint reuse dari /api/csms/dashboard-stats yang sudah ada.
+ * Endpoint: /api/csms/dashboard-stats
  *
  * @param {Object} filters - { years } dari global dashboard filter
  * @returns {{ stats, loading, error, refetch }}
  */
 export default function useCsmsWidget(filters = {}) {
-    const [stats,   setStats]   = useState(null);
+    const [stats, setStats]     = useState(null);
     const [loading, setLoading] = useState(true);
-    const [error,   setError]   = useState(false);
+    const [error, setError]     = useState(false);
 
-    const buildParams = useCallback((f) => {
-        const params = {};
-        if (f.years) {
-            params.year = Array.isArray(f.years) ? f.years.join(',') : f.years;
-        }
-        return params;
-    }, []);
+    // Serialize years ke string agar bisa dipakai sebagai useEffect dependency
+    // tanpa risiko infinite loop dari object reference baru setiap render.
+    const yearsKey = Array.isArray(filters.years)
+        ? filters.years.join(',')
+        : (filters.years ?? '');
 
-    const fetchStats = useCallback(async (currentFilters) => {
+    const fetchStats = useCallback(async (yearsParam) => {
         setLoading(true);
         setError(false);
         try {
-            const params = buildParams(currentFilters);
-            const res = await axios.get('/api/csms/dashboard-stats', { params });
+            const params = {};
+            if (yearsParam) params.year = yearsParam;
+
+            const res    = await axios.get('/api/csms/dashboard-stats', { params });
             const result = res.data?.result ?? null;
             if (result) {
                 setStats(result);
@@ -40,15 +41,15 @@ export default function useCsmsWidget(filters = {}) {
         } finally {
             setLoading(false);
         }
-    }, [buildParams]);
+    }, []);
 
     useEffect(() => {
-        fetchStats(filters);
-    }, [filters?.years, fetchStats]);
+        fetchStats(yearsKey);
+    }, [yearsKey, fetchStats]);
 
     const refetch = useCallback(() => {
-        fetchStats(filters);
-    }, [fetchStats, filters]);
+        fetchStats(yearsKey);
+    }, [fetchStats, yearsKey]);
 
     return { stats, loading, error, refetch };
 }
