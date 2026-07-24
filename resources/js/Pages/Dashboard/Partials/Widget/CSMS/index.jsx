@@ -8,7 +8,7 @@ import {
     Tooltip,
 } from 'chart.js';
 import { Bar, Doughnut } from 'react-chartjs-2';
-import { HardHat, RefreshCw } from 'lucide-react';
+import { HardHat, RefreshCw, TrendingDown, TrendingUp } from 'lucide-react';
 
 import React from 'react';
 import useCsmsWidget from './Hooks/useCsmsWidget';
@@ -57,35 +57,110 @@ function ProgressBar({ pct, color = P }) {
     );
 }
 
-// ── 1. Summary ────────────────────────────────────────────────────────────────
+// ── 1. Summary — YTD card (pola FL) ──────────────────────────────────────────
 function Summary({ summary, loading }) {
     const total    = (summary?.totalBidding ?? 0) + (summary?.totalPB ?? 0) + (summary?.totalRenewal ?? 0);
     const approved = summary?.totalApproved ?? 0;
     const pct      = total > 0 ? Math.round(approved / total * 100) : 0;
+    const isUp     = summary?.ytdMark === 'up';
+
+    if (loading) {
+        return (
+            <div style={{ background: P, borderRadius: '12px', padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: '10px', animation: 'csms-pulse 1.5s infinite', height: '100%', boxSizing: 'border-box' }}>
+                <Skel w="50%" h="11px" />
+                <Skel w="35%" h="36px" />
+                <Skel h="8px" r="999px" />
+                <Skel w="45%" h="11px" />
+            </div>
+        );
+    }
 
     return (
-        <div style={{ backgroundColor: '#fff', border: `1px solid ${BORDER}`, borderRadius: '12px', padding: '16px', height: '100%', boxSizing: 'border-box' }}>
-            <p style={{ fontSize: '10px', fontWeight: 700, color: MUTED, textTransform: 'uppercase', letterSpacing: '.5px', margin: '0 0 12px' }}>YTD</p>
-            {loading ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                    <Skel h="36px" w="60%" /><Skel h="6px" r="999px" /><Skel h="10px" w="40%" />
-                </div>
-            ) : (
-                <>
-                    <div style={{ fontSize: '48px', fontWeight: 800, color: P, lineHeight: 1, marginBottom: '8px' }}>
-                        {total.toLocaleString('id-ID')}
-                    </div>
-                    <ProgressBar pct={pct} color={G} />
-                    <p style={{ fontSize: '11px', color: MUTED, margin: '6px 0 0' }}>{pct}% approved</p>
-                </>
-            )}
+        <div style={{
+            background: 'linear-gradient(135deg, #153B73, #1E4E96)',
+            borderRadius: '12px',
+            padding: '16px 20px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '8px',
+            color: '#fff',
+            height: '100%',
+            boxSizing: 'border-box',
+        }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <HardHat size={13} style={{ color: 'rgba(255,255,255,0.7)' }} />
+                <span style={{ fontSize: '11px', fontWeight: 700, color: 'rgba(255,255,255,0.8)', textTransform: 'uppercase', letterSpacing: '.5px' }}>
+                    YTD — Total Dokumen
+                </span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: '10px' }}>
+                <span style={{ fontSize: '36px', fontWeight: 800, lineHeight: 1 }}>
+                    {total.toLocaleString('id-ID')}
+                </span>
+                <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.7)' }}>
+                    / {approved.toLocaleString('id-ID')} approved
+                </span>
+            </div>
+            <div style={{ height: '8px', backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: '999px', overflow: 'hidden' }}>
+                <div style={{ width: `${pct}%`, height: '100%', backgroundColor: O, borderRadius: '999px', transition: 'width .6s ease' }} />
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.7)' }}>{pct}% dari total</span>
+                {summary?.ytdMark && (
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', fontSize: '10px', fontWeight: 700, color: isUp ? '#86efac' : '#fca5a5' }}>
+                        {isUp ? <TrendingUp size={11} /> : <TrendingDown size={11} />}
+                        {isUp ? 'Naik' : 'Turun'} vs LY
+                    </span>
+                )}
+            </div>
         </div>
     );
 }
 
-// ── 2. Detail ─────────────────────────────────────────────────────────────────
-// Layout horizontal 3 kolom seperti aimsv2: Bidding | Extension | Qualification
+// ── 2. Detail — KPI cards pola FL ────────────────────────────────────────────
 const DETAIL_COLORS = [P, O, G];
+
+function DetailCard({ row, color, loading }) {
+    const isUp  = row?.this_year_mark === 'up';
+    const pct   = row?.this_year_percent ?? 0;
+
+    if (loading) {
+        return (
+            <div style={{ backgroundColor: BG, border: `1px solid ${BORDER}`, borderRadius: '12px', padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: '10px', animation: 'csms-pulse 1.5s infinite' }}>
+                <Skel w="60%" h="11px" />
+                <Skel w="45%" h="26px" />
+                <Skel h="8px" r="999px" />
+                <Skel w="50%" h="11px" />
+            </div>
+        );
+    }
+
+    return (
+        <div style={{ backgroundColor: BG, border: `1px solid ${BORDER}`, borderRadius: '12px', padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <span style={{ fontSize: '11px', fontWeight: 600, color: MUTED, textTransform: 'uppercase', letterSpacing: '.5px' }}>{row.name}</span>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', flexWrap: 'wrap' }}>
+                <span style={{ fontSize: '26px', fontWeight: 800, color, lineHeight: 1 }}>
+                    {(row.this_year ?? 0).toLocaleString('id-ID')}
+                </span>
+                <span style={{ fontSize: '12px', color: '#94a3b8' }}>
+                    / {(row.last_year ?? 0).toLocaleString('id-ID')} LY
+                </span>
+            </div>
+            <div style={{ height: '8px', backgroundColor: '#e2e8f0', borderRadius: '999px', overflow: 'hidden' }}>
+                <div style={{ width: `${Math.min(100, pct)}%`, height: '100%', backgroundColor: color, borderRadius: '999px', transition: 'width .6s ease' }} />
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '11px', color: '#94a3b8' }}>{pct}% dari YTD</span>
+                {row.this_year_mark && (
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', fontSize: '10px', fontWeight: 700, color: isUp ? '#065f46' : '#991b1b' }}>
+                        {isUp ? <TrendingUp size={11} /> : <TrendingDown size={11} />}
+                        {isUp ? 'Naik' : 'Turun'} vs LY
+                    </span>
+                )}
+            </div>
+        </div>
+    );
+}
 
 function Detail({ detail = [], summary, loading }) {
     const ytd = summary?.ytd ?? 0;
@@ -102,39 +177,10 @@ function Detail({ detail = [], summary, loading }) {
                     }
                 </div>
             </div>
-            {/* 3 kolom horizontal seperti aimsv2 */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
                 {loading
-                    ? [1,2,3].map(i => (
-                        <div key={i} style={{ backgroundColor: BG, borderRadius: '10px', padding: '14px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                            <Skel h="10px" w="60%" />
-                            <Skel h="28px" w="50%" />
-                            <Skel h="8px" r="999px" />
-                            <Skel h="10px" w="40%" />
-                        </div>
-                    ))
-                    : detail.map((row, i) => {
-                        const isUp  = row.this_year_mark === 'up';
-                        const color = DETAIL_COLORS[i % DETAIL_COLORS.length];
-                        return (
-                            <div key={i} style={{ backgroundColor: BG, borderRadius: '10px', padding: '14px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                                <span style={{ fontSize: '10px', fontWeight: 700, color: MUTED, textTransform: 'uppercase', letterSpacing: '.4px' }}>{row.name}</span>
-                                <span style={{ fontSize: '28px', fontWeight: 800, color, lineHeight: 1 }}>{(row.this_year ?? 0).toLocaleString('id-ID')}</span>
-                                <ProgressBar pct={row.this_year_percent ?? 0} color={color} />
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                    <span style={{ fontSize: '10px', color: MUTED }}>{row.this_year_percent ?? 0}% dari YTD</span>
-                                    <span style={{
-                                        fontSize: '10px', fontWeight: 700,
-                                        padding: '1px 6px', borderRadius: '999px',
-                                        backgroundColor: isUp ? '#ecfdf5' : '#fef2f2',
-                                        color: isUp ? '#065f46' : '#991b1b',
-                                    }}>
-                                        {isUp ? '▲' : '▼'} VS LY
-                                    </span>
-                                </div>
-                            </div>
-                        );
-                    })
+                    ? [1,2,3].map(i => <DetailCard key={i} row={{}} color={DETAIL_COLORS[i]} loading={true} />)
+                    : detail.map((row, i) => <DetailCard key={i} row={row} color={DETAIL_COLORS[i % DETAIL_COLORS.length]} loading={false} />)
                 }
             </div>
         </div>

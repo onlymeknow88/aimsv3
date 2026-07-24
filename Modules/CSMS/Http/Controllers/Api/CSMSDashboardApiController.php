@@ -5,35 +5,45 @@ namespace Modules\CSMS\Http\Controllers\Api;
 use App\Helpers\ResponseFormatter;
 use Illuminate\Http\Request;
 use Modules\CSMS\Entities\Bidding;
+use Modules\CSMS\Entities\CsmsChecklist;
 
 class CSMSDashboardApiController extends CSMSBaseApiController
 {
     public function stats(Request $request)
     {
-        $year      = $request->query('year', date('Y'));
-        $year      = preg_replace('/[^0-9,]/', '', (string) $year);
-        if (empty($year)) $year = (string) date('Y');
+        // ── Filter ────────────────────────────────────────────────────────────
+        $thisYear = (int) date('Y');
+        $lastYear = $thisYear - 1;
+
+        $year        = $request->query('year', (string) $thisYear);
+        $year        = preg_replace('/[^0-9,]/', '', (string) $year);
+        if (empty($year)) $year = (string) $thisYear;
 
         $month       = $request->query('month', null);
         $arrayYear   = array_map('intval', explode(',', $year));
         $safeYears   = implode(',', $arrayYear);
         $monthFilter = $month ? explode(',', $month) : [];
         $monthNames  = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-        $thisYear    = max($arrayYear);
-        $lastYear    = $thisYear - 1;
 
-        // ── YTD summary (migrasi: $yearly aimsv2) ─────────────────────────────
-        $totalBidding  = Bidding::whereRaw("YEAR(created_at) IN ({$safeYears})")->where('criteria', self::CRITERIA_BIDDING)->count();
-        $totalPB       = Bidding::whereRaw("YEAR(created_at) IN ({$safeYears})")->where('criteria', self::CRITERIA_POST_BIDDING)->count();
-        $totalRenewal  = Bidding::whereRaw("YEAR(created_at) IN ({$safeYears})")->where('criteria', self::CRITERIA_RENEWAL)->count();
+        // ── YTD summary — dari CsmsChecklist (sama persis aims lama) ─────────
+        // YTD = total checklist rows untuk tahun tsb
+        // complete = checklist yang point-nya POST KUALIFIKASI
+        $ytd      = CsmsChecklist::whereRaw("YEAR(created_at) IN ({$safeYears})")->count();
+        $complete = CsmsChecklist::whereRaw("YEAR(created_at) IN ({$safeYears})")
+            ->where('point', 'POST KUALIFIKASI')
+            ->count();
+
+        // Untuk summary card juga tampilkan data Bidding (untuk context)
         $totalApproved = Bidding::whereRaw("YEAR(created_at) IN ({$safeYears})")->where('status', self::STATUS_APPROVED)->count();
         $totalOnReview = Bidding::whereRaw("YEAR(created_at) IN ({$safeYears})")->whereIn('status', [self::STATUS_ON_REVIEW_OHS, self::STATUS_ON_REVIEW_DHOHS, self::STATUS_ON_REVIEW_KTT])->count();
         $totalDraft    = Bidding::whereRaw("YEAR(created_at) IN ({$safeYears})")->where('status', self::STATUS_DRAFT)->count();
-        $ytd           = $totalBidding + $totalPB + $totalRenewal;
+        $totalBidding  = Bidding::whereRaw("YEAR(created_at) IN ({$safeYears})")->where('criteria', self::CRITERIA_BIDDING)->count();
+        $totalPB       = Bidding::whereRaw("YEAR(created_at) IN ({$safeYears})")->where('criteria', self::CRITERIA_POST_BIDDING)->count();
+        $totalRenewal  = Bidding::whereRaw("YEAR(created_at) IN ({$safeYears})")->where('criteria', self::CRITERIA_RENEWAL)->count();
 
         $summary = [
             'ytd'           => $ytd,
-            'percent'       => $ytd > 0 ? round($totalApproved / $ytd * 100) : 0,
+            'percent'       => ($complete && $ytd) ? round($complete / $ytd * 100) : 0,
             'totalBidding'  => $totalBidding,
             'totalPB'       => $totalPB,
             'totalRenewal'  => $totalRenewal,
@@ -42,73 +52,74 @@ class CSMSDashboardApiController extends CSMSBaseApiController
             'totalDraft'    => $totalDraft,
         ];
 
-        // ── Detail: 3 kategori horizontal (migrasi: $detail aimsv2) ──────────
-        // aimsv2 menampilkan this_year + this_year_percent + mark (up/down)
-        $lyBidding = Bidding::whereYear('created_at', $lastYear)->where('criteria', self::CRITERIA_BIDDING)->count();
-        $lyPB      = Bidding::whereYear('created_at', $lastYear)->where('criteria', self::CRITERIA_POST_BIDDING)->count();
-        $lyRenewal = Bidding::whereYear('created_at', $lastYear)->where('criteria', self::CRITERIA_RENEWAL)->count();
-
-        $detail = [
-            [
-                'name'              => 'Bidding',
-                'this_year'         => $totalBidding,
-                'this_year_percent' => $ytd > 0 ? round($totalBidding / $ytd * 100) : 0,
-                'this_year_mark'    => $totalBidding >= $lyBidding ? 'up' : 'down',
-            ],
-            [
-                'name'              => 'Extension',
-                'this_year'         => $totalPB,
-                'this_year_percent' => $ytd > 0 ? round($totalPB / $ytd * 100) : 0,
-                'this_year_mark'    => $totalPB >= $lyPB ? 'up' : 'down',
-            ],
-            [
-                'name'              => 'Qualification',
-                'this_year'         => $totalRenewal,
-                'this_year_percent' => $ytd > 0 ? round($totalRenewal / $ytd * 100) : 0,
-                'this_year_mark'    => $totalRenewal >= $lyRenewal ? 'up' : 'down',
-            ],
+        // ── Detail: 3 kategori dari CsmsChecklist.point (sama persis aims lama)
+        $manualCategory = [
+            ['name' => 'Bidding',       'slug' => 'BIDDING PROCESS'],
+            ['name' => 'Extension',     'slug' => 'PERPANJANGAN SERTIFIKASI CSMS'],
+            ['name' => 'Qualification', 'slug' => 'POST KUALIFIKASI'],
         ];
 
-        // ── Monthly: total per bulan (migrasi: $monthly aimsv2) ──────────────
-        $monthlyRows = Bidding::whereRaw("YEAR(created_at) IN ({$safeYears})")
-            ->selectRaw("YEAR(created_at) AS yr, MONTH(created_at) AS mo")
-            ->get();
+        $detail = [];
+        foreach ($manualCategory as $c) {
+            $dataThisYear = CsmsChecklist::whereRaw("YEAR(created_at) IN ({$thisYear})")
+                ->where('point', $c['slug'])->count();
+            $dataLastYear = CsmsChecklist::whereYear('created_at', $lastYear)
+                ->where('point', $c['slug'])->count();
 
-        $mMap = [];
-        foreach ($monthlyRows as $row) {
-            $mMap[$row->yr][$row->mo] = ($mMap[$row->yr][$row->mo] ?? 0) + 1;
+            $detail[] = [
+                'name'              => $c['name'],
+                'this_year'         => $dataThisYear,
+                'last_year'         => $dataLastYear,
+                'this_year_percent' => ($dataThisYear && $ytd) ? round($dataThisYear / $ytd * 100) : 0,
+                'this_year_mark'    => $dataThisYear > $dataLastYear ? 'up' : 'down',
+            ];
         }
 
+        // ── Monthly: dari CsmsChecklist (sama persis aims lama) ───────────────
         $monthly = [];
         foreach ($arrayYear as $yr) {
             for ($i = 1; $i <= 12; $i++) {
                 $mn = $monthNames[$i - 1];
                 if (!empty($monthFilter) && !in_array($mn, $monthFilter)) continue;
-                $monthly[] = ['month' => $mn, 'count' => $mMap[$yr][$i] ?? 0];
+                $count = CsmsChecklist::whereYear('created_at', $yr)
+                    ->whereMonth('created_at', $i)
+                    ->count();
+                $monthly[] = ['month' => $mn, 'count' => $count];
             }
         }
 
-        // ── Category: % komposisi (migrasi: $categories aimsv2) ──────────────
-        $grandTotal = $ytd > 0 ? $ytd : 1;
-        $category   = [
-            ['name' => 'Bidding',      'count' => $totalBidding, 'value' => round($totalBidding / $grandTotal * 100)],
-            ['name' => 'Post Bidding', 'count' => $totalPB,      'value' => round($totalPB      / $grandTotal * 100)],
-            ['name' => 'Renewal',      'count' => $totalRenewal, 'value' => round($totalRenewal / $grandTotal * 100)],
-        ];
+        // ── Category: group by point dari CsmsChecklist (sama persis aims lama)
+        $categoryGroups = CsmsChecklist::groupBy('point')
+            ->get([\DB::raw('point as name')]);
 
-        // ── Progress: 4 donut (migrasi: $progress aimsv2) ────────────────────
-        // aimsv2: pra_kualifikasi & certification pakai nilai valid/expired yang sama
-        $valid   = Bidding::whereRaw("YEAR(created_at) IN ({$safeYears})")->whereIn('criteria', [self::CRITERIA_POST_BIDDING, self::CRITERIA_RENEWAL])->where('status', self::STATUS_APPROVED)->count();
-        $expired = Bidding::whereRaw("YEAR(created_at) IN ({$safeYears})")->whereIn('criteria', [self::CRITERIA_POST_BIDDING, self::CRITERIA_RENEWAL, self::CRITERIA_INACTIVE])->where('status', self::STATUS_INACTIVE)->count();
+        $category = [];
+        foreach ($categoryGroups as $cat) {
+            $countCat = CsmsChecklist::whereRaw("YEAR(created_at) IN ({$safeYears})")
+                ->where('point', $cat->name)
+                ->count();
+            $category[] = [
+                'name'  => ucfirst(strtolower($cat->name)),
+                'count' => $countCat,
+                'value' => ($countCat && $ytd) ? round($countCat / $ytd * 100) : 0,
+            ];
+        }
+
+        // ── Progress: 4 donut dari Bidding valid/expired (sama persis aims lama)
+        $valid   = Bidding::whereRaw("YEAR(created_at) IN ({$safeYears})")
+            ->whereIn('criteria', [self::CRITERIA_POST_BIDDING, self::CRITERIA_RENEWAL])
+            ->where('status', self::STATUS_APPROVED)->count();
+        $expired = Bidding::whereRaw("YEAR(created_at) IN ({$safeYears})")
+            ->whereIn('criteria', [self::CRITERIA_POST_BIDDING, self::CRITERIA_RENEWAL])
+            ->where('status', self::STATUS_INACTIVE)->count();
         $all     = $valid + $expired;
         $vPct    = $all > 0 ? round($valid   / $all * 100) : 0;
         $ePct    = $all > 0 ? round($expired / $all * 100) : 0;
 
         $progress = [
-            ['name' => 'Pra Qualification Valid',    'actual' => $vPct, 'target' => max(0, 100 - $vPct), 'count' => $valid],
-            ['name' => 'Pra Qualification Expired',  'actual' => $ePct, 'target' => max(0, 100 - $ePct), 'count' => $expired],
-            ['name' => 'Certification Extention Valid',   'actual' => $vPct, 'target' => max(0, 100 - $vPct), 'count' => $valid],
-            ['name' => 'Certification Extention Expired', 'actual' => $ePct, 'target' => max(0, 100 - $ePct), 'count' => $expired],
+            ['name' => 'Pra Qualification Valid',         'actual' => $vPct, 'target' => max(0, 100 - $vPct), 'count' => $valid],
+            ['name' => 'Pra Qualification Expired',       'actual' => $ePct, 'target' => max(0, 100 - $ePct), 'count' => $expired],
+            ['name' => 'Certification Extension Valid',   'actual' => $vPct, 'target' => max(0, 100 - $vPct), 'count' => $valid],
+            ['name' => 'Certification Extension Expired', 'actual' => $ePct, 'target' => max(0, 100 - $ePct), 'count' => $expired],
         ];
 
         $availableYears = Bidding::selectRaw('DISTINCT YEAR(created_at) as yr')
@@ -126,3 +137,4 @@ class CSMSDashboardApiController extends CSMSBaseApiController
         ], 'Dashboard stats retrieved successfully');
     }
 }
+

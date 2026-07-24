@@ -213,6 +213,7 @@ class CSMSBiddingApiController extends CSMSBaseApiController
                     'question_id'    => $mc->id,
                     'value'          => $userInput ? $userInput['value']   : null,
                     'comment'        => $userInput ? $userInput['comment'] : null,
+                    'point'          => $mc->point ?? null,
                     'ordinal_number' => $mc->ordinal_number,
                 ]);
 
