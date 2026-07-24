@@ -1,3 +1,5 @@
+import { TrendingDown, TrendingUp } from 'lucide-react';
+
 import React from 'react';
 
 const P      = '#153B73';
@@ -37,7 +39,7 @@ export default function CsmsDetail({ detail = [], summary, loading }) {
                 </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
                 {loading
                     ? [1, 2, 3].map(i => (
                         <div key={i} style={{ backgroundColor: BG, borderRadius: '10px', padding: '14px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -50,24 +52,28 @@ export default function CsmsDetail({ detail = [], summary, loading }) {
                     : detail.map((row, i) => {
                         const isUp  = row.this_year_mark === 'up';
                         const color = COLORS[i % COLORS.length];
+                        const pct   = row.this_year_percent ?? 0;
                         return (
-                            <div key={i} style={{ backgroundColor: BG, borderRadius: '10px', padding: '14px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                                <span style={{ fontSize: '10px', fontWeight: 700, color: MUTED, textTransform: 'uppercase', letterSpacing: '.4px' }}>
+                            <div key={i} style={{ backgroundColor: BG, border: `1px solid ${BORDER}`, borderRadius: '12px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '10px', minWidth: 0 }}>
+                                <span style={{ fontSize: '11px', fontWeight: 700, color: MUTED, textTransform: 'uppercase', letterSpacing: '.5px' }}>
                                     {row.name}
                                 </span>
-                                <span style={{ fontSize: '28px', fontWeight: 800, color, lineHeight: 1 }}>
-                                    {(row.this_year ?? 0).toLocaleString('id-ID')}
-                                </span>
-                                <ProgressBar pct={row.this_year_percent ?? 0} color={color} />
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                    <span style={{ fontSize: '10px', color: MUTED }}>{row.this_year_percent ?? 0}% dari YTD</span>
-                                    <span style={{
-                                        fontSize: '10px', fontWeight: 700,
-                                        padding: '1px 6px', borderRadius: '999px',
-                                        backgroundColor: isUp ? '#ecfdf5' : '#fef2f2',
-                                        color: isUp ? '#065f46' : '#991b1b',
-                                    }}>
-                                        {isUp ? '▲' : '▼'} VS LY
+                                <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
+                                    <span style={{ fontSize: '28px', fontWeight: 800, color, lineHeight: 1 }}>
+                                        {(row.this_year ?? 0).toLocaleString('id-ID')}
+                                    </span>
+                                    <span style={{ fontSize: '12px', color: '#94a3b8', whiteSpace: 'nowrap' }}>
+                                        / {(row.last_year ?? 0).toLocaleString('id-ID')} LY
+                                    </span>
+                                </div>
+                                <div style={{ height: '8px', backgroundColor: '#e2e8f0', borderRadius: '999px', overflow: 'hidden' }}>
+                                    <div style={{ width: `${Math.min(100, pct)}%`, height: '100%', backgroundColor: color, borderRadius: '999px', transition: 'width .6s ease' }} />
+                                </div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
+                                    <span style={{ fontSize: '11px', color: '#94a3b8', whiteSpace: 'nowrap' }}>{pct}% dari YTD</span>
+                                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', fontSize: '10px', fontWeight: 700, color: isUp ? '#065f46' : '#991b1b', flexShrink: 0 }}>
+                                        {isUp ? <TrendingUp size={11} /> : <TrendingDown size={11} />}
+                                        {isUp ? 'Naik' : 'Turun'} vs LY
                                     </span>
                                 </div>
                             </div>
