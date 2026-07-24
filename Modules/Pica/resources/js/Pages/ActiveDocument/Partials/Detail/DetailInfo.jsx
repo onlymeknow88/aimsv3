@@ -1,61 +1,90 @@
 import React from 'react';
+import { AlertOctagon, CheckSquare, FileText, Info } from 'lucide-react';
+
+const cardStyle = {
+    backgroundColor: 'var(--card-bg)',
+    border: '1px solid var(--border-color)',
+    borderRadius: '12px',
+    padding: '24px',
+    boxShadow: 'var(--shadow-sm)',
+};
 
 const S = {
-    sectionTitle: { fontSize: '11px', fontWeight: 800, color: 'var(--primary)', margin: '0 0 10px 0', textTransform: 'uppercase' },
-    fieldLabel: { fontSize: '10px', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: '4px' },
-    fieldValue: { fontSize: '13px', color: 'var(--text-primary)', lineHeight: '1.6' },
-    divider: { borderBottom: '1px solid var(--border-color)', marginBottom: '16px', paddingBottom: '16px' },
+    sectionTitle: { fontSize: '13px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' },
+    fieldValue: { fontSize: '13px', color: 'var(--text-primary)', lineHeight: '1.6', margin: 0, whiteSpace: 'pre-wrap' },
 };
+
+function SectionCard({ icon: Icon, iconColor, title, children }) {
+    return (
+        <div style={cardStyle}>
+            <h4 style={S.sectionTitle}>
+                <Icon size={15} style={{ color: iconColor || 'var(--primary)' }} />
+                {title}
+            </h4>
+            {children}
+        </div>
+    );
+}
 
 export default function DetailInfo({ doc, onPreviewFile }) {
     if (!doc) return null;
     return (
-        <div style={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '24px', height: 'fit-content' }}>
-            <div style={S.divider}>
-                <p style={S.sectionTitle}>Non-Compliance</p>
-                <span style={S.fieldLabel}>Deskripsi</span>
-                <p style={{ ...S.fieldValue, marginTop: 0 }}>{doc.non_compliance || '-'}</p>
-            </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            {/* Non-Compliance & Root Cause */}
+            <SectionCard icon={AlertOctagon} iconColor="#ef4444" title="Non-Compliance">
+                <p style={S.fieldValue}>{doc.non_compliance || '-'}</p>
+                {doc.non_compliance_root_cause && (
+                    <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid var(--border-color)' }}>
+                        <h5 style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', margin: '0 0 6px 0' }}>
+                            Root Cause
+                        </h5>
+                        <p style={S.fieldValue}>{doc.non_compliance_root_cause}</p>
+                    </div>
+                )}
+            </SectionCard>
 
-            {doc.non_compliance_root_cause && (
-                <div style={S.divider}>
-                    <p style={S.sectionTitle}>Root Cause</p>
-                    <p style={{ ...S.fieldValue, marginTop: 0 }}>{doc.non_compliance_root_cause}</p>
-                </div>
-            )}
+            {/* Corrective Action */}
+            <SectionCard icon={CheckSquare} iconColor="#10b981" title="Corrective Action">
+                <p style={S.fieldValue}>{doc.corrective_action || '-'}</p>
+            </SectionCard>
 
-            <div style={S.divider}>
-                <p style={S.sectionTitle}>Corrective Action</p>
-                <p style={{ ...S.fieldValue, marginTop: 0 }}>{doc.corrective_action || '-'}</p>
-            </div>
-
+            {/* Remarks */}
             {doc.remarks && (
-                <div style={S.divider}>
-                    <p style={S.sectionTitle}>Remarks</p>
-                    <p style={{ ...S.fieldValue, marginTop: 0 }}>{doc.remarks}</p>
-                </div>
+                <SectionCard icon={Info} iconColor="var(--primary)" title="Remarks">
+                    <p style={S.fieldValue}>{doc.remarks}</p>
+                </SectionCard>
             )}
 
             {/* File Lampiran */}
             {doc.pica_files?.length > 0 && (
-                <div>
-                    <p style={S.sectionTitle}>File Lampiran</p>
+                <SectionCard icon={FileText} iconColor="var(--primary)" title="File Lampiran">
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                         {doc.pica_files.map(f => (
                             <div key={f.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', backgroundColor: '#f8fafc', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
-                                <span style={{ fontSize: '12px', color: 'var(--text-primary)' }}>
+                                <span
+                                    onClick={() => onPreviewFile && onPreviewFile(f)}
+                                    style={{ fontSize: '12px', color: 'var(--text-primary)', cursor: 'pointer', fontWeight: 600 }}
+                                    onMouseEnter={e => e.currentTarget.style.color = 'var(--primary)'}
+                                    onMouseLeave={e => e.currentTarget.style.color = 'var(--text-primary)'}
+                                >
                                     {f.file ? f.file.split('/').pop() : f.id}
                                 </span>
-                                <button
-                                    onClick={() => onPreviewFile && onPreviewFile(f)}
-                                    style={{ fontSize: '11px', fontWeight: 600, color: 'var(--primary)', background: 'none', border: 'none', cursor: 'pointer', padding: '2px 8px' }}
-                                >
-                                    Preview
-                                </button>
+                                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                                    <a
+                                        href={`/api/pica/files/${f.id}/download`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        style={{ fontSize: '11px', fontWeight: 600, color: '#64748b', textDecoration: 'none', padding: '2px 8px' }}
+                                        onMouseEnter={e => e.currentTarget.style.color = 'var(--primary)'}
+                                        onMouseLeave={e => e.currentTarget.style.color = '#64748b'}
+                                    >
+                                        Download
+                                    </a>
+                                </div>
                             </div>
                         ))}
                     </div>
-                </div>
+                </SectionCard>
             )}
         </div>
     );

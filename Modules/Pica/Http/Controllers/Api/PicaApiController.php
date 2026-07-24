@@ -25,7 +25,10 @@ class PicaApiController extends PicaBaseApiController
                       ->orWhereHas('company', fn($q) => $q->where('company_name', 'like', '%' . $request->search . '%'));
                 });
             })
-            ->when($request->status, fn($q) => $q->where('status', $request->status))
+            ->when($request->status, function ($q) use ($request) {
+                $statuses = explode(',', $request->status);
+                $q->whereIn('status', $statuses);
+            })
             ->when($request->source, fn($q) => $q->where('source', $request->source))
             ->when($request->published, fn($q) => $q->where('published', $request->published))
             ->when($request->requested, fn($q) => $q->where('requested', $request->requested))
@@ -154,6 +157,12 @@ class PicaApiController extends PicaBaseApiController
                 'remarks'                   => $request->remarks,
             ]);
 
+            // Sync/Delete existing files that were removed
+            $existingFileIds = $request->input('existing_files', []);
+            PicaFile::where('pica_id', $doc->id)
+                ->whereNotIn('id', $existingFileIds)
+                ->delete();
+
             // Handle new file uploads
             if ($request->hasFile('files')) {
                 foreach ($request->file('files') as $file) {
@@ -213,6 +222,7 @@ class PicaApiController extends PicaBaseApiController
 
         DB::beginTransaction();
         try {
+            $activityDesc = '';
             switch ($action) {
                 case 'submit':
                     $doc->update([
@@ -220,12 +230,7 @@ class PicaApiController extends PicaBaseApiController
                         'requested' => self::REQUESTED_PJA,
                         'published' => self::PUBLISHED_PUBLISH,
                     ]);
-                    // Auto-create New Request activity
-                    PicaActivity::create([
-                        'pica_id'     => $doc->id,
-                        'description' => self::STATUS_NEW_REQUEST,
-                        'user_id'     => (string) auth()->id(),
-                    ]);
+                    $activityDesc = self::STATUS_NEW_REQUEST;
                     break;
 
                 case 'approve_pja':
@@ -233,6 +238,7 @@ class PicaApiController extends PicaBaseApiController
                         'status'    => self::STATUS_ON_REVIEW_CRS,
                         'requested' => self::REQUESTED_CRS,
                     ]);
+                    $activityDesc = 'Approved by PJA';
                     break;
 
                 case 'reject_pja':
@@ -240,6 +246,7 @@ class PicaApiController extends PicaBaseApiController
                         'status'    => self::STATUS_OPEN,
                         'requested' => self::REQUESTED_RETURN,
                     ]);
+                    $activityDesc = 'Returned by PJA';
                     break;
 
                 case 'approve_crs':
@@ -247,6 +254,7 @@ class PicaApiController extends PicaBaseApiController
                         'status'    => self::STATUS_OPEN,
                         'requested' => self::REQUESTED_APPROVED,
                     ]);
+                    $activityDesc = 'Approved by CRS';
                     break;
 
                 case 'reject_crs':
@@ -254,6 +262,7 @@ class PicaApiController extends PicaBaseApiController
                         'status'    => self::STATUS_OPEN,
                         'requested' => self::REQUESTED_RETURN,
                     ]);
+                    $activityDesc = 'Returned by CRS';
                     break;
 
                 case 'close':
@@ -261,6 +270,7 @@ class PicaApiController extends PicaBaseApiController
                         'status'          => self::STATUS_CLOSED,
                         'settlement_date' => now()->toDateString(),
                     ]);
+                    $activityDesc = 'Closed';
                     // Update source document status if applicable
                     $this->closeSourceDocument($doc);
                     break;
@@ -268,6 +278,26 @@ class PicaApiController extends PicaBaseApiController
                 default:
                     DB::rollBack();
                     return $this->error("Action '{$action}' tidak dikenal.", 422);
+            }
+
+            // Create activity log for the action
+            $comment = $request->input('comment');
+            $fullDesc = $activityDesc;
+            if ($comment) {
+                $fullDesc .= "\nCatatan: " . $comment;
+            }
+
+            $activity = PicaActivity::create([
+                'pica_id'     => $doc->id,
+                'description' => $fullDesc,
+                'user_id'     => (string) auth()->id(),
+            ]);
+
+            // Handle optional files uploaded during approval
+            if ($request->hasFile('files')) {
+                foreach ($request->file('files') as $file) {
+                    $this->storeActivityFile($activity->id, $file);
+                }
             }
 
             DB::commit();
@@ -333,8 +363,7 @@ class PicaApiController extends PicaBaseApiController
     public function previewFile(string $fileId)
     {
         $file = PicaFile::findOrFail($fileId);
-        $sas  = $this->resolveSasUrl($file->file);
-        return $this->success(['url' => $sas, 'name' => $file->name]);
+        return $this->streamFileInline($file->file);
     }
 
     public function downloadFile(string $fileId)
@@ -347,8 +376,7 @@ class PicaApiController extends PicaBaseApiController
     public function previewActivityFile(string $fileId)
     {
         $file = PicaActivityFile::findOrFail($fileId);
-        $sas  = $this->resolveSasUrl($file->file);
-        return $this->success(['url' => $sas, 'name' => $file->name]);
+        return $this->streamFileInline($file->file);
     }
 
     public function downloadActivityFile(string $fileId)
@@ -358,18 +386,49 @@ class PicaApiController extends PicaBaseApiController
         return redirect($sas);
     }
 
+    private function streamFileInline(string $filePath)
+    {
+        $fileName = basename($filePath);
+        $ext      = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
+        $mimeType = match ($ext) {
+            'pdf'         => 'application/pdf',
+            'png'         => 'image/png',
+            'jpg', 'jpeg' => 'image/jpeg',
+            'gif'         => 'image/gif',
+            default       => 'application/octet-stream',
+        };
+
+        $sas = GetBlobSasUri('aims-cntr', $filePath, 60);
+        $url = is_array($sas)
+            ? ($sas['blobUriSas'] ?? $sas['sasUri'] ?? $sas['url'] ?? null)
+            : $sas;
+
+        if ($url) {
+            $contents = @file_get_contents($url);
+            if ($contents !== false) {
+                return response($contents, 200, [
+                    'Content-Type'        => $mimeType,
+                    'Content-Disposition' => 'inline; filename="' . $fileName . '"'
+                ]);
+            }
+        }
+
+        abort(404, 'Gagal memuat file.');
+    }
+
     // =========================================================================
     // MASTER DATA
     // =========================================================================
     public function masterData()
     {
-        $companies = \App\Models\Company::select('id', 'company_name')->orderBy('company_name')->get();
+        $ccows     = \App\Models\Company::select('id', 'company_name')->where('type', 'Internal')->orderBy('company_name')->get();
+        $companies = \App\Models\Company::select('id', 'company_name')->where('type', '!=', 'Internal')->orWhereNull('type')->orderBy('company_name')->get();
         $sections  = \App\Models\Section::select('id', 'name')->orderBy('name')->get();
         $locations = \App\Models\AreaLocation::select('id', 'name')->orderBy('name')->get();
         $users     = \App\Models\User::select('id', 'name')->orderBy('name')->get();
-        $managers  = \App\Models\AreaManager::with('user:id,name')->get();
+        $managers  = \App\Models\AreaManager::with(['user:id,name', 'areaLocations:id,name'])->get();
 
-        return $this->success(compact('companies', 'sections', 'locations', 'users', 'managers'));
+        return $this->success(compact('ccows', 'companies', 'sections', 'locations', 'users', 'managers'));
     }
 
     // =========================================================================
@@ -413,10 +472,10 @@ class PicaApiController extends PicaBaseApiController
 
         return PicaFile::create([
             'pica_id'       => $docId,
-            'file'          => $uploadResult['blobName']   ?? $fileName,
+            'file'          => $uploadResult['fileBlobPathName'] ?? $fileName,
             'type'          => $type,
             'size'          => (string) $file->getSize(),
-            'blob_url'      => $uploadResult['blobUriSas'] ?? null,
+            'blob_url'      => $uploadResult['fileBlobUrl']      ?? null,
             'blob_response' => json_encode($uploadResult),
         ]);
     }
@@ -428,10 +487,10 @@ class PicaApiController extends PicaBaseApiController
 
         return PicaActivityFile::create([
             'pica_activity_id' => $activityId,
-            'file'             => $uploadResult['blobName']   ?? $fileName,
+            'file'             => $uploadResult['fileBlobPathName'] ?? $fileName,
             'type_file'        => $file->getClientOriginalExtension(),
             'size'             => (string) $file->getSize(),
-            'blob_url'         => $uploadResult['blobUriSas'] ?? null,
+            'blob_url'         => $uploadResult['fileBlobUrl']      ?? null,
             'blob_response'    => json_encode($uploadResult),
         ]);
     }

@@ -1,10 +1,11 @@
 import { Menu, X } from 'lucide-react';
+
 import React from 'react';
 
 export default function Header({ sidebarOpen, setSidebarOpen }) {
     return (
         <header style={{
-            height: '60px',
+             height: '60px',
             backgroundColor: 'var(--card-bg)',
             borderBottom: '1px solid var(--border-color)',
             display: 'flex',

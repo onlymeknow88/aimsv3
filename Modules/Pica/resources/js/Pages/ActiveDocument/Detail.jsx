@@ -6,6 +6,8 @@ import StatusBadge from './Partials/StatusBadge';
 import DetailSidebar from './Partials/Detail/DetailSidebar';
 import DetailInfo from './Partials/Detail/DetailInfo';
 import DetailActivity from './Partials/Detail/DetailActivity';
+import BlobPreviewModal from '@/Components/BlobPreviewModal';
+import ConfirmationModal from '@/Components/ConfirmationModal';
 
 export default function DetailPica() {
     const { id } = usePage().props;
@@ -13,7 +15,24 @@ export default function DetailPica() {
     const [loading, setLoading]     = useState(true);
     const [actionLoading, setActionLoading] = useState(null);
     const [previewFile, setPreviewFile]     = useState(null);
-    const [previewUrl, setPreviewUrl]       = useState(null);
+    const [showConfirmModal, setShowConfirmModal] = useState(false);
+    const [confirmTitle, setConfirmTitle]         = useState('');
+    const [confirmDescription, setConfirmDescription] = useState('');
+    const [confirmType, setConfirmType]           = useState('generic');
+    const [approvalAction, setApprovalAction]     = useState('');
+
+    const [showRejectModal, setShowRejectModal]   = useState(false);
+    const [rejectAction, setRejectAction]         = useState('');
+    const [rejectComment, setRejectComment]       = useState('');
+    const [rejectFiles, setRejectFiles]           = useState([]);
+    const [isMobile, setIsMobile]                 = useState(false);
+
+    useEffect(() => {
+        const check = () => setIsMobile(window.innerWidth <= 768);
+        check();
+        window.addEventListener('resize', check);
+        return () => window.removeEventListener('resize', check);
+    }, []);
 
     const fetchDoc = useCallback(() => {
         setLoading(true);
@@ -25,43 +44,70 @@ export default function DetailPica() {
 
     useEffect(() => { fetchDoc(); }, [fetchDoc]);
 
-    const handleApproval = async (action) => {
-        setActionLoading(action);
+    const handleApproval = (action) => {
+        if (action.includes('reject')) {
+            setRejectAction(action);
+            setRejectComment('');
+            setRejectFiles([]);
+            setShowRejectModal(true);
+        } else {
+            setApprovalAction(action);
+            if (action === 'submit') {
+                setConfirmTitle('Kirim Dokumen PICA?');
+                setConfirmDescription('Dokumen akan dikirim ke PJA untuk proses review.');
+                setConfirmType('draft');
+            } else if (action === 'approve_pja') {
+                setConfirmTitle('Setujui Dokumen (PJA)?');
+                setConfirmDescription('Apakah Anda yakin ingin menyetujui dokumen ini sebagai PJA? Dokumen akan diteruskan ke CRS.');
+                setConfirmType('review');
+            } else if (action === 'approve_crs') {
+                setConfirmTitle('Setujui Dokumen (CRS)?');
+                setConfirmDescription('Apakah Anda yakin ingin menyetujui dokumen ini sebagai CRS?');
+                setConfirmType('review');
+            } else if (action === 'close') {
+                setConfirmTitle('Selesaikan PICA (Close)?');
+                setConfirmDescription('Apakah Anda yakin ingin menyelesaikan temuan PICA ini? Status dokumen akan diubah menjadi Closed.');
+                setConfirmType('generic');
+            }
+            setShowConfirmModal(true);
+        }
+    };
+
+    const submitApproval = async () => {
+        setActionLoading(approvalAction);
         try {
-            await axios.post(`/api/pica/documents/${id}/approval`, { action });
+            await axios.post(`/api/pica/documents/${id}/approval`, { action: approvalAction });
+            setShowConfirmModal(false);
             fetchDoc();
         } catch {}
         finally { setActionLoading(null); }
     };
 
-    const handlePreviewFile = async (file) => {
-        setPreviewFile(file);
+    const submitReject = async () => {
+        if (!rejectComment.trim()) return;
+        setActionLoading(rejectAction);
+        const fd = new FormData();
+        fd.append('action', rejectAction);
+        fd.append('comment', rejectComment);
+        rejectFiles.forEach(f => fd.append('files[]', f));
+
         try {
-            const res = await axios.get(`/api/pica/files/${file.id}/preview`);
-            setPreviewUrl(res.data?.result?.url ?? null);
+            await axios.post(`/api/pica/documents/${id}/approval`, fd, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+            setShowRejectModal(false);
+            fetchDoc();
         } catch {}
+        finally { setActionLoading(null); }
     };
 
-    const actionButtons = () => {
-        if (!doc) return null;
-        const btn = (label, action, color = '#1d4ed8', bg = 'rgba(29,78,216,0.1)') => (
-            <button
-                key={action}
-                onClick={() => handleApproval(action)}
-                disabled={actionLoading === action}
-                style={{ padding: '7px 14px', borderRadius: '6px', border: 'none', backgroundColor: bg, color, fontSize: '12px', fontWeight: 700, cursor: 'pointer' }}
-            >
-                {actionLoading === action ? '...' : label}
-            </button>
-        );
-        switch (doc.status) {
-            case 'Draft':         return [<a key="edit" href={`/pica/edit/${id}`} style={{ padding: '7px 14px', borderRadius: '6px', border: '1px solid var(--border-color)', fontSize: '12px', fontWeight: 700, textDecoration: 'none', color: 'var(--text-primary)' }}>Edit</a>, btn('Submit', 'submit', '#2FBF71', 'rgba(47,191,113,0.1)')];
-            case 'On Review PJA': return [btn('Approve PJA', 'approve_pja', '#2FBF71', 'rgba(47,191,113,0.1)'), btn('Reject PJA', 'reject_pja', '#ef4444', 'rgba(239,68,68,0.08)')];
-            case 'On Review CRS': return [btn('Approve CRS', 'approve_crs', '#2FBF71', 'rgba(47,191,113,0.1)'), btn('Reject CRS', 'reject_crs', '#ef4444', 'rgba(239,68,68,0.08)')];
-            case 'Open':
-            case 'Overdue':       return [btn('Close', 'close', '#2FBF71', 'rgba(47,191,113,0.1)')];
-            default:              return null;
-        }
+    const handlePreviewFile = (file) => {
+        setPreviewFile({
+            ...file,
+            type: 'pica',
+            name: file.file,
+            file_name: file.file ? file.file.split('/').pop() : 'File'
+        });
     };
 
     if (loading) return (
@@ -77,51 +123,133 @@ export default function DetailPica() {
     );
 
     return (
-        <>
+        <div style={{ backgroundColor: 'var(--bg-color)', minHeight: '100vh', padding: isMobile ? '20px 16px' : '40px 20px' }}>
             <Head title={`PICA — ${doc.identity_id ?? 'Detail'}`} />
 
-            {/* Top Bar */}
-            <div style={{ backgroundColor: 'var(--card-bg)', borderBottom: '1px solid var(--border-color)', padding: '14px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 90, flexWrap: 'wrap', gap: '10px' }}>
-                <a href="/pica/active-document" style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-secondary)', fontSize: '13px', textDecoration: 'none', fontWeight: 600 }}>
-                    <ArrowLeft size={14} /> Kembali ke PICA
+            {/* Top Bar Header */}
+            <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                marginBottom: '24px',
+                borderBottom: '1px solid var(--border-color)',
+                paddingBottom: '12px',
+                flexWrap: 'wrap',
+                gap: '10px',
+            }}>
+                <a href="/pica/active-document" style={{
+                    display: 'inline-flex', alignItems: 'center', gap: '8px',
+                    color: 'var(--primary)', fontWeight: 700, textDecoration: 'none', fontSize: '12px',
+                }}>
+                    <ArrowLeft size={16} /> Kembali ke PICA
                 </a>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <AlertTriangle size={15} style={{ color: 'var(--primary)' }} />
                     <span style={{ fontSize: '14px', fontWeight: 700, color: 'var(--primary)' }}>{doc.identity_id}</span>
                     <StatusBadge status={doc.status} />
-                </div>
-                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                    {actionButtons()}
                 </div>
             </div>
 
             {/* 3-Column Grid */}
-            <div style={{ padding: '24px', display: 'grid', gridTemplateColumns: '240px 1fr 260px', gap: '16px', alignItems: 'start' }}>
-                <DetailSidebar doc={doc} />
-                <DetailInfo doc={doc} onPreviewFile={handlePreviewFile} />
-                <DetailActivity doc={doc} onRefresh={fetchDoc} />
+            <div style={{
+                display: 'grid',
+                gridTemplateColumns: isMobile ? '1fr' : '260px 1fr 280px',
+                gap: isMobile ? '16px' : '24px',
+                alignItems: 'start',
+            }}>
+                <div style={{ order: isMobile ? 2 : 1 }}>
+                    <DetailSidebar doc={doc} />
+                </div>
+                <div style={{ order: isMobile ? 1 : 2 }}>
+                    <DetailInfo doc={doc} onPreviewFile={handlePreviewFile} />
+                </div>
+                <div style={{ order: isMobile ? 3 : 3 }}>
+                    <DetailActivity doc={doc} onRefresh={fetchDoc} onPreviewFile={handlePreviewFile} handleApproval={handleApproval} actionLoading={actionLoading} />
+                </div>
             </div>
 
             {/* File Preview Modal */}
-            {previewFile && (
+            <BlobPreviewModal attachment={previewFile} onClose={() => setPreviewFile(null)} />
+
+            {/* Confirmation Modal (Submit, Approve, Close) */}
+            <ConfirmationModal
+                isOpen={showConfirmModal}
+                type={confirmType}
+                title={confirmTitle}
+                description={confirmDescription}
+                confirmText="Ya, Lanjutkan"
+                cancelText="Batal"
+                onConfirm={submitApproval}
+                onCancel={() => setShowConfirmModal(false)}
+                loading={actionLoading === approvalAction}
+            />
+
+            {/* Rejection Modal (Reject PJA, Reject CRS) */}
+            {showRejectModal && (
                 <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(15,23,42,0.6)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }}>
-                    <div style={{ backgroundColor: '#fff', borderRadius: '16px', width: '100%', maxWidth: '800px', padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <h3 style={{ fontSize: '14px', fontWeight: 700, margin: 0 }}>{previewFile.file?.split('/').pop() ?? 'Preview'}</h3>
-                            <button onClick={() => { setPreviewFile(null); setPreviewUrl(null); }} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '18px', color: '#64748b' }}>✕</button>
+                    <div style={{ backgroundColor: '#fff', borderRadius: '16px', padding: '24px', maxWidth: '450px', width: '100%', boxShadow: '0 25px 60px rgba(0,0,0,0.2)' }}>
+                        <h3 style={{ fontSize: '15px', fontWeight: 800, margin: '0 0 12px 0', textTransform: 'capitalize' }}>
+                            {rejectAction.replace('_', ' ')}
+                        </h3>
+                        <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: '0 0 16px 0' }}>
+                            Tulis alasan penolakan/pengembalian dokumen.
+                        </p>
+                        
+                        <div style={{ marginBottom: '16px' }}>
+                            <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)', marginBottom: '6px', display: 'block' }}>
+                                Catatan Alasan <span style={{ color: '#ef4444' }}>*</span>
+                            </label>
+                            <textarea
+                                value={rejectComment}
+                                onChange={e => setRejectComment(e.target.value)}
+                                placeholder="Tulis alasan penolakan di sini..."
+                                style={{ width: '100%', padding: '8px 12px', border: '1px solid var(--border-color)', borderRadius: '6px', fontSize: '12px', outline: 'none', minHeight: '80px', resize: 'vertical', boxSizing: 'border-box' }}
+                            />
                         </div>
-                        {previewUrl ? (
-                            /\.(jpg|jpeg|png|gif|webp)$/i.test(previewFile.file ?? '') ? (
-                                <img src={previewUrl} alt="preview" style={{ maxWidth: '100%', maxHeight: '500px', objectFit: 'contain', borderRadius: '8px' }} />
-                            ) : (
-                                <a href={previewUrl} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--primary)', fontSize: '13px', fontWeight: 600 }}>Buka file di tab baru</a>
-                            )
-                        ) : (
-                            <p style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Memuat preview...</p>
-                        )}
+                        
+                        <div style={{ marginBottom: '24px' }}>
+                            <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)', marginBottom: '6px', display: 'block' }}>
+                                File Lampiran Pendukung
+                            </label>
+                            <input
+                                type="file"
+                                multiple
+                                onChange={e => setRejectFiles(Array.from(e.target.files))}
+                                style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', width: '100%' }}
+                            />
+                            {rejectFiles.length > 0 && (
+                                <div style={{ marginTop: '8px', fontSize: '11px', color: 'var(--text-secondary)' }}>
+                                    {rejectFiles.map((f, i) => <div key={i}>{f.name}</div>)}
+                                </div>
+                            )}
+                        </div>
+                        
+                        <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+                            <button 
+                                onClick={() => { setShowRejectModal(false); setRejectComment(''); setRejectFiles([]); }} 
+                                style={{ padding: '8px 16px', border: '1px solid var(--border-color)', borderRadius: '8px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', backgroundColor: '#fff', color: 'var(--text-secondary)' }}
+                            >
+                                Batal
+                            </button>
+                            <button 
+                                onClick={submitReject} 
+                                disabled={actionLoading || !rejectComment.trim()}
+                                style={{ 
+                                    padding: '8px 20px', 
+                                    background: 'linear-gradient(135deg, #ef4444, #b91c1c)', 
+                                    color: '#fff', 
+                                    border: 'none', 
+                                    borderRadius: '8px', 
+                                    fontSize: '12px', 
+                                    fontWeight: 700, 
+                                    cursor: !rejectComment.trim() ? 'not-allowed' : 'pointer'
+                                }}
+                            >
+                                {actionLoading ? 'Memproses...' : 'Ya, Reject'}
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}
-        </>
+        </div>
     );
 }

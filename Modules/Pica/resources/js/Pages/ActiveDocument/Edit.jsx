@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Head, usePage } from '@inertiajs/react';
 import { AlertTriangle, ArrowLeft, Upload } from 'lucide-react';
+import SearchableSelect from '@/Components/SearchableSelect';
+import ConfirmationModal from '@/Components/ConfirmationModal';
 import usePicaForm from './Hooks/usePicaForm';
 
 const S = {
@@ -105,33 +107,41 @@ export default function EditPica() {
                     <div style={{ ...row2, marginBottom: '16px' }}>
                         <div>
                             <label style={S.label}>CCOW</label>
-                            <select value={form.ccow_id} onChange={e => setField('ccow_id', e.target.value)} style={{ ...S.input, cursor: 'pointer' }}>
-                                <option value="">Pilih CCOW</option>
-                                {masterData.companies?.map(c => <option key={c.id} value={c.id}>{c.company_name}</option>)}
-                            </select>
+                            <SearchableSelect
+                                options={masterData.ccows?.map(c => ({ ...c, name: c.company_name })) || []}
+                                value={form.ccow_id}
+                                onChange={val => setField('ccow_id', val)}
+                                placeholder="Pilih CCOW"
+                            />
                         </div>
                         <div>
                             <label style={S.label}>Perusahaan Kontraktor</label>
-                            <select value={form.company_id} onChange={e => setField('company_id', e.target.value)} style={{ ...S.input, cursor: 'pointer' }}>
-                                <option value="">Pilih perusahaan</option>
-                                {masterData.companies?.map(c => <option key={c.id} value={c.id}>{c.company_name}</option>)}
-                            </select>
+                             <SearchableSelect
+                                options={masterData.companies?.map(c => ({ ...c, name: c.company_name })) || []}
+                                value={form.company_id}
+                                onChange={val => setField('company_id', val)}
+                                placeholder="Pilih perusahaan"
+                            />
                         </div>
                     </div>
                     <div style={{ ...row2, marginBottom: '16px' }}>
                         <div>
                             <label style={S.label}>Seksi</label>
-                            <select value={form.section_id} onChange={e => setField('section_id', e.target.value)} style={{ ...S.input, cursor: 'pointer' }}>
-                                <option value="">Pilih seksi</option>
-                                {masterData.sections?.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-                            </select>
+                            <SearchableSelect
+                                options={masterData.sections || []}
+                                value={form.section_id}
+                                onChange={val => setField('section_id', val)}
+                                placeholder="Pilih seksi"
+                            />
                         </div>
                         <div>
                             <label style={S.label}>Lokasi</label>
-                            <select value={form.location_id} onChange={e => setField('location_id', e.target.value)} style={{ ...S.input, cursor: 'pointer' }}>
-                                <option value="">Pilih lokasi</option>
-                                {masterData.locations?.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
-                            </select>
+                             <SearchableSelect
+                                options={masterData.locations || []}
+                                value={form.location_id}
+                                onChange={val => setField('location_id', val)}
+                                placeholder="Pilih lokasi"
+                            />
                         </div>
                     </div>
                     <div style={row2}>
@@ -180,17 +190,28 @@ export default function EditPica() {
                     <div style={row2}>
                         <div>
                             <label style={S.label}>PJA</label>
-                            <select value={form.pja_id} onChange={e => setField('pja_id', e.target.value)} style={{ ...S.input, cursor: 'pointer' }}>
-                                <option value="">Pilih PJA</option>
-                                {masterData.managers?.map(m => <option key={m.id} value={m.id}>{m.user?.name ?? m.id}</option>)}
-                            </select>
+                             <SearchableSelect
+                                options={masterData.managers?.map(m => {
+                                    const name = m.user?.name ?? m.id;
+                                    const areas = m.area_locations?.map(l => l.name).join(', ');
+                                    return {
+                                        ...m,
+                                        name: areas ? `${name} (${areas})` : name
+                                    };
+                                }) || []}
+                                value={form.pja_id}
+                                onChange={val => setField('pja_id', val)}
+                                placeholder="Pilih PJA"
+                            />
                         </div>
                         <div>
                             <label style={S.label}>PJO / KTT</label>
-                            <select value={form.pjo_id} onChange={e => setField('pjo_id', e.target.value)} style={{ ...S.input, cursor: 'pointer' }}>
-                                <option value="">Pilih PJO/KTT</option>
-                                {masterData.users?.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
-                            </select>
+                             <SearchableSelect
+                                options={masterData.users || []}
+                                value={form.pjo_id}
+                                onChange={val => setField('pjo_id', val)}
+                                placeholder="Pilih PJO / KTT"
+                            />
                         </div>
                     </div>
                 </div>
@@ -236,20 +257,17 @@ export default function EditPica() {
                 </div>
             </div>
 
-            {showConfirm && (
-                <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(15,23,42,0.6)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-                    <div style={{ backgroundColor: '#fff', borderRadius: '16px', padding: '28px', maxWidth: '400px', width: '90%' }}>
-                        <h3 style={{ fontSize: '15px', fontWeight: 800, margin: '0 0 8px 0' }}>Konfirmasi Perubahan</h3>
-                        <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: '0 0 20px 0' }}>Perubahan data akan disimpan. Lanjutkan?</p>
-                        <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
-                            <button onClick={() => setShowConfirm(false)} style={{ padding: '8px 16px', border: '1px solid var(--border-color)', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', backgroundColor: '#fff' }}>Batal</button>
-                            <button onClick={onSubmit} disabled={submitting} style={{ padding: '8px 20px', background: 'linear-gradient(135deg, #1d4ed8, #153B73)', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 700, cursor: 'pointer' }}>
-                                {submitting ? 'Menyimpan...' : 'Ya, Simpan'}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
+            <ConfirmationModal
+                isOpen={showConfirm}
+                type="generic"
+                title="Konfirmasi Perubahan"
+                description="Perubahan data akan disimpan. Lanjutkan?"
+                confirmText="Ya, Simpan"
+                cancelText="Batal"
+                onConfirm={onSubmit}
+                onCancel={() => setShowConfirm(false)}
+                loading={submitting}
+            />
         </>
     );
 }

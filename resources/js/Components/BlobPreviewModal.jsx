@@ -15,6 +15,8 @@ export default function BlobPreviewModal({ attachment, onClose }) {
     const isCsmsChecklist = attachment.type === 'csms_checklist';
     const isCsmsPjoFile     = attachment.type === 'csms_pjo_file';
     const isCsmsMemoKttFile = attachment.type === 'csms_memo_ktt_file';
+    const isPica = attachment.type === 'pica';
+    const isPicaActivity = attachment.type === 'pica_activity';
 
     // Construct query parameters cleanly
     const params = [];
@@ -40,7 +42,11 @@ export default function BlobPreviewModal({ attachment, onClose }) {
                     ? `/api/csms/pjo-files/${attachmentId}/preview`
                     : isCsmsMemoKttFile
                         ? `/api/csms/memo-ktt-files/${attachmentId}/preview`
-                        : `/api/document-system/attachments/${attachmentId}/preview${queryString}`;
+                        : isPica
+                            ? `/api/pica/files/${attachmentId}/preview`
+                            : isPicaActivity
+                                ? `/api/pica/activity-files/${attachmentId}/preview`
+                                : `/api/document-system/attachments/${attachmentId}/preview${queryString}`;
     const downloadUrl = isFlRisk
         ? `/api/field-leadership/risk-files/${attachmentId}/download`
         : isFlActivity
@@ -51,7 +57,11 @@ export default function BlobPreviewModal({ attachment, onClose }) {
                     ? `/api/csms/pjo-files/${attachmentId}/download`
                     : isCsmsMemoKttFile
                         ? `/api/csms/memo-ktt-files/${attachmentId}/download`
-                        : `/api/document-system/attachments/${attachmentId}/download${queryString}`;
+                        : isPica
+                            ? `/api/pica/files/${attachmentId}/download`
+                            : isPicaActivity
+                                ? `/api/pica/activity-files/${attachmentId}/download`
+                                : `/api/document-system/attachments/${attachmentId}/download${queryString}`;
     const fileExtension = (attachment.file_type || (attachment.name ? attachment.name.split('.').pop() : '') || (attachment.file_name ? attachment.file_name.split('.').pop() : '') || (attachment.file_path ? attachment.file_path.split('.').pop() : '') || '').toLowerCase();
     const isImage = ['png', 'jpg', 'jpeg', 'gif'].includes(fileExtension);
     const isPdf = fileExtension === 'pdf';

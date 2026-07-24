@@ -28,7 +28,7 @@ export default function usePicaForm(docId = null) {
     const [existingFiles, setExisting] = useState([]);
     const [errors, setErrors]          = useState({});
     const [submitting, setSubmitting]  = useState(false);
-    const [masterData, setMasterData]  = useState({ companies: [], sections: [], locations: [], users: [], managers: [] });
+    const [masterData, setMasterData]  = useState({ ccows: [], companies: [], sections: [], locations: [], users: [], managers: [] });
     const [loadingDoc, setLoadingDoc]  = useState(false);
     const [isLocked, setIsLocked]      = useState(false);
 
@@ -112,6 +112,7 @@ export default function usePicaForm(docId = null) {
         const fd = new FormData();
         Object.entries(form).forEach(([k, v]) => { if (v !== '' && v !== null) fd.append(k, v); });
         newFiles.forEach(f => fd.append('files[]', f));
+        existingFiles.forEach(f => fd.append('existing_files[]', f.id));
 
         try {
             if (docId) {

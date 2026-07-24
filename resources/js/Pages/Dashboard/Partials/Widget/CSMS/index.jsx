@@ -1,4 +1,4 @@
-import { HardHat, RefreshCw } from 'lucide-react';
+import { CheckSquare, HardHat, RefreshCw } from 'lucide-react';
 
 import CsmsCategoryProgress from './CsmsCategoryProgress';
 import CsmsDetail from './CsmsDetail';
@@ -64,7 +64,7 @@ export default function CsmsWidget({ filters = {} }) {
             {/* Header */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', gap: '8px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
-                    <HardHat size={16} style={{ color: P, flexShrink: 0 }} />
+                    <CheckSquare size={16} style={{ color: P, flexShrink: 0 }} />
                     <h4 style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-primary, #1e293b)', margin: 0, textTransform: 'uppercase', letterSpacing: '.3px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         CSMS — Contractor Safety Management
                     </h4>
