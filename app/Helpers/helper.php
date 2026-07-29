@@ -14,6 +14,7 @@ if (! function_exists('setting')) {
 if (! function_exists('uploadToBlobStorage')) {
     function uploadToBlobStorage($filename, $filePathTemp, $directPath)
     {
+        $fileHandle = null;
         try {
             $client = new Client;
 
@@ -28,10 +29,11 @@ if (! function_exists('uploadToBlobStorage')) {
 
             $token = json_decode($responseLogin->getBody(), true)['token'] ?? null;
             if (! $token) {
+                Log::error('uploadToBlobStorage: failed to obtain auth token');
                 return [
-                    'fileBlobUrl' => null,
+                    'fileBlobUrl'      => null,
                     'fileBlobPathName' => null,
-                    'blobResponse' => null,
+                    'blobResponse'     => null,
                 ];
             }
 
@@ -42,50 +44,73 @@ if (! function_exists('uploadToBlobStorage')) {
                 ? 'test/' . rtrim($directPath, '/')
                 : 'complianceCMS/' . rtrim($directPath, '/');
 
+            $fileHandle = fopen($filePathTemp, 'r');
+            if ($fileHandle === false) {
+                Log::error('uploadToBlobStorage: cannot open temp file', ['path' => $filePathTemp]);
+                return [
+                    'fileBlobUrl'      => null,
+                    'fileBlobPathName' => null,
+                    'blobResponse'     => null,
+                ];
+            }
+
             $response = $client->request('POST', $urlBlobApi, [
                 'multipart' => [
                     [
-                        'name' => 'Files',
-                        'contents' => fopen($filePathTemp, 'r'),
+                        'name'     => 'Files',
+                        'contents' => $fileHandle,
                         'filename' => $filename,
                     ],
                     [
-                        'name' => 'ContainerName',
+                        'name'     => 'ContainerName',
                         'contents' => 'aims-cntr',
                     ],
                     [
-                        'name' => 'DirectoryPath',
+                        'name'     => 'DirectoryPath',
                         'contents' => $DirectoryPath,
                     ],
                 ],
                 'headers' => [
-                    'Authorization' => 'Bearer '.$token,
+                    'Authorization' => 'Bearer ' . $token,
                 ],
             ]);
 
+            $statusCode = $response->getStatusCode();
 
-
-            if ($response->getStatusCode() === 200) {
+            if ($statusCode === 200 || $statusCode === 201) {
                 $body = json_decode($response->getBody(), true);
 
-                Log::info($body);
+                Log::info('uploadToBlobStorage success', ['file' => $filename, 'path' => $DirectoryPath]);
+
+                // API returns an array; first element contains file info
+                $item = is_array($body) && isset($body[0]) ? $body[0] : (is_array($body) ? $body : []);
 
                 return [
-                    'fileBlobUrl' => $body[0]['blobUri'] ?? null,
-                    'fileBlobPathName' => $body[0]['fileName'] ?? null,
-                    'blobResponse' => [
-                        'blobResponse' => $body,
-                    ],
+                    'fileBlobUrl'      => $item['blobUri']  ?? null,
+                    'fileBlobPathName' => $item['fileName'] ?? null,
+                    'blobResponse'     => $body,
                 ];
             }
-        } catch (Exception $e) {
-            Log::error('uploadToBlobStorage error: '.$e->getMessage());
+
+            Log::error('uploadToBlobStorage: unexpected status', [
+                'status' => $statusCode,
+                'body'   => (string) $response->getBody(),
+            ]);
+        } catch (\Exception $e) {
+            Log::error('uploadToBlobStorage error: ' . $e->getMessage(), [
+                'file' => $filename,
+                'path' => $directPath,
+            ]);
+        } finally {
+            if (is_resource($fileHandle)) {
+                fclose($fileHandle);
+            }
         }
 
         return [
-            'fileBlobUrl' => null,
+            'fileBlobUrl'      => null,
             'fileBlobPathName' => null,
-            'blobResponse' => null,
+            'blobResponse'     => null,
         ];
     }
 }
