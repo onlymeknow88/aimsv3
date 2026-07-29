@@ -1,21 +1,35 @@
-import { ClipboardCheck, Eye, RefreshCw, Search, Plus } from 'lucide-react';
+import { ClipboardCheck, RefreshCw, Search, Plus } from 'lucide-react';
 import React, { useState } from 'react';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 import CSMSLayout from '../../Layouts/CSMSLayout';
+import ConfirmationModal from '@/Components/ConfirmationModal';
 import { Head } from '@inertiajs/react';
-import StatusBadge from '../Bidding/Partials/Components/StatusBadge';
-import TablePagination from '@/Components/TablePagination';
-import useBidding from '../Bidding/Hooks/useBidding';
 import PostBiddingTable from './Partials/PostBiddingTable';
+import TablePagination from '@/Components/TablePagination';
+import axios from 'axios';
+import useBidding from '../Bidding/Hooks/useBidding';
 
 const btnStyle = { display: 'inline-flex', alignItems: 'center', gap: '6px', backgroundColor: '#fff', border: '1px solid var(--border-color)', borderRadius: '6px', padding: '8px 12px', fontSize: '11px', fontWeight: 600, color: 'var(--text-primary)', cursor: 'pointer' };
 
-const thStyle = { fontSize: '11px', fontWeight: 700, color: 'var(--text-primary)', padding: '10px 12px', textTransform: 'uppercase', letterSpacing: '0.03em' };
-const tdStyle = { fontSize: '12px', padding: '10px 12px', color: 'var(--text-secondary)' };
-
 export default function PostBiddingIndex() {
     const { biddings, pagination, loading, search, setSearch, status, setStatus, limit, setLimit, page, setPage, refresh } = useBidding('PostBidding');
+    const [selectedIds, setSelectedIds] = useState([]);
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [deleting, setDeleting] = useState(false);
+
+    const handleDelete = async () => {
+        setDeleting(true);
+        try {
+            await axios.post('/api/csms/biddings/bulk-delete', { ids: selectedIds });
+            setSelectedIds([]);
+            refresh();
+        } catch (err) {
+            alert(err.response?.data?.message ?? 'Gagal menghapus data');
+        } finally {
+            setDeleting(false);
+            setShowDeleteConfirm(false);
+        }
+    };
 
     return (
         <CSMSLayout>
@@ -53,9 +67,27 @@ export default function PostBiddingIndex() {
             </div>
 
             <div style={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--border-color)', borderRadius: '12px', overflow: 'hidden', boxShadow: 'var(--shadow-sm)' }}>
-                <PostBiddingTable biddings={biddings} loading={loading} />
+                <PostBiddingTable
+                    biddings={biddings}
+                    loading={loading}
+                    selectedIds={selectedIds}
+                    onSelectionChange={setSelectedIds}
+                    onDelete={() => setShowDeleteConfirm(true)}
+                />
                 <TablePagination pagination={pagination} onPageChange={setPage} limit={limit} onLimitChange={v => { setLimit(v); setPage(1); }} />
             </div>
+
+            <ConfirmationModal
+                isOpen={showDeleteConfirm}
+                type="generic"
+                title="Hapus Data?"
+                description={`${selectedIds.length} data akan dihapus permanen dan tidak dapat dikembalikan.`}
+                confirmText="Hapus"
+                cancelText="Batal"
+                loading={deleting}
+                onConfirm={handleDelete}
+                onCancel={() => setShowDeleteConfirm(false)}
+            />
         </CSMSLayout>
     );
 }

@@ -63,6 +63,7 @@ export default function PostBiddingCreate() {
     const [masterLoading, setMasterLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [showConfirm, setShowConfirm] = useState(false);
+    const [submitType, setSubmitType] = useState('publish'); // 'draft' or 'publish'
     const [errors, setErrors] = useState({});
 
     useEffect(() => {
@@ -177,7 +178,7 @@ export default function PostBiddingCreate() {
         }));
     };
 
-    const handleSubmit = () => {
+    const handleSubmit = (isDraft = false) => {
         if (!selectedBiddingId) {
             setErrors({ bidding_reference: ['Harap pilih Referensi Bidding terlebih dahulu'] });
             return;
@@ -186,28 +187,23 @@ export default function PostBiddingCreate() {
         setSaving(true);
         setErrors({});
         const fd = new FormData();
-        fd.append('criteria', 'PostBidding');
-        fd.append('company_name', form.company_name);
-        fd.append('address', form.address);
-        fd.append('company_site', form.company_site);
-        fd.append('license_number', form.license_number);
-        fd.append('service_criteria', form.service_criteria);
+        
+        // Add parent bidding_id
+        fd.append('bidding_id', selectedBiddingId);
         fd.append('classification', form.classification);
-        fd.append('business_entity_id', form.business_entity_id);
         fd.append('risk_category', form.risk_category);
 
-        if (form.csms_doc_number) fd.append('csms_doc_number', form.csms_doc_number);
-        if (form.ccow_id) fd.append('ccow_id', form.ccow_id);
-        if (form.company_id) fd.append('company_id', form.company_id);
-        if (form.parent_id) fd.append('parent_id', form.parent_id);
-        if (form.person_in_charge) fd.append('person_in_charge', form.person_in_charge);
+        // Add questionnaire data
+        fd.append('questionnaire', JSON.stringify(form.questionnaire));
         if (questionnaireFile) fd.append('questionnaire_file', questionnaireFile);
 
-        fd.append('questionnaire', JSON.stringify(form.questionnaire));
+        // Add status fields
+        fd.append('published', isDraft ? 'Draft' : 'Publish');
+        fd.append('status', isDraft ? 'Draft' : 'On Review OHS');
 
         // Append checklists and files
         checklists.forEach((cl, i) => {
-            fd.append(`checklists[${i}][id]`, cl.id);
+            fd.append(`checklists[${i}][question_id]`, cl.id);
             fd.append(`checklists[${i}][value]`, cl.value || '');
             fd.append(`checklists[${i}][comment]`, cl.comment || '');
 
@@ -217,23 +213,61 @@ export default function PostBiddingCreate() {
             });
         });
 
-        axios.post('/api/csms/biddings', fd)
+        axios.post('/api/csms/post-biddings', fd, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+        })
             .then(res => {
                 const result = res.data?.result;
                 if (result?.id) {
                     window.location.href = `/csms/post-bidding/detail/${result.id}`;
                 } else {
-                    window.location.href = '/csms/post-bidding/lists';
+                    const redirectUrl = isDraft 
+                        ? '/csms/post-bidding/lists?status=Draft' 
+                        : '/csms/post-bidding/lists?status=On Going';
+                    window.location.href = redirectUrl;
                 }
             })
             .catch(err => {
                 if (err.response?.data?.errors) {
                     setErrors(err.response.data.errors);
+                } else if (err.response?.data?.message) {
+                    setErrors({ general: [err.response.data.message] });
                 }
             })
             .finally(() => {
                 setSaving(false);
+                setShowConfirm(false);
             });
+    };
+
+    const handleExportQuestionnaire = () => {
+        if (!selectedBiddingId) {
+            alert('Pilih bidding terlebih dahulu');
+            return;
+        }
+
+        // Validate required questionnaire fields
+        const required = [
+            'company_nickname', 'scope_of_business',
+            'date_contract_period_start', 'date_contract_period_end',
+            'number_of_workers', 'number_of_spv_pop',
+            'number_of_spv_pom', 'number_of_spv_pou',
+            'number_of_spv_imp_smkp', 'number_of_spv_auditor_smkp',
+            'equipped_name', 'equipped_position',
+            'equipped_telephone', 'equipped_email'
+        ];
+
+        for (const field of required) {
+            if (!form.questionnaire[field]) {
+                alert(`Field ${field.replace(/_/g, ' ')} belum terisi`);
+                return;
+            }
+        }
+
+        window.open(
+            `/api/csms/post-biddings/${selectedBiddingId}/export-questionnaire`,
+            '_blank'
+        );
     };
 
     const groupedChecklists = checklists.reduce((groups, item) => {
@@ -492,18 +526,25 @@ export default function PostBiddingCreate() {
                             {/* Footer Actions */}
                             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', paddingTop: '16px', borderTop: '1px solid var(--border-color)' }}>
                                 <a href="/csms/post-bidding/lists" style={{ padding: '9px 20px', border: '1px solid var(--border-color)', borderRadius: '6px', fontSize: '12px', fontWeight: 600, backgroundColor: '#fff', color: 'var(--text-secondary)', textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}>Batal</a>
-                                <button onClick={() => setShowConfirm(true)} disabled={saving}
+                                <button onClick={() => { setSubmitType('draft'); setShowConfirm(true); }} disabled={saving}
+                                    style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '9px 20px', backgroundColor: '#6b7280', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '12px', fontWeight: 700, cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.7 : 1 }}>
+                                    {saving && submitType === 'draft' ? <Loader2 size={13} style={{ animation: 'spin 1s linear infinite' }} /> : <Save size={13} />}
+                                    {saving && submitType === 'draft' ? 'Menyimpan...' : 'Simpan sebagai Draft'}
+                                </button>
+                                <button onClick={() => { setSubmitType('publish'); setShowConfirm(true); }} disabled={saving}
                                     style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '9px 20px', backgroundColor: 'var(--primary)', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '12px', fontWeight: 700, cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.7 : 1 }}>
-                                    {saving ? <Loader2 size={13} style={{ animation: 'spin 1s linear infinite' }} /> : <Save size={13} />}
-                                    {saving ? 'Menyimpan...' : 'Simpan Post Bidding'}
+                                    {saving && submitType === 'publish' ? <Loader2 size={13} style={{ animation: 'spin 1s linear infinite' }} /> : <Save size={13} />}
+                                    {saving && submitType === 'publish' ? 'Menyimpan...' : 'Simpan & Submit'}
                                 </button>
                                 <ConfirmationModal
                                     isOpen={showConfirm}
-                                    type="draft"
+                                    type={submitType === 'draft' ? 'draft' : 'review'}
+                                    title={submitType === 'draft' ? 'Simpan sebagai Draft?' : 'Submit Post Bidding?'}
+                                    description={submitType === 'draft' ? 'Data akan disimpan sebagai draft dan dapat diedit kembali.' : 'Data akan disubmit untuk review OHS.'}
                                     confirmText="Simpan"
                                     cancelText="Batal"
                                     loading={saving}
-                                    onConfirm={handleSubmit}
+                                    onConfirm={() => handleSubmit(submitType === 'draft')}
                                     onCancel={() => setShowConfirm(false)}
                                 />
                             </div>

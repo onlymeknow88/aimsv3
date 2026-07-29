@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from "react";
+import { ArrowLeft, HardHat, Loader2, Save } from "lucide-react";
+import React, { useEffect, useState } from "react";
+
 import ConfirmationModal from "@/Components/ConfirmationModal";
-import PageLoader from "@/Components/PageLoader";
-import { Head } from "@inertiajs/react";
-import { ArrowLeft, HardHat, Save, Loader2 } from "lucide-react";
-import axios from "axios";
 import FileDropzone from "@/Components/FileDropzone";
+import { Head } from "@inertiajs/react";
+import PageLoader from "@/Components/PageLoader";
+import axios from "axios";
 
 const S = {
     label: {
@@ -49,7 +50,6 @@ export default function BiddingCreate() {
         company_site: "",
         license_number: "",
         service_criteria: "",
-        classification: "",
         person_in_charge: "",
         date: "",
         business_entity_id: "",
@@ -66,6 +66,7 @@ export default function BiddingCreate() {
     const [errors, setErrors] = useState({});
     const [saving, setSaving] = useState(false);
     const [showConfirm, setShowConfirm] = useState(false);
+    const [submitType, setSubmitType] = useState("publish");
     const [checklists, setChecklists] = useState([]);
     const [checklistFiles, setChecklistFiles] = useState({});
     const [masterLoading, setMasterLoading] = useState(true);
@@ -131,7 +132,7 @@ export default function BiddingCreate() {
         }));
     };
 
-    const handleSubmit = () => {
+    const handleSubmit = (isDraft = false) => {
         setSaving(true);
         setErrors({});
 
@@ -139,6 +140,8 @@ export default function BiddingCreate() {
         Object.entries(form).forEach(([k, v]) => {
             if (v !== null && v !== undefined) fd.append(k, v);
         });
+        fd.append("published", isDraft ? "Draft" : "Publish");
+        fd.append("status",    isDraft ? "Draft" : "On Review OHS");
 
         checklists.forEach((cl, idx) => {
             fd.append(`checklists[${idx}][id]`, cl.id);
@@ -164,7 +167,10 @@ export default function BiddingCreate() {
                     setErrors(err.response.data.errors);
                 }
             })
-            .finally(() => setSaving(false));
+            .finally(() => {
+                setSaving(false);
+                setShowConfirm(false);
+            });
     };
 
     if (masterLoading) {
@@ -216,7 +222,7 @@ export default function BiddingCreate() {
                 }}
             >
                 <a
-                    href="/csms/bidding/lists"
+                    href="/csms/bidding/lists?status=Draft"
                     style={{
                         display: "inline-flex",
                         alignItems: "center",
@@ -434,9 +440,9 @@ export default function BiddingCreate() {
                                     Alamat{" "}
                                     <span style={{ color: "#ef4444" }}>*</span>
                                 </label>
-                                <input
+                                <textarea
                                     value={form.address}
-                                    onChange={(e) =>
+                                onChange={(e) =>
                                         set("address", e.target.value)
                                     }
                                     style={{
@@ -444,6 +450,8 @@ export default function BiddingCreate() {
                                         borderColor: errors.address
                                             ? "#ef4444"
                                             : "var(--border-color)",
+                                        minHeight: "80px",
+                                        resize: "vertical",
                                     }}
                                     placeholder="Alamat lengkap perusahaan"
                                 />
@@ -917,7 +925,7 @@ export default function BiddingCreate() {
                         }}
                     >
                         <a
-                            href="/csms/bidding/lists"
+                            href="/csms/bidding/lists?status=Draft"
                             style={{
                                 padding: "9px 20px",
                                 border: "1px solid var(--border-color)",
@@ -934,7 +942,32 @@ export default function BiddingCreate() {
                             Batal
                         </a>
                         <button
-                            onClick={() => setShowConfirm(true)}
+                            onClick={() => { setSubmitType("draft"); setShowConfirm(true); }}
+                            disabled={saving}
+                            style={{
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: "6px",
+                                padding: "9px 20px",
+                                backgroundColor: "#6b7280",
+                                color: "#fff",
+                                border: "none",
+                                borderRadius: "6px",
+                                fontSize: "12px",
+                                fontWeight: 700,
+                                cursor: saving ? "not-allowed" : "pointer",
+                                opacity: saving ? 0.7 : 1,
+                            }}
+                        >
+                            {saving && submitType === "draft" ? (
+                                <Loader2 size={13} style={{ animation: "spin 1s linear infinite" }} />
+                            ) : (
+                                <Save size={13} />
+                            )}
+                            {saving && submitType === "draft" ? "Menyimpan..." : "Simpan sebagai Draft"}
+                        </button>
+                        <button
+                            onClick={() => { setSubmitType("publish"); setShowConfirm(true); }}
                             disabled={saving}
                             style={{
                                 display: "inline-flex",
@@ -951,7 +984,7 @@ export default function BiddingCreate() {
                                 opacity: saving ? 0.7 : 1,
                             }}
                         >
-                            {saving ? (
+                            {saving && submitType === "publish" ? (
                                 <Loader2
                                     size={13}
                                     style={{
@@ -961,17 +994,19 @@ export default function BiddingCreate() {
                             ) : (
                                 <Save size={13} />
                             )}
-                            {saving ? "Menyimpan..." : "Simpan Bidding"}
+                            {saving && submitType === "publish" ? "Menyimpan..." : "Simpan & Submit"}
                         </button>
                         <ConfirmationModal
                             isOpen={showConfirm}
-                            type="draft"
-                            title="Simpan Bidding?"
-                            description="Pastikan semua data sudah benar sebelum disimpan."
+                            type={submitType === "draft" ? "draft" : "review"}
+                            title={submitType === "draft" ? "Simpan sebagai Draft?" : "Submit Bidding ke OHS?"}
+                            description={submitType === "draft" ? "Data akan disimpan sebagai draft dan dapat diedit kembali." : "Data akan disubmit untuk review OHS."}
                             confirmText="Simpan"
                             cancelText="Batal"
                             loading={saving}
-                            onConfirm={handleSubmit}
+                            onConfirm={() => handleSubmit(submitType === "draft")}
+                            onCancel={() => setShowConfirm(false)}
+                        />
                             onCancel={() => setShowConfirm(false)}
                         />
                     </div>

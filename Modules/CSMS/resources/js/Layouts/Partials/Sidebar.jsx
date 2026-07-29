@@ -1,39 +1,56 @@
-﻿import { ArrowLeft, ChevronDown, ChevronUp, HardHat } from 'lucide-react';
+import { ArrowLeft, ChevronDown, ChevronUp, HardHat } from 'lucide-react';
 
 import React from 'react';
 import { usePage } from '@inertiajs/react';
 
 const SLUG_URL = {
-    'csms.dashboard':              '/csms/dashboard',
-    'csms.bidding':                '/csms/bidding/lists',
-    'csms.post-bidding':           null,
-    'csms.post-bidding.active':    '/csms/post-bidding/active',
-    'csms.post-bidding.inactive':  '/csms/post-bidding/inactive',
-    'csms.renewal':                '/csms/renewal/lists',
-    'csms.pica':                   '/csms/pica/lists',
-    'csms.pjo':                    null,
-    'csms.pjo.active':             '/csms/pjo/lists?status=Active',
-    'csms.pjo.ongoing':            '/csms/pjo/lists?status=On Going',
-    'csms.pjo.draft':              '/csms/pjo/lists?status=Draft',
-    'csms.memo':                   '/csms/memo-ktt/lists',
-    'csms.letter':                 '/csms/letter/lists',
-    'csms.dictionary':             '/csms/dictionary/lists',
-    'csms.approval':               '/csms/approval/bidding',
+    'csms.dashboard':                 '/csms/dashboard',
+    'csms.bidding':                   null,
+    'csms.bidding.active':            '/csms/bidding/lists?status=Active',
+    'csms.bidding.ongoing':           '/csms/bidding/lists?status=On Going',
+    'csms.bidding.draft':             '/csms/bidding/lists?status=Draft',
+    'csms.post-bidding':              null,
+    'csms.post-bidding.active':       '/csms/post-bidding/active',
+    'csms.post-bidding.inactive':     '/csms/post-bidding/inactive',
+    'csms.post-bidding.ongoing':      '/csms/post-bidding/lists?status=On Going',
+    'csms.post-bidding.draft':        '/csms/post-bidding/lists?status=Draft',
+    'csms.post-bidding.obsolate':     '/csms/post-bidding/lists?status=Obsolete',
+    'csms.renewal':                   '/csms/renewal/lists',
+    'csms.pica':                      '/csms/pica/lists',
+    'csms.pjo':                       null,
+    'csms.pjo.active':                '/csms/pjo/lists?status=Active',
+    'csms.pjo.ongoing':               '/csms/pjo/lists?status=On Going',
+    'csms.pjo.draft':                 '/csms/pjo/lists?status=Draft',
+    'csms.memo':                      '/csms/memo-ktt/lists',
+    'csms.letter':                    '/csms/letter/lists',
+    'csms.dictionary':                '/csms/dictionary/lists',
+    'csms.approval':                  null,
+    'csms.approval.bidding':          '/csms/approval/bidding',
+    'csms.approval.post-bidding':     '/csms/approval/post-bidding',
 };
 
 function isActivePath(slug, currentPath, currentSearch) {
     const url = SLUG_URL[slug];
     if (!url) return false;
-    if (url.includes('?')) return `${currentPath}${currentSearch}` === url;
+    if (url.includes('?')) {
+        const [urlPath, urlQuery] = url.split('?');
+        const currentFullPath = `${currentPath}${currentSearch}`;
+        // Decode and normalize for comparison
+        const normalizedUrl = decodeURIComponent(url);
+        const normalizedCurrent = decodeURIComponent(currentFullPath);
+        return normalizedCurrent === normalizedUrl || currentFullPath === url;
+    }
     return currentPath === url || currentPath.startsWith(url.replace('/lists', ''));
 }
 
-export default function Sidebar({ sidebarOpen, isMobile, currentPath, currentSearch, openPjo, setOpenPjo, openPostBidding, setOpenPostBidding }) {
+export default function Sidebar({ sidebarOpen, isMobile, currentPath, currentSearch, openBidding, setOpenBidding, openPjo, setOpenPjo, openPostBidding, setOpenPostBidding, openApproval, setOpenApproval }) {
     const { csmsMenus = [] } = usePage().props;
 
     const dropdownState = {
+        'csms.bidding':      { open: openBidding,      setOpen: setOpenBidding },
         'csms.pjo':          { open: openPjo,          setOpen: setOpenPjo },
-        'csms.post-bidding': { open: openPostBidding, setOpen: setOpenPostBidding },
+        'csms.post-bidding': { open: openPostBidding,  setOpen: setOpenPostBidding },
+        'csms.approval':     { open: openApproval,     setOpen: setOpenApproval },
     };
 
     const parentMenus = csmsMenus.filter(m => !m.parent_id).sort((a, b) => a.order_by - b.order_by);

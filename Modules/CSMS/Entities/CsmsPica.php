@@ -14,12 +14,19 @@ class CsmsPica extends Model
 
     protected $fillable = [
         'bidding_id',
+        'checklist_id',
         'description',
         'status',
+        'pic',
+        'due_date',
+    ];
+
+    protected $casts = [
+        'due_date' => 'date',
     ];
 
     protected $appends = [
-        'company_name'
+        'company_name',
     ];
 
     public function getCompanyNameAttribute()
@@ -30,5 +37,10 @@ class CsmsPica extends Model
     public function bidding()
     {
         return $this->belongsTo(Bidding::class, 'bidding_id');
+    }
+
+    public function checklist()
+    {
+        return $this->belongsTo(CsmsChecklist::class, 'checklist_id');
     }
 }
