@@ -1,66 +1,175 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# AIMS v3 — Asset Integrity Management System
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Sistem manajemen integritas aset berbasis web yang dibangun dengan Laravel 11, Inertia.js, dan React. Aplikasi ini menggunakan arsitektur modular (Laravel Modules) untuk memisahkan domain bisnis secara terstruktur.
 
-## About Laravel
+---
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Tech Stack
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+**Backend**
+- PHP 8.2+
+- Laravel 11
+- Laravel Sanctum (API Auth)
+- Laravel Modules (nwidart/laravel-modules v13)
+- Inertia.js v2
+- DomPDF (generate PDF)
+- Maatwebsite Excel (export/import Excel)
+- Google 2FA (two-factor authentication)
+- Ziggy (route binding ke frontend)
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+**Frontend**
+- React 19
+- Tailwind CSS v3
+- Vite 5
+- shadcn/ui + Radix UI
+- TanStack Table v8
+- FullCalendar v6
+- Chart.js / react-chartjs-2
+- Lucide React (icons)
 
-## Learning Laravel
+---
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## Modul
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+| Modul | Alias | Deskripsi |
+|---|---|---|
+| **CSMS** | `csms` | Contract & Service Management System — manajemen kontrak, PJO, bidding, PICA, checklist, renewal |
+| **Pica** | `pica` | Problem Identification & Corrective Action |
+| **DashboardPortal** | `dashboardportal` | Portal dashboard utama |
+| **DocumentSystem** | `documentsystem` | Sistem manajemen dokumen |
+| **FieldLeadership** | `fieldleadership` | Manajemen kepemimpinan lapangan |
+| **Coe** | `coe` | Center of Excellence |
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+---
 
-## Laravel Sponsors
+## Persyaratan
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+- PHP >= 8.2
+- Composer
+- Node.js >= 18
+- MySQL / PostgreSQL
+- Git
 
-### Premium Partners
+---
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+## Instalasi
 
-## Contributing
+### 1. Clone repository
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+```bash
+git clone https://github.com/onlymeknow88/aimsv3.git
+cd aimsv3
+```
 
-## Code of Conduct
+### 2. Install dependencies
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+```bash
+composer install
+npm install
+```
 
-## Security Vulnerabilities
+### 3. Konfigurasi environment
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+```bash
+cp .env.example .env
+php artisan key:generate
+```
 
-## License
+Edit file `.env` sesuaikan koneksi database:
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+```env
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=aimsv3
+DB_USERNAME=root
+DB_PASSWORD=
+```
+
+### 4. Migrasi dan seeder
+
+```bash
+php artisan migrate --seed
+```
+
+### 5. Build frontend
+
+```bash
+# Development
+npm run dev
+
+# Production
+npm run build
+```
+
+### 6. Jalankan server
+
+```bash
+php artisan serve
+```
+
+Akses aplikasi di `http://localhost:8000`
+
+---
+
+## Struktur Modul
+
+Setiap modul mengikuti struktur berikut:
+
+```
+Modules/{NamaModul}/
+├── app/
+│   └── Providers/
+├── config/
+├── database/
+│   ├── migrations/
+│   └── seeders/
+├── Entities/          # Eloquent models
+├── Http/
+│   ├── Controllers/
+│   └── Requests/
+├── resources/
+│   ├── js/
+│   │   ├── Pages/     # React/Inertia pages
+│   │   └── Components/
+│   └── views/         # Blade views (PDF, email)
+├── routes/
+│   ├── web.php
+│   └── api.php
+└── module.json
+```
+
+---
+
+## Artisan Commands
+
+```bash
+# Jalankan semua seeder modul
+php artisan module:seed CSMS
+
+# List semua modul
+php artisan module:list
+
+# Enable/disable modul
+php artisan module:enable {module}
+php artisan module:disable {module}
+```
+
+---
+
+## Fitur Utama CSMS
+
+- Manajemen kontrak dan vendor
+- Proses bidding (active/inactive)
+- Manajemen PJO (Penanggung Jawab Operasional)
+- PICA (Problem Identification & Corrective Action) dalam kontrak
+- Checklist inspeksi
+- Proses renewal kontrak
+- Generate sertifikat & kuesioner PDF
+- Two-Factor Authentication (Google 2FA)
+
+---
+
+## Lisensi
+
+Proprietary — PT Alamtri Resources Indonesia
