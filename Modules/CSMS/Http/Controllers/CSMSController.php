@@ -82,6 +82,22 @@ class CSMSController extends Controller
         return Inertia::render('CSMS/Renewal/Index');
     }
 
+    public function renewalCreate($id): Response
+    {
+        if (!Bidding::where('id', $id)->where('criteria', 'Renewal')->exists()) {
+            abort(404);
+        }
+        return Inertia::render('CSMS/Renewal/Create', ['id' => $id]);
+    }
+
+    public function renewalDetail($id): Response
+    {
+        if (!Bidding::where('id', $id)->exists()) {
+            abort(404);
+        }
+        return Inertia::render('CSMS/Renewal/Detail', ['id' => $id]);
+    }
+
     public function picaIndex(): Response
     {
         return Inertia::render('CSMS/Pica/Index');

@@ -56,6 +56,12 @@ Route::middleware(['web', 'auth'])->prefix('csms')->as('csms.')->group(function 
         Route::get('/lists', [CSMSController::class, 'renewalIndex'])
             ->middleware('module.permission:csms,can_view,csms.renewal')
             ->name('index');
+        Route::get('/create/{renewal}', [CSMSController::class, 'renewalCreate'])
+            ->middleware('module.permission:csms,can_edit,csms.renewal')
+            ->name('create');
+        Route::get('/detail/{renewal}', [CSMSController::class, 'renewalDetail'])
+            ->middleware('module.permission:csms,can_view,csms.renewal')
+            ->name('detail');
     });
 
     // PICA

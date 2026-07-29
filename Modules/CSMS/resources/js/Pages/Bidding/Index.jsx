@@ -100,10 +100,8 @@ export default function BiddingIndex() {
                         style={{ padding: '7px 12px', border: '1px solid var(--border-color)', borderRadius: '6px', fontSize: '12px', outline: 'none', cursor: 'pointer' }}>
                         <option value="">Semua Status</option>
                         <option value="Draft">Draft</option>
-                        <option value="On Review OHS">On Review OHS</option>
-                        <option value="On Review D/H OHS">On Review D/H OHS</option>
-                        <option value="On Review KTT">On Review KTT</option>
-                        <option value="Approved">Approved</option>
+                        <option value="On Going">On Going</option>
+                        <option value="Active">Active</option>
                     </select>
                     <button onClick={refresh} style={btnStyle}><RefreshCw size={14} /></button>
                     <a href="/csms/bidding/create"

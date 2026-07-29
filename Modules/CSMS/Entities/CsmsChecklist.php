@@ -20,6 +20,10 @@ class CsmsChecklist extends Model
         'value',
         'comment',
         'point',
+        'sub_point',
+        'crtiteria',
+        'legal_base',
+        'note',
         'ordinal_number',
     ];
 

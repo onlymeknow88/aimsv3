@@ -6,7 +6,15 @@ export default function useBidding(defaultCriteria = 'Bidding', defaultStatus = 
     const [pagination, setPagination] = useState({ current_page: 1, last_page: 1, total: 0 });
     const [loading, setLoading]       = useState(false);
     const [search, setSearch]         = useState('');
-    const [status, setStatus]         = useState(defaultStatus);
+    const getQueryStatus = () => {
+        if (typeof window !== 'undefined') {
+            const params = new URLSearchParams(window.location.search);
+            return params.get('status') || defaultStatus;
+        }
+        return defaultStatus;
+    };
+
+    const [status, setStatus]         = useState(getQueryStatus);
     const [limit, setLimit]           = useState(10);
     const [page, setPage]             = useState(1);
 

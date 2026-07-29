@@ -36,11 +36,26 @@ Route::prefix('csms')->group(function () {
     Route::get('/post-biddings/{id}', [CSMSBiddingApiController::class, 'show'])
         ->middleware('module.permission:csms,can_view,csms.post-bidding');
 
-    // Renewal (reuses Bidding index with criteria=Renewal)
+    Route::post('/post-biddings', [CSMSBiddingApiController::class, 'storePostBidding'])
+        ->middleware('module.permission:csms,can_create,csms.post-bidding');
+
+    Route::get('/post-biddings/{id}/export-questionnaire', [CSMSBiddingApiController::class, 'exportQuestionnaire'])
+        ->middleware('module.permission:csms,can_view,csms.post-bidding');
+
+    Route::get('/post-biddings/{id}/certificate', [CSMSBiddingApiController::class, 'generateCertificate'])
+        ->middleware('module.permission:csms,can_view,csms.post-bidding');
+
+    // Renewal
     Route::get('/renewals', function (\Illuminate\Http\Request $request) {
         $request->merge(['criteria' => 'Renewal']);
         return app(CSMSBiddingApiController::class)->index($request);
     })->middleware('module.permission:csms,can_view,csms.renewal');
+
+    Route::get('/renewals/{id}', [CSMSBiddingApiController::class, 'show'])
+        ->middleware('module.permission:csms,can_view,csms.renewal');
+
+    Route::put('/renewals/{id}', [CSMSBiddingApiController::class, 'updateRenewal'])
+        ->middleware('module.permission:csms,can_edit,csms.renewal');
 
     // Approval
     Route::post('/approval/{id}', [CSMSBiddingApiController::class, 'processApproval'])
@@ -50,6 +65,12 @@ Route::prefix('csms')->group(function () {
         ->middleware('module.permission:csms,can_create,csms.renewal');
 
     Route::post('/biddings/{id}/deactivate', [CSMSBiddingApiController::class, 'deactivate'])
+        ->middleware('module.permission:csms,can_edit,csms.post-bidding');
+
+    Route::post('/biddings/{id}/obsolete', [CSMSBiddingApiController::class, 'obsolete'])
+        ->middleware('module.permission:csms,can_edit,csms.post-bidding');
+
+    Route::post('/biddings/{id}/sync-company', [CSMSBiddingApiController::class, 'syncCompany'])
         ->middleware('module.permission:csms,can_edit,csms.post-bidding');
 
     // Checklist Attachments
@@ -89,6 +110,8 @@ Route::prefix('csms')->group(function () {
     // PICA
     Route::get('/picas', [CSMSSupportApiController::class, 'indexPicas'])
         ->middleware('module.permission:csms,can_view,csms.pica');
+    Route::put('/picas/{id}', [CSMSSupportApiController::class, 'updatePica'])
+        ->middleware('module.permission:csms,can_edit,csms.pica');
 
     // PJO File Preview & Download
     Route::get('/pjo-files/{id}/preview', [CSMSPjoApiController::class, 'previewFile']);

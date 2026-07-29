@@ -53,15 +53,8 @@ class CSMSPjoApiController extends CSMSBaseApiController
             return ResponseFormatter::error('PJO not found', 404);
         }
 
-        $pjo->files->map(function ($f) {
-            if ($f->file) {
-                $sas = GetBlobSasUri('aims-cntr', $f->file);
-                $f->blob_url = is_array($sas)
-                    ? ($sas['blobUriSas'] ?? $f->blob_url)
-                    : ($sas ?: $f->blob_url);
-            }
-            return $f;
-        });
+        // Do NOT generate SAS URIs here — that causes N sequential Azure HTTP calls.
+        // The frontend uses /preview and /download endpoints on demand instead.
 
         return ResponseFormatter::success([
             'pjo'   => $pjo,
@@ -77,11 +70,40 @@ class CSMSPjoApiController extends CSMSBaseApiController
             'number_pjo'      => 'required|string|max:255',
             'company_id'      => 'nullable|uuid',
             'ccow_id'         => 'nullable|uuid',
+            'criteria'        => 'nullable|string|max:255',
             'date_of_birth'   => 'nullable|date',
             'phone'           => 'nullable|string|max:50',
             'email'           => 'nullable|email|max:255',
             'date_submission' => 'nullable|date',
+            'submission'      => 'nullable|string|max:255',
+            // Validate typed files — all optional, max 20MB each
+            'sertifikat_pop'             => 'nullable|file|max:20480',
+            'sertifikat_pom'             => 'nullable|file|max:20480',
+            'sertifikat_pou'             => 'nullable|file|max:20480',
+            'sertifikat_ismkp'           => 'nullable|file|max:20480',
+            'sertifikat_asmkp'           => 'nullable|file|max:20480',
+            'cv'                         => 'nullable|file|max:20480',
+            'surat_penunjukan'           => 'nullable|file|max:20480',
+            'struktur_organisasi'        => 'nullable|file|max:20480',
+            'persyaratan_administratif'  => 'nullable|file|max:20480',
+            'surat_pernyataan'           => 'nullable|file|max:20480',
+            'sertifikat_lainnya'         => 'nullable|array',
+            'sertifikat_lainnya.*'       => 'nullable|file|max:20480',
         ]);
+
+        // Typed file keys and their corresponding type labels
+        $typedFileKeys = [
+            'sertifikat_pop'             => 'sertifikat_pop',
+            'sertifikat_pom'             => 'sertifikat_pom',
+            'sertifikat_pou'             => 'sertifikat_pou',
+            'sertifikat_ismkp'           => 'sertifikat_ismkp',
+            'sertifikat_asmkp'           => 'sertifikat_asmkp',
+            'cv'                         => 'cv',
+            'surat_penunjukan'           => 'surat_penunjukan',
+            'struktur_organisasi'        => 'struktur_organisasi',
+            'persyaratan_administratif'  => 'persyaratan_administratif',
+            'surat_pernyataan'           => 'surat_pernyataan',
+        ];
 
         DB::beginTransaction();
         try {
@@ -90,9 +112,26 @@ class CSMSPjoApiController extends CSMSBaseApiController
                 'created_by' => (string) auth()->id(),
             ]));
 
+            // Upload single typed files
+            foreach ($typedFileKeys as $key => $type) {
+                if ($request->hasFile($key)) {
+                    $this->uploadPjoFile($request->file($key), $pjo->id, $type);
+                }
+            }
+
+            // Upload multiple sertifikat_lainnya files
+            if ($request->hasFile('sertifikat_lainnya')) {
+                $files = $request->file('sertifikat_lainnya');
+                $filesArray = is_array($files) ? $files : [$files];
+                foreach ($filesArray as $file) {
+                    $this->uploadPjoFile($file, $pjo->id, 'sertifikat_lainnya');
+                }
+            }
+
+            // Legacy generic files[] fallback
             if ($request->hasFile('files')) {
                 foreach ($request->file('files') as $file) {
-                    $this->uploadPjoFile($file, $pjo->id);
+                    $this->uploadPjoFile($file, $pjo->id, 'other');
                 }
             }
 

@@ -1,10 +1,10 @@
-import { ArrowLeft, HardHat, FileText, Loader2, Save, Upload } from 'lucide-react';
+import { ArrowLeft, FileText, HardHat, Loader2, Save, Upload } from 'lucide-react';
+import { Head, usePage } from '@inertiajs/react';
 import React, { useEffect, useState } from 'react';
 
 import ConfirmationModal from '@/Components/ConfirmationModal';
-import PageLoader from '@/Components/PageLoader';
 import FileDropzone from '@/Components/FileDropzone';
-import { Head, usePage } from '@inertiajs/react';
+import PageLoader from '@/Components/PageLoader';
 import axios from 'axios';
 
 const S = {
@@ -43,9 +43,8 @@ export default function BiddingEdit() {
                     company_site:       b.company_site       ?? '',
                     license_number:     b.license_number     ?? '',
                     service_criteria:   b.service_criteria   ?? '',
-                    classification:     b.classification     ?? '',
                     person_in_charge:   b.person_in_charge   ?? '',
-                    date:               b.date               ?? '',
+                    date:               b.date ? b.date.substring(0, 10) : '',
                     business_entity_id: b.business_entity_id ?? '',
                     ccow_id:            b.ccow_id            ?? '',
                     parent_id:          b.parent_id          ?? '',
@@ -186,8 +185,13 @@ export default function BiddingEdit() {
                             </div>
                             <div>
                                 <label style={S.label}>Alamat *</label>
-                                <input value={form.address} onChange={e => set('address', e.target.value)}
-                                    style={{ ...S.input, borderColor: errors.address ? '#ef4444' : 'var(--border-color)' }}
+                                <textarea value={form.address} onChange={e => set('address', e.target.value)}
+                                    style={{
+                                        ...S.input,
+                                        borderColor: errors.address ? '#ef4444' : 'var(--border-color)',
+                                        minHeight: '80px',
+                                        resize: 'vertical'
+                                    }}
                                     placeholder="Alamat lengkap perusahaan" />
                                 {errors.address && <span style={S.error}>{errors.address[0]}</span>}
                             </div>
@@ -320,7 +324,7 @@ export default function BiddingEdit() {
 
                     {/* Footer */}
                     <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', paddingTop: '16px', borderTop: '1px solid var(--border-color)' }}>
-                        <a href={`/csms/bidding/detail/${id}`}
+                        <a href="/csms/bidding/lists?status=Draft"
                             style={{ padding: '9px 20px', border: '1px solid var(--border-color)', borderRadius: '6px', fontSize: '12px', fontWeight: 600, backgroundColor: '#fff', color: 'var(--text-secondary)', textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}>
                             Batal
                         </a>

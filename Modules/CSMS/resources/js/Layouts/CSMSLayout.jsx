@@ -21,8 +21,10 @@ export default function CSMSLayout({ children }) {
     }, []);
 
     // Dropdown collapse states — diinisialisasi dari currentPath
-    const [openPjo, setOpenPjo] = useState(currentPath.includes('/pjo'));
-    const [openPostBidding, setOpenPostBidding] = useState(currentPath.includes('/post-bidding'));
+    const [openBidding, setOpenBidding]         = useState(currentPath.includes('/bidding') && !currentPath.includes('/approval'));
+    const [openPjo, setOpenPjo]                 = useState(currentPath.includes('/pjo'));
+    const [openPostBidding, setOpenPostBidding] = useState(currentPath.includes('/post-bidding') && !currentPath.includes('/approval'));
+    const [openApproval, setOpenApproval]       = useState(currentPath.includes('/approval'));
 
     return (
         <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: 'var(--bg-color)', position: 'relative' }}>
@@ -50,10 +52,14 @@ export default function CSMSLayout({ children }) {
                 isMobile={isMobile}
                 currentPath={currentPath}
                 currentSearch={currentSearch}
+                openBidding={openBidding}
+                setOpenBidding={setOpenBidding}
                 openPjo={openPjo}
                 setOpenPjo={setOpenPjo}
                 openPostBidding={openPostBidding}
                 setOpenPostBidding={setOpenPostBidding}
+                openApproval={openApproval}
+                setOpenApproval={setOpenApproval}
             />
 
             {/* Main Area */}

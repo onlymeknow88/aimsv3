@@ -34,10 +34,27 @@ class CsmsMenuSeeder extends Seeder
             'created_at' => $now, 'updated_at' => $now,
         ]);
 
-        // 3. Bidding
-        $menuIds[] = DB::table('aims_menus')->insertGetId([
+        // 3. Bidding (Parent)
+        $biddingParentId = DB::table('aims_menus')->insertGetId([
             'module_id'  => $moduleId, 'parent_id' => null, 'order_by' => 2,
             'name' => 'Bidding', 'slug' => 'csms.bidding',
+            'created_at' => $now, 'updated_at' => $now,
+        ]);
+        $menuIds[] = $biddingParentId;
+
+        $menuIds[] = DB::table('aims_menus')->insertGetId([
+            'module_id'  => $moduleId, 'parent_id' => $biddingParentId, 'order_by' => 1,
+            'name' => 'Active', 'slug' => 'csms.bidding.active',
+            'created_at' => $now, 'updated_at' => $now,
+        ]);
+        $menuIds[] = DB::table('aims_menus')->insertGetId([
+            'module_id'  => $moduleId, 'parent_id' => $biddingParentId, 'order_by' => 2,
+            'name' => 'On Going', 'slug' => 'csms.bidding.ongoing',
+            'created_at' => $now, 'updated_at' => $now,
+        ]);
+        $menuIds[] = DB::table('aims_menus')->insertGetId([
+            'module_id'  => $moduleId, 'parent_id' => $biddingParentId, 'order_by' => 3,
+            'name' => 'Draft', 'slug' => 'csms.bidding.draft',
             'created_at' => $now, 'updated_at' => $now,
         ]);
 
@@ -59,6 +76,21 @@ class CsmsMenuSeeder extends Seeder
             'name' => 'Inactive', 'slug' => 'csms.post-bidding.inactive',
             'created_at' => $now, 'updated_at' => $now,
         ]);
+        $menuIds[] = DB::table('aims_menus')->insertGetId([
+            'module_id'  => $moduleId, 'parent_id' => $postBiddingParentId, 'order_by' => 3,
+            'name' => 'On Going', 'slug' => 'csms.post-bidding.ongoing',
+            'created_at' => $now, 'updated_at' => $now,
+        ]);
+        $menuIds[] = DB::table('aims_menus')->insertGetId([
+            'module_id'  => $moduleId, 'parent_id' => $postBiddingParentId, 'order_by' => 4,
+            'name' => 'Draft', 'slug' => 'csms.post-bidding.draft',
+            'created_at' => $now, 'updated_at' => $now,
+        ]);
+        $menuIds[] = DB::table('aims_menus')->insertGetId([
+            'module_id'  => $moduleId, 'parent_id' => $postBiddingParentId, 'order_by' => 5,
+            'name' => 'Obsolate', 'slug' => 'csms.post-bidding.obsolate',
+            'created_at' => $now, 'updated_at' => $now,
+        ]);
 
         // 5. Renewal
         $menuIds[] = DB::table('aims_menus')->insertGetId([
@@ -67,10 +99,10 @@ class CsmsMenuSeeder extends Seeder
             'created_at' => $now, 'updated_at' => $now,
         ]);
 
-        // 6. PICA
+        // 6. PICA CSMS
         $menuIds[] = DB::table('aims_menus')->insertGetId([
             'module_id'  => $moduleId, 'parent_id' => null, 'order_by' => 5,
-            'name' => 'PICA', 'slug' => 'csms.pica',
+            'name' => 'PICA CSMS', 'slug' => 'csms.pica',
             'created_at' => $now, 'updated_at' => $now,
         ]);
 
@@ -84,17 +116,17 @@ class CsmsMenuSeeder extends Seeder
 
         $menuIds[] = DB::table('aims_menus')->insertGetId([
             'module_id'  => $moduleId, 'parent_id' => $pjoParentId, 'order_by' => 1,
-            'name' => 'PJO Active', 'slug' => 'csms.pjo.active',
+            'name' => 'Active', 'slug' => 'csms.pjo.active',
             'created_at' => $now, 'updated_at' => $now,
         ]);
         $menuIds[] = DB::table('aims_menus')->insertGetId([
             'module_id'  => $moduleId, 'parent_id' => $pjoParentId, 'order_by' => 2,
-            'name' => 'PJO On Going', 'slug' => 'csms.pjo.ongoing',
+            'name' => 'On Going', 'slug' => 'csms.pjo.ongoing',
             'created_at' => $now, 'updated_at' => $now,
         ]);
         $menuIds[] = DB::table('aims_menus')->insertGetId([
             'module_id'  => $moduleId, 'parent_id' => $pjoParentId, 'order_by' => 3,
-            'name' => 'PJO Draft', 'slug' => 'csms.pjo.draft',
+            'name' => 'Draft', 'slug' => 'csms.pjo.draft',
             'created_at' => $now, 'updated_at' => $now,
         ]);
 
@@ -112,17 +144,29 @@ class CsmsMenuSeeder extends Seeder
             'created_at' => $now, 'updated_at' => $now,
         ]);
 
-        // 10. Kamus CSMS
+        // 10. Kamus
         $menuIds[] = DB::table('aims_menus')->insertGetId([
             'module_id'  => $moduleId, 'parent_id' => null, 'order_by' => 9,
-            'name' => 'Kamus CSMS', 'slug' => 'csms.dictionary',
+            'name' => 'Kamus', 'slug' => 'csms.dictionary',
             'created_at' => $now, 'updated_at' => $now,
         ]);
 
-        // 11. Approval CSMS
-        $menuIds[] = DB::table('aims_menus')->insertGetId([
+        // 11. Approval CSMS (Parent)
+        $approvalParentId = DB::table('aims_menus')->insertGetId([
             'module_id'  => $moduleId, 'parent_id' => null, 'order_by' => 10,
             'name' => 'Approval CSMS', 'slug' => 'csms.approval',
+            'created_at' => $now, 'updated_at' => $now,
+        ]);
+        $menuIds[] = $approvalParentId;
+
+        $menuIds[] = DB::table('aims_menus')->insertGetId([
+            'module_id'  => $moduleId, 'parent_id' => $approvalParentId, 'order_by' => 1,
+            'name' => 'Bidding', 'slug' => 'csms.approval.bidding',
+            'created_at' => $now, 'updated_at' => $now,
+        ]);
+        $menuIds[] = DB::table('aims_menus')->insertGetId([
+            'module_id'  => $moduleId, 'parent_id' => $approvalParentId, 'order_by' => 2,
+            'name' => 'Post Bidding', 'slug' => 'csms.approval.post-bidding',
             'created_at' => $now, 'updated_at' => $now,
         ]);
 

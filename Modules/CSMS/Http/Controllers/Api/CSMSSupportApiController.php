@@ -11,6 +11,7 @@ use Modules\CSMS\Entities\CsmsMemoKttFile;
 use Modules\CSMS\Entities\CsmsLetter;
 use Modules\CSMS\Entities\CsmsDictionary;
 use Modules\CSMS\Entities\CsmsPica;
+use Modules\CSMS\Entities\Bidding;
 use App\Models\Company;
 use App\Models\BusinessEntity;
 
@@ -38,17 +39,43 @@ class CSMSSupportApiController extends CSMSBaseApiController
             ->orderBy('name')
             ->get();
 
+        // Companies that have at least one approved PostBidding — used for PJO create form
+        $biddingCompanies = Bidding::where('criteria', 'PostBidding')
+            ->where('status', 'Approved')
+            ->where('requested', 'Approved')
+            ->where('published', 'Publish')
+            ->get()
+            ->map(function ($b) {
+                $q = is_string($b->questionnaire)
+                    ? (json_decode($b->questionnaire, true) ?? [])
+                    : (array) ($b->questionnaire ?? []);
+                return [
+                    'id'               => $b->company_id ?? $b->id,
+                    'bidding_id'       => $b->id,
+                    'company_name'     => $b->company_name,
+                    'service_criteria' => $b->service_criteria,
+                    'ccow_id'          => $b->ccow_id,
+                    // PJO auto-fill fields from questionnaire
+                    'equipped_name'      => $q['equipped_name']      ?? null,
+                    'equipped_telephone' => $q['equipped_telephone']  ?? null,
+                    'equipped_email'     => $q['equipped_email']      ?? null,
+                ];
+            })
+            ->unique('company_name')
+            ->values();
+
         return ResponseFormatter::success([
-            'companies'         => $companies,
-            'master_checklists' => $masterChecklists,
-            'service_criterias' => ['CONTRACTOR', 'SUBCONTRACTOR'],
-            'classifications'   => [
+            'companies'          => $companies,
+            'bidding_companies'  => $biddingCompanies,
+            'master_checklists'  => $masterChecklists,
+            'service_criterias'  => ['CONTRACTOR', 'SUBCONTRACTOR'],
+            'classifications'    => [
                 'Kontraktor Utama',
                 'Kontraktor Langsung',
                 'Subkontraktor Tunggal',
                 'Kontraktor Bersama',
             ],
-            'business_entities' => $businessEntities,
+            'business_entities'  => $businessEntities,
         ], 'Master data retrieved successfully');
     }
 
@@ -243,15 +270,49 @@ class CSMSSupportApiController extends CSMSBaseApiController
     // ── PICA — INDEX ──────────────────────────────────────────────────────────
     public function indexPicas(Request $request)
     {
-        $q = CsmsPica::with('bidding')->orderBy('created_at', 'desc');
+        $q = CsmsPica::with(['bidding.ccow', 'checklist'])
+            ->orderBy('created_at', 'desc');
 
         if ($s = $request->search) {
-            $q->where('description', 'like', "%{$s}%");
+            $q->where(function ($query) use ($s) {
+                $query->where('description', 'like', "%{$s}%")
+                      ->orWhereHas('bidding', fn($b) => $b->where('company_name', 'like', "%{$s}%"));
+            });
         }
         if ($st = $request->status) {
             $q->where('status', $st);
         }
+        if ($biddingId = $request->bidding_id) {
+            $q->where('bidding_id', $biddingId);
+        }
+
+        // Auto-mark overdue: Open records where due_date has passed
+        $q->each(function ($pica) {
+            if ($pica->status === 'Open' && $pica->due_date && $pica->due_date->isPast()) {
+                $pica->update(['status' => 'Overdue']);
+                $pica->status = 'Overdue';
+            }
+        });
 
         return ResponseFormatter::success($q->paginate($request->limit ?? 10));
+    }
+
+    // ── PICA — UPDATE ─────────────────────────────────────────────────────────
+    public function updatePica(Request $request, string $id)
+    {
+        $pica = CsmsPica::find($id);
+        if (!$pica) {
+            return ResponseFormatter::error('PICA tidak ditemukan', 404);
+        }
+
+        $validated = $request->validate([
+            'status'   => 'sometimes|string|in:Open,Closed,Overdue',
+            'pic'      => 'sometimes|nullable|string|max:255',
+            'due_date' => 'sometimes|nullable|date',
+        ]);
+
+        $pica->update($validated);
+
+        return ResponseFormatter::success($pica, 'PICA berhasil diupdate');
     }
 }

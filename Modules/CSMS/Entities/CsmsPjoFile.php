@@ -14,6 +14,7 @@ class CsmsPjoFile extends Model
 
     protected $fillable = [
         'pjo_id',
+        'type',
         'file',
         'blob_url',
         'blob_response',

@@ -12,7 +12,7 @@ const thStyle = { fontSize: '11px', fontWeight: 700, color: 'var(--text-primary)
 const tdStyle = { fontSize: '12px', padding: '10px 12px', color: 'var(--text-secondary)' };
 
 export default function PostBiddingApproval() {
-    const { biddings, pagination, loading, search, setSearch, status, setStatus, limit, setLimit, page, setPage, refresh, submitApproval } = useBidding('PostBidding');
+    const { biddings, pagination, loading, search, setSearch, status, setStatus, limit, setLimit, page, setPage, refresh, submitApproval } = useBidding('PostBidding', 'Ongoing');
     const [modal, setModal]           = useState({ open: false, id: null, action: null, company: '' });
     const [processing, setProcessing] = useState(false);
     const [comment, setComment]       = useState('');
@@ -43,7 +43,7 @@ export default function PostBiddingApproval() {
                             </div>
                             <select value={status} onChange={e => { setStatus(e.target.value); setPage(1); }}
                                 style={{ height: '36px', padding: '0 10px', fontSize: '12px', border: '1px solid var(--border-color)', borderRadius: '8px', backgroundColor: '#fff', outline: 'none' }}>
-                                <option value="">Semua Status</option>
+                                <option value="Ongoing">Semua Status Review</option>
                                 <option value="On Review OHS">On Review OHS</option>
                                 <option value="On Review D/H OHS">On Review D/H OHS</option>
                                 <option value="On Review KTT">On Review KTT</option>

@@ -16,12 +16,12 @@ export default function usePica() {
             params: { search, status, limit, page }
         })
         .then(res => {
-            const result = res.data?.result || res.data?.data || res.data;
+            const result = res.data?.result ?? res.data;
             setPicas(result?.data ?? (Array.isArray(result) ? result : []));
             setPagination({
                 current_page: result?.current_page ?? 1,
                 last_page:    result?.last_page    ?? 1,
-                total:        result?.total        ?? 0
+                total:        result?.total        ?? 0,
             });
         })
         .catch(() => {})
@@ -30,12 +30,21 @@ export default function usePica() {
 
     useEffect(() => { doFetch(); }, [doFetch]);
 
+    const updatePica = useCallback((id, data) => {
+        return axios.put(`/api/csms/picas/${id}`, data)
+            .then(res => {
+                doFetch();
+                return res.data?.result;
+            });
+    }, [doFetch]);
+
     return {
         picas, pagination, loading,
         search, setSearch,
         status, setStatus,
         limit, setLimit,
         page, setPage,
-        refresh: doFetch
+        refresh: doFetch,
+        updatePica,
     };
 }

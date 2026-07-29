@@ -39,7 +39,8 @@ class Bidding extends Model
         'risk_category',
         'is_obsolate',
         'csms_doc_number',
-        'date'
+        'date',
+        'pjo_id'
     ];
 
     protected $casts = [
@@ -103,5 +104,15 @@ class Bidding extends Model
     public function checklists()
     {
         return $this->hasMany(CsmsChecklist::class, 'bidding_id');
+    }
+
+    public function pjo()
+    {
+        return $this->belongsTo(CsmsPjo::class, 'pjo_id');
+    }
+
+    public function picas()
+    {
+        return $this->hasMany(CsmsPica::class, 'bidding_id');
     }
 }
