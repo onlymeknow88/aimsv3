@@ -14,6 +14,7 @@ class CSMSDatabaseSeeder extends Seeder
         $this->call([
             CSMSMasterBiddingChecklistTableSeeder::class,
             CSMSDummySeeder::class,
+            CsmsCertificateSeeder::class,
         ]);
     }
 }

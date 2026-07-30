@@ -15,10 +15,12 @@ const thStyle = { fontSize: '11px', fontWeight: 700, color: 'var(--text-primary)
 const tdStyle = { fontSize: '12px', padding: '10px 12px', color: 'var(--text-secondary)' };
 
 const STATUS_COLORS = {
-    'Draft':    { color: '#64748b', bg: 'rgba(100,116,139,0.1)' },
-    'Active':   { color: '#2FBF71', bg: 'rgba(47,191,113,0.08)' },
-    'On Going': { color: '#FF8C24', bg: 'rgba(255,140,36,0.08)' },
-    'Inactive': { color: '#ef4444', bg: 'rgba(239,68,68,0.08)' },
+    'Draft':               { color: '#64748b', bg: 'rgba(100,116,139,0.1)' },
+    'On Review Evaluator': { color: '#3b82f6', bg: 'rgba(59,130,246,0.08)' },
+    'Approved':            { color: '#2FBF71', bg: 'rgba(47,191,113,0.08)' },
+    'Active':              { color: '#2FBF71', bg: 'rgba(47,191,113,0.08)' },
+    'On Going':            { color: '#FF8C24', bg: 'rgba(255,140,36,0.08)' },
+    'Inactive':            { color: '#ef4444', bg: 'rgba(239,68,68,0.08)' },
 };
 
 function PjoStatusBadge({ status }) {
@@ -71,6 +73,8 @@ export default function PjoIndex() {
                         style={{ padding: '7px 12px', border: '1px solid var(--border-color)', borderRadius: '6px', fontSize: '12px', outline: 'none', cursor: 'pointer' }}>
                         <option value="">Semua Status</option>
                         <option value="Draft">Draft</option>
+                        <option value="On Review Evaluator">On Review Evaluator</option>
+                        <option value="Approved">Approved</option>
                         <option value="Active">Active</option>
                         <option value="On Going">On Going</option>
                         <option value="Inactive">Inactive</option>

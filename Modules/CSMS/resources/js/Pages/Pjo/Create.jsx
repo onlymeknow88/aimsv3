@@ -65,6 +65,9 @@ export default function PjoCreate() {
         date_submission: "",
         ccow_id: "",
         submission: "",
+        competence: "",
+        cert_number: "",
+        cert_expiry: "",
     });
 
     // Typed files: single per type
@@ -103,16 +106,16 @@ export default function PjoCreate() {
 
     // Auto-fill criteria + PJO contact fields when company selected
     const handleCompanyChange = (companyId) => {
-        set("company_id", companyId);
         if (!companyId) {
-            setForm(f => ({ ...f, company_id: '', criteria: '', name: '', phone: '', email: '' }));
+            setForm(f => ({ ...f, company_id: '', criteria: '', name: '', phone: '', email: '', ccow_id: '' }));
             return;
         }
-        const selectedCompany = companies.find(c => c.id === companyId);
+        const selectedCompany = companies.find(c => String(c.id) === String(companyId));
         const match = biddingCompanies.find(b =>
-            b.id === companyId ||
+            String(b.id) === String(companyId) ||
             (selectedCompany && b.company_name === selectedCompany.name)
         );
+        console.log('[PJO Create] handleCompanyChange', { companyId, selectedCompany, match, biddingCompanies });
         setForm(f => ({
             ...f,
             company_id:  companyId,
@@ -120,6 +123,7 @@ export default function PjoCreate() {
             name:        match?.equipped_name      ?? f.name,
             phone:       match?.equipped_telephone ?? f.phone,
             email:       match?.equipped_email     ?? f.email,
+            ccow_id:     match?.ccow_id            ?? f.ccow_id,
         }));
     };
 
@@ -286,6 +290,21 @@ export default function PjoCreate() {
                                 <div>
                                     <label style={S.label}>Tanggal Lahir</label>
                                     <input type="date" value={form.date_of_birth} onChange={(e) => set("date_of_birth", e.target.value)} style={S.input} />
+                                </div>
+                            </div>
+
+                            <div style={row3}>
+                                <div>
+                                    <label style={S.label}>Kompetensi PJO</label>
+                                    <input value={form.competence} onChange={(e) => set("competence", e.target.value)} style={S.input} placeholder="POP / POM / POU" />
+                                </div>
+                                <div>
+                                    <label style={S.label}>Nomor Sertifikat</label>
+                                    <input value={form.cert_number} onChange={(e) => set("cert_number", e.target.value)} style={S.input} placeholder="No. sertifikat kompetensi" />
+                                </div>
+                                <div>
+                                    <label style={S.label}>Masa Berlaku Sertifikat</label>
+                                    <input type="date" value={form.cert_expiry} onChange={(e) => set("cert_expiry", e.target.value)} style={S.input} />
                                 </div>
                             </div>
 

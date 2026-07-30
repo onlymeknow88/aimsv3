@@ -724,7 +724,7 @@ class CSMSBiddingApiController extends CSMSBaseApiController
             'classification' => 'required|string',
             'risk_category'  => 'required|in:Rendah,Menengah,Tinggi',
             'questionnaire'  => 'required',
-            'questionnaire_file' => 'nullable|file|max:20480',
+            // 'questionnaire_file' => 'nullable|file|max:20480',
             'published'      => 'required|in:Draft,Publish',
             'status'         => 'required|in:Draft,On Review OHS',
         ]);
@@ -759,14 +759,14 @@ class CSMSBiddingApiController extends CSMSBaseApiController
                 ? (json_decode($validated['questionnaire'], true) ?? [])
                 : $validated['questionnaire'];
 
-            if ($request->hasFile('questionnaire_file')) {
-                $file = $request->file('questionnaire_file');
-                $originalName = $file->getClientOriginalName();
-                $path = 'csms/post-bidding/questionnaire/' . $postBidding->id;
-                $uploadResult = uploadToBlobStorage($originalName, $file->getRealPath(), $path);
-                $questionnaireArray['questionnaire_file'] = $uploadResult['fileBlobPathName']
-                    ?? ($path . '/' . $originalName);
-            }
+            // if ($request->hasFile('questionnaire_file')) {
+            //     $file = $request->file('questionnaire_file');
+            //     $originalName = $file->getClientOriginalName();
+            //     $path = 'csms/post-bidding/questionnaire/' . $postBidding->id;
+            //     $uploadResult = uploadToBlobStorage($originalName, $file->getRealPath(), $path);
+            //     $questionnaireArray['questionnaire_file'] = $uploadResult['fileBlobPathName']
+            //         ?? ($path . '/' . $originalName);
+            // }
             $postBidding->questionnaire = json_encode($questionnaireArray);
 
             // 5. Generate document number
@@ -1006,20 +1006,26 @@ class CSMSBiddingApiController extends CSMSBaseApiController
 
                 // ── 2. Profil PJO ────────────────────────────────────────────
                 'pjo_name'        => $pjo->name ?? '-',
-                'pjo_competence'  => $q['equipped_position'] ?? '-',
-                'pjo_cert_number' => $pjo->number_pjo ?? '-',
-                'pjo_cert_expiry' => $pjo?->date_approved?->format('d F Y') ?? '-',
+                'pjo_competence'  => $pjo->competence ?? ($q['equipped_position'] ?? '-'),
+                'pjo_cert_number' => $pjo->cert_number ?? ($pjo->number_pjo ?? '-'),
+                'pjo_cert_expiry' => !empty($pjo->cert_expiry)
+                    ? \Carbon\Carbon::parse($pjo->cert_expiry)->format('d F Y')
+                    : ($pjo?->date_approved?->format('d F Y') ?? '-'),
                 'pjo_phone_email' => $pjoPhoneEmail,
 
                 // ── 3. Bidang Usaha ──────────────────────────────────────────
-                'nib_number'         => $bidding->license_number ?? '-',
-                'iujp_number'        => '-',
-                'license_start_date' => $contractStart,
-                'license_end_date'   => $contractEnd,
-                'business_fields'    => [
+                'nib_number'         => $q['nib_number'] ?? ($bidding->license_number ?? '-'),
+                'iujp_number'        => $q['iujp_number'] ?? '-',
+                'license_start_date' => !empty($q['license_start_date'])
+                    ? \Carbon\Carbon::parse($q['license_start_date'])->format('d-m-Y')
+                    : $contractStart,
+                'license_end_date'   => !empty($q['license_end_date'])
+                    ? \Carbon\Carbon::parse($q['license_end_date'])->format('d-m-Y')
+                    : $contractEnd,
+                'business_fields'    => !empty($q['business_fields']) ? $q['business_fields'] : [
                     [
-                        'kbli'        => '-',
-                        'jenis_usaha' => $bidding->businessEntity->name ?? '-',
+                        'kbli'        => $q['kbli_code'] ?? '-',
+                        'jenis_usaha' => $q['business_type'] ?? ($bidding->businessEntity->name ?? '-'),
                         'bidang_usaha'=> $q['scope_of_business'] ?? ($bidding->service_criteria ?? '-'),
                         'sub_bidang'  => '-',
                         'risiko'      => $bidding->risk_category ?? '-',
@@ -1027,7 +1033,7 @@ class CSMSBiddingApiController extends CSMSBaseApiController
                 ],
 
                 // ── 4. Kegiatan Mitra Kerja ──────────────────────────────────
-                'company_category'        => $bidding->classification ?? 'PJP Utama',
+                'company_category'        => $bidding->classification ?? 'Kontraktor Utama',
                 'contract_level'          => 'PJP Tingkat 1',
                 'owner_dept'              => 'Mining Engineering Dept',
                 'contractor_name'         => $bidding->company_name,
@@ -1035,7 +1041,7 @@ class CSMSBiddingApiController extends CSMSBaseApiController
                 'sub_sub_contractor'      => '-',
                 'sub_sub_sub_contractor'  => '-',
                 'owner_contract_info'     => $contractStart . ' – ' . $contractEnd,
-                'activities_list'         => $q['scope_of_business'] ?? ($bidding->service_criteria ?? '-'),
+                'activities_list'         => $q['activities_list'] ?? ($q['scope_of_business'] ?? ($bidding->service_criteria ?? '-')),
                 'validity_period'         => '3 (tiga) tahun',
 
                 // ── Tanda Tangan ─────────────────────────────────────────────
@@ -1047,13 +1053,13 @@ class CSMSBiddingApiController extends CSMSBaseApiController
 
             // Generate PDF
             ini_set('memory_limit', '1024M');
-            
+
             $pdf = Pdf::loadView('csms::pdf.certificate_new', ['data' => $data])
                 ->setPaper('A4', 'portrait')
                 ->setOption('isHtml5ParserEnabled', true)
                 ->setOption('isRemoteEnabled', false)
                 ->setOption('chunkSize', 2048);
-            
+
             $filename = sprintf(
                 'Sertifikat-CSMS-%s-%s.pdf',
                 str_replace(' ', '-', $bidding->company_name),
