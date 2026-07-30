@@ -26,7 +26,15 @@ class CSMSPjoApiController extends CSMSBaseApiController
             });
         }
 
-        if ($status) $query->where('status', $status);
+        if ($status === 'Ongoing' || $status === 'On Going') {
+            $query->whereIn('status', [self::STATUS_ON_REVIEW_OHS, self::STATUS_ON_REVIEW_DHOHS, self::STATUS_ON_REVIEW_KTT, 'On Review Evaluator']);
+        } elseif ($status === 'Active' || $status === 'Approved') {
+            $query->where('status', self::STATUS_APPROVED);
+        } elseif ($status === 'Draft') {
+            $query->where('status', self::STATUS_DRAFT);
+        } elseif ($status) {
+            $query->where('status', $status);
+        }
 
         $query->orderBy('created_at', 'desc');
 
@@ -76,6 +84,9 @@ class CSMSPjoApiController extends CSMSBaseApiController
             'email'           => 'nullable|email|max:255',
             'date_submission' => 'nullable|date',
             'submission'      => 'nullable|string|max:255',
+            'competence'      => 'nullable|string|max:255',
+            'cert_number'     => 'nullable|string|max:255',
+            'cert_expiry'     => 'nullable|date',
             // Validate typed files — all optional, max 20MB each
             'sertifikat_pop'             => 'nullable|file|max:20480',
             'sertifikat_pom'             => 'nullable|file|max:20480',
@@ -157,16 +168,41 @@ class CSMSPjoApiController extends CSMSBaseApiController
             'date_submission' => 'nullable|date',
             'date_approved'   => 'nullable|date',
             'status'          => 'sometimes|string|max:50',
+            'requested'       => 'nullable|string|max:50',
             'comment'         => 'nullable|string',
             'company_id'      => 'nullable|uuid',
             'ccow_id'         => 'nullable|uuid',
             'date_of_birth'   => 'nullable|date',
             'submission'      => 'nullable|string|max:255',
+            'competence'      => 'nullable|string|max:255',
+            'cert_number'     => 'nullable|string|max:255',
+            'cert_expiry'     => 'nullable|date',
         ]);
 
         DB::beginTransaction();
         try {
             $pjo->update($validated);
+
+            // Logic to create User and link to Company when PJO status becomes Approved
+            if (isset($validated['status']) && $validated['status'] === self::STATUS_APPROVED) {
+                $company = \App\Models\Company::find($pjo->company_id);
+                if ($company) {
+                    $checkUser = \App\Models\User::where('email', $pjo->email)->first();
+                    if (!$checkUser) {
+                        $user = \App\Models\User::create([
+                            'name'     => $pjo->name,
+                            'email'    => $pjo->email,
+                            'password' => bcrypt('123123123'),
+                            'role'     => 'csms_vendor',
+                        ]);
+                    } else {
+                        $user = $checkUser;
+                    }
+                    $company->update([
+                        'user_id' => $user->id,
+                    ]);
+                }
+            }
 
             if ($request->hasFile('files')) {
                 foreach ($request->file('files') as $file) {

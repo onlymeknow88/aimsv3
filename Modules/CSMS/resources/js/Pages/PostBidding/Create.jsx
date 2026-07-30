@@ -2,9 +2,9 @@ import { ArrowLeft, ClipboardCheck, Loader2, Save } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 
 import ConfirmationModal from '@/Components/ConfirmationModal';
-import PageLoader from '@/Components/PageLoader';
 import FileDropzone from '@/Components/FileDropzone';
 import { Head } from '@inertiajs/react';
+import PageLoader from '@/Components/PageLoader';
 import axios from 'axios';
 
 const S = {
@@ -51,6 +51,18 @@ export default function PostBiddingCreate() {
             equipped_position: '',
             equipped_telephone: '',
             equipped_email: '',
+            pjo_competence: '',
+            pjo_cert_number: '',
+            pjo_cert_expiry: '',
+            // ── Data Sertifikat (Bidang Usaha) ────────────────────────────
+            nib_number: '',
+            iujp_number: '',
+            license_start_date: '',
+            license_end_date: '',
+            kbli_code: '',
+            business_type: '',
+            activities_list: '',
+            business_fields: [],
         }
     });
 
@@ -187,7 +199,7 @@ export default function PostBiddingCreate() {
         setSaving(true);
         setErrors({});
         const fd = new FormData();
-        
+
         // Add parent bidding_id
         fd.append('bidding_id', selectedBiddingId);
         fd.append('classification', form.classification);
@@ -221,8 +233,8 @@ export default function PostBiddingCreate() {
                 if (result?.id) {
                     window.location.href = `/csms/post-bidding/detail/${result.id}`;
                 } else {
-                    const redirectUrl = isDraft 
-                        ? '/csms/post-bidding/lists?status=Draft' 
+                    const redirectUrl = isDraft
+                        ? '/csms/post-bidding/lists?status=Draft'
                         : '/csms/post-bidding/lists?status=On Going';
                     window.location.href = redirectUrl;
                 }
@@ -453,7 +465,161 @@ export default function PostBiddingCreate() {
                                             <input type="email" value={form.questionnaire.equipped_email} onChange={e => handleQuestionnaireChange('equipped_email', e.target.value)} style={S.input} />
                                         </div>
                                     </div>
-                                    <div style={{ marginTop: '16px', borderTop: '1px dashed var(--border-color)', paddingTop: '16px' }}>
+
+                                    <div style={row3}>
+                                        <div>
+                                            <label style={S.label}>Kompetensi PJO</label>
+                                            <select value={form.questionnaire.pjo_competence ?? ''} onChange={e => handleQuestionnaireChange('pjo_competence', e.target.value)} style={S.input}>
+                                                <option value="">-- Pilih Kompetensi --</option>
+                                                <option value="POP">POP</option>
+                                                <option value="POM">POM</option>
+                                                <option value="POU">POU</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label style={S.label}>No. Sertifikasi PJO</label>
+                                            <input value={form.questionnaire.pjo_cert_number ?? ''} onChange={e => handleQuestionnaireChange('pjo_cert_number', e.target.value)} placeholder="Contoh: xxxx/xx.0xx/DBT/2009" style={S.input} />
+                                        </div>
+                                        <div>
+                                            <label style={S.label}>Masa Berlaku Sertifikasi PJO</label>
+                                            <input value={form.questionnaire.pjo_cert_expiry ?? ''} onChange={e => handleQuestionnaireChange('pjo_cert_expiry', e.target.value)} placeholder="Contoh: - atau Tanggal" style={S.input} />
+                                        </div>
+                                    </div>
+
+                                    <div style={{ marginTop: '16px', borderTop: '1px solid var(--border-color)', paddingTop: '16px' }}>
+                                        <h5 style={{ fontSize: '12px', fontWeight: 700, color: 'var(--primary)', margin: '0 0 16px 0', textTransform: 'uppercase' }}>Legalitas Bidang Usaha</h5>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                                            <div style={row3}>
+                                                <div>
+                                                    <label style={S.label}>NIB Perusahaan</label>
+                                                    <input value={form.questionnaire.nib_number} onChange={e => handleQuestionnaireChange('nib_number', e.target.value)} placeholder="Masukkan NIB..." style={S.input} />
+                                                </div>
+                                                <div>
+                                                    <label style={S.label}>KBLI Perusahaan</label>
+                                                    <input value={form.questionnaire.kbli_code} onChange={e => handleQuestionnaireChange('kbli_code', e.target.value)} placeholder="Contoh: 09900" style={S.input} />
+                                                </div>
+                                                <div>
+                                                    <label style={S.label}>No. IUJP Perusahaan</label>
+                                                    <input value={form.questionnaire.iujp_number} onChange={e => handleQuestionnaireChange('iujp_number', e.target.value)} placeholder="Masukkan No. IUJP..." style={S.input} />
+                                                </div>
+                                            </div>
+
+                                            <div style={row3}>
+                                                <div>
+                                                    <label style={S.label}>Jenis Usaha (Business Type)</label>
+                                                    <input value={form.questionnaire.business_type} onChange={e => handleQuestionnaireChange('business_type', e.target.value)} placeholder="Contoh: Aktivitas Penunjang..." style={S.input} />
+                                                </div>
+                                                <div>
+                                                    <label style={S.label}>Mulai Berlaku Izin</label>
+                                                    <input type="date" value={form.questionnaire.license_start_date} onChange={e => handleQuestionnaireChange('license_start_date', e.target.value)} style={S.input} />
+                                                </div>
+                                                <div>
+                                                    <label style={S.label}>Selesai Berlaku Izin</label>
+                                                    <input type="date" value={form.questionnaire.license_end_date} onChange={e => handleQuestionnaireChange('license_end_date', e.target.value)} style={S.input} />
+                                                </div>
+                                            </div>
+
+                                            <div>
+                                                <label style={S.label}>Daftar Aktivitas (Activities List)</label>
+                                                <textarea
+                                                    value={form.questionnaire.activities_list}
+                                                    onChange={e => handleQuestionnaireChange('activities_list', e.target.value)}
+                                                    placeholder="Tuliskan daftar aktivitas kerja..."
+                                                    rows={3}
+                                                    style={{ ...S.input, fontFamily: 'inherit', resize: 'vertical' }}
+                                                />
+                                            </div>
+
+                                            {/* Business Fields - dynamic rows */}
+                                            <div>
+                                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                                                    <label style={S.label}>Keterangan Bidang Usaha</label>
+                                                    <button type="button" onClick={() => handleQuestionnaireChange('business_fields', [
+                                                        ...(form.questionnaire.business_fields ?? []),
+                                                        { kbli: form.questionnaire.kbli_code ?? '', jenis_usaha: form.questionnaire.business_type ?? '', bidang_usaha: '', sub_bidang_list: [], risiko: 'Tinggi' }
+                                                    ])} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '4px 10px', backgroundColor: 'var(--primary)', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '11px', fontWeight: 600, cursor: 'pointer' }}>
+                                                        + Tambah Baris
+                                                    </button>
+                                                </div>
+
+                                                {(form.questionnaire.business_fields ?? []).length === 0 ? (
+                                                    <div style={{ padding: '12px', backgroundColor: '#f8fafc', border: '1px dashed var(--border-color)', borderRadius: '6px', fontSize: '11px', color: 'var(--text-secondary)', textAlign: 'center' }}>
+                                                        Belum ada baris bidang usaha. Klik "+ Tambah Baris" untuk menambahkan.
+                                                    </div>
+                                                ) : (
+                                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                                        {(form.questionnaire.business_fields ?? []).map((bf, idx) => (
+                                                            <div key={idx} style={{ padding: '12px', backgroundColor: '#f8fafc', border: '1px solid var(--border-color)', borderRadius: '8px' }}>
+                                                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+                                                                    <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)' }}>Baris {idx + 1}</span>
+                                                                    <button type="button" onClick={() => handleQuestionnaireChange('business_fields',
+                                                                        (form.questionnaire.business_fields ?? []).filter((_, i) => i !== idx)
+                                                                    )} style={{ border: '1px solid #fca5a5', background: '#fef2f2', color: '#ef4444', cursor: 'pointer', fontSize: '11px', fontWeight: 600, padding: '2px 8px', borderRadius: '4px' }}>
+                                                                        Hapus
+                                                                    </button>
+                                                                </div>
+                                                                <div style={row2}>
+                                                                    <div>
+                                                                        <label style={S.label}>No. KBLI</label>
+                                                                        <input value={bf.kbli ?? ''} onChange={e => {
+                                                                            const updated = [...(form.questionnaire.business_fields ?? [])];
+                                                                            updated[idx] = { ...updated[idx], kbli: e.target.value };
+                                                                            handleQuestionnaireChange('business_fields', updated);
+                                                                        }} placeholder="09900" style={S.input} />
+                                                                    </div>
+                                                                    <div>
+                                                                        <label style={S.label}>Jenis Usaha</label>
+                                                                        <input value={bf.jenis_usaha ?? ''} onChange={e => {
+                                                                            const updated = [...(form.questionnaire.business_fields ?? [])];
+                                                                            updated[idx] = { ...updated[idx], jenis_usaha: e.target.value };
+                                                                            handleQuestionnaireChange('business_fields', updated);
+                                                                        }} placeholder="Jenis Usaha..." style={S.input} />
+                                                                    </div>
+                                                                </div>
+                                                                <div style={{ ...row2, marginTop: '10px' }}>
+                                                                    <div>
+                                                                        <label style={S.label}>Bidang Usaha / Sifat Usaha</label>
+                                                                        <input value={bf.bidang_usaha ?? ''} onChange={e => {
+                                                                            const updated = [...(form.questionnaire.business_fields ?? [])];
+                                                                            updated[idx] = { ...updated[idx], bidang_usaha: e.target.value };
+                                                                            handleQuestionnaireChange('business_fields', updated);
+                                                                        }} placeholder="Penambangan / Pengangkutan..." style={S.input} />
+                                                                    </div>
+                                                                    <div>
+                                                                        <label style={S.label}>Risiko</label>
+                                                                        <select value={bf.risiko ?? 'Tinggi'} onChange={e => {
+                                                                            const updated = [...(form.questionnaire.business_fields ?? [])];
+                                                                            updated[idx] = { ...updated[idx], risiko: e.target.value };
+                                                                            handleQuestionnaireChange('business_fields', updated);
+                                                                        }} style={S.input}>
+                                                                            <option value="Tinggi">Tinggi</option>
+                                                                            <option value="Menengah">Menengah</option>
+                                                                            <option value="Rendah">Rendah</option>
+                                                                        </select>
+                                                                    </div>
+                                                                </div>
+                                                                <div style={{ marginTop: '10px' }}>
+                                                                    <label style={S.label}>Sub Bidang / Sub Klasifikasi <span style={{ fontWeight: 400, color: 'var(--text-muted,#94a3b8)' }}>(satu per baris)</span></label>
+                                                                    <textarea
+                                                                        value={Array.isArray(bf.sub_bidang_list) ? bf.sub_bidang_list.join('\n') : (bf.sub_bidang_list ?? '')}
+                                                                        onChange={e => {
+                                                                            const updated = [...(form.questionnaire.business_fields ?? [])];
+                                                                            updated[idx] = { ...updated[idx], sub_bidang_list: e.target.value.split('\n') };
+                                                                            handleQuestionnaireChange('business_fields', updated);
+                                                                        }}
+                                                                        placeholder="Pembukaan lahan&#10;Pengupasan tanah..."
+                                                                        rows={3}
+                                                                        style={{ ...S.input, fontFamily: 'inherit', resize: 'vertical' }}
+                                                                    />
+                                                                </div>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {/* <div style={{ marginTop: '16px', borderTop: '1px dashed var(--border-color)', paddingTop: '16px' }}>
                                         <label style={S.label}>File Scan Kuesioner CSMS</label>
                                         <FileDropzone onFileDrop={(files) => setQuestionnaireFile(files[0])} accept=".pdf,.png,.jpeg,.jpg" />
                                         {questionnaireFile && (
@@ -462,7 +628,7 @@ export default function PostBiddingCreate() {
                                                 <button type="button" onClick={() => setQuestionnaireFile(null)} style={{ flexShrink: 0, border: '1px solid #fca5a5', background: '#fef2f2', color: '#ef4444', cursor: 'pointer', fontSize: '11px', fontWeight: 600, padding: '2px 8px', borderRadius: '4px', lineHeight: '16px' }}>Hapus</button>
                                             </div>
                                         )}
-                                    </div>
+                                    </div> */}
                                 </div>
                             </div>
 

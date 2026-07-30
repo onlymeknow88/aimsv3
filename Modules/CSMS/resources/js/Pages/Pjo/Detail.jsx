@@ -1,9 +1,10 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { AlertCircle, ArrowLeft, Building, Calendar, Download, Edit, Eye, FileText, Mail, Paperclip, Phone, User } from 'lucide-react';
+import { AlertCircle, ArrowLeft, Building, Calendar, Download, Edit, Eye, FileText, Mail, Paperclip, Phone, User, X } from 'lucide-react';
 import { Head, usePage } from '@inertiajs/react';
 
 import PageLoader from '@/Components/PageLoader';
 import axios from 'axios';
+import DetailRightSidebar from './Partials/DetailRightSidebar';
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
@@ -54,6 +55,19 @@ const sectionTitle = {
     borderBottom: '1px solid var(--border-color)', paddingBottom: '8px',
     marginBottom: '12px', textTransform: 'uppercase',
 };
+
+const modalOverlay = {
+    position: 'fixed', inset: 0, backgroundColor: 'rgba(15,23,42,0.45)',
+    backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center',
+    justifyContent: 'center', zIndex: 9999, padding: '16px',
+};
+const modalBox    = { backgroundColor: '#fff', borderRadius: '14px', width: '100%', maxWidth: '480px', boxShadow: '0 20px 40px rgba(0,0,0,0.15)', textAlign: 'left' };
+const modalHeader = { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '18px 20px', borderBottom: '1px solid var(--border-color)' };
+const modalBody   = { padding: '20px', display: 'flex', flexDirection: 'column', gap: '14px' };
+const modalFooter = { display: 'flex', justifyContent: 'flex-end', gap: '8px', padding: '12px 20px', borderTop: '1px solid var(--border-color)' };
+const labelSm     = { fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)', display: 'block', marginBottom: '6px', textTransform: 'uppercase' };
+const textareaStyle = { width: '100%', padding: '10px 12px', border: '1px solid var(--border-color)', borderRadius: '8px', fontSize: '12px', resize: 'vertical', outline: 'none', boxSizing: 'border-box' };
+const btnCancel   = { padding: '8px 16px', border: '1px solid var(--border-color)', borderRadius: '6px', fontSize: '12px', cursor: 'pointer', backgroundColor: '#fff' };
 
 // ── Sub-components ───────────────────────────────────────────────────────────
 
@@ -224,8 +238,8 @@ export default function PjoDetail() {
                 </div>
             </div>
 
-            {/* 2-Column Grid */}
-            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '260px 1fr', gap: isMobile ? '16px' : '24px', alignItems: 'start' }}>
+            {/* 3-Column Grid */}
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '260px 1fr 280px', gap: isMobile ? '16px' : '24px', alignItems: 'start' }}>
 
                 {/* ── Left Sidebar ── */}
                 <aside style={{ position: isMobile ? 'static' : 'sticky', top: '24px', display: 'flex', flexDirection: 'column', gap: '16px', order: isMobile ? 2 : 1 }}>
@@ -304,6 +318,11 @@ export default function PjoDetail() {
                     <FilesSection files={files} />
 
                 </main>
+
+                {/* ── Right Sidebar ── */}
+                <aside style={{ position: isMobile ? 'static' : 'sticky', top: '24px', order: 3 }}>
+                    <DetailRightSidebar pjo={pjo} onApproval={loadDetail} />
+                </aside>
             </div>
         </div>
     );

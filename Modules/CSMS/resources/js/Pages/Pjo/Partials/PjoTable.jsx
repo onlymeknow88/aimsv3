@@ -7,10 +7,12 @@ const thStyle = { fontSize: '11px', fontWeight: 700, color: 'var(--text-primary)
 const tdStyle = { fontSize: '12px', padding: '10px 12px', color: 'var(--text-secondary)' };
 
 const STATUS_COLORS = {
-    'Draft':    { color: '#64748b', bg: 'rgba(100,116,139,0.1)' },
-    'Active':   { color: '#2FBF71', bg: 'rgba(47,191,113,0.08)' },
-    'On Going': { color: '#FF8C24', bg: 'rgba(255,140,36,0.08)' },
-    'Inactive': { color: '#ef4444', bg: 'rgba(239,68,68,0.08)' },
+    'Draft':               { color: '#64748b', bg: 'rgba(100,116,139,0.1)' },
+    'On Review Evaluator': { color: '#8b5cf6', bg: 'rgba(139,92,246,0.08)' },
+    'Approved':            { color: '#2FBF71', bg: 'rgba(47,191,113,0.08)' },
+    'Active':              { color: '#0ea5e9', bg: 'rgba(14,165,233,0.08)' },
+    'On Going':            { color: '#FF8C24', bg: 'rgba(255,140,36,0.08)' },
+    'Inactive':            { color: '#ef4444', bg: 'rgba(239,68,68,0.08)' },
 };
 
 function PjoStatusBadge({ status }) {

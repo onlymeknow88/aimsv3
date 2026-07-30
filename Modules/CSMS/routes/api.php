@@ -10,6 +10,7 @@ Route::prefix('csms')->group(function () {
 
     // Dashboard Stats
     Route::get('/dashboard-stats', [CSMSDashboardApiController::class, 'stats']);
+    Route::get('/main-dashboard-stats', [CSMSDashboardApiController::class, 'statsMainDashboard']);
 
     // Bidding CRUD
     Route::get('/biddings', [CSMSBiddingApiController::class, 'index'])
