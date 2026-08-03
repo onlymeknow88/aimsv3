@@ -51,7 +51,7 @@ class NotifyExpireJsaDocumentJob implements ShouldQueue
             ? implode(';', $this->receiver)
             : $this->receiver;
 
-        $html = view('email_templates.expire_document', [
+        $html = view('documentsystem::email_templates.expire_document', [
             'documents' => $data,
         ])->render();
 

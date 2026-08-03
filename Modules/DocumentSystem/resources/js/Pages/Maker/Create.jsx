@@ -1,14 +1,15 @@
-import React, { useState } from 'react';
-import { Head } from '@inertiajs/react';
 import { ArrowLeft, X } from 'lucide-react';
-import axios from 'axios';
-import InvitedPeopleInput from './Partials/Components/InvitedPeopleInput';
-import FileDropzone from '@/Components/FileDropzone';
-import SearchableSelect from './Partials/Components/SearchableSelect';
-import SummernoteEditor from './Partials/Components/SummernoteEditor';
-import useMaker from './Hooks/useMaker';
+import React, { useState } from 'react';
+
 import BlobPreviewModal from '@/Components/BlobPreviewModal';
 import ConfirmationModal from '@/Components/ConfirmationModal';
+import FileDropzone from '@/Components/FileDropzone';
+import { Head } from '@inertiajs/react';
+import InvitedPeopleInput from './Partials/Components/InvitedPeopleInput';
+import SearchableSelect from './Partials/Components/SearchableSelect';
+import SummernoteEditor from './Partials/Components/SummernoteEditor';
+import axios from 'axios';
+import useMaker from './Hooks/useMaker';
 
 export default function Create({ document = null }) {
     const [existingAttachments, setExistingAttachments] = useState(document?.attachments || []);
@@ -39,6 +40,7 @@ export default function Create({ document = null }) {
         documentLevel, setDocumentLevel,
         sopNumber, setSopNumber,
         winNumber, setWinNumber,
+        formNumber, setFormNumber,
         title, setTitle,
         description, setDescription,
         invitedEmails, setInvitedEmails,
@@ -68,7 +70,7 @@ export default function Create({ document = null }) {
             <Head title={isEdit ? "Edit Document" : "Create New Document"} />
 
             {/* Header Navigation */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px', borderBottom: '1px solid var(--border-color)', paddingBottom: '12px', maxWidth: '800px', margin: '0 auto 24px auto' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px', borderBottom: '1px solid var(--border-color)', paddingBottom: '12px',  margin: '0 auto 24px auto' }}>
                 <a href="/document-system/active" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', color: 'var(--primary)', fontWeight: 700, textDecoration: 'none', fontSize: '12px' }}>
                     <ArrowLeft size={16} /> Kembali ke Active Document
                 </a>
@@ -146,7 +148,7 @@ export default function Create({ document = null }) {
                                 </select>
                             </div>
 
-                            {uploadType === 'document' && documentLevel === 'WIN' && (
+                            {uploadType === 'document' && (documentLevel === 'WIN' || documentLevel === 'FORM') && (
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                                     <div>
                                         <label style={{ fontSize: '10.5px', fontWeight: 700, color: 'var(--text-secondary)', display: 'block', marginBottom: '6px' }}>SOP NUMBER</label>
@@ -183,15 +185,18 @@ export default function Create({ document = null }) {
 
                                     <div style={{ backgroundColor: '#f8fafc', padding: '16px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
                                         <label style={{ fontSize: '10px', fontWeight: 700, color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
-                                            WIN NUMBER
+                                            {documentLevel === 'WIN' ? 'WIN NUMBER' : 'FORM NUMBER'}
                                         </label>
                                         <div style={{ display: 'flex', alignItems: 'stretch', border: '1px solid var(--border-color)', borderRadius: '6px', backgroundColor: '#fff', overflow: 'hidden' }}>
                                             <span style={{ display: 'flex', alignItems: 'center', padding: '0 12px', backgroundColor: '#e2e8f0', color: '#475569', fontSize: '11px', fontWeight: 600, borderRight: '1px solid var(--border-color)', whiteSpace: 'nowrap' }}>
-                                                WIN-{companies.find(c => c.id === company)?.code || 'MAC'}-{departments.find(d => d.id === department)?.document_code || ''}-
+                                                {parentDocumentId && activeSops.find(s => s.id == parentDocumentId)
+                                                    ? `${documentLevel}-${activeSops.find(s => s.id == parentDocumentId)?.document_number || activeSops.find(s => s.id == parentDocumentId)?.full_code}-`
+                                                    : `${documentLevel}-${companies.find(c => c.id === company)?.code || 'MAC'}-${departments.find(d => d.id === department)?.document_code || ''}-`
+                                                }
                                             </span>
                                             <input
-                                                value={winNumber}
-                                                onChange={e => setWinNumber(e.target.value)}
+                                                value={documentLevel === 'WIN' ? winNumber : formNumber}
+                                                onChange={e => documentLevel === 'WIN' ? setWinNumber(e.target.value) : setFormNumber(e.target.value)}
                                                 required
                                                 placeholder="Number"
                                                 style={{ width: '100%', padding: '10px 12px', border: 'none', outline: 'none', fontSize: '11px' }}
@@ -201,7 +206,7 @@ export default function Create({ document = null }) {
                                 </div>
                             )}
 
-                            {uploadType === 'document' && documentLevel === 'SOP' && (
+                            {uploadType === 'document' && (documentLevel === 'SOP' || documentLevel === 'TS') && (
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                                     <div style={{ backgroundColor: '#f8fafc', padding: '16px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
                                         <label style={{ fontSize: '10px', fontWeight: 700, color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
@@ -209,13 +214,13 @@ export default function Create({ document = null }) {
                                         </label>
                                         <div style={{ display: 'flex', alignItems: 'stretch', border: '1px solid var(--border-color)', borderRadius: '6px', backgroundColor: '#fff', overflow: 'hidden' }}>
                                             <span style={{ display: 'flex', alignItems: 'center', padding: '0 12px', backgroundColor: '#e2e8f0', color: '#475569', fontSize: '11px', fontWeight: 600, borderRight: '1px solid var(--border-color)', whiteSpace: 'nowrap' }}>
-                                                {companies.find(c => c.id === company)?.code || 'MAC'}-{departments.find(d => d.id === department)?.document_code || ''}-
+                                                {documentLevel === 'TS' ? 'TS-' : ''}{companies.find(c => c.id === company)?.code || 'MAC'}-{departments.find(d => d.id === department)?.document_code || ''}-
                                             </span>
                                             <input
                                                 value={sopNumber}
                                                 onChange={e => setSopNumber(e.target.value)}
                                                 required
-                                                placeholder="e.g. 001"
+                                                placeholder={documentLevel === 'TS' ? "e.g. 01" : "e.g. 001"}
                                                 style={{ width: '100%', padding: '10px 12px', border: 'none', outline: 'none', fontSize: '11px' }}
                                             />
                                         </div>
@@ -254,10 +259,10 @@ export default function Create({ document = null }) {
                         </div>
                     </div>
 
-                    {/* Section 4: Invited People */}
+                    {/* Section 4: Mengetahui */}
                     <div style={{ marginBottom: '32px' }}>
                         <h3 style={{ fontSize: '14px', fontWeight: 700, color: 'var(--primary)', marginBottom: '16px', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px' }}>
-                            Invited People
+                            Mengetahui
                         </h3>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                             <div>
@@ -291,8 +296,8 @@ export default function Create({ document = null }) {
                                             <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--success)' }}>
                                                 ✓ {file.name}
                                             </span>
-                                            <button 
-                                                type="button" 
+                                            <button
+                                                type="button"
                                                 onClick={() => setFiles(prev => prev.filter((_, i) => i !== idx))}
                                                 style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--danger)', padding: '4px' }}
                                                 title="Batalkan Upload"
@@ -316,8 +321,8 @@ export default function Create({ document = null }) {
                                             >
                                                 {att.file_name || (att.path ? att.path.split('/').pop() : 'Unnamed File')}
                                             </span>
-                                            <button 
-                                                type="button" 
+                                            <button
+                                                type="button"
                                                 onClick={() => handleDeleteAttachment(att.id)}
                                                 style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--danger)', padding: '4px' }}
                                                 title="Hapus Lampiran"

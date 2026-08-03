@@ -165,17 +165,31 @@ export default function ObsoleteTable({
             id: 'attachment',
             header: 'Attachment',
             cell: ({ row }) => {
-                const finalAttachments = (row.original.attachments || []).filter(
-                    att => att.file_name && att.file_name.startsWith('FINAL_')
-                );
+                const doc = row.original;
+                const items = [];
 
-                if (finalAttachments.length === 0) {
+                if (doc.uncontrolled_file_path) {
+                    items.push({
+                        id: 'uncontrolled',
+                        file_name: `FINAL-${doc.document_number} ${doc.title}.pdf`,
+                        file_type: 'pdf',
+                        path: doc.uncontrolled_file_path,
+                        type: 'uncontrolled'
+                    });
+                } else {
+                    const finalAttachments = (doc.attachments || []).filter(
+                        att => att.file_name && att.file_name.startsWith('FINAL_')
+                    );
+                    items.push(...finalAttachments);
+                }
+
+                if (items.length === 0) {
                     return <span style={{ color: 'var(--text-muted)', fontSize: '11px' }}>—</span>;
                 }
 
                 return (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                        {finalAttachments.map(att => (
+                        {items.map(att => (
                             <span
                                 key={att.id}
                                 onClick={() => setPreviewAttachment(att)}

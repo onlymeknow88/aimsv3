@@ -35,21 +35,21 @@ class DocumentSystemDatabaseSeeder extends Seeder
             ['name' => 'Document On Review', 'slug' => 'doc.ongoing', 'parent_slug' => 'doc'],
             ['name' => 'Obsolete Document', 'slug' => 'doc.obsolete', 'parent_slug' => 'doc'],
             ['name' => 'Draft', 'slug' => 'doc.draft', 'parent_slug' => 'doc'],
-            
+
             ['name' => 'Approval', 'slug' => 'doc.approval', 'parent_slug' => null],
-            
+
             // Parent Menu JSA
             ['name' => 'JSA', 'slug' => 'jsa', 'parent_slug' => null],
             // Sub Menus JSA
             ['name' => 'Active JSA', 'slug' => 'doc.jsa', 'parent_slug' => 'jsa'],
             ['name' => 'Obsolete JSA', 'slug' => 'doc.jsa.obsolete', 'parent_slug' => 'jsa'],
             ['name' => 'Draft JSA', 'slug' => 'doc.jsa.draft', 'parent_slug' => 'jsa'],
-            
+
             // Parent Menu PTW
             ['name' => 'Permit To Work (PTW)', 'slug' => 'doc.ptw.parent', 'parent_slug' => null],
             // Sub Menus PTW
             ['name' => 'Active PTW', 'slug' => 'doc.ptw', 'parent_slug' => 'doc.ptw.parent'],
-            
+
             ['name' => 'Master Data', 'slug' => 'doc.master', 'parent_slug' => null],
         ];
 
@@ -91,10 +91,10 @@ class DocumentSystemDatabaseSeeder extends Seeder
 
         // 3. Seed AIMS Roles
         $roles = [
-            ['name' => 'Maker', 'slug' => 'maker', 'is_system' => true],
-            ['name' => 'Approval CRS', 'slug' => 'approval_crs', 'is_system' => true],
-            ['name' => 'Approval PJA', 'slug' => 'approval_pja', 'is_system' => true],
-            ['name' => 'Super Admin', 'slug' => 'super_admin', 'is_system' => true],
+            ['name' => 'Document Control', 'slug' => 'document_control', 'is_system' => false],
+            ['name' => 'Approval DC IMS', 'slug' => 'approval_dc_ims', 'is_system' => false],
+            ['name' => 'PJA', 'slug' => 'pja', 'is_system' => false],
+            ['name' => 'System Admin', 'slug' => 'system_admin', 'is_system' => false],
         ];
 
         $roleIds = [];
@@ -116,7 +116,7 @@ class DocumentSystemDatabaseSeeder extends Seeder
 
         // 4. Seed Matrix Permissions (based on PRD Section 8)
         // Table Columns: role_id, menu_id, can_view, can_create, can_edit, can_delete, can_approval
-        
+
         // Define default settings for Maker Role
         $makerPermissions = [
             'doc.dashboard' => ['view' => true],
@@ -164,20 +164,20 @@ class DocumentSystemDatabaseSeeder extends Seeder
                 $canDelete = false;
                 $canApproval = false;
 
-                if ($slug === 'super_admin') {
+                if ($slug === 'system_admin') {
                     $canView = true;
                     $canCreate = true;
                     $canEdit = true;
                     $canDelete = true;
                     $canApproval = true;
-                } elseif ($slug === 'maker' && isset($makerPermissions[$menuSlug])) {
+                } elseif ($slug === 'document_control' && isset($makerPermissions[$menuSlug])) {
                     $canView = $makerPermissions[$menuSlug]['view'] ?? false;
                     $canCreate = $makerPermissions[$menuSlug]['create'] ?? false;
                     $canEdit = $makerPermissions[$menuSlug]['edit'] ?? false;
-                } elseif ($slug === 'approval_crs' && isset($crsPermissions[$menuSlug])) {
+                } elseif ($slug === 'approval_dc_ims' && isset($crsPermissions[$menuSlug])) {
                     $canView = $crsPermissions[$menuSlug]['view'] ?? false;
                     $canApproval = $crsPermissions[$menuSlug]['approval'] ?? false;
-                } elseif ($slug === 'approval_pja' && isset($pjaPermissions[$menuSlug])) {
+                } elseif ($slug === 'pja' && isset($pjaPermissions[$menuSlug])) {
                     $canView = $pjaPermissions[$menuSlug]['view'] ?? false;
                     $canApproval = $pjaPermissions[$menuSlug]['approval'] ?? false;
                 }
@@ -199,47 +199,5 @@ class DocumentSystemDatabaseSeeder extends Seeder
             }
         }
 
-        // 5. Seed Taxonomy Classification default data (document_system_modules)
-        $existingModuleDS = DB::table('document_system_modules')->where('index', 'SO')->first();
-        if ($existingModuleDS) {
-            $m1 = $existingModuleDS->id;
-        } else {
-            $m1 = \Illuminate\Support\Str::uuid()->toString();
-            DB::table('document_system_modules')->insert([
-                'id' => $m1,
-                'index' => 'SO',
-                'name' => 'Safety Operations',
-                'has_document_number' => true,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-        }
-
-        $existingCategoryDS = DB::table('document_system_categories')->where('index', 'SOP-K3')->first();
-        if ($existingCategoryDS) {
-            $c1 = $existingCategoryDS->id;
-        } else {
-            $c1 = \Illuminate\Support\Str::uuid()->toString();
-            DB::table('document_system_categories')->insert([
-                'id' => $c1,
-                'module_id' => $m1,
-                'index' => 'SOP-K3',
-                'name' => 'SOP K3',
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-        }
-
-        $existingMappingDS = DB::table('document_system_mappings')->where('index', 'WAH')->first();
-        if (!$existingMappingDS) {
-            DB::table('document_system_mappings')->insert([
-                'id' => \Illuminate\Support\Str::uuid()->toString(),
-                'category_id' => $c1,
-                'index' => 'WAH',
-                'name' => 'Bekerja di Ketinggian (Working at Heights)',
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-        }
     }
 }

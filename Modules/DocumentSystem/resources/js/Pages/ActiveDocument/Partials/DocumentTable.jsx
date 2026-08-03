@@ -1,9 +1,3 @@
-import React, { useMemo, useState } from 'react';
-import { useReactTable, getCoreRowModel, getFilteredRowModel, flexRender } from '@tanstack/react-table';
-import { FileText } from 'lucide-react';
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
-import { Checkbox } from '@/components/ui/checkbox';
-import BlobPreviewModal from '@/Components/BlobPreviewModal';
 import {
     Pagination,
     PaginationContent,
@@ -13,6 +7,14 @@ import {
     PaginationNext,
     PaginationPrevious,
 } from "@/components/ui/pagination";
+import React, { useMemo, useState } from 'react';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { flexRender, getCoreRowModel, getFilteredRowModel, useReactTable } from '@tanstack/react-table';
+
+import BlobPreviewModal from '@/Components/BlobPreviewModal';
+import { Checkbox } from '@/components/ui/checkbox';
+import { FileText } from 'lucide-react';
+import { DebouncedInput } from '@/lib/utils';
 
 export default function DocumentTable({
     documents = [],
@@ -141,8 +143,8 @@ export default function DocumentTable({
         {
             accessorKey: 'revision',
             id: 'revision',
-            header: 'Rev',
-            cell: info => <span style={{ color: 'var(--text-secondary)' }}>Rev {info.getValue() || 0}</span>
+            header: 'Revisi',
+            cell: info => <span style={{ color: 'var(--text-secondary)' }}>{info.getValue() || 0}.0</span>
         },
         {
             accessorKey: 'status',
@@ -179,17 +181,31 @@ export default function DocumentTable({
             id: 'attachment',
             header: 'Attachment',
             cell: ({ row }) => {
-                const finalAttachments = (row.original.attachments || []).filter(
-                    att => att.file_name && att.file_name.startsWith('FINAL_')
-                );
+                const doc = row.original;
+                const items = [];
 
-                if (finalAttachments.length === 0) {
+                if (doc.uncontrolled_file_path) {
+                    items.push({
+                        id: 'uncontrolled',
+                        file_name: `FINAL-${doc.document_number} ${doc.title}.pdf`,
+                        file_type: 'pdf',
+                        path: doc.uncontrolled_file_path,
+                        type: 'uncontrolled'
+                    });
+                } else {
+                    const finalAttachments = (doc.attachments || []).filter(
+                        att => att.file_name && att.file_name.startsWith('FINAL_')
+                    );
+                    items.push(...finalAttachments);
+                }
+
+                if (items.length === 0) {
                     return <span style={{ color: 'var(--text-muted)', fontSize: '11px' }}>—</span>;
                 }
 
                 return (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                        {finalAttachments.map(att => (
+                        {items.map(att => (
                             <span
                                 key={att.id}
                                 onClick={() => setPreviewAttachment(att)}
@@ -284,11 +300,11 @@ export default function DocumentTable({
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', minWidth: isSearchable ? '120px' : 'auto' }}>
                                             <span>{flexRender(h.column.columnDef.header, h.getContext())}</span>
                                             {isSearchable && onColumnFilterChange && (
-                                                <input
+                                                <DebouncedInput
                                                     type="text"
                                                     placeholder={`Cari...`}
                                                     value={columnFilters[h.id] || ''}
-                                                    onChange={(e) => onColumnFilterChange(h.id, e.target.value)}
+                                                    onChange={(val) => onColumnFilterChange(h.id, val)}
                                                     onClick={(e) => e.stopPropagation()}
                                                     style={{
                                                         width: '100%',

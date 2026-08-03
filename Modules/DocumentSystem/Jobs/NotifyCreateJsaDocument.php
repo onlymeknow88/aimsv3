@@ -48,7 +48,7 @@ class NotifyCreateJsaDocument implements ShouldQueue
         $attachmentPath = $attachments->isNotEmpty() ? $attachments->first()->path : '';
         $attachmentName = $attachmentPath ? basename($attachmentPath) : '';
 
-        $html = view('email_templates.document_system_review', [
+        $html = view('documentsystem::email_templates.document_system_review', [
             'title'      => $document->title,
             'pic'        => $document->user->name,
             'action_url' => url('document-systems/login'),

@@ -40,7 +40,12 @@ export default function useDraft() {
             }
         })
             .then(res => {
-                setDocs(res.data?.result || []);
+                setDocs(res.data?.result?.data || []);
+                setPagination({
+                    current_page: res.data?.result?.current_page || 1,
+                    last_page: res.data?.result?.last_page || 1,
+                    total: res.data?.result?.total || 0,
+                });
             })
             .catch(err => console.error("Error fetching draft documents", err))
             .finally(() => setLoading(false));
@@ -72,14 +77,20 @@ export default function useDraft() {
     }, [selectedIds]);
 
     const handleDelete = useCallback(async () => {
+        if (selectedIds.length === 0) return;
         if (confirm(`Apakah Anda yakin ingin menghapus ${selectedIds.length} draf terpilih?`)) {
             try {
-                console.log("Delete drafts:", selectedIds);
+                await axios.delete('/api/document-system/documents', {
+                    data: { ids: selectedIds }
+                });
+                setSelectedIds([]);
+                fetchDocuments();
             } catch (err) {
                 console.error("Delete failed", err);
+                alert('Gagal menghapus draf. Silakan coba lagi.');
             }
         }
-    }, [selectedIds]);
+    }, [selectedIds, fetchDocuments]);
 
     return { 
         search, 

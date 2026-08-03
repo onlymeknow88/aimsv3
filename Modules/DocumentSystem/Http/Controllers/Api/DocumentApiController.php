@@ -24,19 +24,22 @@ class DocumentApiController extends Controller
         $status = $request->input('status');
         $search = $request->query('search');
 
-        $query = Document::with(['company', 'department', 'areaManager.user', 'owner', 'mapping.category.module', 'attachments'])
-            ->latest();
+        if ($status === '8') {
+            $query = Document::with(['company', 'department', 'areaManager.user', 'owner', 'mapping.category.module', 'attachments'])
+                ->where('is_obsolate', true)
+                ->orderBy('updated_at', 'desc');
+        } else {
+            $query = Document::with(['company', 'department', 'areaManager.user', 'owner', 'mapping.category.module', 'attachments'])
+                ->latest();
 
-        if ($status) {
-            if (str_contains($status, ',')) {
-                $query->whereIn('status', explode(',', $status));
-            } else {
-                $query->where('status', $status);
+            if ($status) {
+                if (str_contains($status, ',')) {
+                    $query->whereIn('status', explode(',', $status));
+                } else {
+                    $query->where('status', $status);
+                }
             }
-        }
 
-        // Only exclude obsolete documents if status 8 is not explicitly requested
-        if ($status !== '8' && !str_contains($status ?? '', '8')) {
             $query->where('is_obsolate', false);
         }
 
@@ -138,13 +141,19 @@ class DocumentApiController extends Controller
         $deptCode = $dept ? ($dept->document_code ?: $dept->code ?: 'MIS') : 'MIS';
 
         // Format prefix code
-        if ($level === 'WIN') {
-            $prefix = "WIN-{$companyCode}-{$deptCode}-";
+        if ($level === 'WIN' || $level === 'FORM') {
+            $prefix = "{$level}-{$companyCode}-{$deptCode}-";
             $sopNum = $request->input('sop_number', '');
             if ($sopNum) {
-                $prefix = "WIN-{$companyCode}-{$deptCode}-{$sopNum}-";
+                $prefix = "{$level}-{$companyCode}-{$deptCode}-{$sopNum}-";
             }
-            $runningNumber = $request->input('sop_add_win', '001');
+            $runningNumber = $level === 'WIN' 
+                ? $request->input('sop_add_win', '001')
+                : $request->input('sop_add_form', '001');
+            $docNumber = "{$prefix}{$runningNumber}";
+        } elseif ($level === 'TS') {
+            $prefix = "TS-{$companyCode}-{$deptCode}-";
+            $runningNumber = $request->input('sop_number', '01');
             $docNumber = "{$prefix}{$runningNumber}";
         } else {
             $prefix = "{$companyCode}-{$deptCode}-";
@@ -173,6 +182,7 @@ class DocumentApiController extends Controller
                 'document_number' => $docNumber,
                 'sop_number' => $request->input('sop_number'),
                 'sop_add_win' => $request->input('sop_add_win'),
+                'sop_add_form' => $request->input('sop_add_form'),
                 'parent_document' => $request->input('parent_document'),
                 'company_id' => $companyId,
                 'department_id' => $departmentId,
@@ -226,8 +236,9 @@ class DocumentApiController extends Controller
             // Save uploaded files attachment
             if ($request->hasFile('files')) {
                 $service = app(DocumentSystemService::class);
+                $uploadPath = $service->buildUploadPath($request->input('mapping_id'));
                 foreach ($request->file('files') as $file) {
-                    $uploadResult = $service->uploadAttachment($file);
+                    $uploadResult = $service->uploadAttachment($file, $uploadPath);
                     if ($uploadResult) {
                         Attachment::create([
                             'document_id' => $doc->id,
@@ -249,10 +260,10 @@ class DocumentApiController extends Controller
                     ->filter()
                     ->implode(';');
                 if ($receivers) {
-                    $html = view('email_templates.document_system_review', [
+                    $html = view('documentsystem::email_templates.document_system_review', [
                         'title'      => $doc->title,
                         'pic'        => optional(\App\Models\User::find($doc->user_id))->name ?? '-',
-                        'action_url' => url('document-systems/login'),
+                        'action_url' => route('doc.approval.detail', $doc->id),
                     ])->render();
                     sendPowerAutomateEmail([
                         'SendTo'        => $receivers,
@@ -271,7 +282,7 @@ class DocumentApiController extends Controller
         } catch (\Throwable $e) {
             DB::rollBack();
 
-            return ResponseFormatter::error($e->getMessage(), 'Failed to create document', 500);
+            return ResponseFormatter::error('Failed to create document: ' . $e->getMessage(), 500);
         }
     }
 
@@ -300,13 +311,19 @@ class DocumentApiController extends Controller
         $deptCode = $dept ? ($dept->document_code ?: $dept->code ?: 'MIS') : 'MIS';
 
         // Format prefix code
-        if ($level === 'WIN') {
-            $prefix = "WIN-{$companyCode}-{$deptCode}-";
+        if ($level === 'WIN' || $level === 'FORM') {
+            $prefix = "{$level}-{$companyCode}-{$deptCode}-";
             $sopNum = $request->input('sop_number', '');
             if ($sopNum) {
-                $prefix = "WIN-{$companyCode}-{$deptCode}-{$sopNum}-";
+                $prefix = "{$level}-{$companyCode}-{$deptCode}-{$sopNum}-";
             }
-            $runningNumber = $request->input('sop_add_win', '001');
+            $runningNumber = $level === 'WIN' 
+                ? $request->input('sop_add_win', '001')
+                : $request->input('sop_add_form', '001');
+            $docNumber = "{$prefix}{$runningNumber}";
+        } elseif ($level === 'TS') {
+            $prefix = "TS-{$companyCode}-{$deptCode}-";
+            $runningNumber = $request->input('sop_number', '01');
             $docNumber = "{$prefix}{$runningNumber}";
         } else {
             $prefix = "{$companyCode}-{$deptCode}-";
@@ -327,6 +344,7 @@ class DocumentApiController extends Controller
                 'document_number' => $docNumber,
                 'sop_number' => $request->input('sop_number'),
                 'sop_add_win' => $request->input('sop_add_win'),
+                'sop_add_form' => $request->input('sop_add_form'),
                 'parent_document' => $request->input('parent_document'),
                 'company_id' => $companyId,
                 'department_id' => $departmentId,
@@ -380,8 +398,10 @@ class DocumentApiController extends Controller
             // Save uploaded files attachment
             if ($request->hasFile('files')) {
                 $service = app(DocumentSystemService::class);
+                $mappingId = $request->input('mapping_id') ?? $doc->mapping_id;
+                $uploadPath = $service->buildUploadPath($mappingId);
                 foreach ($request->file('files') as $file) {
-                    $uploadResult = $service->uploadAttachment($file);
+                    $uploadResult = $service->uploadAttachment($file, $uploadPath);
                     if ($uploadResult) {
                         Attachment::create([
                             'document_id' => $doc->id,
@@ -402,10 +422,10 @@ class DocumentApiController extends Controller
                 $doc->load('invitedPeople');
                 $receivers = collect($doc->invitedPeople)->pluck('email')->filter()->implode(';');
                 if ($receivers) {
-                    $html = view('email_templates.document_system_review', [
+                    $html = view('documentsystem::email_templates.document_system_review', [
                         'title'      => $doc->title,
                         'pic'        => optional(\App\Models\User::find($doc->user_id))->name ?? '-',
-                        'action_url' => url('document-systems/login'),
+                        'action_url' => route('doc.approval.detail', $doc->id),
                     ])->render();
                     sendPowerAutomateEmail([
                         'SendTo'        => $receivers,
@@ -424,7 +444,7 @@ class DocumentApiController extends Controller
         } catch (\Throwable $e) {
             DB::rollBack();
 
-            return ResponseFormatter::error($e->getMessage(), 'Failed to update document', 500);
+            return ResponseFormatter::error('Failed to update document: ' . $e->getMessage(), 500);
         }
     }
 
@@ -461,6 +481,7 @@ class DocumentApiController extends Controller
         $companyId = $request->query('company_id');
         $departmentId = $request->query('department_id');
         $level = $request->query('level', 'SOP');
+        $parentDocumentId = $request->query('parent_document');
 
         $companyCode = 'MAC';
         if ($companyId) {
@@ -481,8 +502,43 @@ class DocumentApiController extends Controller
         // Base prefix format: e.g. "MAC-MIS-"
         $prefix = "{$companyCode}-{$deptCode}-";
 
-        if ($level === 'WIN') {
-            $prefixCodeToSearch = "WIN-{$prefix}";
+        if ($level === 'WIN' || $level === 'FORM') {
+            if ($parentDocumentId) {
+                $parentDoc = Document::find($parentDocumentId);
+                if ($parentDoc) {
+                    $parentNumber = $parentDoc->document_number;
+                    $prefixCodeToSearch = "{$level}-{$parentNumber}-";
+                    
+                    $count = DB::table('document_system_documents')
+                        ->where('parent_document', $parentDocumentId)
+                        ->where('document_level', $level)
+                        ->count();
+
+                    $nextCode = str_pad($count + 1, 3, '0', STR_PAD_LEFT);
+
+                    return ResponseFormatter::success([
+                        'prefix' => $prefixCodeToSearch,
+                        'next_code' => $nextCode,
+                        'full_number' => "{$prefixCodeToSearch}{$nextCode}",
+                    ], 'Next sequence number generated successfully');
+                }
+            }
+            $prefixCodeToSearch = "{$level}-{$prefix}";
+        } elseif ($level === 'TS') {
+            $prefixCodeToSearch = "TS-{$prefix}";
+            
+            $count = DB::table('document_system_documents')
+                ->where('document_level', 'TS')
+                ->where('prefix_code', 'like', "{$prefixCodeToSearch}%")
+                ->count();
+
+            $nextCode = str_pad($count + 1, 2, '0', STR_PAD_LEFT);
+
+            return ResponseFormatter::success([
+                'prefix' => $prefixCodeToSearch,
+                'next_code' => $nextCode,
+                'full_number' => "{$prefixCodeToSearch}{$nextCode}",
+            ], 'Next sequence number generated successfully');
         } else {
             $prefixCodeToSearch = $prefix;
         }
@@ -517,23 +573,87 @@ class DocumentApiController extends Controller
         $doc = Document::findOrFail($id);
 
         if ($request->level == 1) {
-            $doc->update(['status' => '3', 'approved_by_crs' => $userId, 'approved_at_crs' => now()]);
+            // ── Level 1 (CRS) — Direct Final Approval → Active ───────────────
+            $uncontrolledPath       = null;
+            $uncontrolledBlobUrl    = null;
+            $uncontrolledBlobRespon = null;
+            try {
+                $latestAttachment = Attachment::where('document_id', $doc->id)
+                    ->where('file_type', 'pdf')
+                    ->latest()
+                    ->first();
 
-            // Notify maker & invited people: Level 1 approved, routing to next approval
+                if ($latestAttachment && $latestAttachment->path) {
+                    $sas = GetBlobSasUri('aims-cntr', $latestAttachment->path);
+                    $sasUrl = is_array($sas)
+                        ? ($sas['blobUriSas'] ?? $sas['sasUri'] ?? $sas['url'] ?? $sas['blobUri'] ?? null)
+                        : $sas;
+
+                    if ($sasUrl) {
+                        $originalFileName = $latestAttachment->file_name ?? 'document.pdf';
+                        $cleanFileName = preg_replace('/^FINAL[_-]/', '', $originalFileName);
+                        $uncontrolledFileName = 'FINAL-' . $cleanFileName;
+
+                        $watermarkService = app(WatermarkService::class);
+                        $watermarkedTmp = $watermarkService->applyWatermark(
+                            $sasUrl,
+                            $uncontrolledFileName,
+                            'review'
+                        );
+
+                        $uploadResult = uploadToBlobStorage(
+                            $uncontrolledFileName,
+                            $watermarkedTmp,
+                            'document-systems-files/uncontrolled'
+                        );
+
+                        $watermarkService->cleanup($watermarkedTmp);
+
+                        if ($uploadResult && !empty($uploadResult['fileBlobPathName'])) {
+                            $uncontrolledPath       = $uploadResult['fileBlobPathName'];
+                            $uncontrolledBlobUrl    = $uploadResult['fileBlobUrl'] ?? null;
+                            $uncontrolledBlobRespon = json_encode($uploadResult['blobResponse'] ?? []);
+                        }
+                    }
+                }
+            } catch (\Exception $e) {
+                \Log::error('WatermarkService failed on CRS approval for doc ' . $doc->id . ': ' . $e->getMessage());
+            }
+
+            try {
+                $docService = new DocumentSystemService();
+                $docService->renameToBlobFinal($doc);
+            } catch (\Exception $e) {
+                \Log::error('Failed to rename blobs to FINAL_ on CRS approval: ' . $e->getMessage());
+            }
+
+            $updatePayload = [
+                'status'          => '5',
+                'approved_by_crs' => $userId,
+                'approved_at_crs' => now(),
+            ];
+            if ($uncontrolledPath) {
+                $updatePayload['uncontrolled_file_path']   = $uncontrolledPath;
+                $updatePayload['uncontrolled_blob_url']    = $uncontrolledBlobUrl ?? null;
+                $updatePayload['uncontrolled_blob_respon'] = $uncontrolledBlobRespon ?? null;
+            }
+            $doc->update($updatePayload);
+
+            // Notify maker & invited people: Approved & Active
             $doc->load(['owner', 'invitedPeople']);
             $receivers = collect($doc->invitedPeople)->pluck('email')->filter()->implode(';');
             if ($receivers) {
-                $html = view('email_templates.document_system_review', [
+                $html = view('documentsystem::email_templates.document_system_review', [
                     'title'      => $doc->title,
                     'pic'        => $doc->owner?->name ?? '-',
-                    'action_url' => url('document-systems/login'),
+                    'action_url' => route('doc.approval.detail', $doc->id),
                 ])->render();
                 sendPowerAutomateEmail([
                     'SendTo'        => $receivers,
-                    'Title'         => 'Dokumen Disetujui Level 1 (Routing): ' . $doc->title,
+                    'Title'         => 'Dokumen Disetujui & Aktif: ' . $doc->title,
                     'MsgBody'       => $html,
-                    'AttchmentPath' => '',
-                    'AttchmentName' => '',
+                    'AttchmentPath' => $uncontrolledPath ?? '',
+                    'AttchmentName' => $uncontrolledPath ? basename($uncontrolledPath) : '',
                     'SendCC'        => '',
                 ]);
             }
@@ -628,10 +748,10 @@ class DocumentApiController extends Controller
             $doc->load(['owner', 'invitedPeople']);
             $receivers = collect($doc->invitedPeople)->pluck('email')->filter()->implode(';');
             if ($receivers) {
-                $html = view('email_templates.document_system_review', [
+                $html = view('documentsystem::email_templates.document_system_review', [
                     'title'      => $doc->title,
                     'pic'        => $doc->owner?->name ?? '-',
-                    'action_url' => url('document-systems/login'),
+                    'action_url' => route('doc.approval.detail', $doc->id),
                 ])->render();
                 sendPowerAutomateEmail([
                     'SendTo'        => $receivers,
@@ -655,6 +775,57 @@ class DocumentApiController extends Controller
         ]);
 
         return ResponseFormatter::success($doc, 'Dokumen berhasil disetujui.');
+    }
+
+    /**
+     * Route a document for further approval (status 3) without watermark.
+     */
+    public function routeApproval(Request $request, string $id)
+    {
+        $request->validate([
+            'notes' => 'nullable|string',
+        ]);
+
+        $user = auth()->user() ?? auth('admin')->user() ?? auth('web')->user();
+        $userId = $user ? $user->id : null;
+
+        $doc = Document::findOrFail($id);
+
+        $doc->update([
+            'status'          => '3',
+            'approved_by_crs' => $userId,
+            'approved_at_crs' => now(),
+        ]);
+
+        // Notify invited people: routed for further approval
+        $doc->load(['owner', 'invitedPeople']);
+        $receivers = collect($doc->invitedPeople)->pluck('email')->filter()->implode(';');
+        if ($receivers) {
+            $html = view('documentsystem::email_templates.document_system_review', [
+                'title'      => $doc->title,
+                'pic'        => $doc->owner?->name ?? '-',
+                'action_url' => route('doc.approval.detail', $doc->id),
+            ])->render();
+            sendPowerAutomateEmail([
+                'SendTo'        => $receivers,
+                'Title'         => 'Dokumen Diteruskan untuk Persetujuan: ' . $doc->title,
+                'MsgBody'       => $html,
+                'AttchmentPath' => '',
+                'AttchmentName' => '',
+                'SendCC'        => '',
+            ]);
+        }
+
+        DB::table('document_system_activities')->insert([
+            'id'          => \Illuminate\Support\Str::uuid(),
+            'document_id' => $doc->id,
+            'user_id'     => $userId,
+            'activity'    => 'Dokumen diteruskan untuk persetujuan (Routing): ' . ($request->notes ?? ''),
+            'created_at'  => now(),
+            'updated_at'  => now(),
+        ]);
+
+        return ResponseFormatter::success($doc, 'Dokumen berhasil diteruskan untuk persetujuan.');
     }
 
     /**
@@ -721,10 +892,10 @@ class DocumentApiController extends Controller
             $doc->load(['owner', 'invitedPeople']);
             $receivers = collect($doc->invitedPeople)->pluck('email')->filter()->implode(';');
             if ($receivers) {
-                $html = view('email_templates.document_system_review', [
+                $html = view('documentsystem::email_templates.document_system_review', [
                     'title'      => $doc->title,
                     'pic'        => $doc->owner?->name ?? '-',
-                    'action_url' => url('document-systems/login'),
+                    'action_url' => route('doc.approval.detail', $doc->id),
                 ])->render();
                 sendPowerAutomateEmail([
                     'SendTo'        => $receivers,
@@ -741,7 +912,7 @@ class DocumentApiController extends Controller
             return ResponseFormatter::success($doc, 'Dokumen berhasil dikembalikan ke draft.');
         } catch (\Throwable $e) {
             DB::rollBack();
-            return ResponseFormatter::error($e->getMessage(), 'Gagal memproses penolakan.', 500);
+            return ResponseFormatter::error('Gagal memproses penolakan: ' . $e->getMessage(), 500);
         }
     }
 
@@ -784,8 +955,10 @@ class DocumentApiController extends Controller
             ->toArray() : [];
         $isSuperAdmin = ($user && $user->role === 'super_admin') || in_array('super_admin', $userRoles) || in_array('system_admin', $userRoles);
 
-        $canApproveL1 = $isSuperAdmin || in_array('approval_crs', $userRoles);
-        $canApproveL2 = $isSuperAdmin || in_array('approval_pja', $userRoles);
+        $isCreator = $user && ($document->user_id === $user->id || $document->created_by === $user->id);
+
+        $canApproveL1 = ($isSuperAdmin || in_array('approval_dc_ims', $userRoles) || in_array('document_control', $userRoles)) && (!$isCreator || $isSuperAdmin);
+        $canApproveL2 = ($isSuperAdmin || in_array('approval_dc_ims', $userRoles)) && (!$isCreator || $isSuperAdmin);
 
         return ResponseFormatter::success([
             'document' => $document,
@@ -841,8 +1014,74 @@ class DocumentApiController extends Controller
         if (!empty($ids)) {
             $query->whereIn('id', $ids);
         } else {
-            // Default to active/expired documents
-            $query->whereIn('status', ['5', '7'])->where('is_obsolate', false);
+            // Default to active, expired, and obsolete documents/revisions
+            $query->whereIn('status', ['5', '7', '8']);
+
+            // Apply searches/filters
+            $search = $request->query('search');
+            if (!empty($search)) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('title', 'like', "%{$search}%")
+                      ->orWhere('document_number', 'like', "%{$search}%");
+                });
+            }
+
+            if ($request->filled('filter_company')) {
+                $comp = $request->query('filter_company');
+                $query->whereHas('company', function ($q) use ($comp) {
+                    $q->where('company_name', 'like', "%{$comp}%")
+                      ->orWhere('document_code', 'like', "%{$comp}%");
+                });
+            }
+
+            if ($request->filled('filter_department')) {
+                $dept = $request->query('filter_department');
+                $query->whereHas('department', function ($q) use ($dept) {
+                    $q->where('name', 'like', "%{$dept}%")
+                      ->orWhere('code', 'like', "%{$dept}%")
+                      ->orWhere('document_code', 'like', "%{$dept}%");
+                });
+            }
+
+            if ($request->filled('filter_pic')) {
+                $pic = $request->query('filter_pic');
+                $query->whereHas('owner', function ($q) use ($pic) {
+                    $q->where('name', 'like', "%{$pic}%");
+                });
+            }
+
+            if ($request->filled('filter_module')) {
+                $mod = $request->query('filter_module');
+                $query->whereHas('mapping.category.module', function ($q) use ($mod) {
+                    $q->where('name', 'like', "%{$mod}%");
+                });
+            }
+
+            if ($request->filled('filter_category')) {
+                $cat = $request->query('filter_category');
+                $query->whereHas('mapping.category', function ($q) use ($cat) {
+                    $q->where('name', 'like', "%{$cat}%");
+                });
+            }
+
+            if ($request->filled('filter_mapping')) {
+                $map = $request->query('filter_mapping');
+                $query->whereHas('mapping', function ($q) use ($map) {
+                    $q->where('name', 'like', "%{$map}%");
+                });
+            }
+
+            if ($request->filled('filter_document_level')) {
+                $query->where('document_level', 'like', '%' . $request->query('filter_document_level') . '%');
+            }
+
+            if ($request->filled('filter_document_number')) {
+                $query->where('document_number', 'like', '%' . $request->query('filter_document_number') . '%');
+            }
+
+            if ($request->filled('filter_title')) {
+                $query->where('title', 'like', '%' . $request->query('filter_title') . '%');
+            }
         }
         $docs = $query->get();
 

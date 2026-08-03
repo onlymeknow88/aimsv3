@@ -21,6 +21,11 @@ export default function useMapping() {
     const [limit, setLimit] = useState(10);
     const [pagination, setPagination] = useState({ current_page: 1, last_page: 1, total: 0 });
 
+    // Column filters
+    const [filterName, setFilterName] = useState('');
+    const [filterCategory, setFilterCategory] = useState('');
+    const [filterModule, setFilterModule] = useState('');
+
     // Modal (create/edit)
     const [modalOpen, setModalOpen] = useState(false);
     const [editId, setEditId] = useState(null);
@@ -38,7 +43,11 @@ export default function useMapping() {
         setLoading(true);
         setError(null);
         try {
-            const response = await axios.get(BASE_URL, { params: { search, page, limit } });
+            const params = { search, page, limit };
+            if (filterName)     params.filter_name     = filterName;
+            if (filterCategory) params.filter_category = filterCategory;
+            if (filterModule)   params.filter_module   = filterModule;
+            const response = await axios.get(BASE_URL, { params });
             const result = response.data?.result;
             if (result && result.data) {
                 setMappings(result.data || []);
@@ -61,7 +70,7 @@ export default function useMapping() {
         } finally {
             setLoading(false);
         }
-    }, [search, page, limit]);
+    }, [search, page, limit, filterName, filterCategory, filterModule]);
 
     // Fetch categories list for dropdown select option
     const fetchCategories = async () => {
@@ -76,7 +85,7 @@ export default function useMapping() {
 
     useEffect(() => {
         setPage(1);
-    }, [search, limit]);
+    }, [search, limit, filterName, filterCategory, filterModule]);
 
     useEffect(() => {
         fetchMappings();
@@ -174,6 +183,12 @@ export default function useMapping() {
         error,
         search,
         setSearch,
+        filterName,
+        setFilterName,
+        filterCategory,
+        setFilterCategory,
+        filterModule,
+        setFilterModule,
         fetchMappings,
         pagination,
         page,

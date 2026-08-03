@@ -123,7 +123,19 @@ export default function useActiveDocument() {
     const exportDocuments = useCallback(async (ids = []) => {
         try {
             const response = await axios.get('/api/document-system/documents/export', {
-                params: { ids: ids.join(',') },
+                params: {
+                    ids: ids.join(','),
+                    search,
+                    filter_company: columnFilters.company,
+                    filter_department: columnFilters.department,
+                    filter_pic: columnFilters.pic,
+                    filter_module: columnFilters.module,
+                    filter_category: columnFilters.category,
+                    filter_document_level: columnFilters.document_level,
+                    filter_mapping: columnFilters.mapping,
+                    filter_document_number: columnFilters.document_number,
+                    filter_title: columnFilters.title,
+                },
                 responseType: 'blob',
             });
             const url = window.URL.createObjectURL(new Blob([response.data]));
@@ -137,7 +149,7 @@ export default function useActiveDocument() {
             console.error('Export failed', err);
             alert('Gagal mengekspor dokumen.');
         }
-    }, []);
+    }, [search, columnFilters]);
 
     return { 
         search, 

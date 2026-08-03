@@ -27,6 +27,12 @@ Route::middleware(['web', 'auth'])->prefix('document-system')->group(function ()
         Route::get('/generate-number', [DocumentApiController::class, 'generateNumber']);
     });
 
+    Route::middleware('module.permission:document-system,can_approval,doc.approval')->group(function () {
+        Route::post('/documents/approve/{id}', [DocumentApiController::class, 'approve']);
+        Route::post('/documents/route/{id}', [DocumentApiController::class, 'routeApproval']);
+        Route::post('/documents/reject/{id}', [DocumentApiController::class, 'reject']);
+    });
+
     Route::middleware('module.permission:document-system,can_edit,doc.maker')->group(function () {
         Route::post('/documents/{id}', [DocumentApiController::class, 'update']);
         Route::delete('/attachments/{id}', [DocumentApiController::class, 'deleteAttachment']);
@@ -36,38 +42,36 @@ Route::middleware(['web', 'auth'])->prefix('document-system')->group(function ()
         Route::delete('/documents', [DocumentApiController::class, 'destroy']);
     });
 
-    Route::middleware('module.permission:document-system,can_approval,doc.approval')->group(function () {
-        Route::post('/documents/approve/{id}', [DocumentApiController::class, 'approve']);
-        Route::post('/documents/reject/{id}', [DocumentApiController::class, 'reject']);
-    });
-
     // ==========================================
     // 2. Permission & Master Data API Actions
     // ==========================================
-    // Master data is read-only for document operations, mapped to master permission
-    Route::middleware('module.permission:document-system,can_view,doc.master')->group(function () {
-        Route::post('/permissions', [PermissionApiController::class, 'updatePermissions']);
+    // Read-only reference endpoints for document operations (accessible to anyone with can_view access on the module)
+    Route::middleware('module.permission:document-system,can_view')->group(function () {
         Route::get('/companies', [MasterDataApiController::class, 'getCompanies']);
         Route::get('/departments', [MasterDataApiController::class, 'getDepartments']);
         Route::get('/pjs', [MasterDataApiController::class, 'getPjs']);
         Route::get('/modules', [MasterDataApiController::class, 'getModules']);
+        Route::get('/categories', [MasterDataApiController::class, 'getCategories']);
+        Route::get('/mappings', [MasterDataApiController::class, 'getMappings']);
+        Route::get('/dashboard/stats', [MasterDataApiController::class, 'getDashboardStats']);
+        Route::get('/active-sops', [DocumentApiController::class, 'getActiveSops']);
+        Route::get('/employees', [MasterDataApiController::class, 'getEmployees']);
+        Route::get('/pjs-by-department', [MasterDataApiController::class, 'getPjsByDepartment']);
+    });
+
+    // Master settings modification endpoints (restricted to doc.master permission)
+    Route::middleware('module.permission:document-system,can_view,doc.master')->group(function () {
+        Route::post('/permissions', [PermissionApiController::class, 'updatePermissions']);
         Route::post('/modules', [MasterDataApiController::class, 'storeModule']);
         Route::put('/modules/{id}', [MasterDataApiController::class, 'updateModule']);
         Route::delete('/modules/{id}', [MasterDataApiController::class, 'deleteModule']);
-        Route::get('/categories', [MasterDataApiController::class, 'getCategories']);
         Route::post('/categories', [MasterDataApiController::class, 'storeCategory']);
         Route::put('/categories/{id}', [MasterDataApiController::class, 'updateCategory']);
         Route::delete('/categories/{id}', [MasterDataApiController::class, 'deleteCategory']);
-        Route::get('/mappings', [MasterDataApiController::class, 'getMappings']);
         Route::post('/mappings', [MasterDataApiController::class, 'storeMapping']);
         Route::put('/mappings/{id}', [MasterDataApiController::class, 'updateMapping']);
         Route::delete('/mappings/{id}', [MasterDataApiController::class, 'deleteMapping']);
     });
-
-    // Standard read endpoints allowed for active SOP reference creation
-    Route::get('/dashboard/stats', [MasterDataApiController::class, 'getDashboardStats']);
-    Route::get('/active-sops', [DocumentApiController::class, 'getActiveSops']);
-    Route::get('/employees', [MasterDataApiController::class, 'getEmployees']);
 
     // ==========================================
     // 3. JSA API Actions

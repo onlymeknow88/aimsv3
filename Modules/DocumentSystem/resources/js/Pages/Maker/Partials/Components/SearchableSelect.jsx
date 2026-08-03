@@ -39,9 +39,9 @@ export default function SearchableSelect({ options = [], value, onChange, placeh
 
     const isSelected = (optId) => {
         if (isMulti) {
-            return Array.isArray(value) && value.includes(optId);
+            return Array.isArray(value) && value.map(String).includes(String(optId));
         }
-        return value === optId;
+        return String(value) === String(optId);
     };
 
     const getDisplayLabel = () => {
@@ -50,7 +50,7 @@ export default function SearchableSelect({ options = [], value, onChange, placeh
             if (currentValues.length === 0) return placeholder;
             return `${currentValues.length} Orang Terpilih`;
         }
-        const selected = options.find(opt => opt.id === value);
+        const selected = options.find(opt => String(opt.id) === String(value));
         return selected ? selected.name : placeholder;
     };
 

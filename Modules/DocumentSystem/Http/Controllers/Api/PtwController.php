@@ -321,7 +321,7 @@ class PtwController extends Controller
         $doc->load(['peoples', 'user']);
         $receivers = collect($doc->peoples)->pluck('email')->filter()->implode(';');
         if ($receivers) {
-            $html = view('email_templates.document_system_review', [
+            $html = view('documentsystem::email_templates.document_system_review', [
                 'title'      => $doc->title,
                 'pic'        => $doc->user?->name ?? '-',
                 'action_url' => url('document-systems/login'),
@@ -365,7 +365,7 @@ class PtwController extends Controller
         $doc->load(['peoples', 'user']);
         $receivers = collect($doc->peoples)->pluck('email')->filter()->implode(';');
         if ($receivers) {
-            $html = view('email_templates.document_system_review', [
+            $html = view('documentsystem::email_templates.document_system_review', [
                 'title'      => $doc->title,
                 'pic'        => $doc->user?->name ?? '-',
                 'action_url' => url('document-systems/login'),
@@ -413,7 +413,7 @@ class PtwController extends Controller
         $doc->load(['peoples', 'user']);
         $receivers = collect($doc->peoples)->pluck('email')->filter()->implode(';');
         if ($receivers) {
-            $html = view('email_templates.document_system_review', [
+            $html = view('documentsystem::email_templates.document_system_review', [
                 'title'      => $doc->title,
                 'pic'        => $doc->user?->name ?? '-',
                 'action_url' => url('document-systems/login'),

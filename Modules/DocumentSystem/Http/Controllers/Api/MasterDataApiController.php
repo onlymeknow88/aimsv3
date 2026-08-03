@@ -156,7 +156,7 @@ class MasterDataApiController extends Controller
             ->with('module:id,name')
             ->withCount('mappings')
             ->orderByRaw('CAST(SUBSTRING_INDEX(document_system_categories.index, ".", 1) AS UNSIGNED) ASC')
-            ->orderByRaw('CAST(SUBSTRING_INDEX(document_system_categories.index, ".", 2) AS UNSIGNED) ASC')
+            ->orderByRaw('CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(document_system_categories.index, ".", 2), ".", -1) AS UNSIGNED) ASC')
             ->orderBy('index', 'asc');
 
         if ($moduleId) {
@@ -241,14 +241,17 @@ class MasterDataApiController extends Controller
      */
     public function getMappings(Request $request)
     {
-        $search = $request->query('search');
-        $categoryId = $request->query('category_id');
+        $search         = $request->query('search');
+        $categoryId     = $request->query('category_id');
+        $filterName     = $request->query('filter_name');
+        $filterCategory = $request->query('filter_category');
+        $filterModule   = $request->query('filter_module');
 
         $query = Mapping::select('id', 'category_id', 'name', 'index')
             ->with(['category:id,module_id,name', 'category.module:id,name'])
             ->orderByRaw('CAST(SUBSTRING_INDEX(document_system_mappings.index, ".", 1) AS UNSIGNED) ASC')
-            ->orderByRaw('CAST(SUBSTRING_INDEX(document_system_mappings.index, ".", 2) AS UNSIGNED) ASC')
-            ->orderByRaw('CAST(SUBSTRING_INDEX(document_system_mappings.index, ".", 3) AS UNSIGNED) ASC')
+            ->orderByRaw('CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(document_system_mappings.index, ".", 2), ".", -1) AS UNSIGNED) ASC')
+            ->orderByRaw('CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(document_system_mappings.index, ".", 3), ".", -1) AS UNSIGNED) ASC')
             ->orderBy('index', 'asc');
 
         if ($categoryId) {
@@ -265,6 +268,23 @@ class MasterDataApiController extends Controller
                             $mq->where('name', 'like', "%{$search}%");
                         });
                   });
+            });
+        }
+
+        // Column-level filters (header filter inputs)
+        if (!empty($filterName)) {
+            $query->where('name', 'like', "%{$filterName}%");
+        }
+
+        if (!empty($filterCategory)) {
+            $query->whereHas('category', function ($cq) use ($filterCategory) {
+                $cq->where('name', 'like', "%{$filterCategory}%");
+            });
+        }
+
+        if (!empty($filterModule)) {
+            $query->whereHas('category.module', function ($mq) use ($filterModule) {
+                $mq->where('name', 'like', "%{$filterModule}%");
             });
         }
 
@@ -332,6 +352,44 @@ class MasterDataApiController extends Controller
     }
 
     /**
+     * Fetch PJ (area manager) of the selected department via head_id relation to user.
+     */
+    public function getPjsByDepartment(Request $request)
+    {
+        $departmentId = $request->query('department_id');
+
+        if (!$departmentId) {
+            return ResponseFormatter::success([], 'No department selected');
+        }
+
+        // Get department with its head user
+        $department = \App\Models\Department::with('head')->find($departmentId);
+        if (!$department || !$department->head) {
+            return ResponseFormatter::success([], 'Department or department head not found');
+        }
+
+        $headUser = $department->head;
+
+        // Find or create AreaManager record for the department head user
+        $mgr = AreaManager::where('user_id', $headUser->id)->first();
+        if (!$mgr) {
+            $mgr = AreaManager::create([
+                'user_id' => $headUser->id,
+            ]);
+        }
+
+        $managers = [
+            [
+                'id'    => $mgr->id,
+                'name'  => $headUser->name ?? 'Unknown',
+                'email' => $headUser->email ?? '',
+            ]
+        ];
+
+        return ResponseFormatter::success($managers, 'PJs retrieved successfully');
+    }
+
+    /**
      * Fetch employees filtered by company.
      */
     public function getEmployees(Request $request)
@@ -359,9 +417,19 @@ class MasterDataApiController extends Controller
     {
         $stats = [
             'active_docs'   => Document::where('status', '5')->count(),
-            'ongoing_docs'  => Document::where('status', '2')->count(),
-            'draft_docs'    => Document::where('status', '1')->count(),
-            'obsolete_docs' => Document::where('status', '6')->count(),
+            'ongoing_docs'  => Document::whereIn('status', ['1', '3', '4', '6'])->count(),
+            'draft_docs'    => Document::where('status', '2')->count(),
+            'obsolete_docs' => Document::where('is_obsolate', true)
+                ->whereIn('id', function($q) {
+                    $q->select('id')
+                      ->from('document_system_documents')
+                      ->whereIn(DB::raw('(document_number, revision)'), function($sub) {
+                          $sub->select('document_number', DB::raw('MAX(revision)'))
+                              ->from('document_system_documents')
+                              ->where('is_obsolate', true)
+                              ->groupBy('document_number');
+                      });
+                })->count(),
             'jsa_active'    => JsaDocument::where('status', '5')->count(),
             'ptw_active'    => PtwDocument::where('status', '5')->count(),
         ];
@@ -393,7 +461,7 @@ class MasterDataApiController extends Controller
                         $totalArray[$month]++;
                         if ($doc->status == '5') {
                             $activeArray[$month]++;
-                        } elseif ($doc->status == '6') {
+                        } elseif ($doc->status == '7' || $doc->status == '8' || $doc->is_obsolate) {
                             $expiredArray[$month]++;
                         }
                     }

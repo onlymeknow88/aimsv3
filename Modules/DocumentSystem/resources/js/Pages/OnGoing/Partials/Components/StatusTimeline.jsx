@@ -3,14 +3,14 @@ import { Check, Clock } from 'lucide-react';
 import React from 'react';
 
 const statusToStep = {
-    '1': 0,
-    '2': 0,
-    '3': 1,
-    '4': 1,
-    '5': 4,
-    '6': 2,
-    '7': 3,
-    '8': 4,
+    '1': 1,  // Waiting Review -> step 1 (Tahap Review)
+    '2': 0,  // Draft -> step 0
+    '3': 2,  // Routing Approval -> step 2 (Approval DC IMS)
+    '4': 1,  // Revision -> back to step 1 (Tahap Review)
+    '5': 3,  // Active -> step 3 (Dokumen Aktif)
+    '6': 1,  // Prepare Approval -> step 1 (Tahap Review)
+    '7': 3,  // Expired -> step 3 (stays at Dokumen Aktif)
+    '8': 3,  // Obsolete -> step 3
 };
 
 
@@ -19,35 +19,34 @@ export default function StatusTimeline({ status, document }) {
     const currentStep = statusToStep[String(status)] ?? 0;
     const isRevision  = String(status) === '4';
 
+    const fmt = (dateStr) => dateStr
+        ? new Date(dateStr).toLocaleString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+        : null;
+
     const steps = [
         {
             key: 'draft',
             label: 'Draft / Pembuat',
             sublabel: document?.creator?.name || document?.owner?.name || null,
+            timestamp: fmt(document?.created_at),
         },
         {
             key: 'review',
             label: 'Tahap Review',
-            sublabel: null,
+            sublabel: (['1', '6'].includes(String(document?.status))) ? 'Sedang Direview' : null,
+            timestamp: ['1', '3', '4', '5', '6', '7'].includes(String(document?.status)) ? fmt(document?.updated_at) : null,
         },
         {
-            key: 'approvalL1',
-            label: 'Approval CRS (L1)',
-            sublabel: document?.approved_by_crs_user?.name
-                || (document?.approved_at_crs ? 'Disetujui' : null),
-        },
-        {
-            key: 'approvalL2',
-            label: 'Approval PJA (L2)',
-            sublabel: document?.approved_by_pja_user?.name
-                || (document?.approved_at_pja ? 'Disetujui' : null),
+            key: 'approvalDCIMS',
+            label: 'Approval DC IMS',
+            sublabel: document?.approved_by_crs_user?.name || (String(document?.status) === '3' ? 'Menunggu Persetujuan' : null),
+            timestamp: fmt(document?.approved_at_crs),
         },
         {
             key: 'active',
             label: 'Dokumen Aktif',
-            sublabel: document?.approved_at_pja
-                ? new Date(document.approved_at_pja).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })
-                : null,
+            sublabel: String(document?.status) === '5' ? 'Aktif' : String(document?.status) === '7' ? 'Expired' : null,
+            timestamp: String(document?.status) === '5' || String(document?.status) === '7' ? fmt(document?.approved_at_crs) : null,
         },
     ];
 
@@ -96,7 +95,7 @@ export default function StatusTimeline({ status, document }) {
                             )}
                         </div>
 
-                        {/* Label + sublabel */}
+                        {/* Label + sublabel + timestamp */}
                         <div style={{ paddingTop: '3px', paddingBottom: showConnector ? '28px' : '0' }}>
                             <div style={{
                                 fontSize: '11px',
@@ -119,6 +118,12 @@ export default function StatusTimeline({ status, document }) {
                             {step.sublabel && (
                                 <div style={{ fontSize: '10px', color: 'var(--text-secondary)', marginTop: '1px', fontWeight: 500 }}>
                                     {step.sublabel}
+                                </div>
+                            )}
+                            {step.timestamp && (done || active) && (
+                                <div style={{ fontSize: '9px', color: 'var(--text-muted)', marginTop: '2px', display: 'flex', alignItems: 'center', gap: '3px' }}>
+                                    <Clock size={9} />
+                                    {step.timestamp}
                                 </div>
                             )}
                         </div>
