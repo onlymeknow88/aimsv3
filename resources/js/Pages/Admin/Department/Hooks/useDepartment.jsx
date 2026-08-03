@@ -14,6 +14,7 @@ const emptyForm = {
 export default function useDepartment() {
     // Data
     const [departments, setDepartments] = useState([]);
+    const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [search, setSearch] = useState("");
@@ -35,6 +36,15 @@ export default function useDepartment() {
     const [deleteError, setDeleteError] = useState(null);
 
     // ── Fetch ──────────────────────────────────────────────────────────────────
+    const fetchMasterData = useCallback(async () => {
+        try {
+            const response = await axios.get(`${BASE}/master-data`);
+            setUsers(response.data?.result?.users || []);
+        } catch (e) {
+            console.error("Gagal memuat master data users:", e);
+        }
+    }, []);
+
     const fetchDepartments = useCallback(async () => {
         setLoading(true);
         setError(null);
@@ -42,7 +52,11 @@ export default function useDepartment() {
             const response = await axios.get(BASE, { params: { search, page, limit } });
             // ResponseFormatter::success membungkus hasil paginate(), datanya ada di result.data
             setDepartments(response.data?.result?.data || []);
-            setPagination(response.data?.result?.pagination || { current_page: 1, last_page: 1, total: 0 });
+            setPagination({
+                current_page: response.data?.result?.current_page || 1,
+                last_page: response.data?.result?.last_page || 1,
+                total: response.data?.result?.total || 0,
+            });
         } catch (e) {
             setError("Gagal memuat data.");
             console.error(e);
@@ -62,8 +76,9 @@ export default function useDepartment() {
     }, [limit]);
 
     useEffect(() => {
+        fetchMasterData();
         fetchDepartments();
-    }, [fetchDepartments]);
+    }, [fetchMasterData, fetchDepartments]);
 
     // ── Modal helpers (create/edit) ──────────────────────────────────────────
     const openCreateModal = () => {
@@ -151,6 +166,7 @@ export default function useDepartment() {
 
     return {
         departments, // filtering sudah dilakukan di server lewat query `search`
+        users,
         loading,
         error,
         search,

@@ -1,6 +1,7 @@
 import { X, AlertTriangle } from "lucide-react";
+import SearchableSelect from "@/Components/SearchableSelect";
 
-export default function DepartmentModal({ isOpen, onClose, onSubmit, editId, form, setField, submitting, formError }) {
+export default function DepartmentModal({ isOpen, onClose, onSubmit, editId, form, setField, submitting, formError, users = [] }) {
     if (!isOpen) return null;
 
     return (
@@ -114,6 +115,17 @@ export default function DepartmentModal({ isOpen, onClose, onSubmit, editId, for
                                     fontSize: "13px",
                                     color: "#0f172a",
                                 }}
+                            />
+                        </div>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                            <label style={{ fontSize: "13px", fontWeight: 700, color: "#0f172a" }}>
+                                Kepala Departemen
+                            </label>
+                            <SearchableSelect
+                                options={users}
+                                value={form.head_id}
+                                onChange={(val) => setField("head_id", val)}
+                                placeholder="Pilih Kepala Departemen..."
                             />
                         </div>
                         <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>

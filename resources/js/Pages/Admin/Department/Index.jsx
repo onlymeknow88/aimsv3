@@ -41,6 +41,7 @@ export default function Index() {
         setField,
         submitting,
         formError,
+        users,
         // delete confirmation
         deleteTarget,
         deleting,
@@ -244,6 +245,7 @@ export default function Index() {
                     setField={setField}
                     submitting={submitting}
                     formError={formError}
+                    users={users}
                 />
             )}
 

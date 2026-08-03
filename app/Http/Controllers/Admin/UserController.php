@@ -92,6 +92,7 @@ class UserController extends Controller
 
         if ($request->has('role_ids')) {
             $user->documentRoles()->sync($request->role_ids);
+            \Cache::flush();
         }
 
         return back();

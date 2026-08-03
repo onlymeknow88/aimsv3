@@ -25,7 +25,7 @@ class EmailService
             $mail = new PHPMailer(true);
 
             if ($data['type'] == 'new_document') {
-                $html = view('email_templates.document_system_review', [
+                $html = view('documentsystem::email_templates.document_system_review', [
                     'title' => $data['title'],
                     'pic' => $data['pic'],
                     'action_url' => url('document-systems/login'),
@@ -33,20 +33,20 @@ class EmailService
 
                 $subject = trans('global.new_document');
             } else if ($data['type'] == 'almost_expire_document') {
-                $html = view('email_templates.almost_expire_document', [
+                $html = view('documentsystem::email_templates.almost_expire_document', [
                     'documents' => $data['documents'],
                     'day' => $data['day'],
                 ])->render();
 
                 $subject = 'Reminder Expire Document';
             } else if ($data['type'] == 'expire_document') {
-                $html = view('email_templates.expire_document', [
+                $html = view('documentsystem::email_templates.expire_document', [
                     'documents' => $data['documents'],
                 ])->render();
 
                 $subject = 'Expire Document';
             } else {
-                $html = view('email_templates.expire_document', [
+                $html = view('documentsystem::email_templates.expire_document', [
                     'documents' => $data['documents'],
                 ])->render();
 

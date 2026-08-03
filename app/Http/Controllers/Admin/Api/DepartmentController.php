@@ -18,7 +18,7 @@ class DepartmentController extends Controller
             $limit  = $request->query('limit', 10);   // Default limit 10
             $search = $request->query('search', '');  // Default search kosong
 
-            $query = Department::query();
+            $query = Department::with('head:id,name,email');
 
             if ($search) {
                 $query->where(function ($q) use ($search) {
@@ -31,6 +31,21 @@ class DepartmentController extends Controller
             $departments = $query->orderBy('name')->paginate($limit);
 
             return ResponseFormatter::success($departments, 'Departments retrieved successfully');
+        } catch (\Exception $e) {
+            return ResponseFormatter::error('Gagal: ' . $e->getMessage(), 500);
+        }
+    }
+
+    /**
+     * API: Get master data (users list for head_id dropdown).
+     */
+    public function masterData()
+    {
+        try {
+            $users = \App\Models\User::orderBy('name')->get(['id', 'name', 'email']);
+            return ResponseFormatter::success([
+                'users' => $users
+            ], 'Master data retrieved successfully');
         } catch (\Exception $e) {
             return ResponseFormatter::error('Gagal: ' . $e->getMessage(), 500);
         }

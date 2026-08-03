@@ -29,7 +29,7 @@ export default function useCsmsWidget(filters = {}) {
             const params = {};
             if (yearsParam) params.year = yearsParam;
 
-            const res    = await axios.get('/api/csms/dashboard-stats', { params });
+            const res    = await axios.get('/api/csms/main-dashboard-stats', { params });
             const result = res.data?.result ?? null;
             if (result) {
                 setStats(result);

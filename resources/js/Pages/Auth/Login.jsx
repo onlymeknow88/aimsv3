@@ -1,11 +1,12 @@
-import { useEffect } from 'react';
+import { ChevronRight, Eye, EyeOff, HardHat, Lock, Mail, ShieldCheck } from 'lucide-react';
+import { Head, Link, useForm } from '@inertiajs/react';
+
 import Checkbox from '@/Components/Checkbox';
 import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
 import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
-import { Head, Link, useForm } from '@inertiajs/react';
-import { ShieldCheck, Lock, Mail, ChevronRight, HardHat, Eye, EyeOff } from 'lucide-react';
+import { useEffect } from 'react';
 
 export default function Login({ status, canResetPassword }) {
     const { data, setData, post, processing, errors, reset } = useForm({
@@ -42,12 +43,12 @@ export default function Login({ status, canResetPassword }) {
                 overflow: 'hidden'
             }}>
                 {/* Background mining overlay */}
-                <div style={{ 
-                    position: 'absolute', 
+                <div style={{
+                    position: 'absolute',
                     top: 0, left: 0, right: 0, bottom: 0,
-                    backgroundImage: 'url("https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&q=80&w=1000")', 
-                    backgroundSize: 'cover', 
-                    backgroundPosition: 'center', 
+                    backgroundImage: 'url("images/alamtri-minerals.jpg")',
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
                     opacity: 0.15,
                     zIndex: 1
                 }} />
@@ -55,10 +56,10 @@ export default function Login({ status, canResetPassword }) {
                 {/* Top Branding */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', zIndex: 2 }}>
                     <div style={{
-                        width: '40px',
-                        height: '40px',
+                        // width: '40px',
+                        // height: '40px',
                         borderRadius: '8px',
-                        backgroundColor: '#FF8C24',
+                        backgroundColor: '#fff',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
@@ -67,7 +68,7 @@ export default function Login({ status, canResetPassword }) {
                         fontSize: '1.25rem',
                         boxShadow: '0 4px 10px rgba(255, 140, 36, 0.3)'
                     }}>
-                        ★
+                       <img src="/images/Alamtri Geo Logo - Full Color 1.png" width="70"/>
                     </div>
                     <div>
                         <h1 style={{ fontSize: '20px', fontWeight: 800, margin: 0, color: '#fff', letterSpacing: '0.5px' }}>AIMS</h1>

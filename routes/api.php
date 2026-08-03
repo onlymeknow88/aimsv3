@@ -39,6 +39,7 @@ Route::middleware(['admin.session', 'auth:admin', 'admin.auth'])
         // ── Departments API ───────────────────────────────────────────
         Route::prefix('departments')->group(function () {
             Route::get('/', [\App\Http\Controllers\Admin\Api\DepartmentController::class, 'index']);
+            Route::get('/master-data', [\App\Http\Controllers\Admin\Api\DepartmentController::class, 'masterData']);
             Route::post('/', [\App\Http\Controllers\Admin\Api\DepartmentController::class, 'store']);
             Route::put('/{id}', [\App\Http\Controllers\Admin\Api\DepartmentController::class, 'update']);
             Route::delete('/{id}', [\App\Http\Controllers\Admin\Api\DepartmentController::class, 'destroy']);
