@@ -351,7 +351,7 @@ class JsaApiController extends Controller
         $doc->load(['people', 'user']);
         $receivers = collect($doc->people)->pluck('email')->filter()->implode(';');
         if ($receivers) {
-            $html = view('email_templates.document_system_review', [
+            $html = view('documentsystem::email_templates.document_system_review', [
                 'title'      => $doc->title,
                 'pic'        => $doc->user?->name ?? '-',
                 'action_url' => url('document-systems/login'),
@@ -395,7 +395,7 @@ class JsaApiController extends Controller
         $doc->load(['people', 'user']);
         $receivers = collect($doc->people)->pluck('email')->filter()->implode(';');
         if ($receivers) {
-            $html = view('email_templates.document_system_review', [
+            $html = view('documentsystem::email_templates.document_system_review', [
                 'title'      => $doc->title,
                 'pic'        => $doc->user?->name ?? '-',
                 'action_url' => url('document-systems/login'),
@@ -440,7 +440,7 @@ class JsaApiController extends Controller
         $doc->load(['people', 'user']);
         $receivers = collect($doc->people)->pluck('email')->filter()->implode(';');
         if ($receivers) {
-            $html = view('email_templates.document_system_review', [
+            $html = view('documentsystem::email_templates.document_system_review', [
                 'title'      => $doc->title,
                 'pic'        => $doc->user?->name ?? '-',
                 'action_url' => url('document-systems/login'),

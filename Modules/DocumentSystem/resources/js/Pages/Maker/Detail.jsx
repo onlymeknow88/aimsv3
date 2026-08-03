@@ -24,15 +24,32 @@ export default function Detail({ id }) {
         loadingData,
         notes,
         setNotes,
-        loading,
+        loadingApprove,
+        loadingRouting,
+        loadingReject,
         isRejectModalOpen,
         setIsRejectModalOpen,
+        isConfirmRoutingOpen,
+        setIsConfirmRoutingOpen,
         rejectFiles,
         setRejectFiles,
         handleApprove,
+        handleRouting,
         handleReject,
         showApproval
     } = useDetail(id);
+
+    useEffect(() => {
+        if (!loadingData && document && showApproval) {
+            const params = new URLSearchParams(window.location.search);
+            const action = params.get('action');
+            if (action === 'approve') {
+                setIsConfirmApproveOpen(true);
+            } else if (action === 'reject') {
+                setIsRejectModalOpen(true);
+            }
+        }
+    }, [loadingData, document, showApproval]);
 
     if (loadingData || !document) {
         return (
@@ -158,9 +175,12 @@ export default function Detail({ id }) {
                                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                                     color: '#fff', fontWeight: 700, fontSize: '12px'
                                 }}>
-                                    {getInitials(document.owner?.name)}
+                                    {getInitials(document.area_manager?.user?.name)}
                                 </div>
-                                <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{document.owner?.name || '-'}</span>
+                                <div>
+                                    <span style={{ fontWeight: 600, color: 'var(--text-primary)', display: 'block' }}>{document.area_manager?.user?.name || '-'}</span>
+                                    <span style={{ fontSize: '9px', color: 'var(--text-muted)', fontWeight: 600 }}>Department Head</span>
+                                </div>
                             </div>
 
                             <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', color: 'var(--text-secondary)' }}>
@@ -176,6 +196,14 @@ export default function Detail({ id }) {
                                 <div>
                                     <span style={{ fontSize: '10px', display: 'block', fontWeight: 700 }}>DEPARTMENT</span>
                                     <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{document.department?.name || '-'}</span>
+                                </div>
+                            </div>
+
+                            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', color: 'var(--text-secondary)' }}>
+                                <User size={14} style={{ marginTop: '2px', flexShrink: 0 }} />
+                                <div>
+                                    <span style={{ fontSize: '10px', display: 'block', fontWeight: 700 }}>Document Control</span>
+                                    <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{document.owner?.name || '-'}</span>
                                 </div>
                             </div>
 
@@ -275,7 +303,7 @@ export default function Detail({ id }) {
                             boxShadow: 'var(--shadow-sm)'
                         }}>
                             <h4 style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                <Users size={16} /> Invited Reviewers
+                                <Users size={16} /> Mengetahui
                             </h4>
                             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                                 {document.invited_people.map(p => (
@@ -289,13 +317,16 @@ export default function Detail({ id }) {
 
                     {/* Attachments Card */}
                     {/* Active documents (status 5/7): show uncontrolled watermarked copy if available */}
-                    {['5', '7'].includes(String(document.status)) && document.uncontrolled_file_path ? (
+                    {/* Attachments Card */}
+                    {/* Active documents (status 5/7): show uncontrolled watermarked copy if available */}
+                    {['5', '7'].includes(String(document.status)) && document.uncontrolled_file_path && (
                         <div style={{
                             backgroundColor: 'var(--card-bg)',
                             border: '1px solid var(--border-color)',
                             borderRadius: '12px',
                             padding: '24px',
-                            boxShadow: 'var(--shadow-sm)'
+                            boxShadow: 'var(--shadow-sm)',
+                            marginBottom: '20px'
                         }}>
                             <h4 style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '4px' }}>Dokumen Resmi</h4>
                             <p style={{ fontSize: '11px', color: 'var(--text-secondary)', marginBottom: '12px' }}>
@@ -325,7 +356,9 @@ export default function Detail({ id }) {
                                 </a>
                             </div>
                         </div>
-                    ) : document.attachments && document.attachments.length > 0 && (
+                    )}
+
+                    {document.attachments && document.attachments.length > 0 && (
                         <div style={{
                             backgroundColor: 'var(--card-bg)',
                             border: '1px solid var(--border-color)',
@@ -357,22 +390,37 @@ export default function Detail({ id }) {
                         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '16px' }}>
                             <button
                                 onClick={() => setIsRejectModalOpen(true)}
-                                disabled={loading}
+                                disabled={loadingApprove || loadingRouting || loadingReject}
                                 style={{ border: '1px solid var(--danger)', color: 'var(--danger)', background: '#fff', borderRadius: '6px', padding: '8px 16px', cursor: 'pointer', fontSize: '11px', fontWeight: 700 }}
                             >
-                                Reject & Return
+                                {loadingReject ? 'Processing...' : 'Reject & Return'}
+                            </button>
+                            <button
+                                onClick={() => setIsConfirmRoutingOpen(true)}
+                                disabled={loadingApprove || loadingRouting || loadingReject}
+                                style={{ border: '1px solid var(--primary)', color: 'var(--primary)', background: '#fff', borderRadius: '6px', padding: '8px 16px', cursor: (loadingApprove || loadingRouting || loadingReject) ? 'not-allowed' : 'pointer', fontSize: '11px', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                            >
+                                {loadingRouting ? (
+                                    <>
+                                        <svg style={{ animation: 'spin 1s linear infinite', width: '12px', height: '12px' }} fill="none" viewBox="0 0 24 24">
+                                            <circle style={{ opacity: 0.25 }} cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                            <path style={{ opacity: 0.75 }} fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                                        </svg>
+                                        <span>Processing...</span>
+                                    </>
+                                ) : 'Approve & Rooting'}
                             </button>
                             <button
                                 onClick={() => setIsConfirmApproveOpen(true)}
-                                disabled={loading}
+                                disabled={loadingApprove || loadingRouting || loadingReject}
                                 style={{
                                     border: 'none',
                                     color: '#fff',
                                     backgroundColor: 'var(--primary)',
                                     borderRadius: '6px',
                                     padding: '8px 16px',
-                                    cursor: loading ? 'not-allowed' : 'pointer',
-                                    opacity: loading ? 0.7 : 1,
+                                    cursor: (loadingApprove || loadingRouting || loadingReject) ? 'not-allowed' : 'pointer',
+                                    opacity: loadingApprove ? 0.7 : 1,
                                     fontSize: '11px',
                                     fontWeight: 700,
                                     display: 'inline-flex',
@@ -380,7 +428,7 @@ export default function Detail({ id }) {
                                     gap: '6px'
                                 }}
                             >
-                                {loading ? (
+                                {loadingApprove ? (
                                     <>
                                         <svg style={{ animation: 'spin 1s linear infinite', width: '12px', height: '12px', color: '#fff' }} fill="none" viewBox="0 0 24 24">
                                             <circle style={{ opacity: 0.25 }} cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
@@ -388,9 +436,7 @@ export default function Detail({ id }) {
                                         </svg>
                                         <span>Processing...</span>
                                     </>
-                                ) : (
-                                    String(document.status) === '1' ? 'Approve & Rooting' : 'Approve & Publish'
-                                )}
+                                ) : 'Approve to Publish'}
                             </button>
                         </div>
                     )}
@@ -423,7 +469,7 @@ export default function Detail({ id }) {
                             <p style={{ fontSize: '11.5px', color: 'var(--text-secondary)', marginBottom: '16px', lineHeight: '1.5' }}>
                                 Dokumen akan ditolak dan dikembalikan ke pembuat (Draft). Silakan berikan alasan atau catatan revisi di bawah ini.
                             </p>
-                             <div style={{ marginBottom: '20px' }}>
+                            <div style={{ marginBottom: '20px' }}>
                                 <label style={{ fontSize: '10px', fontWeight: 700, color: 'var(--text-secondary)', display: 'block', marginBottom: '6px', textTransform: 'uppercase' }}>
                                     Alasan Return / Catatan Revisi <span style={{ color: 'var(--danger)' }}>*</span>
                                 </label>
@@ -457,7 +503,7 @@ export default function Detail({ id }) {
                                             Pilih File Evidence
                                         </span>
                                         <span style={{ fontSize: '9px', color: 'var(--text-secondary)' }}>
-                                            PDF, Gambar, Excel, dll.
+                                            .docx,.pdf,.jpg,.png (Max 20MB per file)
                                         </span>
                                     </label>
                                 </div>
@@ -487,17 +533,17 @@ export default function Detail({ id }) {
                                         setNotes('');
                                         setRejectFiles([]);
                                     }}
-                                    disabled={loading}
+                                    disabled={loadingReject}
                                     style={{ border: '1px solid var(--border-color)', color: 'var(--text-secondary)', background: '#fff', borderRadius: '6px', padding: '8px 16px', cursor: 'pointer', fontSize: '11px', fontWeight: 700 }}
                                 >
                                     Batal
                                 </button>
                                 <button
                                     onClick={handleReject}
-                                    disabled={loading}
-                                    style={{ border: 'none', color: '#fff', backgroundColor: 'var(--danger)', borderRadius: '6px', padding: '8px 16px', cursor: loading ? 'not-allowed' : 'pointer', fontSize: '11px', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                                    disabled={loadingReject}
+                                    style={{ border: 'none', color: '#fff', backgroundColor: 'var(--danger)', borderRadius: '6px', padding: '8px 16px', cursor: loadingReject ? 'not-allowed' : 'pointer', fontSize: '11px', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '6px' }}
                                 >
-                                    {loading ? (
+                                    {loadingReject ? (
                                         <>
                                             <svg style={{ animation: 'spin 1s linear infinite', width: '12px', height: '12px', color: '#fff' }} fill="none" viewBox="0 0 24 24">
                                                 <circle style={{ opacity: 0.25 }} cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
@@ -594,12 +640,24 @@ export default function Detail({ id }) {
             />
 
             <ConfirmationModal
+                isOpen={isConfirmRoutingOpen}
+                type="generic"
+                title="Approve & Rooting?"
+                description="Dokumen akan diteruskan untuk proses persetujuan lebih lanjut tanpa diterbitkan."
+                confirmText="Ya, Teruskan"
+                cancelText="Batal"
+                onConfirm={() => {
+                    setIsConfirmRoutingOpen(false);
+                    handleRouting();
+                }}
+                onCancel={() => setIsConfirmRoutingOpen(false)}
+            />
+
+            <ConfirmationModal
                 isOpen={isConfirmApproveOpen}
                 type="generic"
-                title={String(document.status) === '1' ? "Forward to Checker?" : "Publish Document?"}
-                description={String(document.status) === '1'
-                    ? "This document will be forwarded to the final checker."
-                    : "This document will be active for 2 years and cannot be edited."}
+                title="Approve to Publish?"
+                description="Dokumen akan diteruskan ke proses persetujuan dan diterbitkan dengan masa berlaku 4 tahun."
                 confirmText="Yes"
                 cancelText="Cancel"
                 onConfirm={() => {

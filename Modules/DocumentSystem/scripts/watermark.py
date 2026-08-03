@@ -5,6 +5,7 @@ def apply_transparent_watermark(page, watermark_image_path, opacity=0.25):
     """
     Apply a centered, semi-transparent watermark image to a PDF page using PyMuPDF.
     opacity: 0.0 = fully transparent, 1.0 = fully opaque. Default 0.25 (25% opacity).
+    For landscape pages the watermark is rotated 90° to match the orientation.
     """
     rect = page.rect
     page_w = rect.width
@@ -20,8 +21,12 @@ def apply_transparent_watermark(page, watermark_image_path, opacity=0.25):
         img_w = 400
         img_h = 200
 
-    # Scale based on orientation (portrait vs landscape)
     is_landscape = page_w > page_h
+
+    effective_w = img_w
+    effective_h = img_h
+    watermark_rotate = 0
+
     if is_landscape:
         max_w = page_w * 0.60
         max_h = page_h * 0.60
@@ -29,8 +34,8 @@ def apply_transparent_watermark(page, watermark_image_path, opacity=0.25):
         max_w = page_w * 0.70
         max_h = page_h * 0.70
 
-    w = float(img_w)
-    h = float(img_h)
+    w = float(effective_w)
+    h = float(effective_h)
     if w > max_w or h > max_h:
         scale = min(max_w / w, max_h / h)
         w = w * scale
@@ -45,6 +50,9 @@ def apply_transparent_watermark(page, watermark_image_path, opacity=0.25):
 
     # Map visual coordinates to the unrotated coordinate system used by page.insert_image
     dest_rect = dest_rect * page.derotation_matrix
+
+    # Combine page rotation with watermark rotation
+    comp_rotate = (page.rotation + watermark_rotate) % 360
 
     # Insert image with alpha (transparency) control
     try:
@@ -63,12 +71,10 @@ def apply_transparent_watermark(page, watermark_image_path, opacity=0.25):
         alpha_bytes = bytes(samples[3::n])
         src_pix.set_alpha(alpha_bytes)
 
-        comp_rotate = page.rotation
         page.insert_image(dest_rect, pixmap=src_pix, keep_proportion=True, overlay=True, rotate=comp_rotate)
 
     except Exception as e:
         print(f"Warning: transparent watermark failed ({e}), falling back to direct insert")
-        comp_rotate = page.rotation
         page.insert_image(dest_rect, filename=watermark_image_path, keep_proportion=True, overlay=True, rotate=comp_rotate)
 
 

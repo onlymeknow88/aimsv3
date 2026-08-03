@@ -55,10 +55,11 @@ class NotifyAlmostExpireDocumentJob implements ShouldQueue
             } else {
                 $receiver = [];
             }
-            $expire_date = Carbon::parse($document->doc_created)->addYear(2);
-            $expire_lenght = Carbon::parse(date('Y-m-d'))->diffInDays($expire_date);
-            if ($expire_lenght == 7) {
-                $ids['week'][] = [
+            $expire_date = Carbon::parse($document->doc_created)->addYears(4)->startOfDay();
+            $today = Carbon::today();
+
+            if ($expire_date->copy()->subMonths(7)->equalTo($today)) {
+                $ids['7_months'][] = [
                     'id' => $document->id,
                     'title' => $document->title,
                     'document_number' => $document->fix_document_number,
@@ -66,8 +67,8 @@ class NotifyAlmostExpireDocumentJob implements ShouldQueue
                 ];
             }
 
-            if ($expire_lenght == 3) {
-                $ids['three'][] = [
+            if ($expire_date->copy()->subMonths(3)->equalTo($today)) {
+                $ids['3_months'][] = [
                     'id' => $document->id,
                     'title' => $document->title,
                     'document_number' => $document->fix_document_number,
@@ -75,8 +76,17 @@ class NotifyAlmostExpireDocumentJob implements ShouldQueue
                 ];
             }
 
-            if ($expire_lenght == 1) {
-                $ids['one'][] = [
+            if ($expire_date->copy()->subMonths(1)->equalTo($today)) {
+                $ids['1_month'][] = [
+                    'id' => $document->id,
+                    'title' => $document->title,
+                    'document_number' => $document->fix_document_number,
+                    'receiver' => $receiver,
+                ];
+            }
+
+            if ($expire_date->copy()->subWeeks(1)->equalTo($today)) {
+                $ids['1_week'][] = [
                     'id' => $document->id,
                     'title' => $document->title,
                     'document_number' => $document->fix_document_number,
@@ -85,16 +95,40 @@ class NotifyAlmostExpireDocumentJob implements ShouldQueue
             }
         }
 
-        if (isset($ids['week'])) {
-            $send = $this->notify($receiver, $ids['week'], 7);
+        if (isset($ids['7_months'])) {
+            $emails = [];
+            foreach ($ids['7_months'] as $item) {
+                $emails = array_merge($emails, $item['receiver']);
+            }
+            $emails = array_unique($emails);
+            $send = $this->notify($emails, $ids['7_months'], '7 Bulan');
         }
-        if (isset($ids['three'])) {
-            $peoples = $this->getPeoples(collect($ids['three'])->pluck('id')->all());
-            $send = $this->notify($receiver, $ids['three'], 3);
+
+        if (isset($ids['3_months'])) {
+            $emails = [];
+            foreach ($ids['3_months'] as $item) {
+                $emails = array_merge($emails, $item['receiver']);
+            }
+            $emails = array_unique($emails);
+            $send = $this->notify($emails, $ids['3_months'], '3 Bulan');
         }
-        if (isset($ids['one'])) {
-            $peoples = $this->getPeoples(collect($ids['one'])->pluck('id')->all());
-            $send = $this->notify($receiver, $ids['one'], 1);
+
+        if (isset($ids['1_month'])) {
+            $emails = [];
+            foreach ($ids['1_month'] as $item) {
+                $emails = array_merge($emails, $item['receiver']);
+            }
+            $emails = array_unique($emails);
+            $send = $this->notify($emails, $ids['1_month'], '1 Bulan');
+        }
+
+        if (isset($ids['1_week'])) {
+            $emails = [];
+            foreach ($ids['1_week'] as $item) {
+                $emails = array_merge($emails, $item['receiver']);
+            }
+            $emails = array_unique($emails);
+            $send = $this->notify($emails, $ids['1_week'], '1 Minggu');
         }
     }
 
@@ -129,14 +163,14 @@ class NotifyAlmostExpireDocumentJob implements ShouldQueue
                     ? implode(';', $emails)
                     : $emails;
 
-                $html = view('email_templates.almost_expire_document', [
+                $html = view('documentsystem::email_templates.almost_expire_document', [
                     'documents' => $documents,
                     'day'       => $day,
                 ])->render();
 
                 sendPowerAutomateEmail([
                     'SendTo'        => $receiver,
-                    'Title'         => 'Reminder: Document Will Expire in ' . $day . ' Day(s)',
+                    'Title'         => 'Reminder: Document Will Expire in ' . (is_numeric($day) ? $day . ' Day(s)' : $day),
                     'MsgBody'       => $html,
                     'AttchmentPath' => '',
                     'AttchmentName' => '',

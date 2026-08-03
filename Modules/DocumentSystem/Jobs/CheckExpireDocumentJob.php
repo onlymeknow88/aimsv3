@@ -43,7 +43,7 @@ class CheckExpireDocumentJob implements ShouldQueue
             $emails = [];
             $ids = [];
             foreach ($documents as $document) {
-                $expire_date = Carbon::parse($document->doc_created)->addYear(2);
+                $expire_date = Carbon::parse($document->doc_created)->addYear(4);
                 if (Carbon::parse($expire_date) <= Carbon::now()) {
                     $exp_doc = Document::with('peoples')
                         ->find($document->id);

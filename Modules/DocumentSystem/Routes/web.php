@@ -43,6 +43,7 @@ Route::middleware(['web', 'auth'])->prefix('document-system')->group(function ()
         ->middleware('module.permission:document-system,can_approval,doc.approval')
         ->name('doc.approval');
 
+
     // Job Safety Analysis (JSA)
     Route::get('/jsa', [\Modules\DocumentSystem\Http\Controllers\JsaController::class, 'index'])
         ->middleware('module.permission:document-system,can_view,doc.jsa')
@@ -81,5 +82,10 @@ Route::middleware(['web', 'auth'])->prefix('document-system')->group(function ()
     Route::get('/master', [DocumentSystemController::class, 'master'])
         ->middleware('module.permission:document-system,can_view,doc.master')
         ->name('doc.master');
+});
+
+Route::middleware(['web'])->group(function () {
+    Route::get('/document-system/approval/detail/{id}', [DocumentSystemController::class, 'approvalDetail'])
+        ->name('doc.approval.detail');
 });
 

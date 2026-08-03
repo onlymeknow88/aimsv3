@@ -54,8 +54,8 @@ class DocumentSystemExport implements FromView, ShouldAutoSize, WithColumnWidths
         $drawing = new Drawing();
         $drawing->setName('Logo');
         $drawing->setDescription('This is my logo');
-        $drawing->setPath(public_path('/images/Alamtri Geo Logo - Full Color 1.png'));
-        $drawing->setHeight(100);
+        $drawing->setPath(public_path('/images/Alamtri Geo Logo - Full Color.png'));
+        $drawing->setHeight(60);
         $drawing->setCoordinates('D1');
 
         return $drawing;

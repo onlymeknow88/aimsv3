@@ -7,7 +7,9 @@ export default function useDetail(id) {
     const [canApproveL2, setCanApproveL2] = useState(false);
     const [loadingData, setLoadingData] = useState(true);
     const [notes, setNotes] = useState('');
-    const [loading, setLoading] = useState(false);
+    const [loadingApprove, setLoadingApprove] = useState(false);
+    const [loadingRouting, setLoadingRouting] = useState(false);
+    const [loadingReject, setLoadingReject] = useState(false);
     const [loadingMessage, setLoadingMessage] = useState('');
     const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
 
@@ -32,32 +34,25 @@ export default function useDetail(id) {
 
     const handleApprove = useCallback(() => {
         if (!document) return;
-        const level = String(document.status) === '1' ? 1 : 2;
-
-        setLoading(true);
-        // Level 2 triggers watermarking which can take a few seconds
-        setLoadingMessage(level === 2
-            ? 'Memproses watermark & menerbitkan dokumen...'
-            : 'Memproses persetujuan...'
-        );
-
-        axios.post(`/api/document-system/documents/approve/${document.id}`, {
-            level,
-            notes
-        })
-        .then(() => {
-            fetchDocumentDetails();
-        })
-        .catch(err => {
-            alert('Gagal memproses persetujuan.');
-            console.error(err);
-        })
-        .finally(() => {
-            setLoading(false);
-            setLoadingMessage('');
-            setNotes('');
-        });
+        setLoadingApprove(true);
+        setLoadingMessage('Memproses watermark & menerbitkan dokumen...');
+        axios.post(`/api/document-system/documents/approve/${document.id}`, { level: 1, notes })
+        .then(() => { fetchDocumentDetails(); })
+        .catch(err => { alert('Gagal memproses persetujuan.'); console.error(err); })
+        .finally(() => { setLoadingApprove(false); setLoadingMessage(''); setNotes(''); });
     }, [document, notes, fetchDocumentDetails]);
+
+    const handleRouting = useCallback(() => {
+        if (!document) return;
+        setLoadingRouting(true);
+        setLoadingMessage('Meneruskan dokumen untuk persetujuan...');
+        axios.post(`/api/document-system/documents/route/${document.id}`, { notes })
+            .then(() => { fetchDocumentDetails(); })
+            .catch(err => { alert('Gagal meneruskan dokumen.'); console.error(err); })
+            .finally(() => { setLoadingRouting(false); setLoadingMessage(''); setNotes(''); });
+    }, [document, notes, fetchDocumentDetails]);
+
+    const [isConfirmRoutingOpen, setIsConfirmRoutingOpen] = useState(false);
 
     const [rejectFiles, setRejectFiles] = useState([]);
 
@@ -67,7 +62,7 @@ export default function useDetail(id) {
             alert('Catatan/Alasan return wajib diisi untuk menolak dokumen.');
             return;
         }
-        setLoading(true);
+        setLoadingReject(true);
 
         const formData = new FormData();
         formData.append('reason', notes);
@@ -87,15 +82,14 @@ export default function useDetail(id) {
             console.error(err);
         })
         .finally(() => {
-            setLoading(false);
+            setLoadingReject(false);
             setNotes('');
             setIsRejectModalOpen(false);
         });
     }, [document, notes, rejectFiles, fetchDocumentDetails]);
 
     const showApproval = document ? (
-        (canApproveL1 && String(document.status) === '1') || // level 1 and waiting review
-        (canApproveL2 && (String(document.status) === '3' || String(document.status) === '6')) // level 2 and rooting or prepare rooting
+        canApproveL1 && (String(document.status) === '1' || String(document.status) === '3')
     ) : false;
 
     const handleDeleteAttachment = useCallback((attachmentId) => {
@@ -118,13 +112,18 @@ export default function useDetail(id) {
         loadingData,
         notes,
         setNotes,
-        loading,
+        loadingApprove,
+        loadingRouting,
+        loadingReject,
         loadingMessage,
         isRejectModalOpen,
         setIsRejectModalOpen,
+        isConfirmRoutingOpen,
+        setIsConfirmRoutingOpen,
         rejectFiles,
         setRejectFiles,
         handleApprove,
+        handleRouting,
         handleReject,
         showApproval,
         handleDeleteAttachment

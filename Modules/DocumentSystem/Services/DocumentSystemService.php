@@ -4,6 +4,7 @@ namespace Modules\DocumentSystem\Services;
 
 use Modules\DocumentSystem\Entities\Document;
 use Modules\DocumentSystem\Entities\Attachment;
+use Modules\DocumentSystem\Entities\Mapping;
 use Illuminate\Support\Facades\Storage;
 use GuzzleHttp\Client;
 use Illuminate\Support\Facades\Log;
@@ -23,9 +24,36 @@ class DocumentSystemService
     }
 
     /**
+     * Build a structured blob storage folder path based on mapping hierarchy.
+     * Result: document-systems-files/{module-slug}/{category-slug}/{mapping-slug}
+     */
+    public function buildUploadPath($mappingId): string
+    {
+        $base = 'document-systems-files';
+
+        if (!$mappingId) {
+            return $base . '/general';
+        }
+
+        $mapping = Mapping::with('category.module')->find($mappingId);
+
+        if (!$mapping) {
+            return $base . '/general';
+        }
+
+        $slug = fn(string $str): string => strtolower(trim(preg_replace('/[^a-zA-Z0-9]+/', '-', $str), '-'));
+
+        $moduleName   = $slug($mapping->category?->module?->name ?? 'module');
+        $categoryName = $slug($mapping->category?->name ?? 'category');
+        $mappingName  = $slug($mapping->name ?? 'mapping');
+
+        return "{$base}/{$moduleName}/{$categoryName}/{$mappingName}";
+    }
+
+    /**
      * Handle document file uploads.
      */
-    public function uploadAttachment($file, string $path = 'documents')
+    public function uploadAttachment($file, string $path = 'document-systems-files/general')
     {
         if (!$file) {
             return null;

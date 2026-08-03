@@ -136,6 +136,16 @@ class DocumentSystemController extends Controller
         ]);
     }
 
+    /**
+     * View approval detail page.
+     */
+    public function approvalDetail($id)
+    {
+        return inertia('DocumentSystem/Approval/Detail', [
+            'id' => $id
+        ]);
+    }
+
 
 
     /**

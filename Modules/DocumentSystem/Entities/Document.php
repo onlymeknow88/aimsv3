@@ -9,6 +9,11 @@ class Document extends Model
 {
     use HasUuids;
 
+    const DRAFT = '2';
+    const ACTIVE = '5';
+    const EXPIRED = '7';
+    const OBSOLETE = '8';
+
     protected $table = 'document_system_documents';
 
     protected $fillable = [
