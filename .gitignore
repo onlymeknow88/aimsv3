@@ -19,3 +19,6 @@ yarn-error.log
 /.vscode
 /agent
 /scratch
+/.agents
+/.kilo
+/.kilocode

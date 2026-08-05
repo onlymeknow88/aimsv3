@@ -16,7 +16,18 @@ if (! function_exists('uploadToBlobStorage')) {
     {
         $fileHandle = null;
         try {
-            $client = new Client;
+            if (empty($filePathTemp) || !is_file($filePathTemp)) {
+                Log::error('uploadToBlobStorage: invalid or empty temp file path', ['path' => $filePathTemp]);
+                return [
+                    'fileBlobUrl'      => null,
+                    'fileBlobPathName' => null,
+                    'blobResponse'     => null,
+                ];
+            }
+
+            $client = new Client([
+                'verify' => config('app.env') === 'production'
+            ]);
 
             $urlBlobApiLogin = setting('blob_api_login_url');
 
@@ -96,7 +107,7 @@ if (! function_exists('uploadToBlobStorage')) {
                 'status' => $statusCode,
                 'body'   => (string) $response->getBody(),
             ]);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Log::error('uploadToBlobStorage error: ' . $e->getMessage(), [
                 'file' => $filename,
                 'path' => $directPath,
@@ -119,7 +130,9 @@ if (! function_exists('GetBlobSasUri')) {
     function GetBlobSasUri($container, $filePath, $expSasLimit = 5)
     {
         try {
-            $client = new Client;
+            $client = new Client([
+                'verify' => config('app.env') === 'production'
+            ]);
 
             $urlBlobApiLogin = setting('blob_api_login_url');
 
@@ -149,14 +162,17 @@ if (! function_exists('GetBlobSasUri')) {
                 ],
             ]);
 
-            if ($response->getStatusCode() === 200) {
+            $statusCode = $response->getStatusCode();
+
+            if ($statusCode === 200) {
                 return json_decode($response->getBody(), true);
             }
-        } catch (\Exception $e) {
-            Log::error('GetBlobSasUri error: '.$e->getMessage());
-        }
 
-        return null;
+            return null;
+        } catch (\Throwable $e) {
+            Log::error('GetBlobSasUri error: ' . $e->getMessage() . ' for ' . $filePath);
+            return null;
+        }
     }
 }
 

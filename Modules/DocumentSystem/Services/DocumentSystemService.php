@@ -60,7 +60,7 @@ class DocumentSystemService
         }
 
         $filename = $file->getClientOriginalName();
-        $filePathTemp = $file->getRealPath();
+        $filePathTemp = $file->getRealPath() ?: $file->getPathname();
 
         $result = uploadToBlobStorage($filename, $filePathTemp, $path);
 

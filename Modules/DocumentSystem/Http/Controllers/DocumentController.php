@@ -116,6 +116,7 @@ class DocumentController extends Controller
             'created_by'      => $userId,
             'status'          => '2', // Draft
             'revision'        => '0',
+            'is_obsolate'     => false,
             'doc_created'     => now(),
         ]);
 

@@ -117,7 +117,7 @@ export default function useDepartment() {
         setFormError(null);
         try {
             if (editId) {
-                await axios.put(`${BASE}/${editId}`, form);
+                await axios.post(`${BASE}/${editId}/update`, form);
             } else {
                 await axios.post(BASE, form);
             }
@@ -152,7 +152,7 @@ export default function useDepartment() {
         setDeleting(true);
         setDeleteError(null);
         try {
-            await axios.delete(`${BASE}/${deleteTarget.id}`);
+            await axios.post(`${BASE}/${deleteTarget.id}/delete`);
             setDeleteTarget(null);
             fetchDepartments();
         } catch (e) {

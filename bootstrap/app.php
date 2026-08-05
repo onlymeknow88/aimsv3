@@ -27,6 +27,12 @@ return Application::configure(basePath: dirname(__DIR__))
             'api/admin/*',
             'admin/*',
             'logout',
+            'api/document-system/*',
+            'api/csms/*',
+            'api/pica/*',
+            'api/coe/*',
+            'api/field-leadership/*',
+            'api/dashboard-portal/*',
         ]);
 
         $middleware->alias([

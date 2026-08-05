@@ -1007,8 +1007,6 @@ export default function BiddingCreate() {
                             onConfirm={() => handleSubmit(submitType === "draft")}
                             onCancel={() => setShowConfirm(false)}
                         />
-                            onCancel={() => setShowConfirm(false)}
-                        />
                     </div>
                 </div>
             </div>

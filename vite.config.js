@@ -7,6 +7,11 @@ export default defineConfig(async () => {
     const paths = await collectModuleAssetsPaths([], 'Modules');
 
     return {
+    //    server: {
+    //            hmr: {
+    //                host: 'localhost',
+    //            },
+    //        },
         plugins: [
             laravel({
                 input: [

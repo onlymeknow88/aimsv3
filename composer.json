@@ -32,7 +32,12 @@
             "App\\": "app/",
             "Database\\Factories\\": "database/factories/",
             "Database\\Seeders\\": "database/seeders/",
-            "Modules\\": "Modules/"
+            "Modules\\": "Modules/",
+            "Modules\\CSMS\\App\\": "Modules/CSMS/app/",
+            "Modules\\Coe\\App\\": "Modules/Coe/app/",
+            "Modules\\DashboardPortal\\App\\": "Modules/DashboardPortal/app/",
+            "Modules\\FieldLeadership\\App\\": "Modules/FieldLeadership/app/",
+            "Modules\\Pica\\App\\": "Modules/Pica/app/"
         },
         "files": [
             "app/Helpers/helper.php"

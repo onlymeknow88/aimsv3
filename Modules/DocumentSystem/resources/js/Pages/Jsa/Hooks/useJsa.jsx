@@ -102,7 +102,7 @@ export default function useJsa(isObsolete = false, isDraft = false) {
     const deleteJsa = useCallback(async (id) => {
         if (!confirm('Apakah Anda yakin ingin menghapus dokumen JSA ini?')) return;
         try {
-            await axios.delete(`/api/document-system/jsa/${id}`);
+            await axios.post(`/api/document-system/jsa/${id}/delete`, {});
             fetchDocuments();
         } catch (err) {
             console.error('Delete JSA failed', err);

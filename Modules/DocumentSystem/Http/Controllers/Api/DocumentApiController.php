@@ -195,6 +195,7 @@ class DocumentApiController extends Controller
                 'upload_type' => $request->input('upload_type'),
                 'status' => $request->input('status', '2'), // 2 = Draft, 1 = Waiting Review
                 'revision' => '0',
+                'is_obsolate' => false,
                 'doc_created' => $request->input('doc_created', now()),
             ]);
 
@@ -443,8 +444,13 @@ class DocumentApiController extends Controller
             return ResponseFormatter::success($doc, 'Document updated successfully');
         } catch (\Throwable $e) {
             DB::rollBack();
+            \Illuminate\Support\Facades\Log::error('Update document failed: ' . $e->getMessage(), [
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString(),
+            ]);
 
-            return ResponseFormatter::error('Failed to update document: ' . $e->getMessage(), 500);
+            return ResponseFormatter::error('Failed to update document: ' . $e->getMessage() . ' in ' . basename($e->getFile()) . ' on line ' . $e->getLine(), 500);
         }
     }
 

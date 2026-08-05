@@ -95,7 +95,7 @@ export default function useDetail(id) {
     const handleDeleteAttachment = useCallback((attachmentId) => {
         if (!window.confirm('Apakah Anda yakin ingin menghapus lampiran ini?')) return;
 
-        axios.delete(`/api/document-system/attachments/${attachmentId}`)
+        axios.post(`/api/document-system/attachments/${attachmentId}/delete`, {})
             .then(() => {
                 fetchDocumentDetails();
             })

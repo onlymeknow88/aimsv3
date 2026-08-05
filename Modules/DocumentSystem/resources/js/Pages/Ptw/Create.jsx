@@ -99,7 +99,7 @@ export default function Create({ document = null }) {
     const handleDeleteAttachment = async (id) => {
         if (confirm('Apakah Anda yakin ingin menghapus lampiran ini?')) {
             try {
-                await axios.delete(`/api/document-system/ptw/attachments/${id}`);
+                await axios.post(`/api/document-system/ptw/attachments/${id}/delete`, {});
                 window.location.reload();
             } catch (err) {
                 console.error('Failed to delete PTW attachment', err);

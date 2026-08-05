@@ -32,8 +32,14 @@ class GeneralController extends Controller
                     ? ($sas['blobUriSas'] ?? $sas['sasUri'] ?? $sas['url'] ?? $sas['blobUri'] ?? null)
                     : $sas;
                 if ($url) {
-                    $fileContents = @file_get_contents($url);
-                    if ($fileContents === false) abort(404, 'File tidak dapat diambil.');
+                    try {
+                        $client = new \GuzzleHttp\Client([
+                            'verify' => config('app.env') === 'production'
+                        ]);
+                        $fileContents = $client->get($url)->getBody()->getContents();
+                    } catch (\Throwable $e) {
+                        abort(404, 'File tidak dapat diambil dari storage.');
+                    }
                     return response($fileContents, 200, [
                         'Content-Type' => $mimeType,
                         'Content-Disposition' => 'inline; filename="' . addslashes($fileName) . '"',
@@ -131,8 +137,12 @@ class GeneralController extends Controller
                 if ($url) {
                     // Stream via PHP so we control Content-Disposition header
                     // Direct redirect to Azure causes forced download due to blob storage headers
-                    $fileContents = @file_get_contents($url);
-                    if ($fileContents === false) {
+                    try {
+                        $client = new \GuzzleHttp\Client([
+                            'verify' => config('app.env') === 'production'
+                        ]);
+                        $fileContents = $client->get($url)->getBody()->getContents();
+                    } catch (\Throwable $e) {
                         abort(404, 'File tidak dapat diambil dari storage.');
                     }
                     return response($fileContents, 200, [

@@ -80,8 +80,8 @@ export default function useDraft() {
         if (selectedIds.length === 0) return;
         if (confirm(`Apakah Anda yakin ingin menghapus ${selectedIds.length} draf terpilih?`)) {
             try {
-                await axios.delete('/api/document-system/documents', {
-                    data: { ids: selectedIds }
+                await axios.post('/api/document-system/documents/destroy', {
+                    ids: selectedIds
                 });
                 setSelectedIds([]);
                 fetchDocuments();

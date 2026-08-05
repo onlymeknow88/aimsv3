@@ -19,7 +19,7 @@ export default function Create({ document = null }) {
     const handleDeleteAttachment = async (attId) => {
         if (!window.confirm('Apakah Anda yakin ingin menghapus lampiran ini?')) return;
         try {
-            await axios.delete(`/api/document-system/attachments/${attId}`);
+            await axios.post(`/api/document-system/attachments/${attId}/delete`, {});
             setExistingAttachments(prev => prev.filter(att => att.id !== attId));
         } catch (err) {
             console.error('Failed to delete attachment', err);

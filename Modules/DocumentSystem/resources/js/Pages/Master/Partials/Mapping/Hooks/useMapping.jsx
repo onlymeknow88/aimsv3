@@ -132,7 +132,7 @@ export default function useMapping() {
         setFormError(null);
         try {
             if (editId) {
-                await axios.put(`${BASE_URL}/${editId}`, form);
+                await axios.post(`${BASE_URL}/${editId}/update`, { ...form });
             } else {
                 await axios.post(BASE_URL, form);
             }
@@ -165,7 +165,7 @@ export default function useMapping() {
         setDeleting(true);
         setDeleteError(null);
         try {
-            await axios.delete(`${BASE_URL}/${deleteTarget.id}`);
+            await axios.post(`${BASE_URL}/${deleteTarget.id}/delete`, {});
             fetchMappings();
             closeDeleteModal();
         } catch (e) {

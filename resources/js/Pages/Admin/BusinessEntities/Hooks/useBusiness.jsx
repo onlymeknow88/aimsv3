@@ -106,7 +106,7 @@ export default function useBusiness() {
         try {
             if (editId) {
                 // Update existing entity
-                await axios.put(`${BASE_URL}/${editId}`, form);
+                await axios.post(`${BASE_URL}/${editId}/update`, form);
             } else {
                 // Create new entity
                 await axios.post(BASE_URL, form);
@@ -141,7 +141,7 @@ export default function useBusiness() {
         setDeleting(true);
         setDeleteError(null);
         try {
-            await axios.delete(`${BASE_URL}/${deleteTarget.id}`);
+            await axios.post(`${BASE_URL}/${deleteTarget.id}/delete`);
             fetchBusinessEntities();
             closeDeleteModal();
         } catch (e) {

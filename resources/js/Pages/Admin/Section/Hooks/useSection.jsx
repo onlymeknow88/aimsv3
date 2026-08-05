@@ -122,7 +122,7 @@ export default function useSection() {
     };
 
     const updateAreaLocation = async (id, name) => {
-        const response = await axios.put(`${BASE}/area-locations/${id}`, { name });
+        const response = await axios.post(`${BASE}/area-locations/${id}/update`, { name });
         await fetchMasterData();
         fetchSections();
         return response.data?.result;
@@ -138,7 +138,7 @@ export default function useSection() {
     };
 
     const updateAreaManager = async (id, userId, areaLocationIds = []) => {
-        const response = await axios.put(`${BASE}/area-managers/${id}`, {
+        const response = await axios.post(`${BASE}/area-managers/${id}/update`, {
             user_id: userId,
             area_location_ids: areaLocationIds,
         });
@@ -153,7 +153,7 @@ export default function useSection() {
         setFormError(null);
         try {
             if (editId) {
-                await axios.put(`${BASE}/${editId}`, form);
+                await axios.post(`${BASE}/${editId}/update`, form);
             } else {
                 await axios.post(BASE, form);
             }
@@ -188,7 +188,7 @@ export default function useSection() {
         setDeleting(true);
         setDeleteError(null);
         try {
-            await axios.delete(`${BASE}/${deleteTarget.id}`);
+            await axios.post(`${BASE}/${deleteTarget.id}/delete`);
             setDeleteTarget(null);
             fetchSections();
         } catch (e) {
@@ -201,14 +201,14 @@ export default function useSection() {
     };
 
     const deleteAreaManager = async (id) => {
-        await axios.delete(`${BASE}/area-managers/${id}`);
+        await axios.post(`${BASE}/area-managers/${id}/delete`);
 
         await fetchMasterData();
         await fetchSections();
     };
 
     const deleteAreaLocation = async (id) => {
-        await axios.delete(`${BASE}/area-locations/${id}`);
+        await axios.post(`${BASE}/area-locations/${id}/delete`);
 
         await fetchMasterData();
         await fetchSections();

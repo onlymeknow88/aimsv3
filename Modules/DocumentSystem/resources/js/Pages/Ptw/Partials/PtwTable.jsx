@@ -35,7 +35,7 @@ export default function PtwTable({
         if (!deleteTargetId) return;
         setDeleting(true);
         try {
-            await axios.delete(`/api/document-system/ptw/${deleteTargetId}`);
+            await axios.post(`/api/document-system/ptw/${deleteTargetId}/delete`, {});
             setDeleteTargetId(null);
             window.location.reload();
         } catch (err) {

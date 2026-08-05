@@ -77,14 +77,20 @@ export default function useObsolete() {
     }, [selectedIds]);
 
     const handleDelete = useCallback(async () => {
+        if (selectedIds.length === 0) return;
         if (confirm(`Apakah Anda yakin ingin menghapus ${selectedIds.length} dokumen usang terpilih?`)) {
             try {
-                console.log("Delete obsolete documents:", selectedIds);
+                await axios.post('/api/document-system/documents/destroy', {
+                    ids: selectedIds
+                });
+                setSelectedIds([]);
+                fetchDocuments();
             } catch (err) {
                 console.error("Delete failed", err);
+                alert('Gagal menghapus dokumen usang. Silakan coba lagi.');
             }
         }
-    }, [selectedIds]);
+    }, [selectedIds, fetchDocuments]);
 
     return { 
         search, 
