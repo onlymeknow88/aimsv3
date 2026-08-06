@@ -204,8 +204,8 @@ export default function Index() {
 
     const filteredSections = form.department_id
         ? sections.filter(
-              (s) => String(s.department_id) === String(form.department_id),
-          )
+            (s) => String(s.department_id) === String(form.department_id),
+        )
         : sections;
 
     const hasEmployee = !!users.filter((u) => u.employee).length;
@@ -555,12 +555,12 @@ export default function Index() {
                                     borderRadius: "6px",
                                 }}
                                 onMouseEnter={(e) =>
-                                    (e.currentTarget.style.backgroundColor =
-                                        "#f1f5f9")
+                                (e.currentTarget.style.backgroundColor =
+                                    "#f1f5f9")
                                 }
                                 onMouseLeave={(e) =>
-                                    (e.currentTarget.style.backgroundColor =
-                                        "transparent")
+                                (e.currentTarget.style.backgroundColor =
+                                    "transparent")
                                 }
                             >
                                 <X size={18} />
@@ -696,7 +696,7 @@ export default function Index() {
                                     <SectionTitle
                                         icon={UserCheck}
                                         title="Peran & Akses Modul"
-                                        // color="#8b5cf6"
+                                    // color="#8b5cf6"
                                     />
                                     <div
                                         style={{
@@ -773,26 +773,26 @@ export default function Index() {
                                                         </span>
                                                         {activeRoles.length >
                                                             0 && (
-                                                            <span
-                                                                style={{
-                                                                    fontSize:
-                                                                        "10px",
-                                                                    fontWeight: 700,
-                                                                    backgroundColor:
-                                                                        "#dbeafe",
-                                                                    color: "#1d4ed8",
-                                                                    padding:
-                                                                        "1px 7px",
-                                                                    borderRadius:
-                                                                        "99px",
-                                                                }}
-                                                            >
-                                                                {
-                                                                    activeRoles.length
-                                                                }{" "}
-                                                                aktif
-                                                            </span>
-                                                        )}
+                                                                <span
+                                                                    style={{
+                                                                        fontSize:
+                                                                            "10px",
+                                                                        fontWeight: 700,
+                                                                        backgroundColor:
+                                                                            "#dbeafe",
+                                                                        color: "#1d4ed8",
+                                                                        padding:
+                                                                            "1px 7px",
+                                                                        borderRadius:
+                                                                            "99px",
+                                                                    }}
+                                                                >
+                                                                    {
+                                                                        activeRoles.length
+                                                                    }{" "}
+                                                                    aktif
+                                                                </span>
+                                                            )}
                                                     </label>
                                                     {isExpanded && (
                                                         <div
@@ -808,7 +808,7 @@ export default function Index() {
                                                             }}
                                                         >
                                                             {modRoles.length ===
-                                                            0 ? (
+                                                                0 ? (
                                                                 <span
                                                                     style={{
                                                                         fontSize:
@@ -901,7 +901,7 @@ export default function Index() {
                                     <SectionTitle
                                         icon={Briefcase}
                                         title="Data Karyawan"
-                                        // color="#10b981"
+                                    // color="#10b981"
                                     />
                                     <Toggle
                                         checked={form.with_employee}
@@ -1050,7 +1050,7 @@ export default function Index() {
                                                     onBlur={onBlur}
                                                 />
                                             </Field>
-                                            <Field label="No. KTP / ID">
+                                            <Field label="No. ID">
                                                 <input
                                                     type="text"
                                                     value={form.emp_id_number}
@@ -1264,8 +1264,8 @@ export default function Index() {
                                     {submitting
                                         ? "Menyimpan..."
                                         : editId
-                                          ? "Perbarui User"
-                                          : "Simpan User"}
+                                            ? "Perbarui User"
+                                            : "Simpan User"}
                                 </button>
                             </div>
                         </form>

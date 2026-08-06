@@ -104,7 +104,7 @@ export default function useAimsModule() {
         setFormError(null);
         try {
             if (editId) {
-                await axios.put(`${BASE_URL}/${editId}`, form);
+                await axios.post(`${BASE_URL}/${editId}/update`, form);
             } else {
                 await axios.post(BASE_URL, form);
             }
@@ -137,7 +137,7 @@ export default function useAimsModule() {
         setDeleting(true);
         setDeleteError(null);
         try {
-            await axios.delete(`${BASE_URL}/${deleteTarget.id}`);
+            await axios.post(`${BASE_URL}/${deleteTarget.id}/delete`);
             fetchModules();
             closeDeleteModal();
         } catch (e) {

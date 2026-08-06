@@ -214,7 +214,7 @@ export default function useRolePermission(initialModuleId) {
         e.preventDefault();
         if (!editingRole) return;
         try {
-            await axios.put(`${BASE}/roles/${editingRole.id}`, {
+            await axios.post(`${BASE}/roles/${editingRole.id}/update`, {
                 module_id: selectedModule,
                 name: editRoleName,
                 slug: editRoleSlug,
@@ -236,7 +236,7 @@ export default function useRolePermission(initialModuleId) {
             return;
         }
         try {
-            await axios.delete(`${BASE}/roles/${roleId}`);
+            await axios.post(`${BASE}/roles/${roleId}/delete`);
             fetchData();
         } catch (err) {
             const msg = err.response?.data?.message || "Gagal menghapus role.";

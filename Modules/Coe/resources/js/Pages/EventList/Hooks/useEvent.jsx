@@ -9,11 +9,15 @@ const emptyForm = {
     section_id: '',
     start_date: '',
     end_date: '',
-    status: 'Scheduled',
+    frequency: 'once',
+    repeat_day: 'once',
+    status: 'PENDING',
     description: '',
     invited_emails: [],
     repeat: true,
     must_send_email: true,
+    attachment: '',
+    file: null,
 };
 
 export default function useEvent() {
@@ -116,17 +120,25 @@ export default function useEvent() {
             }
         }
 
+        const startDateStr = entity.start_date ? entity.start_date.split('T')[0] : '';
+        const endDateStr = entity.end_date ? entity.end_date.split('T')[0] : '';
+        const isMultiDay = endDateStr && endDateStr !== startDateStr;
+
         setForm({
             title: entity.title || '',
             category_id: entity.category_id || '',
             section_id: entity.section_id || '',
-            start_date: entity.start_date ? entity.start_date.split('T')[0] : '',
-            end_date: entity.end_date ? entity.end_date.split('T')[0] : '',
+            start_date: startDateStr,
+            end_date: endDateStr,
+            frequency: entity.frequency || 'once',
+            repeat_day: isMultiDay ? 'more_than_once' : 'once',
             status: entity.status || 'Scheduled',
             description: entity.description || '',
             invited_emails: formattedEmails,
-            repeat: entity.repeat !== false,
-            must_send_email: entity.must_send_email !== false,
+            repeat: String(entity.repeat) === '1' || entity.repeat === true || entity.repeat === 1,
+            must_send_email: String(entity.must_send_email) === '1' || entity.must_send_email === true || entity.must_send_email === 1,
+            attachment: entity.attachment || '',
+            file: null,
         });
         setFormError(null);
         setModalOpen(true);
@@ -150,10 +162,39 @@ export default function useEvent() {
         setSubmitting(true);
         setFormError(null);
         try {
+            const formData = new FormData();
+            formData.append('title', form.title || '');
+            formData.append('category_id', form.category_id || '');
+            formData.append('section_id', form.section_id || '');
+            formData.append('start_date', form.start_date || '');
+            
+            const realEndDate = form.repeat_day === 'once' ? (form.start_date || '') : (form.end_date || '');
+            formData.append('end_date', realEndDate);
+            formData.append('frequency', form.frequency || 'once');
+            
+            formData.append('status', form.status || '');
+            formData.append('description', form.description || '');
+            formData.append('repeat', form.repeat ? '1' : '0');
+            formData.append('must_send_email', form.must_send_email ? '1' : '0');
+
+            if (form.invited_emails && form.invited_emails.length > 0) {
+                form.invited_emails.forEach((email, idx) => {
+                    formData.append(`invited_emails[${idx}]`, email);
+                });
+            }
+
+            if (form.file) {
+                formData.append('file', form.file);
+            }
+
             if (editId) {
-                await axios.put(`${BASE_URL}/${editId}`, form);
+                await axios.post(`${BASE_URL}/${editId}/update`, formData, {
+                    headers: { 'Content-Type': 'multipart/form-data' }
+                });
             } else {
-                await axios.post(BASE_URL, form);
+                await axios.post(BASE_URL, formData, {
+                    headers: { 'Content-Type': 'multipart/form-data' }
+                });
             }
             fetchEvents();
             closeModal();
@@ -184,7 +225,7 @@ export default function useEvent() {
         setDeleting(true);
         setDeleteError(null);
         try {
-            await axios.delete(`${BASE_URL}/${deleteTarget.id}`);
+            await axios.post(`${BASE_URL}/${deleteTarget.id}/delete`);
             fetchEvents();
             closeDeleteModal();
         } catch (e) {

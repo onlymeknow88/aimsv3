@@ -1,5 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { AlertTriangle, X, Plus, Trash } from "lucide-react";
+import { AlertTriangle, Plus, Trash, X } from "lucide-react";
+import React, { useEffect, useState } from 'react';
+
+import Checkbox from "@/Components/Checkbox";
+import FileDropzone from '@/Components/FileDropzone';
+import SummernoteEditor from '@/Components/SummernoteEditor';
 
 export default function EventModal({
     isOpen,
@@ -140,41 +144,57 @@ export default function EventModal({
                             />
                         </div>
 
-                        {/* Category & Section */}
+                        {/* Category */}
+                        <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                            <label style={{ fontSize: "13px", fontWeight: 600, color: "#0f172a" }}>Kategori</label>
+                            <select
+                                value={form.category_id}
+                                onChange={(e) => setField("category_id", e.target.value)}
+                                required
+                                style={{ padding: "10px 14px", border: "1.5px solid #e2e8f0", borderRadius: "8px", fontSize: "13px", color: "#0f172a", outline: "none" }}
+                            >
+                                <option value="">Pilih Kategori</option>
+                                {categories.map(cat => (
+                                    <option key={cat.id} value={cat.id}>{cat.name}</option>
+                                ))}
+                            </select>
+                        </div>
+
+                        {/* Frequency & Repeat Day */}
                         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
                             <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-                                <label style={{ fontSize: "13px", fontWeight: 600, color: "#0f172a" }}>Kategori</label>
+                                <label style={{ fontSize: "13px", fontWeight: 600, color: "#0f172a" }}>Frekuensi</label>
                                 <select
-                                    value={form.category_id}
-                                    onChange={(e) => setField("category_id", e.target.value)}
+                                    value={form.frequency || 'once'}
+                                    onChange={(e) => setField("frequency", e.target.value)}
                                     required
                                     style={{ padding: "10px 14px", border: "1.5px solid #e2e8f0", borderRadius: "8px", fontSize: "13px", color: "#0f172a", outline: "none" }}
                                 >
-                                    <option value="">Pilih Kategori</option>
-                                    {categories.map(cat => (
-                                        <option key={cat.id} value={cat.id}>{cat.name}</option>
-                                    ))}
+                                    <option value="once">Tidak Berulang</option>
+                                    <option value="weekly">Mingguan</option>
+                                    <option value="monthly">Bulanan</option>
                                 </select>
                             </div>
                             <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-                                <label style={{ fontSize: "13px", fontWeight: 600, color: "#0f172a" }}>Section Penanggung Jawab</label>
+                                <label style={{ fontSize: "13px", fontWeight: 600, color: "#0f172a" }}>Durasi Hari</label>
                                 <select
-                                    value={form.section_id}
-                                    onChange={(e) => setField("section_id", e.target.value)}
+                                    value={form.repeat_day || 'once'}
+                                    onChange={(e) => setField("repeat_day", e.target.value)}
+                                    required
                                     style={{ padding: "10px 14px", border: "1.5px solid #e2e8f0", borderRadius: "8px", fontSize: "13px", color: "#0f172a", outline: "none" }}
                                 >
-                                    <option value="">Pilih Section (Opsional)</option>
-                                    {sections.map(sec => (
-                                        <option key={sec.id} value={sec.id}>{sec.name}</option>
-                                    ))}
+                                    <option value="once">Sehari</option>
+                                    <option value="more_than_once">Lebih dari satu hari</option>
                                 </select>
                             </div>
                         </div>
 
                         {/* Dates */}
-                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+                        <div style={{ display: "grid", gridTemplateColumns: form.repeat_day === 'more_than_once' ? "1fr 1fr" : "1fr", gap: "16px" }}>
                             <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-                                <label style={{ fontSize: "13px", fontWeight: 600, color: "#0f172a" }}>Tanggal Mulai</label>
+                                <label style={{ fontSize: "13px", fontWeight: 600, color: "#0f172a" }}>
+                                    {form.repeat_day === 'more_than_once' ? 'Tanggal Mulai' : 'Tanggal Event'}
+                                </label>
                                 <input
                                     type="date"
                                     value={form.start_date}
@@ -189,42 +209,45 @@ export default function EventModal({
                                     style={{ padding: "10px 14px", border: "1.5px solid #e2e8f0", borderRadius: "8px", fontSize: "13px", color: "#0f172a", outline: "none" }}
                                 />
                             </div>
-                            <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-                                <label style={{ fontSize: "13px", fontWeight: 600, color: "#0f172a" }}>Tanggal Akhir</label>
-                                <input
-                                    type="date"
-                                    value={form.end_date}
-                                    onChange={(e) => setField("end_date", e.target.value)}
-                                    min={form.start_date}
-                                    style={{ padding: "10px 14px", border: "1.5px solid #e2e8f0", borderRadius: "8px", fontSize: "13px", color: "#0f172a", outline: "none" }}
-                                />
-                            </div>
+                            {form.repeat_day === 'more_than_once' && (
+                                <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                                    <label style={{ fontSize: "13px", fontWeight: 600, color: "#0f172a" }}>Tanggal Akhir</label>
+                                    <input
+                                        type="date"
+                                        value={form.end_date}
+                                        onChange={(e) => setField("end_date", e.target.value)}
+                                        min={form.start_date}
+                                        style={{ padding: "10px 14px", border: "1.5px solid #e2e8f0", borderRadius: "8px", fontSize: "13px", color: "#0f172a", outline: "none" }}
+                                    />
+                                </div>
+                            )}
                         </div>
 
-                        {/* Status */}
-                        <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-                            <label style={{ fontSize: "13px", fontWeight: 600, color: "#0f172a" }}>Status</label>
-                            <select
-                                value={form.status}
-                                onChange={(e) => setField("status", e.target.value)}
-                                required
-                                style={{ padding: "10px 14px", border: "1.5px solid #e2e8f0", borderRadius: "8px", fontSize: "13px", color: "#0f172a", outline: "none" }}
-                            >
-                                <option value="Scheduled">Scheduled</option>
-                                <option value="Completed">Completed</option>
-                                <option value="Cancelled">Cancelled</option>
-                            </select>
-                        </div>
+                        {/* Status (Hanya muncul saat Edit) */}
+                        {editId && (
+                            <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                                <label style={{ fontSize: "13px", fontWeight: 600, color: "#0f172a" }}>Status</label>
+                                <select
+                                    value={form.status}
+                                    onChange={(e) => setField("status", e.target.value)}
+                                    required
+                                    style={{ padding: "10px 14px", border: "1.5px solid #e2e8f0", borderRadius: "8px", fontSize: "13px", color: "#0f172a", outline: "none" }}
+                                >
+                                    <option value="PENDING">PENDING</option>
+                                    <option value="Scheduled">Scheduled</option>
+                                    <option value="Completed">Completed</option>
+                                    <option value="Cancelled">Cancelled</option>
+                                </select>
+                            </div>
+                        )}
 
                         {/* Description */}
                         <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
                             <label style={{ fontSize: "13px", fontWeight: 600, color: "#0f172a" }}>Deskripsi Agenda</label>
-                            <textarea
+                            <SummernoteEditor
                                 value={form.description}
-                                onChange={(e) => setField("description", e.target.value)}
+                                onChange={(val) => setField("description", val)}
                                 placeholder="Masukkan detail agenda..."
-                                rows={3}
-                                style={{ padding: "10px 14px", border: "1.5px solid #e2e8f0", borderRadius: "8px", fontSize: "13px", color: "#0f172a", outline: "none", resize: 'vertical' }}
                             />
                         </div>
 
@@ -263,24 +286,37 @@ export default function EventModal({
                             </div>
                         </div>
 
+                        {/* File Attachment */}
+                        <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                            <label style={{ fontSize: "13px", fontWeight: 600, color: "#0f172a" }}>File Lampiran</label>
+                            <FileDropzone
+                                onFileDrop={(files) => setField("file", files[0])}
+                                accept=".pdf,.docx,.xlsx,.png,.jpg,.jpeg"
+                            />
+                            {form.file && (
+                                <div style={{ fontSize: '11px', color: '#10b981', marginTop: '2px' }}>
+                                    File dipilih: <strong>{form.file.name}</strong> ({(form.file.size / 1024).toFixed(1)} KB)
+                                </div>
+                            )}
+                            {form.attachment && !form.file && (
+                                <div style={{ fontSize: '11px', color: '#64748b', marginTop: '2px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                    <span>File aktif saat ini:</span>
+                                    <span style={{ fontWeight: 600, color: 'var(--primary)' }}>{form.attachment.split('/').pop()}</span>
+                                </div>
+                            )}
+                        </div>
+
                         {/* Boolean checkboxes */}
                         <div style={{ display: 'flex', gap: '20px', marginTop: '4px' }}>
-                            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', cursor: 'pointer' }}>
-                                <input
-                                    type="checkbox"
-                                    checked={form.repeat}
-                                    onChange={(e) => setField('repeat', e.target.checked)}
-                                />
-                                Ulangi Agenda (Repeat)
-                            </label>
-                            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', cursor: 'pointer' }}>
-                                <input
-                                    type="checkbox"
-                                    checked={form.must_send_email}
-                                    onChange={(e) => setField('must_send_email', e.target.checked)}
-                                />
-                                Kirim Notifikasi Email
-                            </label>
+                            {form.invited_emails && form.invited_emails.length > 0 && (
+                                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', cursor: 'pointer' }}>
+                                    <Checkbox
+                                        checked={!!form.must_send_email}
+                                        onChange={(e) => setField('must_send_email', e.target.checked)}
+                                    />
+                                    Kirim Notifikasi Email
+                                </label>
+                            )}
                         </div>
                     </div>
 

@@ -90,15 +90,67 @@ class HandleInertiaRequests extends Middleware
             }
         }
 
+        // Document System menus — hanya di-load untuk halaman document-system
+        $dsMenus = [];
+        if ($request->is('document-system*') && $user) {
+            $moduleId = \DB::table('aims_modules')->where('slug', 'document-system')->value('id');
+            if ($moduleId) {
+                if (in_array($user->role, ['super_admin', 'system_admin'])) {
+                    $dsMenus = \DB::table('aims_menus')
+                        ->where('module_id', $moduleId)
+                        ->orderBy('parent_id')
+                        ->orderBy('order_by')
+                        ->get()
+                        ->toArray();
+                } else {
+                    // Get menus where user has can_view permission
+                    $allowedMenuIds = \DB::table('aims_user_roles')
+                        ->join('aims_roles', 'aims_user_roles.role_id', '=', 'aims_roles.id')
+                        ->join('aims_permissions', 'aims_roles.id', '=', 'aims_permissions.role_id')
+                        ->where('aims_user_roles.user_id', $user->id)
+                        ->where('aims_roles.module_id', $moduleId)
+                        ->where('aims_permissions.can_view', 1)
+                        ->distinct()
+                        ->pluck('aims_permissions.menu_id')
+                        ->toArray();
+
+                    // Fetch the allowed menus
+                    $menus = \DB::table('aims_menus')
+                        ->where('module_id', $moduleId)
+                        ->whereIn('id', $allowedMenuIds)
+                        ->get()
+                        ->toArray();
+
+                    // Also include parent menus of allowed child menus if not already present
+                    $parentIds = collect($menus)->pluck('parent_id')->filter()->unique()->toArray();
+                    $allAllowedIds = array_unique(array_merge($allowedMenuIds, $parentIds));
+
+                    $dsMenus = \DB::table('aims_menus')
+                        ->where('module_id', $moduleId)
+                        ->whereIn('id', $allAllowedIds)
+                        ->orderBy('parent_id')
+                        ->orderBy('order_by')
+                        ->get()
+                        ->toArray();
+                }
+            }
+        }
+
         return [
             ...parent::share($request),
             'auth' => [
                 'user' => $user,
                 'modules' => $allowedModules,
+                'roles' => $user ? \DB::table('aims_user_roles')
+                    ->join('aims_roles', 'aims_user_roles.role_id', '=', 'aims_roles.id')
+                    ->where('aims_user_roles.user_id', $user->id)
+                    ->pluck('aims_roles.slug')
+                    ->toArray() : [],
             ],
             'flsMenus'  => $flsMenus,
             'csmsMenus' => $csmsMenus,
             'picaMenus' => $picaMenus,
+            'dsMenus'   => $dsMenus,
         ];
     }
 }

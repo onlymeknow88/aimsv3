@@ -89,7 +89,65 @@ export default function Detail({ id }) {
         <div style={{ backgroundColor: 'var(--bg-color)', minHeight: '100vh', padding: '40px 20px' }}>
             <Head title={`Detail Approval: ${document.title}`} />
 
+            {/* Top Bar Header */}
+            <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                marginBottom: '24px',
+                borderBottom: '1px solid var(--border-color)',
+                paddingBottom: '12px'
+            }}>
+                <a href="/document-system/active" style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    color: 'var(--primary)',
+                    fontWeight: 700,
+                    textDecoration: 'none',
+                    fontSize: '12px'
+                }}>
+                    <ArrowLeft size={16} /> Kembali ke Active Document
+                </a>
 
+                {['2', '1', '3', '4', '6'].includes(String(document.status)) && (
+                    <a href={`/document-system/active/edit/${document.id}`} style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        backgroundColor: 'var(--primary)',
+                        color: '#fff',
+                        borderRadius: '6px',
+                        padding: '6px 14px',
+                        fontSize: '11px',
+                        fontWeight: 700,
+                        textDecoration: 'none'
+                    }}>
+                        <Edit size={12} /> Edit Dokumen
+                    </a>
+                )}
+
+                {['5', '7'].includes(String(document.status)) && !document.is_obsolate && (
+                    <button
+                        onClick={() => setIsConfirmRenewOpen(true)}
+                        style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            backgroundColor: 'var(--primary)',
+                            color: '#fff',
+                            borderRadius: '6px',
+                            padding: '6px 14px',
+                            fontSize: '11px',
+                            fontWeight: 700,
+                            border: 'none',
+                            cursor: 'pointer'
+                        }}
+                    >
+                        <Edit size={12} /> Update Document (Revisi)
+                    </button>
+                )}
+            </div>
             {/* 3-Column Grid Layout */}
             <div style={{
                 display: 'grid',
@@ -297,7 +355,7 @@ export default function Detail({ id }) {
                         </div>
                     )}
 
-                    {document.attachments && document.attachments.length > 0 && (
+                    {document.attachments && document.attachments.length > 0 && !(['5', '7'].includes(String(document.status)) && document.uncontrolled_file_path) && (
                         <div style={{
                             backgroundColor: 'var(--card-bg)',
                             border: '1px solid var(--border-color)',

@@ -52,154 +52,104 @@ class DummyDataSeeder extends Seeder
             'type' => 'Internal',
         ]);
 
-        // 2. Seed Departments (Global)
-        $hrd = Department::create([
-            'name' => 'Human Resources Department',
-            'code' => 'HRD',
-            'document_code' => 'HRD-DEPT',
-        ]);
+        // 2. Seed Departments & Heads (PICs) from the provided list
+        $departmentPICs = [
+            ['code' => 'MIM', 'dept' => 'Management Improvement', 'pic' => 'Sujatmiko Agung Nugroho'],
+            ['code' => 'IMS', 'dept' => 'Integrated Management System', 'pic' => 'Mustolih'],
+            ['code' => 'GED', 'dept' => 'Geology Development', 'pic' => 'Nurul Ikhsan'],
+            ['code' => 'GFO', 'dept' => 'Geology Field Operation', 'pic' => 'Nana Kuryana'],
+            ['code' => 'MTS', 'dept' => 'Mine Technical Support', 'pic' => 'Niko Dharminto'],
+            ['code' => 'STS', 'dept' => 'Site Technical Services', 'pic' => 'Rahmad Taufik Siregar'],
+            ['code' => 'LMF', 'dept' => 'Land Management & Forestry', 'pic' => 'Michael A. Nurwibowo'],
+            ['code' => 'MPO', 'dept' => 'Mining Production', 'pic' => 'Rahmad Taufik Siregar'],
+            ['code' => 'DNB', 'dept' => 'Drill and Blast', 'pic' => 'Rahmad Taufik Siregar'],
+            ['code' => 'CPP', 'dept' => 'Coal Handling & Processsing Plant', 'pic' => 'Budi Prakoso'],
+            ['code' => 'TNT', 'dept' => 'Technical Training', 'pic' => 'Kusumo Reksomukti'],
+            ['code' => 'CHM', 'dept' => 'Coal Hauling & Road Maintenance', 'pic' => 'Ivan Kurniawan'],
+            ['code' => 'CBL', 'dept' => 'Coal Processing & Barge Loading', 'pic' => 'Yuhardono Hardin'],
+            ['code' => 'CUC', 'dept' => 'Coal Barging Upper Cycle', 'pic' => 'Yuhardono Hardin'],
+            ['code' => 'QAC', 'dept' => 'Quality Assurance & Control', 'pic' => 'Noor Achmadi Surya Kesuma'],
+            ['code' => 'MTN', 'dept' => 'Maintenance', 'pic' => 'Noor Achmadi Surya Kesuma'],
+            ['code' => 'LOG', 'dept' => 'Logistic', 'pic' => 'Tri Harsono'],
+            ['code' => 'GAM', 'dept' => 'General Affair Management', 'pic' => 'Yudi Rizki Irawan Prawirohardjo'],
+            ['code' => 'ENV', 'dept' => 'Environmental Operation', 'pic' => 'Boorliant Satryana Wisnu'],
+            ['code' => 'OHS', 'dept' => 'Occupational Health & Safety', 'pic' => 'Mustolih'],
+            ['code' => 'IHH', 'dept' => 'Industrial Healt & Hygiene', 'pic' => 'Mustolih'],
+            ['code' => 'MKT', 'dept' => 'Marketing', 'pic' => null],
+            ['code' => 'IBL', 'dept' => 'Inbound Logistics', 'pic' => 'Noor Achmadi Surya Kesuma'],
+            ['code' => 'HRM', 'dept' => 'Human Resources Management', 'pic' => null],
+            ['code' => 'FIN', 'dept' => 'Finance & Accounting', 'pic' => null],
+            ['code' => 'MIS', 'dept' => 'Management Information System', 'pic' => null],
+            ['code' => 'PRC', 'dept' => 'Procurement', 'pic' => null],
+            ['code' => 'MMT', 'dept' => 'Material Management', 'pic' => 'Azzikri Ijazah'],
+            ['code' => 'CSR', 'dept' => 'Corporate Social Responsibility', 'pic' => 'Sri Armiaty Jarkasi'],
+            ['code' => 'CMR', 'dept' => 'Community Relation', 'pic' => 'Bustanul Muhadisin'],
+            ['code' => 'GOV', 'dept' => 'Government and Relation', 'pic' => 'Erisnandar'],
+            ['code' => 'PMO', 'dept' => 'Project Management Officer', 'pic' => 'Yudho Winarko'],
+        ];
 
-        $hse = Department::create([
-            'name' => 'Health, Safety, and Environment',
-            'code' => 'HSE',
-            'document_code' => 'HSE-DEPT',
-        ]);
-
-        $it = Department::create([
-            'name' => 'Information Technology',
-            'code' => 'IT',
-            'document_code' => 'IT-DEPT',
-        ]);
-
-        // Fetch AimsRoles
-        $makerRole = AimsRole::where('slug', 'maker')->first();
-        $crsRole   = AimsRole::where('slug', 'approval_crs')->first();
-        $pjaRole   = AimsRole::where('slug', 'approval_pja')->first();
-
-        // 3. Seed Users & Employees
-        // User 1: Maker
-        $user1 = User::create([
-            'name' => 'Aditya Maker',
-            'email' => 'maker@aims.test',
-            'password' => bcrypt('password'),
-            'role' => 'viewer',
-            'is_active' => true,
-            'department_id' => $hse->id,
-        ]);
-        if ($makerRole) {
-            $user1->documentRoles()->sync([$makerRole->id]);
+        // Gather all unique PIC names
+        $pics = [];
+        foreach ($departmentPICs as $item) {
+            if ($item['pic']) {
+                $pics[] = $item['pic'];
+            }
         }
-        Employee::create([
-            'user_id' => $user1->id,
-            'department_id' => $hse->id,
-            'company_id' => $maruwai->id,
-            'number' => 'EMP001',
-            'id_number' => '3171012345678001',
-            'name' => 'Aditya Maker',
-            'date_of_birth' => '1990-05-15',
-            'gender' => 'Laki-laki',
-            'address' => 'Sunter, Jakarta Utara',
-            'employee_status' => 'Active',
-            'position' => 'Safety Specialist',
-            'grade' => 'Grade 4',
-        ]);
+        $uniquePics = array_unique($pics);
 
-        // User 2: CRS
-        $user2 = User::create([
-            'name' => 'Budi CRS',
-            'email' => 'crs@aims.test',
-            'password' => bcrypt('password'),
-            'role' => 'viewer',
-            'is_active' => true,
-            'department_id' => $hrd->id,
-        ]);
-        if ($crsRole) {
-            $user2->documentRoles()->sync([$crsRole->id]);
+        // Seed PIC Users & Employees
+        $userMap = [];
+        foreach ($uniquePics as $name) {
+            $slug = strtolower(preg_replace('/[^a-zA-Z0-9]/', '', str_replace(' ', '', $name)));
+            $email = "{$slug}@aims.test";
+
+            $user = User::create([
+                'name' => $name,
+                'email' => $email,
+                'password' => bcrypt('password'),
+                'role' => 'viewer',
+                'is_active' => true,
+            ]);
+
+            Employee::create([
+                'user_id' => $user->id,
+                'company_id' => $maruwai->id,
+                'number' => 'EMP' . rand(100000, 999999),
+                'id_number' => '31710' . rand(10000000000, 99999999999),
+                'name' => $name,
+                'date_of_birth' => '1985-01-01',
+                'gender' => 'Laki-laki',
+                'employee_status' => 'Active',
+                'position' => 'Department Head',
+                'grade' => 'Grade 6',
+            ]);
+
+            $userMap[$name] = $user;
         }
-        Employee::create([
-            'user_id' => $user2->id,
-            'department_id' => $hrd->id,
-            'company_id' => $maruwai->id,
-            'number' => 'EMP002',
-            'id_number' => '3171012345678002',
-            'name' => 'Budi CRS',
-            'date_of_birth' => '1988-11-20',
-            'gender' => 'Laki-laki',
-            'address' => 'Kelapa Gading, Jakarta Utara',
-            'employee_status' => 'Active',
-            'position' => 'HR Manager',
-            'grade' => 'Grade 6',
-        ]);
 
-        // User 3: PJA
-        $user3 = User::create([
-            'name' => 'Chandra PJA',
-            'email' => 'pja@aims.test',
-            'password' => bcrypt('password'),
-            'role' => 'viewer',
-            'is_active' => true,
-            'department_id' => $it->id,
-        ]);
-        if ($pjaRole) {
-            $user3->documentRoles()->sync([$pjaRole->id]);
+        // Seed Departments
+        $deptMap = [];
+        foreach ($departmentPICs as $item) {
+            $picName = $item['pic'];
+            $headId = $picName && isset($userMap[$picName]) ? $userMap[$picName]->id : null;
+            $code = $item['code'];
+
+            $dept = Department::create([
+                'name' => $item['dept'],
+                'code' => $code . '-DEPT',
+                'document_code' => $code,
+                'head_id' => $headId,
+            ]);
+
+            $deptMap[$item['dept']] = $dept;
+
+            if ($picName && isset($userMap[$picName])) {
+                $u = $userMap[$picName];
+                if (!$u->department_id) {
+                    $u->update(['department_id' => $dept->id]);
+                    $u->employee?->update(['department_id' => $dept->id]);
+                }
+            }
         }
-        Employee::create([
-            'user_id' => $user3->id,
-            'department_id' => $it->id,
-            'company_id' => $lahai->id,
-            'number' => 'EMP003',
-            'id_number' => '3171012345678003',
-            'name' => 'Chandra PJA',
-            'date_of_birth' => '1992-08-10',
-            'gender' => 'Laki-laki',
-            'address' => 'Klandasan, Balikpapan',
-            'employee_status' => 'Inactive',
-            'position' => 'IT Lead',
-            'grade' => 'Grade 5',
-        ]);
-
-        // 4. Seed Area Locations & Area Managers
-        $loc1 = AreaLocation::create(['name' => 'Office Building 1st Floor']);
-        $loc2 = AreaLocation::create(['name' => 'Workshop A']);
-        $loc3 = AreaLocation::create(['name' => 'Mining Area Block B']);
-
-        $mgr1 = AreaManager::create(['user_id' => $user2->id]);
-        $mgr2 = AreaManager::create(['user_id' => $user3->id]);
-
-        // 5. Seed Sections
-        $sec1 = Section::create([
-            'department_id' => $hrd->id,
-            'name' => 'Recruitment & Onboarding',
-        ]);
-        $sec1->areaLocations()->sync([$loc1->id]);
-        $sec1->areaManagers()->sync([$mgr1->id]);
-
-        $sec2 = Section::create([
-            'department_id' => $hrd->id,
-            'name' => 'Training & Development',
-        ]);
-        $sec2->areaLocations()->sync([$loc1->id]);
-        $sec2->areaManagers()->sync([$mgr1->id]);
-
-        $sec3 = Section::create([
-            'department_id' => $hse->id,
-            'name' => 'Safety Operations',
-        ]);
-        $sec3->areaLocations()->sync([$loc2->id]);
-        $sec3->areaManagers()->sync([$mgr2->id]);
-
-        $sec4 = Section::create([
-            'department_id' => $hse->id,
-            'name' => 'Environmental Management',
-        ]);
-        $sec4->areaLocations()->sync([$loc3->id]);
-        $sec4->areaManagers()->sync([$mgr2->id]);
-
-        $sec5 = Section::create([
-            'department_id' => $it->id,
-            'name' => 'Infrastructure & Support',
-        ]);
-        $sec5->areaLocations()->sync([$loc1->id]);
-        $sec5->areaManagers()->sync([$mgr1->id]);
     }
 }

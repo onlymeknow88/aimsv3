@@ -91,13 +91,20 @@ export default function useCalendar() {
         });
     }
 
-    // Helper: matches events to a date
+    // Helper: matches events to a date range (start_date to end_date)
     const getEventsForDate = (cellDate) => {
+        const cellMidnight = new Date(cellDate.year, cellDate.month, cellDate.day);
+        
         return events.filter(event => {
-            const eventDate = new Date(event.start_date);
-            return eventDate.getDate() === cellDate.day &&
-                   eventDate.getMonth() === cellDate.month &&
-                   eventDate.getFullYear() === cellDate.year;
+            if (!event.start_date) return false;
+            
+            const start = new Date(event.start_date);
+            start.setHours(0, 0, 0, 0);
+            
+            const end = event.end_date ? new Date(event.end_date) : new Date(event.start_date);
+            end.setHours(23, 59, 59, 999);
+            
+            return cellMidnight >= start && cellMidnight <= end;
         });
     };
 

@@ -24,7 +24,9 @@ Route::middleware(['admin.session', 'auth:admin', 'admin.auth'])
             Route::get('/modules', [\App\Http\Controllers\Admin\Api\AimsMenuController::class, 'getModules']);
             Route::post('/',       [\App\Http\Controllers\Admin\Api\AimsMenuController::class, 'store']);
             Route::put('/{id}',    [\App\Http\Controllers\Admin\Api\AimsMenuController::class, 'update']);
+            Route::post('/{id}/update', [\App\Http\Controllers\Admin\Api\AimsMenuController::class, 'update']); // IIS Spoofing
             Route::delete('/{id}', [\App\Http\Controllers\Admin\Api\AimsMenuController::class, 'destroy']);
+            Route::post('/{id}/delete', [\App\Http\Controllers\Admin\Api\AimsMenuController::class, 'destroy']); // IIS Spoofing
         });
 
         // ── Users API ─────────────────────────────────────────────────
@@ -33,15 +35,20 @@ Route::middleware(['admin.session', 'auth:admin', 'admin.auth'])
             Route::get('/master-data', [\App\Http\Controllers\Admin\Api\UserController::class, 'masterData']);
             Route::post('/',           [\App\Http\Controllers\Admin\Api\UserController::class, 'store']);
             Route::put('/{id}',        [\App\Http\Controllers\Admin\Api\UserController::class, 'update']);
+            Route::post('/{id}/update', [\App\Http\Controllers\Admin\Api\UserController::class, 'update']); // IIS Spoofing
             Route::delete('/{id}',     [\App\Http\Controllers\Admin\Api\UserController::class, 'destroy']);
+            Route::post('/{id}/delete', [\App\Http\Controllers\Admin\Api\UserController::class, 'destroy']); // IIS Spoofing
         });
 
         // ── Departments API ───────────────────────────────────────────
         Route::prefix('departments')->group(function () {
             Route::get('/', [\App\Http\Controllers\Admin\Api\DepartmentController::class, 'index']);
+            Route::get('/master-data', [\App\Http\Controllers\Admin\Api\DepartmentController::class, 'masterData']);
             Route::post('/', [\App\Http\Controllers\Admin\Api\DepartmentController::class, 'store']);
             Route::put('/{id}', [\App\Http\Controllers\Admin\Api\DepartmentController::class, 'update']);
+            Route::post('/{id}/update', [\App\Http\Controllers\Admin\Api\DepartmentController::class, 'update']); // IIS Spoofing
             Route::delete('/{id}', [\App\Http\Controllers\Admin\Api\DepartmentController::class, 'destroy']);
+            Route::post('/{id}/delete', [\App\Http\Controllers\Admin\Api\DepartmentController::class, 'destroy']); // IIS Spoofing
         });
 
         // ── Sections API ──────────────────────────────────────────────
@@ -50,19 +57,25 @@ Route::middleware(['admin.session', 'auth:admin', 'admin.auth'])
             Route::get('/master-data', [\App\Http\Controllers\Admin\Api\SectionController::class, 'masterData']);
             Route::post('/area-locations', [\App\Http\Controllers\Admin\Api\SectionController::class, 'storeAreaLocation']);
             Route::put('/area-locations/{id}', [\App\Http\Controllers\Admin\Api\SectionController::class, 'updateAreaLocation']);
+            Route::post('/area-locations/{id}/update', [\App\Http\Controllers\Admin\Api\SectionController::class, 'updateAreaLocation']); // IIS Spoofing
             Route::post('/area-managers', [\App\Http\Controllers\Admin\Api\SectionController::class, 'storeAreaManager']);
             Route::put('/area-managers/{id}', [\App\Http\Controllers\Admin\Api\SectionController::class, 'updateAreaManager']);
+            Route::post('/area-managers/{id}/update', [\App\Http\Controllers\Admin\Api\SectionController::class, 'updateAreaManager']); // IIS Spoofing
             Route::post('/', [\App\Http\Controllers\Admin\Api\SectionController::class, 'store']);
             Route::put('/{id}', [\App\Http\Controllers\Admin\Api\SectionController::class, 'update']);
+            Route::post('/{id}/update', [\App\Http\Controllers\Admin\Api\SectionController::class, 'update']); // IIS Spoofing
             Route::delete('/{id}', [\App\Http\Controllers\Admin\Api\SectionController::class, 'destroy']);
+            Route::post('/{id}/delete', [\App\Http\Controllers\Admin\Api\SectionController::class, 'destroy']); // IIS Spoofing
             Route::delete(
                 '/area-managers/{id}',
                 [SectionController::class, 'destroyAreaManager']
             );
+            Route::post('/area-managers/{id}/delete', [SectionController::class, 'destroyAreaManager']); // IIS Spoofing
             Route::delete(
                 '/area-locations/{id}',
                 [SectionController::class, 'destroyAreaLocation']
             );
+            Route::post('/area-locations/{id}/delete', [SectionController::class, 'destroyAreaLocation']); // IIS Spoofing
         });
 
         // ── Business Entities API ──────────────────────────────────────────────
@@ -70,7 +83,9 @@ Route::middleware(['admin.session', 'auth:admin', 'admin.auth'])
             Route::get('/', [\App\Http\Controllers\Admin\Api\BusinessController::class, 'index']);
             Route::post('/', [\App\Http\Controllers\Admin\Api\BusinessController::class, 'store']);
             Route::put('/{id}', [\App\Http\Controllers\Admin\Api\BusinessController::class, 'update']);
+            Route::post('/{id}/update', [\App\Http\Controllers\Admin\Api\BusinessController::class, 'update']); // IIS Spoofing
             Route::delete('/{id}', [\App\Http\Controllers\Admin\Api\BusinessController::class, 'destroy']);
+            Route::post('/{id}/delete', [\App\Http\Controllers\Admin\Api\BusinessController::class, 'destroy']); // IIS Spoofing
         });
 
         // ── Companies API ──────────────────────────────────────────────────────
@@ -78,7 +93,9 @@ Route::middleware(['admin.session', 'auth:admin', 'admin.auth'])
             Route::get('/', [\App\Http\Controllers\Admin\Api\CompanyController::class, 'index']);
             Route::post('/', [\App\Http\Controllers\Admin\Api\CompanyController::class, 'store']);
             Route::put('/{id}', [\App\Http\Controllers\Admin\Api\CompanyController::class, 'update']);
+            Route::post('/{id}/update', [\App\Http\Controllers\Admin\Api\CompanyController::class, 'update']); // IIS Spoofing
             Route::delete('/{id}', [\App\Http\Controllers\Admin\Api\CompanyController::class, 'destroy']);
+            Route::post('/{id}/delete', [\App\Http\Controllers\Admin\Api\CompanyController::class, 'destroy']); // IIS Spoofing
         });
 
         // ── Role & Permissions API ─────────────────────────────────────────────
@@ -88,7 +105,9 @@ Route::middleware(['admin.session', 'auth:admin', 'admin.auth'])
             Route::post('/bulk-update', [\App\Http\Controllers\Admin\Api\RolePermissionController::class, 'bulkUpdate']);
             Route::post('/roles', [\App\Http\Controllers\Admin\Api\RolePermissionController::class, 'storeRole']);
             Route::put('/roles/{id}', [\App\Http\Controllers\Admin\Api\RolePermissionController::class, 'updateRole']);
+            Route::post('/roles/{id}/update', [\App\Http\Controllers\Admin\Api\RolePermissionController::class, 'updateRole']); // IIS Spoofing
             Route::delete('/roles/{id}', [\App\Http\Controllers\Admin\Api\RolePermissionController::class, 'destroyRole']);
+            Route::post('/roles/{id}/delete', [\App\Http\Controllers\Admin\Api\RolePermissionController::class, 'destroyRole']); // IIS Spoofing
         });
 
         // ── AIMS Modules API ──────────────────────────────────────────────────
@@ -96,7 +115,9 @@ Route::middleware(['admin.session', 'auth:admin', 'admin.auth'])
             Route::get('/', [\App\Http\Controllers\Admin\Api\AimsModuleController::class, 'index']);
             Route::post('/', [\App\Http\Controllers\Admin\Api\AimsModuleController::class, 'store']);
             Route::put('/{id}', [\App\Http\Controllers\Admin\Api\AimsModuleController::class, 'update']);
+            Route::post('/{id}/update', [\App\Http\Controllers\Admin\Api\AimsModuleController::class, 'update']); // IIS Spoofing
             Route::delete('/{id}', [\App\Http\Controllers\Admin\Api\AimsModuleController::class, 'destroy']);
+            Route::post('/{id}/delete', [\App\Http\Controllers\Admin\Api\AimsModuleController::class, 'destroy']); // IIS Spoofing
         });
     });
 

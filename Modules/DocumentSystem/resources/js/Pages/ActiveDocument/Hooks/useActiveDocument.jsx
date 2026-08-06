@@ -109,8 +109,8 @@ export default function useActiveDocument() {
         if (!confirm(`Apakah Anda yakin ingin menghapus ${selectedIds.length} dokumen terpilih? Tindakan ini tidak dapat dibatalkan.`)) return;
 
         try {
-            await axios.delete('/api/document-system/documents', {
-                data: { ids: selectedIds }
+            await axios.post('/api/document-system/documents/destroy', {
+                ids: selectedIds
             });
             setSelectedIds([]);
             fetchDocuments();

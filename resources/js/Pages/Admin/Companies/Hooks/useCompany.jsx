@@ -132,7 +132,7 @@ export default function useCompany() {
         try {
             if (editId) {
                 // Update existing company
-                await axios.put(`${BASE_URL}/${editId}`, form);
+                await axios.post(`${BASE_URL}/${editId}/update`, form);
             } else {
                 // Create new company
                 await axios.post(BASE_URL, form);
@@ -167,7 +167,7 @@ export default function useCompany() {
         setDeleting(true);
         setDeleteError(null);
         try {
-            await axios.delete(`${BASE_URL}/${deleteTarget.id}`);
+            await axios.post(`${BASE_URL}/${deleteTarget.id}/delete`);
             fetchCompanies();
             closeDeleteModal();
         } catch (e) {

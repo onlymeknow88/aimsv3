@@ -1,8 +1,30 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
     LayoutDashboard, ArrowLeft, ChevronDown, ChevronUp, Calendar, List, Database, Settings
 } from 'lucide-react';
 import { usePage } from '@inertiajs/react';
+
+const SLUG_URL = {
+    'calender-of-event-coe.calendar': '/coe/calendar',
+    'calender-of-event-coe.dashboard': '/coe',
+    'calender-of-event-coe.list': '/coe/list',
+    'calender-of-event-coe.master': null,
+    'calender-of-event-coe.categories': '/coe/categories',
+};
+
+const ICON_MAP = {
+    'calender-of-event-coe.calendar': <Calendar size={14} />,
+    'calender-of-event-coe.dashboard': <LayoutDashboard size={14} />,
+    'calender-of-event-coe.list': <List size={14} />,
+    'calender-of-event-coe.master': <Database size={14} />,
+    'calender-of-event-coe.categories': <List size={14} />,
+};
+
+function isActivePath(slug, currentPath, currentSearch) {
+    const url = SLUG_URL[slug];
+    if (!url) return false;
+    return currentPath === url;
+}
 
 export default function Sidebar({
     sidebarOpen,
@@ -11,9 +33,24 @@ export default function Sidebar({
     openMaster,
     setOpenMaster
 }) {
-    const { auth } = usePage().props;
+    const { auth, coeMenus = [] } = usePage().props;
     const allowedModules = auth?.modules || [];
     const hasCoeAccess = auth?.user && (allowedModules.includes('*') || allowedModules.includes('calender-of-event-coe'));
+
+    const dropdownState = {
+        'calender-of-event-coe.master': { open: openMaster, setOpen: setOpenMaster },
+    };
+
+    // Filter parent menus (excluding Calendar as it is rendered statically at the top)
+    const parentMenus = coeMenus
+        .filter(m => !m.parent_id && m.slug !== 'calender-of-event-coe.calendar')
+        .sort((a, b) => a.order_by - b.order_by);
+
+    const childMenus = (parentId) => coeMenus
+        .filter(m => String(m.parent_id) === String(parentId))
+        .sort((a, b) => a.order_by - b.order_by);
+
+    const hasChildren = (id) => coeMenus.some(m => String(m.parent_id) === String(id));
 
     return (
         <div
@@ -38,7 +75,7 @@ export default function Sidebar({
         >
             {/* Logo / Header Modul */}
             <div style={{ padding: '24px 20px', display: 'flex', alignItems: 'center', gap: '12px', borderBottom: '1px solid rgba(255, 255, 255, 0.05)', whiteSpace: 'nowrap' }}>
-                <div style={{ width: '40px', height: '40px', borderRadius: '8px', backgroundColor: 'var(--primary)', display: 'flex', alignItems: 'center', justify_content: 'center', color: '#fff', fontWeight: 'bold', fontSize: '16px', flexShrink: 0, justifyContent: 'center' }}>
+                <div style={{ width: '40px', height: '40px', borderRadius: '8px', backgroundColor: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 'bold', fontSize: '16px', flexShrink: 0 }}>
                     📅
                 </div>
                 <div>
@@ -58,7 +95,7 @@ export default function Sidebar({
             {/* Navigasi Modul */}
             <div style={{ flex: 1, padding: '16px 8px' }}>
                 <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
-                    {/* 2. Calendar */}
+                    {/* Statically render Event Calendar at the top */}
                     <li style={{ marginBottom: '4px' }}>
                         <a
                             href="/coe/calendar"
@@ -83,12 +120,76 @@ export default function Sidebar({
                         </a>
                     </li>
 
-                    {hasCoeAccess && (
-                        <>
-                            {/* 1. Dashboard */}
-                            <li style={{ marginBottom: '4px' }}>
+                    {hasCoeAccess && parentMenus.map(menu => {
+                        const url = SLUG_URL[menu.slug];
+                        const active = isActivePath(menu.slug, currentPath, currentSearch);
+                        const dd = dropdownState[menu.slug];
+                        const isDropdown = hasChildren(menu.id) && dd;
+
+                        if (isDropdown) {
+                            return (
+                                <li key={menu.id} style={{ marginBottom: '4px' }}>
+                                    <button
+                                        onClick={() => dd.setOpen(!dd.open)}
+                                        style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'space-between',
+                                            width: '100%',
+                                            padding: '10px 16px',
+                                            borderRadius: '8px',
+                                            fontSize: '13px',
+                                            fontWeight: 500,
+                                            color: '#a3b1c6',
+                                            backgroundColor: 'transparent',
+                                            border: 'none',
+                                            cursor: 'pointer',
+                                            transition: 'all 0.2s ease',
+                                            textAlign: 'left'
+                                        }}
+                                        className="hover-link"
+                                    >
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                            <span style={{ display: 'inline-flex', alignItems: 'center', color: 'rgba(255,255,255,0.4)', flexShrink: 0 }}>
+                                                {ICON_MAP[menu.slug] || <Database size={14} />}
+                                            </span>
+                                            <span>{menu.name}</span>
+                                        </div>
+                                        {dd.open ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+                                    </button>
+                                    {dd.open && (
+                                        <ul style={{ listStyle: 'none', margin: '4px 0 0 0', paddingLeft: '28px' }}>
+                                            {childMenus(menu.id).map(child => {
+                                                const childUrl = SLUG_URL[child.slug] ?? '#';
+                                                const childActive = isActivePath(child.slug, currentPath, currentSearch);
+                                                return (
+                                                    <li key={child.id}>
+                                                        <a
+                                                            href={childUrl}
+                                                            style={{
+                                                                display: 'block',
+                                                                padding: '6px 12px',
+                                                                fontSize: '12px',
+                                                                color: childActive ? '#fff' : '#a3b1c6',
+                                                                textDecoration: 'none'
+                                                            }}
+                                                            className="hover-link"
+                                                        >
+                                                            {child.name}
+                                                        </a>
+                                                    </li>
+                                                );
+                                            })}
+                                        </ul>
+                                    )}
+                                </li>
+                            );
+                        }
+
+                        return (
+                            <li key={menu.id} style={{ marginBottom: '4px' }}>
                                 <a
-                                    href="/coe"
+                                    href={url || '#'}
                                     style={{
                                         display: 'flex',
                                         alignItems: 'center',
@@ -98,93 +199,21 @@ export default function Sidebar({
                                         fontSize: '13px',
                                         fontWeight: 500,
                                         textDecoration: 'none',
-                                        color: currentPath === '/coe' ? '#fff' : '#a3b1c6',
-                                        backgroundColor: currentPath === '/coe' ? 'var(--primary)' : 'transparent',
+                                        color: active ? '#fff' : '#a3b1c6',
+                                        backgroundColor: active ? 'var(--primary)' : 'transparent',
                                         transition: 'all 0.2s ease',
                                         whiteSpace: 'nowrap'
                                     }}
-                                    className={currentPath !== '/coe' ? "hover-link" : ""}
+                                    className={!active ? "hover-link" : ""}
                                 >
-                                    <LayoutDashboard size={14} style={{ color: currentPath === '/coe' ? '#fff' : 'rgba(255,255,255,0.4)', flexShrink: 0 }} />
-                                    Dashboard
+                                    <span style={{ display: 'inline-flex', alignItems: 'center', color: active ? '#fff' : 'rgba(255,255,255,0.4)', flexShrink: 0 }}>
+                                        {ICON_MAP[menu.slug] || <LayoutDashboard size={14} />}
+                                    </span>
+                                    {menu.name}
                                 </a>
                             </li>
-                            {/* 3. Event List */}
-                            <li style={{ marginBottom: '4px' }}>
-                                <a
-                                    href="/coe/list"
-                                    style={{
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: '12px',
-                                        padding: '10px 16px',
-                                        borderRadius: '8px',
-                                        fontSize: '13px',
-                                        fontWeight: 500,
-                                        textDecoration: 'none',
-                                        color: currentPath === '/coe/list' ? '#fff' : '#a3b1c6',
-                                        backgroundColor: currentPath === '/coe/list' ? 'var(--primary)' : 'transparent',
-                                        transition: 'all 0.2s ease',
-                                        whiteSpace: 'nowrap'
-                                    }}
-                                    className={currentPath !== '/coe/list' ? "hover-link" : ""}
-                                >
-                                    <List size={14} style={{ color: currentPath === '/coe/list' ? '#fff' : 'rgba(255,255,255,0.4)', flexShrink: 0 }} />
-                                    Event List
-                                </a>
-                            </li>
-
-                            {/* 4. Master Data Settings Dropdown */}
-                            <li style={{ marginBottom: '4px' }}>
-                                <button
-                                    onClick={() => setOpenMaster(!openMaster)}
-                                    style={{
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'space-between',
-                                        width: '100%',
-                                        padding: '10px 16px',
-                                        borderRadius: '8px',
-                                        fontSize: '13px',
-                                        fontWeight: 500,
-                                        color: '#a3b1c6',
-                                        backgroundColor: 'transparent',
-                                        border: 'none',
-                                        cursor: 'pointer',
-                                        transition: 'all 0.2s ease',
-                                        textAlign: 'left'
-                                    }}
-                                    className="hover-link"
-                                >
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                        <Database size={14} style={{ color: 'rgba(255,255,255,0.4)' }} />
-                                        <span>Master Data</span>
-                                    </div>
-                                    {openMaster ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
-                                </button>
-
-                                {openMaster && (
-                                    <ul style={{ listStyle: 'none', margin: '4px 0 0 0', paddingLeft: '28px' }}>
-                                        <li>
-                                            <a
-                                                href="/coe/categories"
-                                                style={{
-                                                    display: 'block',
-                                                    padding: '6px 12px',
-                                                    fontSize: '12px',
-                                                    color: currentPath === '/coe/categories' ? '#fff' : '#a3b1c6',
-                                                    textDecoration: 'none'
-                                                }}
-                                                className="hover-link"
-                                            >
-                                                Categories
-                                            </a>
-                                        </li>
-                                    </ul>
-                                )}
-                            </li>
-                        </>
-                    )}
+                        );
+                    })}
                 </ul>
             </div>
         </div>

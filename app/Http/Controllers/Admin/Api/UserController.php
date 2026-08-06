@@ -146,6 +146,7 @@ class UserController extends Controller
 
                 if (!empty($validated['role_ids'])) {
                     $user->documentRoles()->sync($validated['role_ids']);
+                    \Cache::flush();
                 }
 
                 return $user;
@@ -216,6 +217,7 @@ class UserController extends Controller
                 }
 
                 $user->documentRoles()->sync($validated['role_ids'] ?? []);
+                \Cache::flush();
             });
 
             return ResponseFormatter::success(['id' => $user->id], 'User berhasil diperbarui.');

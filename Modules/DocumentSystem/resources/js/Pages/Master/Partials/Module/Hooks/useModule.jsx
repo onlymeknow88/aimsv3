@@ -114,8 +114,8 @@ export default function useModule() {
         setFormError(null);
         try {
             if (editId) {
-                // Update existing
-                await axios.put(`${BASE_URL}/${editId}`, form);
+                // Update existing — POST ke /update untuk kompatibilitas IIS
+                await axios.post(`${BASE_URL}/${editId}/update`, { ...form });
             } else {
                 // Create new
                 await axios.post(BASE_URL, form);
@@ -150,7 +150,7 @@ export default function useModule() {
         setDeleting(true);
         setDeleteError(null);
         try {
-            await axios.delete(`${BASE_URL}/${deleteTarget.id}`);
+            await axios.post(`${BASE_URL}/${deleteTarget.id}/delete`, {});
             fetchModules();
             closeDeleteModal();
         } catch (e) {

@@ -18,6 +18,11 @@ Route::middleware(['web', 'auth'])->prefix('document-system')->group(function ()
 
     Route::middleware('module.permission:document-system,can_view,doc.maker')->group(function () {
         Route::get('/documents/export', [DocumentApiController::class, 'export']);
+    });
+
+    // GET /documents dan /documents/{id} dapat diakses oleh semua role yang punya can_view
+    // di module document-system (doc.maker, doc.draft, doc.approval, dll)
+    Route::middleware('module.permission:document-system,can_view')->group(function () {
         Route::get('/documents', [DocumentApiController::class, 'index']);
         Route::get('/documents/{id}', [DocumentApiController::class, 'show']);
     });
@@ -33,13 +38,19 @@ Route::middleware(['web', 'auth'])->prefix('document-system')->group(function ()
         Route::post('/documents/reject/{id}', [DocumentApiController::class, 'reject']);
     });
 
+    Route::middleware('module.permission:document-system,can_delete,doc.maker')->group(function () {
+        Route::delete('/documents', [DocumentApiController::class, 'destroy']);
+    });
+
+    // POST destroy untuk _method:DELETE spoofing IIS — accessible semua role can_delete di module
+    Route::middleware('module.permission:document-system,can_delete')->group(function () {
+        Route::post('/documents/destroy', [DocumentApiController::class, 'destroy']);
+    });
+
     Route::middleware('module.permission:document-system,can_edit,doc.maker')->group(function () {
         Route::post('/documents/{id}', [DocumentApiController::class, 'update']);
         Route::delete('/attachments/{id}', [DocumentApiController::class, 'deleteAttachment']);
-    });
-
-    Route::middleware('module.permission:document-system,can_delete,doc.maker')->group(function () {
-        Route::delete('/documents', [DocumentApiController::class, 'destroy']);
+        Route::post('/attachments/{id}/delete', [DocumentApiController::class, 'deleteAttachment']); // _method:DELETE spoofing untuk IIS
     });
 
     // ==========================================
@@ -64,13 +75,19 @@ Route::middleware(['web', 'auth'])->prefix('document-system')->group(function ()
         Route::post('/permissions', [PermissionApiController::class, 'updatePermissions']);
         Route::post('/modules', [MasterDataApiController::class, 'storeModule']);
         Route::put('/modules/{id}', [MasterDataApiController::class, 'updateModule']);
+        Route::post('/modules/{id}/update', [MasterDataApiController::class, 'updateModule']); // _method:PUT spoofing untuk IIS
         Route::delete('/modules/{id}', [MasterDataApiController::class, 'deleteModule']);
+        Route::post('/modules/{id}/delete', [MasterDataApiController::class, 'deleteModule']); // _method:DELETE spoofing untuk IIS
         Route::post('/categories', [MasterDataApiController::class, 'storeCategory']);
         Route::put('/categories/{id}', [MasterDataApiController::class, 'updateCategory']);
+        Route::post('/categories/{id}/update', [MasterDataApiController::class, 'updateCategory']); // _method:PUT spoofing untuk IIS
         Route::delete('/categories/{id}', [MasterDataApiController::class, 'deleteCategory']);
+        Route::post('/categories/{id}/delete', [MasterDataApiController::class, 'deleteCategory']); // _method:DELETE spoofing untuk IIS
         Route::post('/mappings', [MasterDataApiController::class, 'storeMapping']);
         Route::put('/mappings/{id}', [MasterDataApiController::class, 'updateMapping']);
+        Route::post('/mappings/{id}/update', [MasterDataApiController::class, 'updateMapping']); // _method:PUT spoofing untuk IIS
         Route::delete('/mappings/{id}', [MasterDataApiController::class, 'deleteMapping']);
+        Route::post('/mappings/{id}/delete', [MasterDataApiController::class, 'deleteMapping']); // _method:DELETE spoofing untuk IIS
     });
 
     // ==========================================
@@ -89,10 +106,12 @@ Route::middleware(['web', 'auth'])->prefix('document-system')->group(function ()
     Route::middleware('module.permission:document-system,can_edit,doc.jsa')->group(function () {
         Route::post('/jsa/{id}', [JsaApiController::class, 'update']);
         Route::delete('/jsa/attachments/{id}', [JsaApiController::class, 'deleteAttachment']);
+        Route::post('/jsa/attachments/{id}/delete', [JsaApiController::class, 'deleteAttachment']); // _method:DELETE spoofing untuk IIS
     });
 
     Route::middleware('module.permission:document-system,can_delete,doc.jsa')->group(function () {
         Route::delete('/jsa/{id}', [JsaApiController::class, 'destroy']);
+        Route::post('/jsa/{id}/delete', [JsaApiController::class, 'destroy']); // _method:DELETE spoofing untuk IIS
     });
 
     Route::middleware('module.permission:document-system,can_approval,doc.approval')->group(function () {
@@ -116,10 +135,12 @@ Route::middleware(['web', 'auth'])->prefix('document-system')->group(function ()
     Route::middleware('module.permission:document-system,can_edit,doc.ptw')->group(function () {
         Route::post('/ptw/{id}', [\Modules\DocumentSystem\Http\Controllers\Api\PtwController::class, 'update']);
         Route::delete('/ptw/attachments/{id}', [\Modules\DocumentSystem\Http\Controllers\Api\PtwController::class, 'deleteAttachment']);
+        Route::post('/ptw/attachments/{id}', [\Modules\DocumentSystem\Http\Controllers\Api\PtwController::class, 'deleteAttachment']); // _method:DELETE spoofing untuk IIS
     });
 
     Route::middleware('module.permission:document-system,can_delete,doc.ptw')->group(function () {
         Route::delete('/ptw/{id}', [\Modules\DocumentSystem\Http\Controllers\Api\PtwController::class, 'destroy']);
+        Route::post('/ptw/{id}/delete', [\Modules\DocumentSystem\Http\Controllers\Api\PtwController::class, 'destroy']); // _method:DELETE spoofing untuk IIS
     });
 
     Route::middleware('module.permission:document-system,can_approval,doc.approval')->group(function () {

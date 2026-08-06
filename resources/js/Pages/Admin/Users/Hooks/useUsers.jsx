@@ -155,7 +155,7 @@ export default function useUsers() {
         try {
             const payload = { ...form };
             if (editId) {
-                await axios.put(`${BASE}/${editId}`, payload);
+                await axios.post(`${BASE}/${editId}/update`, payload);
             } else {
                 await axios.post(BASE, payload);
             }
@@ -176,7 +176,7 @@ export default function useUsers() {
     const handleDelete = async (user) => {
         if (!confirm(`Hapus user "${user.name}" dan data employee-nya?`)) return;
         try {
-            await axios.delete(`${BASE}/${user.id}`);
+            await axios.post(`${BASE}/${user.id}/delete`);
             fetchUsers();
         } catch (err) {
             alert(err.response?.data?.message || 'Gagal menghapus.');

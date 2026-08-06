@@ -90,17 +90,22 @@ export default function DepartmentTable({
 }) {
     const columns = useMemo(
         () => [
-            { accessorKey: "name", header: "Nama Departemen" },
-            { accessorKey: "code", header: "Kode Departemen" },
-            { accessorKey: "document_code", header: "Kode Dokumen" },
+            { accessorKey: "name", header: "Nama Buisnes Prosess" },
+            { accessorKey: "code", header: "Kode Buisnes Prosess" },
+            { accessorKey: "document_code", header: "Kode Document Buisnes Prosess" },
+            {
+                accessorKey: "head.name",
+                header: "Kepala Departemen",
+                cell: ({ row }) => row.original.head?.name || "-",
+            },
             {
                 id: "actions",
                 header: "Aksi",
                 cell: ({ row }) => (
                     <div style={{ textAlign: "right" }}>
                         <ActionBtns
-                            onEdit={() => onEdit(row.original)}
-                            onDelete={() => onDelete(row.original)}
+                             onEdit={() => onEdit(row.original)}
+                             onDelete={() => onDelete(row.original)}
                         />
                     </div>
                 ),

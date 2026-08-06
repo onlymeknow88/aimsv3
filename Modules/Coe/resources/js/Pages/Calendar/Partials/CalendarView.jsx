@@ -4,6 +4,8 @@ import useCalendar from '../Hooks/useCalendar';
 import CalendarModal from './CalendarModal';
 import CoeLayout from '../../../Layouts/CoeLayout';
 import { Head } from '@inertiajs/react';
+import FullCalendar from '@fullcalendar/react';
+import dayGridPlugin from '@fullcalendar/daygrid';
 
 const cardStyle = {
     backgroundColor: '#fff',
@@ -53,6 +55,42 @@ export default function CalendarView() {
         handleToday,
         fetchEvents,
     } = useCalendar();
+
+    const calendarRef = React.useRef(null);
+
+    // Sync external currentDate state to FullCalendar view
+    React.useEffect(() => {
+        if (calendarRef.current) {
+            const calendarApi = calendarRef.current.getApi();
+            calendarApi.gotoDate(currentDate);
+        }
+    }, [currentDate]);
+
+    // Format events for FullCalendar
+    const formattedEvents = React.useMemo(() => {
+        return events.map(ev => {
+            let endDate = null;
+            if (ev.end_date) {
+                // Add 1 day to end_date to make it inclusive in FullCalendar's exclusive dayGridMonth view
+                const d = new Date(ev.end_date);
+                d.setDate(d.getDate() + 1);
+                endDate = d.toISOString().split('T')[0];
+            }
+            const color = ev.category?.color || '#3b82f6';
+            return {
+                id: ev.id,
+                title: ev.title,
+                start: ev.start_date ? ev.start_date.split(' ')[0] : null,
+                end: endDate,
+                backgroundColor: color,
+                borderColor: color,
+                textColor: '#fff',
+                extendedProps: {
+                    originalEvent: ev
+                }
+            };
+        });
+    }, [events]);
 
     return (
         <CoeLayout>
@@ -158,104 +196,83 @@ export default function CalendarView() {
             </div>
 
             {/* Monthly Calendar View */}
-            <div style={{ ...cardStyle, padding: 0, overflow: 'hidden' }}>
-                {/* Month Name Banner */}
-                <div style={{ padding: '16px 24px', borderBottom: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: '8px', backgroundColor: '#f8fafc' }}>
-                    <CalendarIcon size={18} color="var(--primary)" />
-                    <h2 style={{ fontSize: '16px', fontWeight: 800, color: '#0f172a', margin: 0 }}>
-                        {MONTH_NAMES[month]} {year}
-                    </h2>
-                </div>
-
-                {/* Day Header Grid */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', borderBottom: '1px solid #e2e8f0', backgroundColor: '#f8fafc' }}>
-                    {DAY_NAMES.map((d, index) => (
-                        <div
-                            key={index}
-                            style={{
-                                padding: '12px 10px',
-                                textAlign: 'center',
-                                fontSize: '11px',
-                                fontWeight: 700,
-                                textTransform: 'uppercase',
-                                color: index === 0 ? '#ef4444' : '#475569',
-                                borderRight: index < 6 ? '1px solid #e2e8f0' : 'none'
-                            }}
-                        >
-                            {d}
-                        </div>
-                    ))}
-                </div>
-
-                {/* Days Grid */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', backgroundColor: '#e2e8f0', gap: '1px' }}>
-                    {calendarCells.map((cell, idx) => {
-                        const cellEvents = getEventsForDate(cell);
-                        const isToday = new Date().getDate() === cell.day &&
-                                        new Date().getMonth() === cell.month &&
-                                        new Date().getFullYear() === cell.year;
-
-                        return (
-                            <div
-                                key={idx}
-                                style={{
-                                    backgroundColor: cell.isCurrentMonth ? '#fff' : '#f8fafc',
-                                    minHeight: '120px',
-                                    padding: '8px',
-                                    display: 'flex',
-                                    flexDirection: 'column',
-                                    gap: '4px',
-                                }}
-                            >
-                                {/* Date Number */}
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                                    <span
-                                        style={{
-                                            fontSize: '12px',
-                                            fontWeight: isToday ? 800 : 600,
-                                            color: isToday ? '#fff' : (cell.isCurrentMonth ? '#0f172a' : '#94a3b8'),
-                                            backgroundColor: isToday ? 'var(--primary)' : 'transparent',
-                                            width: isToday ? '22px' : 'auto',
-                                            height: isToday ? '22px' : 'auto',
-                                            borderRadius: isToday ? '50%' : 'none',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                        }}
-                                    >
-                                        {cell.day}
-                                    </span>
-                                </div>
-
-                                {/* Events List on this Date */}
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flexGrow: 1, overflowY: 'auto' }}>
-                                    {cellEvents.map(ev => (
-                                        <div
-                                            key={ev.id}
-                                            onClick={() => setSelectedEvent(ev)}
-                                            style={{
-                                                backgroundColor: ev.category?.color || '#3b82f6',
-                                                color: '#fff',
-                                                fontSize: '10px',
-                                                fontWeight: 700,
-                                                padding: '4px 8px',
-                                                borderRadius: '4px',
-                                                cursor: 'pointer',
-                                                whiteSpace: 'nowrap',
-                                                textOverflow: 'ellipsis',
-                                                overflow: 'hidden',
-                                                boxShadow: '0 1px 2px rgba(0,0,0,0.1)'
-                                            }}
-                                            title={ev.title}
-                                        >
-                                            {ev.title}
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        );
-                    })}
-                </div>
+            <div style={{ ...cardStyle, padding: '24px' }}>
+                <FullCalendar
+                    ref={calendarRef}
+                    plugins={[dayGridPlugin]}
+                    initialView="dayGridMonth"
+                    headerToolbar={false}
+                    events={formattedEvents}
+                    height="auto"
+                    eventClick={(info) => {
+                        setSelectedEvent(info.event.extendedProps.originalEvent);
+                    }}
+                />
+                
+                <style>{`
+                    .fc {
+                        font-family: inherit;
+                    }
+                    .fc-scrollgrid {
+                        border: 1px solid #e2e8f0 !important;
+                        border-radius: 12px !important;
+                        overflow: hidden !important;
+                    }
+                    .fc-col-header-cell {
+                        background-color: #f8fafc !important;
+                        padding: 12px 0 !important;
+                        border: 1px solid #e2e8f0 !important;
+                    }
+                    .fc-col-header-cell-cushion {
+                        font-size: 11px !important;
+                        font-weight: 700 !important;
+                        text-transform: uppercase !important;
+                        color: #475569 !important;
+                        text-decoration: none !important;
+                        letter-spacing: 0.5px;
+                    }
+                    .fc-day {
+                        border: 1px solid #e2e8f0 !important;
+                    }
+                    .fc-day-other {
+                        background-color: #f8fafc !important;
+                        opacity: 0.6;
+                    }
+                    .fc-daygrid-day-number {
+                        font-size: 12px !important;
+                        font-weight: 700 !important;
+                        color: #475569 !important;
+                        text-decoration: none !important;
+                        padding: 8px 10px !important;
+                    }
+                    .fc-daygrid-day.fc-day-today {
+                        background-color: #f1f5f9 !important;
+                    }
+                    .fc-daygrid-day.fc-day-today .fc-daygrid-day-number {
+                        color: var(--primary) !important;
+                        font-weight: 800 !important;
+                    }
+                    .fc-event {
+                        cursor: pointer !important;
+                        border-radius: 6px !important;
+                        padding: 4px 8px !important;
+                        font-size: 11px !important;
+                        font-weight: 700 !important;
+                        border: none !important;
+                        box-shadow: 0 1px 3px rgba(0,0,0,0.06) !important;
+                        margin: 2px 4px !important;
+                        transition: transform 0.15s ease, box-shadow 0.15s ease !important;
+                    }
+                    .fc-event:hover {
+                        transform: translateY(-0.5px) !important;
+                        box-shadow: 0 2px 4px rgba(0,0,0,0.08) !important;
+                        filter: brightness(0.95) !important;
+                    }
+                    .fc-event-title {
+                        font-weight: 700 !important;
+                        color: #fff !important;
+                    }
+                `}</style>
             </div>
 
             <CalendarModal

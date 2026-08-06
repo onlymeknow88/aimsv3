@@ -118,7 +118,7 @@ export default function useAimsMenu() {
 
         try {
             if (editId) {
-                await axios.put(`${BASE}/${editId}`, payload);
+                await axios.post(`${BASE}/${editId}/update`, payload);
             } else {
                 await axios.post(BASE, payload);
             }
@@ -146,7 +146,7 @@ export default function useAimsMenu() {
         if (!confirm(msg)) return;
 
         try {
-            await axios.delete(`${BASE}/${menu.id}`);
+            await axios.post(`${BASE}/${menu.id}/delete`);
             fetchAll();
         } catch (err) {
             alert(err.response?.data?.message || 'Gagal menghapus menu.');
