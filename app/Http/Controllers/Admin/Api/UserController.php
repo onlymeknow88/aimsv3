@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Models\Employee;
 use App\Models\Company;
 use App\Models\Department;
+use App\Services\AdminActivityLogService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -152,6 +153,15 @@ class UserController extends Controller
                 return $user;
             });
 
+            AdminActivityLogService::log(
+                action: 'create',
+                resource: 'User',
+                resourceId: $user->id,
+                description: "Membuat user baru '{$user->name}' ({$user->email})",
+                newData: ['id' => $user->id, 'name' => $user->name, 'email' => $user->email],
+                request: $request,
+            );
+
             return ResponseFormatter::success(['id' => $user->id], 'User berhasil dibuat.');
         } catch (\Exception $e) {
             \Log::error('User Store Error: ' . $e->getMessage());
@@ -166,6 +176,8 @@ class UserController extends Controller
     {
         $user = User::find($id);
         if (!$user) return ResponseFormatter::error('User tidak ditemukan.', 404);
+
+        $oldData = ['id' => $user->id, 'name' => $user->name, 'email' => $user->email];
 
         $validated = $request->validate([
             'name'          => 'required|string|max:255',
@@ -220,6 +232,17 @@ class UserController extends Controller
                 \Cache::flush();
             });
 
+            $user->refresh();
+            AdminActivityLogService::log(
+                action: 'update',
+                resource: 'User',
+                resourceId: $user->id,
+                description: "Memperbarui user '{$user->name}' ({$user->email})",
+                oldData: $oldData,
+                newData: ['id' => $user->id, 'name' => $user->name, 'email' => $user->email],
+                request: $request,
+            );
+
             return ResponseFormatter::success(['id' => $user->id], 'User berhasil diperbarui.');
         } catch (\Exception $e) {
             \Log::error('User Update Error: ' . $e->getMessage());
@@ -230,16 +253,28 @@ class UserController extends Controller
     /**
      * API: Delete user + employee.
      */
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
         $user = User::find($id);
         if (!$user) return ResponseFormatter::error('User tidak ditemukan.', 404);
+
+        $oldData = ['id' => $user->id, 'name' => $user->name, 'email' => $user->email];
 
         try {
             DB::transaction(function () use ($user) {
                 $user->employee?->delete();
                 $user->delete();
             });
+
+            AdminActivityLogService::log(
+                action: 'delete',
+                resource: 'User',
+                resourceId: (string) $id,
+                description: "Menghapus user '{$oldData['name']}' ({$oldData['email']})",
+                oldData: $oldData,
+                request: $request,
+            );
+
             return ResponseFormatter::success(null, 'User berhasil dihapus.');
         } catch (\Exception $e) {
             \Log::error('User Destroy Error: ' . $e->getMessage());

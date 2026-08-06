@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin\Api;
 use App\Helpers\ResponseFormatter;
 use App\Http\Controllers\Controller;
 use App\Models\Department;
+use App\Services\AdminActivityLogService;
 use Illuminate\Http\Request;
 
 class DepartmentController extends Controller
@@ -66,6 +67,15 @@ class DepartmentController extends Controller
         try {
             $department = Department::create($validated);
 
+            AdminActivityLogService::log(
+                action: 'create',
+                resource: 'Department',
+                resourceId: $department->id,
+                description: "Membuat department baru '{$department->name}'",
+                newData: $department->toArray(),
+                request: $request,
+            );
+
             return ResponseFormatter::success($department, 'Department berhasil dibuat.');
         } catch (\Exception $e) {
             return ResponseFormatter::error('Gagal membuat department: ' . $e->getMessage(), 500);
@@ -89,8 +99,20 @@ class DepartmentController extends Controller
             'head_id'       => 'nullable|exists:users,id',
         ]);
 
+        $oldData = $department->toArray();
+
         try {
             $department->update($validated);
+
+            AdminActivityLogService::log(
+                action: 'update',
+                resource: 'Department',
+                resourceId: $department->id,
+                description: "Memperbarui department '{$department->name}'",
+                oldData: $oldData,
+                newData: $department->fresh()->toArray(),
+                request: $request,
+            );
 
             return ResponseFormatter::success($department, 'Department berhasil diperbarui.');
         } catch (\Exception $e) {
@@ -101,15 +123,26 @@ class DepartmentController extends Controller
     /**
      * API: Delete a department.
      */
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
         $department = Department::find($id);
         if (!$department) {
             return ResponseFormatter::error('Department tidak ditemukan.', 404);
         }
 
+        $oldData = $department->toArray();
+
         try {
             $department->delete();
+
+            AdminActivityLogService::log(
+                action: 'delete',
+                resource: 'Department',
+                resourceId: (string) $id,
+                description: "Menghapus department '{$oldData['name']}'",
+                oldData: $oldData,
+                request: $request,
+            );
 
             return ResponseFormatter::success(null, 'Department berhasil dihapus.');
         } catch (\Exception $e) {

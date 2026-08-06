@@ -9,6 +9,7 @@ use App\Models\AreaManager;
 use App\Models\Department;
 use App\Models\Section;
 use App\Models\User;
+use App\Services\AdminActivityLogService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
@@ -84,6 +85,15 @@ class SectionController extends Controller
         try {
             $location = AreaLocation::create($validated);
 
+            AdminActivityLogService::log(
+                action: 'create',
+                resource: 'AreaLocation',
+                resourceId: $location->id,
+                description: "Membuat area location baru '{$location->name}'",
+                newData: $location->toArray(),
+                request: $request,
+            );
+
             return ResponseFormatter::success($location, 'Area location berhasil dibuat.');
         } catch (\Exception $e) {
             return ResponseFormatter::error('Gagal membuat area location: ' . $e->getMessage(), 500);
@@ -106,8 +116,20 @@ class SectionController extends Controller
             ],
         ]);
 
+        $oldData = $location->toArray();
+
         try {
             $location->update($validated);
+
+            AdminActivityLogService::log(
+                action: 'update',
+                resource: 'AreaLocation',
+                resourceId: $location->id,
+                description: "Memperbarui area location '{$location->name}'",
+                oldData: $oldData,
+                newData: $location->fresh()->toArray(),
+                request: $request,
+            );
 
             return ResponseFormatter::success($location, 'Area location berhasil diperbarui.');
         } catch (\Exception $e) {
@@ -147,6 +169,15 @@ class SectionController extends Controller
                 'areaLocations:id,name',
             ]);
 
+            AdminActivityLogService::log(
+                action: 'create',
+                resource: 'AreaManager',
+                resourceId: $manager->id,
+                description: "Membuat area manager baru untuk user '{$manager->user?->name}'",
+                newData: $manager->toArray(),
+                request: $request,
+            );
+
             return ResponseFormatter::success(
                 $manager,
                 'Area manager berhasil dibuat.'
@@ -173,6 +204,8 @@ class SectionController extends Controller
             'area_location_ids.*' => 'exists:area_locations,id',
         ]);
 
+        $oldData = $manager->toArray();
+
         DB::transaction(function () use ($manager, $validated) {
 
             $manager->update([
@@ -188,6 +221,16 @@ class SectionController extends Controller
             'user:id,name,email',
             'areaLocations:id,name',
         ]);
+
+        AdminActivityLogService::log(
+            action: 'update',
+            resource: 'AreaManager',
+            resourceId: $manager->id,
+            description: "Memperbarui area manager untuk user '{$manager->user?->name}'",
+            oldData: $oldData,
+            newData: $manager->toArray(),
+            request: $request,
+        );
 
         return ResponseFormatter::success(
             $manager,
@@ -228,6 +271,15 @@ class SectionController extends Controller
             $section->areaManagers()->sync($validated['area_manager_ids'] ?? []);
             $section->load(['department:id,name', 'areaLocations:id,name', 'areaManagers.user:id,name,email']);
 
+            AdminActivityLogService::log(
+                action: 'create',
+                resource: 'Section',
+                resourceId: $section->id,
+                description: "Membuat section baru '{$section->name}'",
+                newData: $section->toArray(),
+                request: $request,
+            );
+
             return ResponseFormatter::success($section, 'Section berhasil dibuat.');
         } catch (\Exception $e) {
             return ResponseFormatter::error('Gagal membuat section: ' . $e->getMessage(), 500);
@@ -264,6 +316,8 @@ class SectionController extends Controller
             $id
         );
 
+        $oldData = $section->toArray();
+
         try {
             $section->update([
                 'name' => $validated['name'],
@@ -272,6 +326,16 @@ class SectionController extends Controller
             $section->areaLocations()->sync($validated['area_location_ids'] ?? []);
             $section->areaManagers()->sync($validated['area_manager_ids'] ?? []);
             $section->load(['department:id,name', 'areaLocations:id,name', 'areaManagers.user:id,name,email']);
+
+            AdminActivityLogService::log(
+                action: 'update',
+                resource: 'Section',
+                resourceId: $section->id,
+                description: "Memperbarui section '{$section->name}'",
+                oldData: $oldData,
+                newData: $section->toArray(),
+                request: $request,
+            );
 
             return ResponseFormatter::success($section, 'Section berhasil diperbarui.');
         } catch (\Exception $e) {
@@ -282,15 +346,26 @@ class SectionController extends Controller
     /**
      * API: Delete (soft delete) a section.
      */
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
         $section = Section::find($id);
         if (!$section) {
             return ResponseFormatter::error('Section tidak ditemukan.', 404);
         }
 
+        $oldData = $section->toArray();
+
         try {
             $section->delete(); // soft delete karena tabel punya deleted_at
+
+            AdminActivityLogService::log(
+                action: 'delete',
+                resource: 'Section',
+                resourceId: (string) $id,
+                description: "Menghapus section '{$oldData['name']}'",
+                oldData: $oldData,
+                request: $request,
+            );
 
             return ResponseFormatter::success(null, 'Section berhasil dihapus.');
         } catch (\Exception $e) {
@@ -357,9 +432,10 @@ class SectionController extends Controller
         }
     }
 
-    public function destroyAreaManager($id)
+    public function destroyAreaManager(Request $request, $id)
     {
         $manager = AreaManager::findOrFail($id);
+        $oldData = $manager->toArray();
 
         DB::transaction(function () use ($manager) {
 
@@ -373,14 +449,24 @@ class SectionController extends Controller
             $manager->delete();
         });
 
+        AdminActivityLogService::log(
+            action: 'delete',
+            resource: 'AreaManager',
+            resourceId: (string) $id,
+            description: "Menghapus area manager ID: {$id}",
+            oldData: $oldData,
+            request: $request,
+        );
+
         return ResponseFormatter::success(
             null,
             'Area Manager berhasil dihapus.'
         );
     }
-    public function destroyAreaLocation($id)
+    public function destroyAreaLocation(Request $request, $id)
     {
         $location = AreaLocation::findOrFail($id);
+        $oldData = $location->toArray();
 
         if (
             $location->sections()->exists() ||
@@ -393,6 +479,15 @@ class SectionController extends Controller
         }
 
         $location->delete();
+
+        AdminActivityLogService::log(
+            action: 'delete',
+            resource: 'AreaLocation',
+            resourceId: (string) $id,
+            description: "Menghapus area location '{$oldData['name']}'",
+            oldData: $oldData,
+            request: $request,
+        );
 
         return ResponseFormatter::success(
             null,

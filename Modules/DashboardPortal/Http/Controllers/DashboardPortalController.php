@@ -6,6 +6,9 @@ namespace Modules\DashboardPortal\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Inertia\Inertia;
 
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+
 class DashboardPortalController extends Controller
 {
     /**
@@ -13,7 +16,34 @@ class DashboardPortalController extends Controller
      */
     public function dashboardIndex()
     {
-        return Inertia::render('DashboardPortal/Dashboard/Index');
+        $widgets = DB::table('app_settings')
+            ->where('id', 'like', 'widget_%')
+            ->orderBy('id')
+            ->get();
+
+        return Inertia::render('DashboardPortal/Dashboard/Index', [
+            'widgets' => $widgets
+        ]);
+    }
+
+    /**
+     * Update widget setting.
+     */
+    public function updateSetting(Request $request)
+    {
+        $request->validate([
+            'id' => 'required|string|exists:app_settings,id',
+            'val' => 'required|string'
+        ]);
+
+        DB::table('app_settings')
+            ->where('id', $request->id)
+            ->update([
+                'val' => $request->val,
+                'updated_at' => now()
+            ]);
+
+        return response()->json(['message' => 'Setting updated successfully']);
     }
     /**
      * Display a listing of the resource.

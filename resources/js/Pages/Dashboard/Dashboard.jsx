@@ -40,7 +40,7 @@ ChartJS.register(
     LineElement, ArcElement, ChartTitle, Tooltip, Legend, Filler
 );
 
-export default function Dashboard({ coeEvents: initialEvents = [], slideshows: initialSlideshows = [] }) {
+export default function Dashboard({ coeEvents: initialEvents = [], slideshows: initialSlideshows = [], widgetSettings = {} }) {
     const {
         activeSlide,
         setActiveSlide,
@@ -104,7 +104,7 @@ export default function Dashboard({ coeEvents: initialEvents = [], slideshows: i
                 data: [15, 20, 24, 28, 32, 38],
                 backgroundColor: '#94a3b8',
                 borderRadius: 4,
-            },
+                },
             {
                 label: 'Realisasi (BCM)',
                 data: [12, 18, 22, 30, 31, 39],
@@ -140,7 +140,9 @@ export default function Dashboard({ coeEvents: initialEvents = [], slideshows: i
             <Head title="AIMS Dashboard" />
 
             {/* Section 1: KPI Cards — Safety Performance dari dashboard_general */}
-            <SafetyKPI generalStats={generalStats} loading={loading} />
+            {widgetSettings['widget_safety_performance_chart'] !== "false" && (
+                <SafetyKPI generalStats={generalStats} loading={loading} />
+            )}
 
             {/* Section 2: Hero Area */}
             <style>{`
@@ -156,37 +158,54 @@ export default function Dashboard({ coeEvents: initialEvents = [], slideshows: i
                     }
                 }
             `}</style>
-            <div className="dashboard-grid-hero">
-                {/* Welcome Banner Slideshow Container */}
-                <SlideShow
-                    loading={loading}
-                    currentSlide={currentSlide}
-                    slides={slides}
-                    activeSlide={activeSlide}
-                    setActiveSlide={setActiveSlide}
-                    prevSlide={prevSlide}
-                    nextSlide={nextSlide}
-                    setPreviewVideo={setPreviewVideo}
-                />
+            
+            {(widgetSettings['widget_video_slide'] !== "false" || widgetSettings['widget_calendar'] !== "false") && (
+                <div className="dashboard-grid-hero">
+                    {/* Welcome Banner Slideshow Container */}
+                    {widgetSettings['widget_video_slide'] !== "false" && (
+                        <SlideShow
+                            loading={loading}
+                            currentSlide={currentSlide}
+                            slides={slides}
+                            activeSlide={activeSlide}
+                            setActiveSlide={setActiveSlide}
+                            prevSlide={prevSlide}
+                            nextSlide={nextSlide}
+                            setPreviewVideo={setPreviewVideo}
+                        />
+                    )}
 
-                {/* Event Calendar Sidebar */}
-                <CalendarofEvent loading={loading} coeEvents={coeEvents} />
-            </div>
+                    {/* Event Calendar Sidebar */}
+                    {widgetSettings['widget_calendar'] !== "false" && (
+                        <CalendarofEvent loading={loading} coeEvents={coeEvents} />
+                    )}
+                </div>
+            )}
 
             {/* Section 3: Calendar of Event Stats */}
-            <CalendarOfEventStats stats={coeStats} loading={loading} />
+            {widgetSettings['widget_calendar_of_event_list'] !== "false" && (
+                <CalendarOfEventStats stats={coeStats} loading={loading} />
+            )}
 
             {/* Section 4: Document System Widget */}
-            <DocumentSystemWidget />
+            {widgetSettings['widget_ds'] !== "false" && (
+                <DocumentSystemWidget />
+            )}
 
             {/* Section 5: Field Leadership Widget */}
-            <FieldLeadership />
+            {widgetSettings['widget_fls'] !== "false" && (
+                <FieldLeadership />
+            )}
 
             {/* Section 6: CSMS Widget */}
-            <CsmsWidget />
+            {widgetSettings['widget_csms'] !== "false" && (
+                <CsmsWidget />
+            )}
 
             {/* Section 7: News & Update */}
-            <NewsUpdate newsItems={newsItems} loading={loading} />
+            {widgetSettings['widget_news_update'] !== "false" && (
+                <NewsUpdate newsItems={newsItems} loading={loading} />
+            )}
 
         </DashboardLayout>
     );

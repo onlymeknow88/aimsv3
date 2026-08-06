@@ -1,5 +1,7 @@
 <?php
 
+require_once __DIR__ . '/sendEmailHelper.php';
+
 use GuzzleHttp\Client;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -179,11 +181,6 @@ if (! function_exists('GetBlobSasUri')) {
 if (! function_exists('sendPowerAutomateEmail')) {
     function sendPowerAutomateEmail($data)
     {
-        return [
-            'status' => 'success',
-            'message' => 'Email notification disabled'
-        ];
-
         $url = setting('power_automate_email');
 
         if (!$url) {

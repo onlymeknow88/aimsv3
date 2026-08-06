@@ -30,7 +30,12 @@ class AuthenticatedSessionController extends Controller
      */
     public function store(LoginRequest $request): RedirectResponse
     {
-        $request->authenticate();
+        try {
+            $request->authenticate();
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            \App\Services\LoginLogService::record('login_failed', $request, null, 'Invalid credentials', 'Password');
+            throw $e;
+        }
 
         $user = Auth::user();
 
@@ -51,6 +56,8 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
+        \App\Services\LoginLogService::record('login_success', $request, $user, null, 'Password');
+
         return redirect()->intended(route('dashboard', absolute: false));
     }
 
@@ -59,6 +66,11 @@ class AuthenticatedSessionController extends Controller
      */
     public function destroy(Request $request): RedirectResponse
     {
+        $user = Auth::guard('web')->user();
+        if ($user) {
+            \App\Services\LoginLogService::record('logout', $request, $user, null, 'Password');
+        }
+
         Auth::guard('web')->logout();
 
         $request->session()->invalidate();

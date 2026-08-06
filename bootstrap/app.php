@@ -15,6 +15,8 @@ return Application::configure(basePath: dirname(__DIR__))
         },
     )
     ->withMiddleware(function (Middleware $middleware) {
+        $middleware->trustProxies(at: '*');
+
         $middleware->web(append: [
             \Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets::class,
         ]);
@@ -33,6 +35,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'api/coe/*',
             'api/field-leadership/*',
             'api/dashboard-portal/*',
+            'two-factor-challenge/*',
         ]);
 
         $middleware->alias([

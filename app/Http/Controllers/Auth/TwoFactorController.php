@@ -77,7 +77,7 @@ class TwoFactorController extends Controller
         }
 
         RateLimiter::clear($throttleKey);
-        $this->completeTwoFactor($request, $user);
+        $this->completeTwoFactor($request, $user, 'TOTP');
 
         return redirect()->intended(route('dashboard', absolute: false));
     }
@@ -126,7 +126,7 @@ class TwoFactorController extends Controller
         ]);
 
         RateLimiter::clear($throttleKey);
-        $this->completeTwoFactor($request, $user);
+        $this->completeTwoFactor($request, $user, 'OTP');
 
         return redirect()->intended(route('dashboard', absolute: false));
     }
@@ -180,13 +180,22 @@ class TwoFactorController extends Controller
             $user->google2fa_secret
         );
 
+        // Safe decrypt if key changed
+        $recoveryCodes = [];
+        if ($user->google2fa_enabled && $user->two_factor_recovery_codes) {
+            try {
+                $recoveryCodes = json_decode(decrypt($user->two_factor_recovery_codes), true) ?? [];
+            } catch (\Illuminate\Contracts\Encryption\DecryptException $e) {
+                // If APP_KEY changed, recovery codes cannot be decrypted. Set to empty.
+                $recoveryCodes = [];
+            }
+        }
+
         return Inertia::render('Auth/TwoFactorSetup', [
             'qrCodeUrl'  => $qrCodeUrl,
             'secret'     => $user->google2fa_secret,
             'isEnabled'  => (bool) $user->google2fa_enabled,
-            'recoveryCodes' => $user->google2fa_enabled
-                ? json_decode(decrypt($user->two_factor_recovery_codes ?? 'null'), true) ?? []
-                : [],
+            'recoveryCodes' => $recoveryCodes,
         ]);
     }
 
@@ -251,12 +260,15 @@ class TwoFactorController extends Controller
         return User::find($userId);
     }
 
-    private function completeTwoFactor(Request $request, User $user): void
+    private function completeTwoFactor(Request $request, User $user, string $method): void
     {
         $request->session()->forget(['2fa_pending', '2fa_user_id']);
-        Auth::login($user);
         $request->session()->regenerate();
+        
+        Auth::guard('web')->login($user);
         $request->session()->put('2fa_verified', true);
+
+        \App\Services\LoginLogService::record('login_success', $request, $user, null, $method);
     }
 
     public function generateAndSendOtp(User $user): void

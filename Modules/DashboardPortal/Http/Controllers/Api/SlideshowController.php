@@ -4,6 +4,7 @@ namespace Modules\DashboardPortal\Http\Controllers\Api;
 
 use App\Helpers\ResponseFormatter;
 use App\Http\Controllers\Controller;
+use App\Services\UserActivityLogService;
 use Illuminate\Http\Request;
 use Modules\DashboardPortal\app\Models\Slideshow;
 
@@ -80,6 +81,16 @@ class SlideshowController extends Controller
             'blob_response' => $uploadResult['blobResponse'],
         ]);
 
+        UserActivityLogService::log(
+            module: 'dashboard_portal',
+            action: 'create',
+            resource: 'Slideshow',
+            resourceId: $slideshow->id,
+            description: "Mengunggah slideshow baru '{$slideshow->name}'",
+            newData: $slideshow->toArray(),
+            request: $request,
+        );
+
         return ResponseFormatter::success($slideshow, 'Slideshow created successfully');
     }
 
@@ -115,7 +126,20 @@ class SlideshowController extends Controller
             }
         }
 
+        $oldData = $slideshow->toArray();
+
         $slideshow->update($data);
+
+        UserActivityLogService::log(
+            module: 'dashboard_portal',
+            action: 'update',
+            resource: 'Slideshow',
+            resourceId: $slideshow->id,
+            description: "Memperbarui slideshow '{$slideshow->name}'",
+            oldData: $oldData,
+            newData: $slideshow->fresh()->toArray(),
+            request: $request,
+        );
 
         return ResponseFormatter::success($slideshow, 'Slideshow updated successfully');
     }
@@ -123,7 +147,17 @@ class SlideshowController extends Controller
     public function deleteSlideShow($id)
     {
         $slideshow = Slideshow::findOrFail($id);
+        $oldData = $slideshow->toArray();
         $slideshow->delete();
+
+        UserActivityLogService::log(
+            module: 'dashboard_portal',
+            action: 'delete',
+            resource: 'Slideshow',
+            resourceId: (string) $id,
+            description: "Menghapus slideshow '{$oldData['name']}'",
+            oldData: $oldData,
+        );
 
         return ResponseFormatter::success(null, 'Slideshow deleted successfully');
     }

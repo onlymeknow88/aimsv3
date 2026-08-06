@@ -133,7 +133,7 @@ export default function useNewsAndUpdate() {
         setDeleting(true);
         setDeleteError(null);
         try {
-            await axios.delete(`${BASE_URL}/${deleteTarget.id}`);
+            await axios.post(`${BASE_URL}/${deleteTarget.id}/delete`);
             fetchNews();
             closeDeleteModal();
         } catch (e) {

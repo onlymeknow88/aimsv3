@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Helpers\ResponseFormatter;
 use App\Models\AimsMenu;
 use App\Models\AimsModule;
+use App\Services\AdminActivityLogService;
 use Illuminate\Http\Request;
 
 class AimsMenuController extends Controller
@@ -122,6 +123,15 @@ class AimsMenuController extends Controller
 
             $menu->load('module');
 
+            AdminActivityLogService::log(
+                action: 'create',
+                resource: 'AimsMenu',
+                resourceId: $menu->id,
+                description: "Membuat menu baru '{$menu->name}' (slug: {$menu->slug})",
+                newData: $menu->toArray(),
+                request: $request,
+            );
+
             return ResponseFormatter::success($menu, 'Menu berhasil dibuat.');
         } catch (\Exception $e) {
             return ResponseFormatter::error('Gagal membuat menu: ' . $e->getMessage(), 500);
@@ -152,6 +162,8 @@ class AimsMenuController extends Controller
             return ResponseFormatter::error('Menu tidak bisa menjadi parent dari dirinya sendiri.', 422);
         }
 
+        $oldData = $menu->toArray();
+
         try {
             $menu->update([
                 'module_id' => $validated['module_id'],
@@ -163,6 +175,16 @@ class AimsMenuController extends Controller
 
             $menu->load('module');
 
+            AdminActivityLogService::log(
+                action: 'update',
+                resource: 'AimsMenu',
+                resourceId: $menu->id,
+                description: "Memperbarui menu '{$menu->name}' (slug: {$menu->slug})",
+                oldData: $oldData,
+                newData: $menu->toArray(),
+                request: $request,
+            );
+
             return ResponseFormatter::success($menu, 'Menu berhasil diperbarui.');
         } catch (\Exception $e) {
             return ResponseFormatter::error('Gagal memperbarui menu: ' . $e->getMessage(), 500);
@@ -172,7 +194,7 @@ class AimsMenuController extends Controller
     /**
      * API: Hapus menu beserta children-nya.
      */
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
         $menu = AimsMenu::with('children')->find($id);
 
@@ -180,10 +202,21 @@ class AimsMenuController extends Controller
             return ResponseFormatter::error('Menu tidak ditemukan.', 404);
         }
 
+        $oldData = $menu->toArray();
+
         try {
             // Hapus children terlebih dahulu agar tidak orphan
             $menu->children()->delete();
             $menu->delete();
+
+            AdminActivityLogService::log(
+                action: 'delete',
+                resource: 'AimsMenu',
+                resourceId: (string) $id,
+                description: "Menghapus menu '{$oldData['name']}'",
+                oldData: $oldData,
+                request: $request,
+            );
 
             return ResponseFormatter::success(null, 'Menu berhasil dihapus.');
         } catch (\Exception $e) {

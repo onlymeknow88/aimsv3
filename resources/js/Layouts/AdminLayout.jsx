@@ -21,11 +21,23 @@ export default function AdminLayout({ children, title = "Backoffice Admin" }) {
     const [userDropdown, setUserDropdown] = useState(false);
     const currentPath = typeof window !== 'undefined' ? window.location.pathname : '/admin/role-permissions';
 
+    const isLogActive = currentPath.startsWith('/admin/login-logs') || 
+                        currentPath.startsWith('/admin/activity-logs') || 
+                        currentPath.startsWith('/admin/user-activity-logs');
+
+    const [logsDropdownOpen, setLogsDropdownOpen] = useState(isLogActive);
+
     const mainMenuItems = [
         { name: 'Dashboard', icon: () => <span style={{ fontSize: '16px' }}>🏠</span>, href: '/admin/dashboard', active: currentPath === '/admin/dashboard' },
         { name: 'Business Entities', icon: () => <span style={{ fontSize: '16px' }}>🏬</span>, href: '/admin/business-entities', active: currentPath === '/admin/business-entities' },
         { name: 'Roles', icon: () => <span style={{ fontSize: '16px' }}>🛡️</span>, href: '/admin/role-permissions', active: currentPath.startsWith('/admin/role-permissions') },
         { name: 'Users & Employee', icon: () => <span style={{ fontSize: '16px' }}>👥</span>, href: '/admin/users', active: currentPath.startsWith('/admin/users') },
+    ];
+
+    const logSubmenuItems = [
+        { name: 'Login Log', icon: () => <span style={{ fontSize: '14px' }}>🗒️</span>, href: '/admin/login-logs', active: currentPath.startsWith('/admin/login-logs') },
+        { name: 'Activity Log', icon: () => <span style={{ fontSize: '14px' }}>📋</span>, href: '/admin/activity-logs', active: currentPath.startsWith('/admin/activity-logs') },
+        { name: 'User Activity Log', icon: () => <span style={{ fontSize: '14px' }}>📝</span>, href: '/admin/user-activity-logs', active: currentPath.startsWith('/admin/user-activity-logs') },
     ];
 
     const masterMenuItems = [
@@ -103,6 +115,72 @@ export default function AdminLayout({ children, title = "Backoffice Admin" }) {
                                 </li>
                             );
                         })}
+
+                        {/* Logs Dropdown Item */}
+                        <li style={{ marginBottom: '6px' }}>
+                            <button
+                                onClick={() => setLogsDropdownOpen(!logsDropdownOpen)}
+                                style={{
+                                    width: '100%',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'space-between',
+                                    padding: '10px 16px',
+                                    borderRadius: '8px',
+                                    fontSize: '14px',
+                                    fontWeight: 600,
+                                    color: isLogActive ? '#3b82f6' : '#a1a1aa',
+                                    backgroundColor: isLogActive ? 'rgba(59, 130, 246, 0.05)' : 'transparent',
+                                    border: 'none',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.2s',
+                                    textAlign: 'left'
+                                }}
+                                className={!isLogActive ? 'nav-hover' : ''}
+                            >
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                    <span style={{ fontSize: '16px' }}>📋</span>
+                                    <span>Logs</span>
+                                </div>
+                                <ChevronDown size={14} style={{
+                                    transform: logsDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                                    transition: 'transform 0.2s'
+                                }} />
+                            </button>
+
+                            {/* Dropdown Menu Items */}
+                            {logsDropdownOpen && (
+                                <ul style={{ listStyle: 'none', margin: '4px 0 0 0', padding: '0 0 0 16px' }}>
+                                    {logSubmenuItems.map((item, idx) => {
+                                        const Icon = item.icon;
+                                        return (
+                                            <li key={idx} style={{ marginBottom: '4px' }}>
+                                                <Link
+                                                    href={item.href}
+                                                    style={{
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        gap: '12px',
+                                                        padding: '8px 16px',
+                                                        borderRadius: '8px',
+                                                        fontSize: '13px',
+                                                        fontWeight: 600,
+                                                        textDecoration: 'none',
+                                                        color: item.active ? '#3b82f6' : '#a1a1aa',
+                                                        backgroundColor: item.active ? 'rgba(59, 130, 246, 0.1)' : 'transparent',
+                                                        transition: 'all 0.2s'
+                                                    }}
+                                                    className={!item.active ? 'nav-hover' : ''}
+                                                >
+                                                    <Icon />
+                                                    {item.name}
+                                                </Link>
+                                            </li>
+                                        );
+                                    })}
+                                </ul>
+                            )}
+                        </li>
                     </ul>
 
                     {/* Master Data Section Header */}
