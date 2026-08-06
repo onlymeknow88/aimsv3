@@ -530,12 +530,19 @@ class DocumentApiController extends Controller
         // Base prefix format: e.g. "MAC-MIS-"
         $prefix = "{$companyCode}-{$deptCode}-";
 
-        if ($level === 'WIN' || $level === 'FORM') {
+        // Map level names to prefixes (e.g. FORM -> F)
+        $levelPrefix = $level;
+        if ($level === 'FORM') {
+            $levelPrefix = 'F';
+        }
+
+        if ($level === 'WIN' || $level === 'FORM' || $level === 'F') {
             if ($parentDocumentId) {
                 $parentDoc = Document::find($parentDocumentId);
                 if ($parentDoc) {
                     $parentNumber = $parentDoc->document_number;
-                    $prefixCodeToSearch = "{$level}-{$parentNumber}-";
+                    // Format: e.g., WIN-AMI-IMS-01- or F-AMI-IMS-01-
+                    $prefixCodeToSearch = "{$levelPrefix}-{$parentNumber}-";
                     
                     $count = DB::table('document_system_documents')
                         ->where('parent_document', $parentDocumentId)
@@ -551,7 +558,18 @@ class DocumentApiController extends Controller
                     ], 'Next sequence number generated successfully');
                 }
             }
-            $prefixCodeToSearch = "{$level}-{$prefix}";
+            $prefixCodeToSearch = "{$levelPrefix}-{$prefix}";
+            $count = DB::table('document_system_documents')
+                ->where('document_level', $level)
+                ->where('prefix_code', 'like', "{$prefixCodeToSearch}%")
+                ->count();
+            $nextCode = str_pad($count + 1, 3, '0', STR_PAD_LEFT);
+
+            return ResponseFormatter::success([
+                'prefix' => $prefixCodeToSearch,
+                'next_code' => $nextCode,
+                'full_number' => "{$prefixCodeToSearch}{$nextCode}",
+            ], 'Next sequence number generated successfully');
         } elseif ($level === 'TS') {
             $prefixCodeToSearch = "TS-{$prefix}";
             
@@ -567,22 +585,37 @@ class DocumentApiController extends Controller
                 'next_code' => $nextCode,
                 'full_number' => "{$prefixCodeToSearch}{$nextCode}",
             ], 'Next sequence number generated successfully');
+        } elseif ($level === 'MN') {
+            $prefixCodeToSearch = "MN-{$prefix}";
+            
+            $count = DB::table('document_system_documents')
+                ->where('document_level', 'MN')
+                ->where('prefix_code', 'like', "{$prefixCodeToSearch}%")
+                ->count();
+
+            $nextCode = str_pad($count + 1, 2, '0', STR_PAD_LEFT);
+
+            return ResponseFormatter::success([
+                'prefix' => $prefixCodeToSearch,
+                'next_code' => $nextCode,
+                'full_number' => "{$prefixCodeToSearch}{$nextCode}",
+            ], 'Next sequence number generated successfully');
         } else {
+            // SOP (Standard Operating Procedure)
             $prefixCodeToSearch = $prefix;
+            $count = DB::table('document_system_documents')
+                ->where('document_level', 'SOP')
+                ->where('prefix_code', 'like', "{$prefixCodeToSearch}%")
+                ->count();
+            // SOP sequence is 2 digits according to the design reference (e.g. AMI-OHS-01)
+            $nextCode = str_pad($count + 1, 2, '0', STR_PAD_LEFT);
+
+            return ResponseFormatter::success([
+                'prefix' => $prefixCodeToSearch,
+                'next_code' => $nextCode,
+                'full_number' => "{$prefixCodeToSearch}{$nextCode}",
+            ], 'Next sequence number generated successfully');
         }
-
-        // Query check to find existing documents with this prefix under the level
-        $count = DB::table('document_system_documents')
-            ->where('prefix_code', 'like', "{$prefixCodeToSearch}%")
-            ->count();
-
-        $nextCode = str_pad($count + 1, 3, '0', STR_PAD_LEFT);
-
-        return ResponseFormatter::success([
-            'prefix' => $prefixCodeToSearch,
-            'next_code' => $nextCode,
-            'full_number' => "{$prefixCodeToSearch}{$nextCode}",
-        ], 'Next sequence number generated successfully');
     }
 
     /**

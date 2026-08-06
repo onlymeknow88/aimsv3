@@ -11,6 +11,7 @@ import MappingModal from './MappingModal';
 import React, { useMemo } from 'react';
 import TablePagination from '@/Components/TablePagination';
 import useMapping from '../Hooks/useMapping';
+import SearchableSelect from '@/Components/SearchableSelect';
 
 const inputStyle = {
     width: '100%',
@@ -68,6 +69,30 @@ export default function MappingTable() {
         confirmDelete,
     } = useMapping();
 
+    const categoryOptions = useMemo(() => {
+        return categories.map(c => ({
+            id: c.name,
+            name: c.index ? `${c.index} ${c.name}` : c.name
+        }));
+    }, [categories]);
+
+    const moduleOptions = useMemo(() => {
+        const moduleMap = new Map();
+        categories.forEach(c => {
+            if (c.module?.name) {
+                const name = c.module.name;
+                const idx = c.module.index;
+                const label = idx ? `${idx} ${name}` : name;
+                moduleMap.set(name, label);
+            }
+        });
+        return Array.from(moduleMap.entries()).map(([name, label]) => ({
+            id: name,
+            name: label
+        }));
+    }, [categories]);
+
+
     const columns = useMemo(() => [
         {
             id: 'index',
@@ -87,7 +112,11 @@ export default function MappingTable() {
         {
             id: 'category',
             header: 'Kategori',
-            accessorFn: row => row.category?.name ?? '-',
+            accessorFn: row => {
+                const category = row.category;
+                if (!category) return '-';
+                return category.index ? `${category.index} ${category.name}` : category.name;
+            },
             enableColumnFilter: true,
             filterValue: filterCategory,
             onFilterChange: setFilterCategory,
@@ -96,7 +125,11 @@ export default function MappingTable() {
         {
             id: 'module',
             header: 'Modul',
-            accessorFn: row => row.category?.module?.name ?? '-',
+            accessorFn: row => {
+                const module = row.category?.module;
+                if (!module) return '-';
+                return module.index ? `${module.index} ${module.name}` : module.name;
+            },
             enableColumnFilter: true,
             filterValue: filterModule,
             onFilterChange: setFilterModule,
@@ -232,12 +265,28 @@ export default function MappingTable() {
                                     {headerGroup.headers.map(header => (
                                         <TableHead key={`filter-cell-${header.id}`} style={{ padding: '6px 8px' }}>
                                             {header.column.columnDef.enableColumnFilter ? (
-                                                <input
-                                                    value={header.column.columnDef.filterValue ?? ''}
-                                                    onChange={e => header.column.columnDef.onFilterChange(e.target.value)}
-                                                    placeholder={header.column.columnDef.filterPlaceholder}
-                                                    style={filterInputStyle}
-                                                />
+                                                header.column.id === 'category' ? (
+                                                    <SearchableSelect
+                                                        value={header.column.columnDef.filterValue ?? ''}
+                                                        onChange={val => header.column.columnDef.onFilterChange(val)}
+                                                        placeholder={header.column.columnDef.filterPlaceholder}
+                                                        options={categoryOptions}
+                                                    />
+                                                ) : header.column.id === 'module' ? (
+                                                    <SearchableSelect
+                                                        value={header.column.columnDef.filterValue ?? ''}
+                                                        onChange={val => header.column.columnDef.onFilterChange(val)}
+                                                        placeholder={header.column.columnDef.filterPlaceholder}
+                                                        options={moduleOptions}
+                                                    />
+                                                ) : (
+                                                    <input
+                                                        value={header.column.columnDef.filterValue ?? ''}
+                                                        onChange={e => header.column.columnDef.onFilterChange(e.target.value)}
+                                                        placeholder={header.column.columnDef.filterPlaceholder}
+                                                        style={filterInputStyle}
+                                                    />
+                                                )
                                             ) : null}
                                         </TableHead>
                                     ))}
