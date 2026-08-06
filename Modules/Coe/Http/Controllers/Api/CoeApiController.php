@@ -7,9 +7,14 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Modules\Coe\Entities\Category;
 use Modules\Coe\Entities\Event;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\File;
+use App\Traits\SendsEmail;
 
 class CoeApiController extends Controller
 {
+    use SendsEmail;
+
     /**
      * Get categories list with pagination and search.
      */
@@ -108,9 +113,6 @@ class CoeApiController extends Controller
         return ResponseFormatter::success($events, 'Events retrieved successfully');
     }
 
-    /**
-     * Store a new event.
-     */
     public function storeEvent(Request $request)
     {
         $request->validate([
@@ -119,12 +121,25 @@ class CoeApiController extends Controller
             'section_id'      => 'nullable|exists:sections,id',
             'start_date'      => 'required|date',
             'end_date'        => 'nullable|date|after_or_equal:start_date',
+            'frequency'       => 'nullable|string|max:100',
             'status'          => 'required|string|max:100',
             'description'     => 'nullable|string',
             'invited_emails'  => 'nullable|array',
             'repeat'          => 'boolean',
             'must_send_email' => 'boolean',
+            'file'            => 'nullable|file|max:10240', // Max 10MB
         ]);
+
+        $attachment = null;
+        $blobUrl = null;
+        $blobRespon = null;
+
+        $uploadResult = $this->handleFileUpload($request);
+        if ($uploadResult) {
+            $attachment = $uploadResult['fileBlobPathName'];
+            $blobUrl = $uploadResult['fileBlobUrl'];
+            $blobRespon = json_encode($uploadResult['blobResponse']);
+        }
 
         $event = Event::create([
             'user_id'         => $request->user()?->id,
@@ -136,9 +151,15 @@ class CoeApiController extends Controller
             'invited_emails'  => $request->invited_emails,
             'start_date'      => $request->start_date,
             'end_date'        => $request->end_date,
-            'repeat'          => $request->repeat ?? true,
-            'must_send_email' => $request->must_send_email ?? true,
+            'frequency'       => $request->frequency,
+            'repeat'          => $request->has('repeat') ? filter_var($request->repeat, FILTER_VALIDATE_BOOLEAN) : true,
+            'must_send_email' => $request->has('must_send_email') ? filter_var($request->must_send_email, FILTER_VALIDATE_BOOLEAN) : true,
+            'attachment'      => $attachment,
+            'blob_url'        => $blobUrl,
+            'blob_respon'     => $blobRespon,
         ]);
+
+        $this->sendInvitationEmail($event);
 
         return ResponseFormatter::success($event, 'Event created successfully');
     }
@@ -156,12 +177,25 @@ class CoeApiController extends Controller
             'section_id'      => 'nullable|exists:sections,id',
             'start_date'      => 'required|date',
             'end_date'        => 'nullable|date|after_or_equal:start_date',
+            'frequency'       => 'nullable|string|max:100',
             'status'          => 'required|string|max:100',
             'description'     => 'nullable|string',
             'invited_emails'  => 'nullable|array',
             'repeat'          => 'boolean',
             'must_send_email' => 'boolean',
+            'file'            => 'nullable|file|max:10240', // Max 10MB
         ]);
+
+        $attachment = $event->attachment;
+        $blobUrl = $event->blob_url;
+        $blobRespon = $event->blob_respon;
+
+        $uploadResult = $this->handleFileUpload($request);
+        if ($uploadResult) {
+            $attachment = $uploadResult['fileBlobPathName'];
+            $blobUrl = $uploadResult['fileBlobUrl'];
+            $blobRespon = json_encode($uploadResult['blobResponse']);
+        }
 
         $event->update([
             'category_id'     => $request->category_id,
@@ -172,9 +206,15 @@ class CoeApiController extends Controller
             'invited_emails'  => $request->invited_emails,
             'start_date'      => $request->start_date,
             'end_date'        => $request->end_date,
-            'repeat'          => $request->repeat ?? true,
-            'must_send_email' => $request->must_send_email ?? true,
+            'frequency'       => $request->frequency,
+            'repeat'          => $request->has('repeat') ? filter_var($request->repeat, FILTER_VALIDATE_BOOLEAN) : true,
+            'must_send_email' => $request->has('must_send_email') ? filter_var($request->must_send_email, FILTER_VALIDATE_BOOLEAN) : true,
+            'attachment'      => $attachment,
+            'blob_url'        => $blobUrl,
+            'blob_respon'     => $blobRespon,
         ]);
+
+        $this->sendInvitationEmail($event);
 
         return ResponseFormatter::success($event, 'Event updated successfully');
     }
@@ -200,34 +240,30 @@ class CoeApiController extends Controller
     }
 
     /**
-     * Get dashboard stats and chart data.
+     * Get dashboard statistics.
      */
     public function getDashboardStats()
     {
-        $year = now()->year;
-
         $totalEvents = Event::count();
         $completedEvents = Event::where('status', 'Completed')->count();
-        $upcomingEvents = Event::where('status', 'Scheduled')->where('start_date', '>=', now()->toDateString())->count();
+        $upcomingEvents = Event::where('status', 'Scheduled')->count();
         $cancelledEvents = Event::where('status', 'Cancelled')->count();
 
-        // 1. Monthly Completed Events
-        $monthlyCompleted = Event::selectRaw('MONTH(start_date) as month, COUNT(*) as count')
-            ->where('status', 'Completed')
-            ->whereYear('start_date', $year)
-            ->groupBy('month')
-            ->orderBy('month', 'asc')
-            ->pluck('count', 'month')
-            ->all();
+        // Chart 1: Events by Category
+        $categoriesData = Event::select('category_id', \DB::raw('count(*) as count'))
+            ->groupBy('category_id')
+            ->with('category:id,name')
+            ->get();
 
-        $chart1Labels = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"];
+        $chart1Labels = [];
         $chart1Data = [];
-        for ($m = 1; $m <= 12; $m++) {
-            $chart1Data[] = $monthlyCompleted[$m] ?? 0;
+        foreach ($categoriesData as $data) {
+            $chart1Labels[] = $data->category->name ?? 'Unknown';
+            $chart1Data[] = $data->count;
         }
 
-        // 3. Events by Status
-        $statusCounts = Event::selectRaw('status, COUNT(*) as count')
+        // Chart 3: Events by Status
+        $statusCounts = Event::select('status', \DB::raw('count(*) as count'))
             ->groupBy('status')
             ->pluck('count', 'status')
             ->all();
@@ -251,5 +287,97 @@ class CoeApiController extends Controller
                 'data' => $chart3Data,
             ]
         ], 'Dashboard statistics retrieved successfully');
+    }
+
+    /**
+     * Send event invitation email.
+     */
+    private function sendInvitationEmail($event)
+    {
+        // Explicitly check must_send_email as boolean
+        $mustSend = filter_var($event->must_send_email, FILTER_VALIDATE_BOOLEAN);
+        
+        if ($mustSend && !empty($event->invited_emails)) {
+            // Filter out empty values
+            $emailsArray = is_array($event->invited_emails) ? $event->invited_emails : explode(',', $event->invited_emails);
+            $filteredEmails = array_filter(array_map('trim', $emailsArray));
+
+            if (empty($filteredEmails)) {
+                return;
+            }
+
+            $emails = implode(',', $filteredEmails);
+            
+            $attachments = [];
+            $tempPath = null;
+            
+            if ($event->attachment) {
+                $sas = GetBlobSasUri('aims-cntr', $event->attachment);
+                $url = is_array($sas)
+                    ? ($sas['blobUriSas'] ?? $sas['sasUri'] ?? $sas['url'] ?? $sas['blobUri'] ?? null)
+                    : $sas;
+                    
+                if ($url) {
+                    try {
+                        $client = new \GuzzleHttp\Client(['verify' => config('app.env') === 'production']);
+                        $contents = $client->get($url)->getBody()->getContents();
+                        
+                        $tempPath = tempnam(sys_get_temp_dir(), 'coe_');
+                        file_put_contents($tempPath, $contents);
+                        
+                        $attachments[] = [
+                            'name' => basename($event->attachment),
+                            'path' => $tempPath,
+                        ];
+                    } catch (\Throwable $e) {
+                        Log::error('Failed to download attachment from blob for event email: ' . $e->getMessage());
+                    }
+                }
+            }
+
+            $this->sendEmailWithTemplate(
+                'coe::emails.event_invitation',
+                ['event' => $event],
+                $emails,
+                'Undangan Acara AIMS: ' . $event->title,
+                null,
+                null,
+                $attachments,
+                4
+            );
+
+            // Clean up temporary file
+            if ($tempPath && file_exists($tempPath)) {
+                @unlink($tempPath);
+            }
+        }
+    }
+
+    /**
+     * Upload file attachment to Azure Blob Storage.
+     */
+    private function handleFileUpload(Request $request)
+    {
+        if ($request->hasFile('file')) {
+            $uploadedFile = $request->file('file');
+            $filetype = $uploadedFile->getClientOriginalExtension();
+            $file_name_clean = "" . Str::slug($request->title) . "-" . Str::slug(now()->toDateTimeString()) . ".$filetype";
+            
+            // Temp local path
+            $tempPath = $uploadedFile->storeAs('tmp/coe_attachment', $file_name_clean, ['disk' => 'local']);
+            $filePathTemp = storage_path('app/' . $tempPath);
+            
+            // Upload to Azure blob
+            $blobResult = uploadToBlobStorage($file_name_clean, $filePathTemp, 'coe_attachment');
+            
+            // Delete temp file
+            if (File::exists($filePathTemp)) {
+                File::delete($filePathTemp);
+            }
+            
+            return $blobResult;
+        }
+
+        return null;
     }
 }
