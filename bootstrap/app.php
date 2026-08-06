@@ -29,6 +29,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'api/admin/*',
             'admin/*',
             'logout',
+            'two-factor-challenge/*',
+            'two-factor/*',
             'api/document-system/*',
             'api/csms/*',
             'api/pica/*',

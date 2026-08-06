@@ -147,63 +147,7 @@ export default function TwoFactorChallenge({ hasTotpEnabled, email }) {
                     </p>
                 </div>
 
-                {/* Mode Tabs — hanya tampil jika TOTP aktif */}
-                {hasTotpEnabled && (
-                    <div style={{
-                        display: 'grid',
-                        gridTemplateColumns: '1fr 1fr',
-                        gap: '8px',
-                        marginBottom: '28px',
-                        backgroundColor: '#f1f5f9',
-                        borderRadius: '12px',
-                        padding: '4px',
-                    }}>
-                        <button
-                            type="button"
-                            onClick={() => switchMode('totp')}
-                            style={{
-                                padding: '10px',
-                                borderRadius: '8px',
-                                border: 'none',
-                                cursor: 'pointer',
-                                fontSize: '12px',
-                                fontWeight: 600,
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                gap: '6px',
-                                backgroundColor: mode === 'totp' ? '#fff' : 'transparent',
-                                color: mode === 'totp' ? '#153B73' : '#64748b',
-                                boxShadow: mode === 'totp' ? '0 1px 4px rgba(0,0,0,0.08)' : 'none',
-                                transition: 'all 0.2s',
-                            }}
-                        >
-                            <SmartphoneNfc size={14} /> Authenticator
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => switchMode('otp')}
-                            style={{
-                                padding: '10px',
-                                borderRadius: '8px',
-                                border: 'none',
-                                cursor: 'pointer',
-                                fontSize: '12px',
-                                fontWeight: 600,
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                gap: '6px',
-                                backgroundColor: mode === 'otp' ? '#fff' : 'transparent',
-                                color: mode === 'otp' ? '#153B73' : '#64748b',
-                                boxShadow: mode === 'otp' ? '0 1px 4px rgba(0,0,0,0.08)' : 'none',
-                                transition: 'all 0.2s',
-                            }}
-                        >
-                            <Mail size={14} /> Email OTP
-                        </button>
-                    </div>
-                )}
+
 
                 {/* OTP sent notice */}
                 {flash.otp_sent && (

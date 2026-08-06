@@ -14,9 +14,11 @@ use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 use PragmaRX\Google2FA\Google2FA;
+use App\Traits\SendsEmail;
 
 class TwoFactorController extends Controller
 {
+    use SendsEmail;
     /**
      * Show the 2FA challenge page.
      * Dipanggil setelah login berhasil tapi 2FA belum diverifikasi.
@@ -180,13 +182,11 @@ class TwoFactorController extends Controller
             $user->google2fa_secret
         );
 
-        // Safe decrypt if key changed
         $recoveryCodes = [];
         if ($user->google2fa_enabled && $user->two_factor_recovery_codes) {
             try {
                 $recoveryCodes = json_decode(decrypt($user->two_factor_recovery_codes), true) ?? [];
-            } catch (\Illuminate\Contracts\Encryption\DecryptException $e) {
-                // If APP_KEY changed, recovery codes cannot be decrypted. Set to empty.
+            } catch (\Exception $e) {
                 $recoveryCodes = [];
             }
         }
@@ -273,14 +273,27 @@ class TwoFactorController extends Controller
 
     public function generateAndSendOtp(User $user): void
     {
-        $otp = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+        $otp = str_pad((string) random_int(100000, 999999), 6, '0', STR_PAD_LEFT);
 
         $user->update([
             'email_otp'            => Hash::make($otp),
             'email_otp_expires_at' => now()->addMinutes(5),
         ]);
 
-        $user->notify(new SendTwoFactorOtp($otp));
+        $subject = 'Kode OTP Login AIMS V3';
+        $body = "<div style='font-family: Arial, sans-serif; padding: 20px; color: #333;'>
+            <h2 style='color: #153B73;'>Autentikasi Dua Langkah AIMS V3</h2>
+            <p>Halo,</p>
+            <p>Gunakan kode OTP berikut untuk memverifikasi login Anda:</p>
+            <div style='font-size: 24px; font-weight: bold; letter-spacing: 4px; padding: 12px; background-color: #f1f5f9; border-radius: 8px; display: inline-block; color: #1d4ed8; margin: 10px 0;'>
+                {$otp}
+            </div>
+            <p style='color: #ef4444; font-size: 13px;'>Kode ini hanya berlaku selama <strong>5 menit</strong>. Jangan sebarkan kode ini kepada siapa pun demi keamanan akun Anda.</p>
+            <hr style='border: none; border-top: 1px solid #e2e8f0; margin: 20px 0;' />
+            <p style='font-size: 11px; color: #64748b;'>Email ini dikirimkan otomatis oleh sistem AIMS V3. Harap jangan membalas email ini.</p>
+        </div>";
+
+        $this->sendSimpleEmail($user->email, $subject, $body, true);
     }
 
     private function generateRecoveryCodes(): array
