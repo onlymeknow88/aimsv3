@@ -156,7 +156,7 @@ export default function useSlideshow() {
         setDeleting(true);
         setDeleteError(null);
         try {
-            await axios.delete(`${BASE_URL}/${deleteTarget.id}`);
+            await axios.post(`${BASE_URL}/${deleteTarget.id}/delete`);
             fetchSlideshows();
             closeDeleteModal();
         } catch (e) {

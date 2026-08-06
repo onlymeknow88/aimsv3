@@ -10,6 +10,22 @@ import {
 import React from 'react';
 import { usePage } from '@inertiajs/react';
 
+const SLUG_URL = {
+    'dashboard-portal.dashboard': '/dashboard-portal/dashboard',
+    'dashboard-portal.slideshow': '/dashboard-portal/slideshow',
+    'dashboard-portal.banner': '/dashboard-portal/banner',
+    'dashboard-portal.general': '/dashboard-portal/general',
+    'dashboard-portal.news-and-update': '/dashboard-portal/news-and-update',
+};
+
+const ICON_MAP = {
+    'dashboard-portal.dashboard': <LayoutDashboard size={14} />,
+    'dashboard-portal.slideshow': <Video size={14} />,
+    'dashboard-portal.banner': <Image size={14} />,
+    'dashboard-portal.general': <BarChart2 size={14} />,
+    'dashboard-portal.news-and-update': <Newspaper size={14} />,
+};
+
 export default function Sidebar({
     sidebarOpen,
     currentPath,
@@ -17,9 +33,14 @@ export default function Sidebar({
     openMaster,
     setOpenMaster
 }) {
-    const { auth } = usePage().props;
+    const { auth, dpMenus = [] } = usePage().props;
     const allowedModules = auth?.modules || [];
-    const hasCoeAccess = auth?.user && (allowedModules.includes('*') || allowedModules.includes('calender-of-event-coe'));
+    const hasDashboardAccess = auth?.user && (allowedModules.includes('*') || allowedModules.includes('dashboard-portal'));
+
+    // Filter and sort parent menus
+    const parentMenus = dpMenus
+        .filter(m => !m.parent_id)
+        .sort((a, b) => a.order_by - b.order_by);
 
     return (
         <div
@@ -44,7 +65,7 @@ export default function Sidebar({
         >
             {/* Logo / Header Modul */}
             <div style={{ padding: '24px 20px', display: 'flex', alignItems: 'center', gap: '12px', borderBottom: '1px solid rgba(255, 255, 255, 0.05)', whiteSpace: 'nowrap' }}>
-                <div style={{ width: '40px', height: '40px', borderRadius: '8px', backgroundColor: 'var(--primary)', display: 'flex', alignItems: 'center', justify_content: 'center', color: '#fff', fontWeight: 'bold', fontSize: '16px', flexShrink: 0, justifyContent: 'center' }}>
+                <div style={{ width: '40px', height: '40px', borderRadius: '8px', backgroundColor: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 'bold', fontSize: '16px', flexShrink: 0 }}>
                     🛡️
                 </div>
                 <div>
@@ -64,13 +85,15 @@ export default function Sidebar({
             {/* Navigasi Modul */}
             <div style={{ flex: 1, padding: '16px 8px' }}>
                 <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+                    {hasDashboardAccess && parentMenus.map(menu => {
+                        const url = SLUG_URL[menu.slug] || '#';
+                        const isActive = currentPath === url || (url === '/dashboard-portal/dashboard' && currentPath === '/dashboard-portal');
+                        const icon = ICON_MAP[menu.slug] || <LayoutDashboard size={14} />;
 
-                    {hasCoeAccess && (
-                        <>
-                            {/* Dashboard */}
-                            <li style={{ marginBottom: '4px' }}>
+                        return (
+                            <li key={menu.id} style={{ marginBottom: '4px' }}>
                                 <a
-                                    href="/dashboard-portal"
+                                    href={url}
                                     style={{
                                         display: 'flex',
                                         alignItems: 'center',
@@ -80,120 +103,21 @@ export default function Sidebar({
                                         fontSize: '13px',
                                         fontWeight: 500,
                                         textDecoration: 'none',
-                                        color: currentPath === '/dashboard-portal' ? '#fff' : '#a3b1c6',
-                                        backgroundColor: currentPath === '/dashboard-portal' ? 'var(--primary)' : 'transparent',
+                                        color: isActive ? '#fff' : '#a3b1c6',
+                                        backgroundColor: isActive ? 'var(--primary)' : 'transparent',
                                         transition: 'all 0.2s ease',
                                         whiteSpace: 'nowrap'
                                     }}
-                                    className={currentPath !== '/dashboard-portal' ? "hover-link" : ""}
+                                    className={!isActive ? "hover-link" : ""}
                                 >
-                                    <LayoutDashboard size={14} style={{ color: currentPath === '/dashboard-portal' ? '#fff' : 'rgba(255,255,255,0.4)', flexShrink: 0 }} />
-                                    Dashboard
+                                    <span style={{ display: 'inline-flex', alignItems: 'center', color: isActive ? '#fff' : 'rgba(255,255,255,0.4)', flexShrink: 0 }}>
+                                        {icon}
+                                    </span>
+                                    {menu.name}
                                 </a>
                             </li>
-
-                            {/* Slideshow */}
-                            <li style={{ marginBottom: '4px' }}>
-                                <a
-                                    href="/dashboard-portal/slideshow"
-                                    style={{
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: '12px',
-                                        padding: '10px 16px',
-                                        borderRadius: '8px',
-                                        fontSize: '13px',
-                                        fontWeight: 500,
-                                        textDecoration: 'none',
-                                        color: currentPath === '/dashboard-portal/slideshow' ? '#fff' : '#a3b1c6',
-                                        backgroundColor: currentPath === '/dashboard-portal/slideshow' ? 'var(--primary)' : 'transparent',
-                                        transition: 'all 0.2s ease',
-                                        whiteSpace: 'nowrap'
-                                    }}
-                                    className={currentPath !== '/dashboard-portal/slideshow' ? "hover-link" : ""}
-                                >
-                                    <Video size={14} style={{ color: currentPath === '/dashboard-portal/slideshow' ? '#fff' : 'rgba(255,255,255,0.4)', flexShrink: 0 }} />
-                                    SlideShow
-                                </a>
-                            </li>
-
-                            {/* Banner */}
-                            <li style={{ marginBottom: '4px' }}>
-                                <a
-                                    href="/dashboard-portal/banner"
-                                    style={{
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: '12px',
-                                        padding: '10px 16px',
-                                        borderRadius: '8px',
-                                        fontSize: '13px',
-                                        fontWeight: 500,
-                                        textDecoration: 'none',
-                                        color: currentPath === '/dashboard-portal/banner' ? '#fff' : '#a3b1c6',
-                                        backgroundColor: currentPath === '/dashboard-portal/banner' ? 'var(--primary)' : 'transparent',
-                                        transition: 'all 0.2s ease',
-                                        whiteSpace: 'nowrap'
-                                    }}
-                                    className={currentPath !== '/dashboard-portal/banner' ? "hover-link" : ""}
-                                >
-                                    <Image size={14} style={{ color: currentPath === '/dashboard-portal/banner' ? '#fff' : 'rgba(255,255,255,0.4)', flexShrink: 0 }} />
-                                    Banner
-                                </a>
-                            </li>
-
-                            {/* General */}
-                            <li style={{ marginBottom: '4px' }}>
-                                <a
-                                    href="/dashboard-portal/general"
-                                    style={{
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: '12px',
-                                        padding: '10px 16px',
-                                        borderRadius: '8px',
-                                        fontSize: '13px',
-                                        fontWeight: 500,
-                                        textDecoration: 'none',
-                                        color: currentPath === '/dashboard-portal/general' ? '#fff' : '#a3b1c6',
-                                        backgroundColor: currentPath === '/dashboard-portal/general' ? 'var(--primary)' : 'transparent',
-                                        transition: 'all 0.2s ease',
-                                        whiteSpace: 'nowrap'
-                                    }}
-                                    className={currentPath !== '/dashboard-portal/general' ? "hover-link" : ""}
-                                >
-                                    <BarChart2 size={14} style={{ color: currentPath === '/dashboard-portal/general' ? '#fff' : 'rgba(255,255,255,0.4)', flexShrink: 0 }} />
-                                    General KPI
-                                </a>
-                            </li>
-
-                            {/* News & Update */}
-                            <li style={{ marginBottom: '4px' }}>
-                                <a
-                                    href="/dashboard-portal/news-and-update"
-                                    style={{
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: '12px',
-                                        padding: '10px 16px',
-                                        borderRadius: '8px',
-                                        fontSize: '13px',
-                                        fontWeight: 500,
-                                        textDecoration: 'none',
-                                        color: currentPath === '/dashboard-portal/news-and-update' ? '#fff' : '#a3b1c6',
-                                        backgroundColor: currentPath === '/dashboard-portal/news-and-update' ? 'var(--primary)' : 'transparent',
-                                        transition: 'all 0.2s ease',
-                                        whiteSpace: 'nowrap'
-                                    }}
-                                    className={currentPath !== '/dashboard-portal/news-and-update' ? "hover-link" : ""}
-                                >
-                                    <Newspaper size={14} style={{ color: currentPath === '/dashboard-portal/news-and-update' ? '#fff' : 'rgba(255,255,255,0.4)', flexShrink: 0 }} />
-                                    News &amp; Update
-                                </a>
-                            </li>
-
-                        </>
-                    )}
+                        );
+                    })}
                 </ul>
             </div>
         </div>

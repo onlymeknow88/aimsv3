@@ -156,7 +156,7 @@ export default function useBanner() {
         setDeleting(true);
         setDeleteError(null);
         try {
-            await axios.delete(`${BASE_URL}/${deleteTarget.id}`);
+            await axios.post(`${BASE_URL}/${deleteTarget.id}/delete`);
             fetchBanners();
             closeDeleteModal();
         } catch (e) {

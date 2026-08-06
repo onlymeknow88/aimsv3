@@ -5,7 +5,14 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 Route::get('/', function () {
-    return Inertia::render('Dashboard/Dashboard');
+    $widgetSettings = \DB::table('app_settings')
+        ->where('id', 'like', 'widget_%')
+        ->pluck('val', 'id')
+        ->toArray();
+
+    return Inertia::render('Dashboard/Dashboard', [
+        'widgetSettings' => $widgetSettings
+    ]);
 })->middleware(['auth', '2fa'])->name('dashboard');
 
 Route::middleware('admin.session')->group(function () {

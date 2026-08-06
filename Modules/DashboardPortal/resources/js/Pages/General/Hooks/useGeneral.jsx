@@ -127,7 +127,7 @@ export default function useGeneral() {
             };
 
             if (editId) {
-                await axios.put(`${BASE_URL}/${editId}`, payload);
+                await axios.post(`${BASE_URL}/${editId}/update`, payload);
             } else {
                 await axios.post(BASE_URL, payload);
             }
@@ -160,7 +160,7 @@ export default function useGeneral() {
         setDeleting(true);
         setDeleteError(null);
         try {
-            await axios.delete(`${BASE_URL}/${deleteTarget.id}`);
+            await axios.post(`${BASE_URL}/${deleteTarget.id}/delete`);
             fetchGenerals();
             closeDeleteModal();
         } catch (e) {

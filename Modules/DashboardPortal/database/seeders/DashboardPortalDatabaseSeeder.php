@@ -11,6 +11,8 @@ class DashboardPortalDatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // $this->call([]);
+        $this->call([
+            DashboardPortalMenuSeeder::class,
+        ]);
     }
 }

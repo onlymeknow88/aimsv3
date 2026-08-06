@@ -136,6 +136,92 @@ class HandleInertiaRequests extends Middleware
             }
         }
 
+        // Dashboard Portal menus — hanya di-load untuk halaman dashboard-portal
+        $dpMenus = [];
+        if ($request->is('dashboard-portal*') && $user) {
+            $moduleId = \DB::table('aims_modules')->where('slug', 'dashboard-portal')->value('id');
+            if ($moduleId) {
+                if (in_array($user->role, ['super_admin', 'system_admin'])) {
+                    $dpMenus = \DB::table('aims_menus')
+                        ->where('module_id', $moduleId)
+                        ->orderBy('parent_id')
+                        ->orderBy('order_by')
+                        ->get()
+                        ->toArray();
+                } else {
+                    $allowedMenuIds = \DB::table('aims_user_roles')
+                        ->join('aims_roles', 'aims_user_roles.role_id', '=', 'aims_roles.id')
+                        ->join('aims_permissions', 'aims_roles.id', '=', 'aims_permissions.role_id')
+                        ->where('aims_user_roles.user_id', $user->id)
+                        ->where('aims_roles.module_id', $moduleId)
+                        ->where('aims_permissions.can_view', 1)
+                        ->distinct()
+                        ->pluck('aims_permissions.menu_id')
+                        ->toArray();
+
+                    $menus = \DB::table('aims_menus')
+                        ->where('module_id', $moduleId)
+                        ->whereIn('id', $allowedMenuIds)
+                        ->get()
+                        ->toArray();
+
+                    $parentIds = collect($menus)->pluck('parent_id')->filter()->unique()->toArray();
+                    $allAllowedIds = array_unique(array_merge($allowedMenuIds, $parentIds));
+
+                    $dpMenus = \DB::table('aims_menus')
+                        ->where('module_id', $moduleId)
+                        ->whereIn('id', $allAllowedIds)
+                        ->orderBy('parent_id')
+                        ->orderBy('order_by')
+                        ->get()
+                        ->toArray();
+                }
+            }
+        }
+
+        // CoE menus — hanya di-load untuk halaman coe
+        $coeMenus = [];
+        if ($request->is('coe*') && $user) {
+            $moduleId = \DB::table('aims_modules')->where('slug', 'calender-of-event-coe')->value('id');
+            if ($moduleId) {
+                if (in_array($user->role, ['super_admin', 'system_admin'])) {
+                    $coeMenus = \DB::table('aims_menus')
+                        ->where('module_id', $moduleId)
+                        ->orderBy('parent_id')
+                        ->orderBy('order_by')
+                        ->get()
+                        ->toArray();
+                } else {
+                    $allowedMenuIds = \DB::table('aims_user_roles')
+                        ->join('aims_roles', 'aims_user_roles.role_id', '=', 'aims_roles.id')
+                        ->join('aims_permissions', 'aims_roles.id', '=', 'aims_permissions.role_id')
+                        ->where('aims_user_roles.user_id', $user->id)
+                        ->where('aims_roles.module_id', $moduleId)
+                        ->where('aims_permissions.can_view', 1)
+                        ->distinct()
+                        ->pluck('aims_permissions.menu_id')
+                        ->toArray();
+
+                    $menus = \DB::table('aims_menus')
+                        ->where('module_id', $moduleId)
+                        ->whereIn('id', $allowedMenuIds)
+                        ->get()
+                        ->toArray();
+
+                    $parentIds = collect($menus)->pluck('parent_id')->filter()->unique()->toArray();
+                    $allAllowedIds = array_unique(array_merge($allowedMenuIds, $parentIds));
+
+                    $coeMenus = \DB::table('aims_menus')
+                        ->where('module_id', $moduleId)
+                        ->whereIn('id', $allAllowedIds)
+                        ->orderBy('parent_id')
+                        ->orderBy('order_by')
+                        ->get()
+                        ->toArray();
+                }
+            }
+        }
+
         return [
             ...parent::share($request),
             'auth' => [
@@ -151,6 +237,8 @@ class HandleInertiaRequests extends Middleware
             'csmsMenus' => $csmsMenus,
             'picaMenus' => $picaMenus,
             'dsMenus'   => $dsMenus,
+            'dpMenus'   => $dpMenus,
+            'coeMenus'  => $coeMenus,
         ];
     }
 }
