@@ -1,12 +1,12 @@
 import { ChevronRight, Eye, EyeOff, HardHat, Lock, Mail, ShieldCheck } from 'lucide-react';
 import { Head, Link, useForm } from '@inertiajs/react';
+import { useEffect } from 'react';
 
 import Checkbox from '@/Components/Checkbox';
 import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
 import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
-import { useEffect } from 'react';
 
 export default function Login({ status, canResetPassword }) {
     const { data, setData, post, processing, errors, reset } = useForm({
@@ -56,8 +56,6 @@ export default function Login({ status, canResetPassword }) {
                 {/* Top Branding */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', zIndex: 2 }}>
                     <div style={{
-                        // width: '40px',
-                        // height: '40px',
                         borderRadius: '8px',
                         backgroundColor: '#fff',
                         display: 'flex',

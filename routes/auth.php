@@ -10,6 +10,7 @@ use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Auth\TwoFactorController;
 use App\Http\Controllers\Auth\VerifyEmailController;
+use App\Http\Controllers\Auth\OtpAuthController;
 use Illuminate\Support\Facades\Route;
 
 // ── 2FA Challenge routes (session pending, bukan auth) ──────────────────────
@@ -34,6 +35,12 @@ Route::middleware('guest')->group(function () {
         ->name('login');
 
     Route::post('login', [AuthenticatedSessionController::class, 'store']);
+
+    Route::post('otp/send', [OtpAuthController::class, 'sendOtp'])
+        ->name('otp.send');
+
+    Route::post('otp/verify', [OtpAuthController::class, 'verifyOtp'])
+        ->name('otp.verify');
 
     Route::get('forgot-password', [PasswordResetLinkController::class, 'create'])
         ->name('password.request');
