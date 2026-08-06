@@ -4,6 +4,7 @@ namespace Modules\DashboardPortal\Http\Controllers\Api;
 
 use App\Helpers\ResponseFormatter;
 use App\Http\Controllers\Controller;
+use App\Services\UserActivityLogService;
 use Illuminate\Http\Request;
 use Modules\DashboardPortal\app\Models\Banner;
 
@@ -80,6 +81,16 @@ class BannerController extends Controller
             'blob_response' => $uploadResult['blobResponse'],
         ]);
 
+        UserActivityLogService::log(
+            module: 'dashboard_portal',
+            action: 'create',
+            resource: 'Banner',
+            resourceId: $banner->id,
+            description: "Mengunggah banner baru '{$banner->name}'",
+            newData: $banner->toArray(),
+            request: $request,
+        );
+
         return ResponseFormatter::success($banner, 'Banner created successfully');
     }
 
@@ -115,7 +126,20 @@ class BannerController extends Controller
             }
         }
 
+        $oldData = $banner->toArray();
+
         $banner->update($data);
+
+        UserActivityLogService::log(
+            module: 'dashboard_portal',
+            action: 'update',
+            resource: 'Banner',
+            resourceId: $banner->id,
+            description: "Memperbarui banner '{$banner->name}'",
+            oldData: $oldData,
+            newData: $banner->fresh()->toArray(),
+            request: $request,
+        );
 
         return ResponseFormatter::success($banner, 'Banner updated successfully');
     }
@@ -123,7 +147,17 @@ class BannerController extends Controller
     public function deleteBanner($id)
     {
         $banner = Banner::findOrFail($id);
+        $oldData = $banner->toArray();
         $banner->delete();
+
+        UserActivityLogService::log(
+            module: 'dashboard_portal',
+            action: 'delete',
+            resource: 'Banner',
+            resourceId: (string) $id,
+            description: "Menghapus banner '{$oldData['name']}'",
+            oldData: $oldData,
+        );
 
         return ResponseFormatter::success(null, 'Banner deleted successfully');
     }

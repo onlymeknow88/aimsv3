@@ -6,6 +6,7 @@ use App\Helpers\ResponseFormatter;
 use App\Http\Controllers\Controller;
 use App\Models\Company;
 use App\Models\Department;
+use App\Services\UserActivityLogService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -279,6 +280,16 @@ class DocumentApiController extends Controller
 
             DB::commit();
 
+            UserActivityLogService::log(
+                module: 'document_system',
+                action: 'create',
+                resource: 'Document',
+                resourceId: $doc->id,
+                description: "Membuat dokumen baru '{$doc->document_number} - {$doc->title}'",
+                newData: $doc->toArray(),
+                request: $request,
+            );
+
             return ResponseFormatter::success($doc, 'Document created successfully');
         } catch (\Throwable $e) {
             DB::rollBack();
@@ -336,7 +347,7 @@ class DocumentApiController extends Controller
         $userId = $user ? $user->id : null;
 
         DB::beginTransaction();
-        try {
+            $oldData = $doc->toArray();
             $doc->update([
                 'title' => $request->title,
                 'document_level' => $level,
@@ -440,6 +451,17 @@ class DocumentApiController extends Controller
             }
 
             DB::commit();
+
+            UserActivityLogService::log(
+                module: 'document_system',
+                action: 'update',
+                resource: 'Document',
+                resourceId: $doc->id,
+                description: "Memperbarui dokumen '{$doc->document_number} - {$doc->title}'",
+                oldData: $oldData,
+                newData: $doc->fresh()->toArray(),
+                request: $request,
+            );
 
             return ResponseFormatter::success($doc, 'Document updated successfully');
         } catch (\Throwable $e) {
@@ -780,6 +802,17 @@ class DocumentApiController extends Controller
             'updated_at' => now(),
         ]);
 
+        UserActivityLogService::log(
+            module: 'document_system',
+            action: 'approve',
+            resource: 'Document',
+            resourceId: $doc->id,
+            description: "Menyetujui dokumen '{$doc->document_number}' (Level {$request->level})",
+            oldData: ['status' => $doc->fresh()->status], // status updated before log
+            newData: $doc->toArray(),
+            request: $request,
+        );
+
         return ResponseFormatter::success($doc, 'Dokumen berhasil disetujui.');
     }
 
@@ -830,6 +863,17 @@ class DocumentApiController extends Controller
             'created_at'  => now(),
             'updated_at'  => now(),
         ]);
+
+        UserActivityLogService::log(
+            module: 'document_system',
+            action: 'route',
+            resource: 'Document',
+            resourceId: $doc->id,
+            description: "Diteruskan untuk persetujuan (Routing) dokumen '{$doc->document_number}'",
+            oldData: ['status' => $doc->fresh()->status],
+            newData: $doc->toArray(),
+            request: $request,
+        );
 
         return ResponseFormatter::success($doc, 'Dokumen berhasil diteruskan untuk persetujuan.');
     }
@@ -905,7 +949,7 @@ class DocumentApiController extends Controller
                 ])->render();
                 sendPowerAutomateEmail([
                     'SendTo'        => $receivers,
-                    'Title'         => 'Dokumen Dikembalikan (Return): ' . $doc->title,
+                    'Title'         => 'Dokumen Returned/Rejected: ' . $doc->title,
                     'MsgBody'       => $html,
                     'AttchmentPath' => '',
                     'AttchmentName' => '',
@@ -915,7 +959,18 @@ class DocumentApiController extends Controller
 
             DB::commit();
 
-            return ResponseFormatter::success($doc, 'Dokumen berhasil dikembalikan ke draft.');
+            UserActivityLogService::log(
+                module: 'document_system',
+                action: 'reject',
+                resource: 'Document',
+                resourceId: $doc->id,
+                description: "Menolak/Kembalikan dokumen '{$doc->document_number}': {$request->reason}",
+                oldData: ['status' => $doc->fresh()->status],
+                newData: $doc->toArray(),
+                request: $request,
+            );
+
+            return ResponseFormatter::success($doc, 'Dokumen berhasil ditolak.');
         } catch (\Throwable $e) {
             DB::rollBack();
             return ResponseFormatter::error('Gagal memproses penolakan: ' . $e->getMessage(), 500);
@@ -979,7 +1034,17 @@ class DocumentApiController extends Controller
     public function deleteAttachment(string $id)
     {
         $attachment = Attachment::findOrFail($id);
+        $oldData = $attachment->toArray();
         $attachment->delete();
+
+        UserActivityLogService::log(
+            module: 'document_system',
+            action: 'delete',
+            resource: 'DocumentAttachment',
+            resourceId: (string) $id,
+            description: "Menghapus lampiran dokumen '{$oldData['file_name']}'",
+            oldData: $oldData,
+        );
 
         return ResponseFormatter::success(null, 'Lampiran berhasil dihapus.');
     }
@@ -995,15 +1060,27 @@ class DocumentApiController extends Controller
         ]);
 
         $deleted = 0;
+        $deletedDocs = [];
         foreach ($request->ids as $id) {
             $doc = Document::find($id);
             if ($doc) {
+                $deletedDocs[] = $doc->toArray();
                 // Also delete related attachments records
                 \Modules\DocumentSystem\Entities\Attachment::where('document_id', $doc->id)->delete();
                 $doc->delete();
                 $deleted++;
             }
         }
+
+        UserActivityLogService::log(
+            module: 'document_system',
+            action: 'delete',
+            resource: 'Document',
+            resourceId: implode(',', $request->ids),
+            description: "Menghapus {$deleted} dokumen secara massal",
+            oldData: $deletedDocs,
+            request: $request,
+        );
 
         return ResponseFormatter::success(['deleted' => $deleted], "{$deleted} dokumen berhasil dihapus.");
     }

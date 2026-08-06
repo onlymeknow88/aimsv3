@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin\Api;
 use App\Helpers\ResponseFormatter;
 use App\Http\Controllers\Controller;
 use App\Models\Company;
+use App\Services\AdminActivityLogService;
 use Illuminate\Http\Request;
 
 class CompanyController extends Controller
@@ -56,6 +57,15 @@ class CompanyController extends Controller
 
             $company = Company::create($validated);
 
+            AdminActivityLogService::log(
+                action: 'create',
+                resource: 'Company',
+                resourceId: $company->id,
+                description: "Membuat company baru '{$company->company_name}'",
+                newData: $company->toArray(),
+                request: $request,
+            );
+
             return ResponseFormatter::success($company, 'Company created successfully');
         } catch (\Exception $e) {
             return ResponseFormatter::error('Error creating company: ' . $e->getMessage(), 500);
@@ -69,6 +79,7 @@ class CompanyController extends Controller
     {
         try {
             $company = Company::findOrFail($id);
+            $oldData = $company->toArray();
 
             $validated = $request->validate([
                 'company_name'      => 'required|string|max:255|unique:companies,company_name,' . $id,
@@ -83,6 +94,16 @@ class CompanyController extends Controller
 
             $company->update($validated);
 
+            AdminActivityLogService::log(
+                action: 'update',
+                resource: 'Company',
+                resourceId: $company->id,
+                description: "Memperbarui company '{$company->company_name}'",
+                oldData: $oldData,
+                newData: $company->fresh()->toArray(),
+                request: $request,
+            );
+
             return ResponseFormatter::success($company, 'Company updated successfully');
         } catch (\Exception $e) {
             return ResponseFormatter::error('Error updating company: ' . $e->getMessage(), 500);
@@ -92,11 +113,21 @@ class CompanyController extends Controller
     /**
      * API: Delete a company.
      */
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
         try {
             $company = Company::findOrFail($id);
+            $oldData = $company->toArray();
             $company->delete();
+
+            AdminActivityLogService::log(
+                action: 'delete',
+                resource: 'Company',
+                resourceId: (string) $id,
+                description: "Menghapus company '{$oldData['company_name']}'",
+                oldData: $oldData,
+                request: $request,
+            );
 
             return ResponseFormatter::success(null, 'Company deleted successfully');
         } catch (\Exception $e) {

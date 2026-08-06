@@ -77,6 +77,21 @@ Route::middleware(['admin.session', 'auth:admin', 'admin.auth'])->prefix('admin'
 
     // AIMS Modules — Inertia Page
     Route::get('/modules', [\App\Http\Controllers\Admin\AimsModuleController::class, 'index'])->name('admin.modules');
+
+    // Login Logs — Inertia Page
+    Route::get('/login-logs', function () {
+        return Inertia::render('Admin/LoginLog/Index');
+    })->name('admin.login-logs');
+
+    // Activity Logs — Inertia Page
+    Route::get('/activity-logs', function () {
+        return Inertia::render('Admin/ActivityLog/Index');
+    })->name('admin.activity-logs');
+
+    // User Activity Logs — Inertia Page
+    Route::get('/user-activity-logs', function () {
+        return Inertia::render('Admin/UserActivityLog/Index');
+    })->name('admin.user-activity-logs');
 });
 
 require __DIR__.'/auth.php';

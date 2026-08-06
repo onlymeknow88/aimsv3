@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin\Api;
  
 use App\Helpers\ResponseFormatter;
 use App\Http\Controllers\Controller;
+use App\Services\AdminActivityLogService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Artisan;
@@ -164,6 +165,15 @@ class RolePermissionController extends Controller
  
             Artisan::call('cache:clear');
  
+            AdminActivityLogService::log(
+                action: 'update',
+                resource: 'Permission',
+                resourceId: null,
+                description: 'Bulk update ' . count($changes) . ' permission(s)',
+                newData: $changes,
+                request: $request,
+            );
+ 
             return ResponseFormatter::success(null, 'Bulk permissions berhasil diperbarui.');
         } catch (\Exception $e) {
             return ResponseFormatter::error('Gagal memperbarui permissions: ' . $e->getMessage(), 500);
@@ -201,6 +211,15 @@ class RolePermissionController extends Controller
             ]);
  
             $role = DB::table('aims_roles')->where('id', $roleId)->first();
+ 
+            AdminActivityLogService::log(
+                action: 'create',
+                resource: 'Role',
+                resourceId: (string) $roleId,
+                description: "Membuat role baru '{$request->name}' (slug: {$request->slug})",
+                newData: (array) $role,
+                request: $request,
+            );
  
             return ResponseFormatter::success($role, 'Role berhasil dibuat.');
         } catch (\Exception $e) {
@@ -248,6 +267,16 @@ class RolePermissionController extends Controller
  
             $updatedRole = DB::table('aims_roles')->where('id', $id)->first();
  
+            AdminActivityLogService::log(
+                action: 'update',
+                resource: 'Role',
+                resourceId: (string) $id,
+                description: "Memperbarui role '{$request->name}'",
+                oldData: (array) $role,
+                newData: (array) $updatedRole,
+                request: $request,
+            );
+ 
             return ResponseFormatter::success($updatedRole, 'Role berhasil diperbarui.');
         } catch (\Exception $e) {
             return ResponseFormatter::error('Gagal memperbarui role: ' . $e->getMessage(), 500);
@@ -257,7 +286,7 @@ class RolePermissionController extends Controller
     /**
      * API: Delete a role
      */
-    public function destroyRole($id)
+    public function destroyRole(Request $request, $id)
     {
         try {
             $role = DB::table('aims_roles')->where('id', $id)->first();
@@ -265,10 +294,21 @@ class RolePermissionController extends Controller
                 return ResponseFormatter::error('Role tidak ditemukan.', 404);
             }
  
+            $oldData = (array) $role;
+ 
             DB::table('aims_permissions')->where('role_id', $id)->delete();
             DB::table('aims_roles')->where('id', $id)->delete();
  
             Artisan::call('cache:clear');
+ 
+            AdminActivityLogService::log(
+                action: 'delete',
+                resource: 'Role',
+                resourceId: (string) $id,
+                description: "Menghapus role '{$oldData['name']}'",
+                oldData: $oldData,
+                request: $request,
+            );
  
             return ResponseFormatter::success(null, 'Role berhasil dihapus.');
         } catch (\Exception $e) {

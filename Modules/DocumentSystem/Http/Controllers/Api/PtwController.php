@@ -4,6 +4,7 @@ namespace Modules\DocumentSystem\Http\Controllers\Api;
 
 use App\Helpers\ResponseFormatter;
 use App\Http\Controllers\Controller;
+use App\Services\UserActivityLogService;
 use Illuminate\Http\Request;
 use Modules\DocumentSystem\Entities\PtwDocument;
 use Modules\DocumentSystem\Entities\PtwDocumentActivity;
@@ -183,6 +184,16 @@ class PtwController extends Controller
             }
         }
 
+        UserActivityLogService::log(
+            module: 'document_system',
+            action: 'create',
+            resource: 'PtwDocument',
+            resourceId: $doc->id,
+            description: "Membuat PTW baru '{$doc->document_number} - {$doc->title}'",
+            newData: $doc->toArray(),
+            request: $request,
+        );
+
         return ResponseFormatter::success($doc, 'PTW berhasil dibuat.');
     }
 
@@ -219,6 +230,8 @@ class PtwController extends Controller
 
         $user = $request->user() ?? auth()->user() ?? auth('admin')->user() ?? auth('web')->user();
         $userId = $user ? $user->id : null;
+
+        $oldData = $doc->toArray();
 
         $doc->update([
             'title'           => $request->title ?? $doc->title,
@@ -264,6 +277,17 @@ class PtwController extends Controller
             }
         }
 
+        UserActivityLogService::log(
+            module: 'document_system',
+            action: 'update',
+            resource: 'PtwDocument',
+            resourceId: $doc->id,
+            description: "Memperbarui PTW '{$doc->document_number} - {$doc->title}'",
+            oldData: $oldData,
+            newData: $doc->fresh()->toArray(),
+            request: $request,
+        );
+
         return ResponseFormatter::success($doc, 'PTW berhasil diperbarui.');
     }
 
@@ -273,8 +297,18 @@ class PtwController extends Controller
     public function destroy(string $id)
     {
         $doc = PtwDocument::findOrFail($id);
+        $oldData = $doc->toArray();
         PtwDocumentAttachment::where('ptw_document_id', $doc->id)->delete();
         $doc->delete();
+
+        UserActivityLogService::log(
+            module: 'document_system',
+            action: 'delete',
+            resource: 'PtwDocument',
+            resourceId: (string) $id,
+            description: "Menghapus PTW '{$oldData['document_number']} - {$oldData['title']}'",
+            oldData: $oldData,
+        );
 
         return ResponseFormatter::success(null, 'PTW berhasil dihapus.');
     }
@@ -336,6 +370,16 @@ class PtwController extends Controller
             ]);
         }
 
+        UserActivityLogService::log(
+            module: 'document_system',
+            action: 'submit',
+            resource: 'PtwDocument',
+            resourceId: $doc->id,
+            description: "Mengirim PTW untuk direview '{$doc->document_number}'",
+            oldData: ['status' => '1'],
+            newData: $doc->fresh()->toArray(),
+        );
+
         return ResponseFormatter::success($doc, 'Dokumen berhasil dikirim untuk review.');
     }
 
@@ -379,6 +423,17 @@ class PtwController extends Controller
                 'SendCC'        => '',
             ]);
         }
+
+        UserActivityLogService::log(
+            module: 'document_system',
+            action: 'approve',
+            resource: 'PtwDocument',
+            resourceId: $doc->id,
+            description: "Menyetujui PTW '{$doc->document_number}'",
+            oldData: ['status' => '2'],
+            newData: $doc->fresh()->toArray(),
+            request: $request,
+        );
 
         return ResponseFormatter::success($doc, 'Dokumen berhasil disetujui.');
     }
@@ -428,6 +483,17 @@ class PtwController extends Controller
             ]);
         }
 
+        UserActivityLogService::log(
+            module: 'document_system',
+            action: 'reject',
+            resource: 'PtwDocument',
+            resourceId: $doc->id,
+            description: "Mengembalikan PTW ke draft: {$request->description}",
+            oldData: ['status' => '2'],
+            newData: $doc->fresh()->toArray(),
+            request: $request,
+        );
+
         return ResponseFormatter::success($doc, 'Dokumen dikembalikan ke draft.');
     }
 
@@ -437,7 +503,17 @@ class PtwController extends Controller
     public function deleteAttachment(string $id)
     {
         $attachment = PtwDocumentAttachment::findOrFail($id);
+        $oldData = $attachment->toArray();
         $attachment->delete();
+
+        UserActivityLogService::log(
+            module: 'document_system',
+            action: 'delete',
+            resource: 'PtwDocumentAttachment',
+            resourceId: (string) $id,
+            description: "Menghapus lampiran PTW '{$oldData['file_name']}'",
+            oldData: $oldData,
+        );
 
         return ResponseFormatter::success(null, 'Lampiran berhasil dihapus.');
     }

@@ -4,6 +4,7 @@ namespace Modules\DocumentSystem\Http\Controllers\Api;
 
 use App\Helpers\ResponseFormatter;
 use App\Http\Controllers\Controller;
+use App\Services\UserActivityLogService;
 use Illuminate\Http\Request;
 use Modules\DocumentSystem\Entities\JsaDocument;
 use Modules\DocumentSystem\Entities\JsaDocumentActivity;
@@ -199,6 +200,16 @@ class JsaApiController extends Controller
             }
         }
 
+        UserActivityLogService::log(
+            module: 'document_system',
+            action: 'create',
+            resource: 'JsaDocument',
+            resourceId: $doc->id,
+            description: "Membuat JSA baru '{$doc->document_number} - {$doc->title}'",
+            newData: $doc->toArray(),
+            request: $request,
+        );
+
         return ResponseFormatter::success($doc, 'JSA berhasil dibuat.');
     }
 
@@ -211,6 +222,8 @@ class JsaApiController extends Controller
 
         $user = $request->user() ?? auth()->user() ?? auth('admin')->user() ?? auth('web')->user();
         $userId = $user ? $user->id : null;
+
+        $oldData = $doc->toArray();
 
         $doc->update([
             'title'           => $request->title ?? $doc->title,
@@ -258,6 +271,17 @@ class JsaApiController extends Controller
             }
         }
 
+        UserActivityLogService::log(
+            module: 'document_system',
+            action: 'update',
+            resource: 'JsaDocument',
+            resourceId: $doc->id,
+            description: "Memperbarui JSA '{$doc->document_number} - {$doc->title}'",
+            oldData: $oldData,
+            newData: $doc->fresh()->toArray(),
+            request: $request,
+        );
+
         return ResponseFormatter::success($doc, 'JSA berhasil diperbarui.');
     }
 
@@ -267,11 +291,21 @@ class JsaApiController extends Controller
     public function destroy(string $id)
     {
         $doc = JsaDocument::findOrFail($id);
+        $oldData = $doc->toArray();
 
         // Also delete related attachments records
         JsaDocumentAttachment::where('jsa_document_id', $doc->id)->delete();
 
         $doc->delete();
+
+        UserActivityLogService::log(
+            module: 'document_system',
+            action: 'delete',
+            resource: 'JsaDocument',
+            resourceId: (string) $id,
+            description: "Menghapus JSA '{$oldData['document_number']} - {$oldData['title']}'",
+            oldData: $oldData,
+        );
 
         return ResponseFormatter::success(null, 'JSA berhasil dihapus.');
     }
@@ -366,6 +400,16 @@ class JsaApiController extends Controller
             ]);
         }
 
+        UserActivityLogService::log(
+            module: 'document_system',
+            action: 'submit',
+            resource: 'JsaDocument',
+            resourceId: $doc->id,
+            description: "Mengirim JSA untuk direview '{$doc->document_number}'",
+            oldData: ['status' => JsaDocument::DRAFT],
+            newData: $doc->fresh()->toArray(),
+        );
+
         return ResponseFormatter::success($doc, 'Dokumen berhasil dikirim untuk review.');
     }
 
@@ -409,6 +453,17 @@ class JsaApiController extends Controller
                 'SendCC'        => '',
             ]);
         }
+
+        UserActivityLogService::log(
+            module: 'document_system',
+            action: 'approve',
+            resource: 'JsaDocument',
+            resourceId: $doc->id,
+            description: "Menyetujui JSA '{$doc->document_number}'",
+            oldData: ['status' => JsaDocument::PENDING_REVIEW],
+            newData: $doc->fresh()->toArray(),
+            request: $request,
+        );
 
         return ResponseFormatter::success($doc, 'Dokumen berhasil disetujui.');
     }
@@ -454,6 +509,17 @@ class JsaApiController extends Controller
                 'SendCC'        => '',
             ]);
         }
+
+        UserActivityLogService::log(
+            module: 'document_system',
+            action: 'reject',
+            resource: 'JsaDocument',
+            resourceId: $doc->id,
+            description: "Mengembalikan JSA ke draft: {$request->description}",
+            oldData: ['status' => JsaDocument::PENDING_REVIEW],
+            newData: $doc->fresh()->toArray(),
+            request: $request,
+        );
 
         $uploadedAttachments = [];
         if ($request->hasFile('files')) {

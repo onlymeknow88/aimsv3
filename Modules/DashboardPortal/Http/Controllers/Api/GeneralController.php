@@ -4,6 +4,7 @@ namespace Modules\DashboardPortal\Http\Controllers\Api;
 
 use App\Helpers\ResponseFormatter;
 use App\Http\Controllers\Controller;
+use App\Services\UserActivityLogService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Modules\DashboardPortal\app\Models\General;
@@ -64,6 +65,16 @@ class GeneralController extends Controller
             'manpower_mark'           => $request->manpower_mark ?? 'UP',
         ]);
 
+        UserActivityLogService::log(
+            module: 'dashboard_portal',
+            action: 'create',
+            resource: 'PortalGeneral',
+            resourceId: $general->id,
+            description: "Membuat data statistik portal umum baru",
+            newData: $general->toArray(),
+            request: $request,
+        );
+
         return ResponseFormatter::success($general, 'General data created successfully', 201);
     }
 
@@ -84,6 +95,7 @@ class GeneralController extends Controller
         ]);
 
         $general = General::findOrFail($id);
+        $oldData = $general->toArray();
 
         $general->update([
             'user_id'                 => auth()->id(),
@@ -97,6 +109,17 @@ class GeneralController extends Controller
             'manpower_mark'           => $request->manpower_mark ?? $general->manpower_mark,
         ]);
 
+        UserActivityLogService::log(
+            module: 'dashboard_portal',
+            action: 'update',
+            resource: 'PortalGeneral',
+            resourceId: $general->id,
+            description: "Memperbarui data statistik portal umum",
+            oldData: $oldData,
+            newData: $general->fresh()->toArray(),
+            request: $request,
+        );
+
         return ResponseFormatter::success($general, 'General data updated successfully');
     }
 
@@ -106,7 +129,17 @@ class GeneralController extends Controller
     public function destroy($id)
     {
         $general = General::findOrFail($id);
+        $oldData = $general->toArray();
         $general->delete();
+
+        UserActivityLogService::log(
+            module: 'dashboard_portal',
+            action: 'delete',
+            resource: 'PortalGeneral',
+            resourceId: (string) $id,
+            description: "Menghapus data statistik portal umum",
+            oldData: $oldData,
+        );
 
         return ResponseFormatter::success(null, 'General data deleted successfully');
     }

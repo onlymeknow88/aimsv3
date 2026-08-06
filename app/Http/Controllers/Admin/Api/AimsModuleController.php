@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin\Api;
 use App\Helpers\ResponseFormatter;
 use App\Http\Controllers\Controller;
 use App\Models\AimsModule;
+use App\Services\AdminActivityLogService;
 use Illuminate\Http\Request;
 
 class AimsModuleController extends Controller
@@ -48,6 +49,15 @@ class AimsModuleController extends Controller
         try {
             $module = AimsModule::create($validated);
 
+            AdminActivityLogService::log(
+                action: 'create',
+                resource: 'AimsModule',
+                resourceId: $module->id,
+                description: "Membuat AIMS module baru '{$module->name}'",
+                newData: $module->toArray(),
+                request: $request,
+            );
+
             return ResponseFormatter::success($module, 'AIMS module berhasil dibuat.');
         } catch (\Exception $e) {
             return ResponseFormatter::error('Gagal membuat module: ' . $e->getMessage(), 500);
@@ -66,8 +76,20 @@ class AimsModuleController extends Controller
             'slug' => 'required|string|max:255|unique:aims_modules,slug,' . $module->id,
         ]);
 
+        $oldData = $module->toArray();
+
         try {
             $module->update($validated);
+
+            AdminActivityLogService::log(
+                action: 'update',
+                resource: 'AimsModule',
+                resourceId: $module->id,
+                description: "Memperbarui AIMS module '{$module->name}'",
+                oldData: $oldData,
+                newData: $module->fresh()->toArray(),
+                request: $request,
+            );
 
             return ResponseFormatter::success($module, 'AIMS module berhasil diperbarui.');
         } catch (\Exception $e) {
@@ -78,11 +100,21 @@ class AimsModuleController extends Controller
     /**
      * API: Delete a module.
      */
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
         try {
             $module = AimsModule::findOrFail($id);
+            $oldData = $module->toArray();
             $module->delete();
+
+            AdminActivityLogService::log(
+                action: 'delete',
+                resource: 'AimsModule',
+                resourceId: (string) $id,
+                description: "Menghapus AIMS module '{$oldData['name']}'",
+                oldData: $oldData,
+                request: $request,
+            );
 
             return ResponseFormatter::success(null, 'AIMS module berhasil dihapus.');
         } catch (\Exception $e) {

@@ -131,44 +131,27 @@ export default function Header({
 
                                     {/* Dropdown Options */}
                                     <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
-                                        <li>
-                                            <Link
-                                                href={route('profile.edit')}
-                                                style={{
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    gap: '10px',
-                                                    padding: '10px 16px',
-                                                    fontSize: '13px',
-                                                    color: 'var(--text-primary)',
-                                                    textDecoration: 'none',
-                                                    transition: 'background-color 0.2s'
-                                                }}
-                                                className="dropdown-item"
-                                                onClick={() => setProfileDropdownOpen(false)}
-                                            >
-                                                Profile
-                                            </Link>
-                                        </li>
-                                        <li>
-                                            <Link
-                                                href={route('dashboard-portal.dashboard')}
-                                                style={{
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    gap: '10px',
-                                                    padding: '10px 16px',
-                                                    fontSize: '13px',
-                                                    color: 'var(--text-primary)',
-                                                    textDecoration: 'none',
-                                                    transition: 'background-color 0.2s'
-                                                }}
-                                                className="dropdown-item"
-                                                onClick={() => setProfileDropdownOpen(false)}
-                                            >
-                                                Dashboard Portal
-                                            </Link>
-                                        </li>
+                                        {auth?.user && (auth?.modules?.includes('*') || auth?.modules?.includes('dashboard-portal')) && (
+                                            <li>
+                                                <Link
+                                                    href={route('dashboard-portal.dashboard')}
+                                                    style={{
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        gap: '10px',
+                                                        padding: '10px 16px',
+                                                        fontSize: '13px',
+                                                        color: 'var(--text-primary)',
+                                                        textDecoration: 'none',
+                                                        transition: 'background-color 0.2s'
+                                                    }}
+                                                    className="dropdown-item"
+                                                    onClick={() => setProfileDropdownOpen(false)}
+                                                >
+                                                    Dashboard Portal
+                                                </Link>
+                                            </li>
+                                        )}
                                         <li>
                                             <Link
                                                 href={route('two-factor.setup')}

@@ -4,6 +4,7 @@ namespace Modules\Coe\Http\Controllers\Api;
 
 use App\Helpers\ResponseFormatter;
 use App\Http\Controllers\Controller;
+use App\Services\UserActivityLogService;
 use Illuminate\Http\Request;
 use Modules\Coe\Entities\Category;
 use Modules\Coe\Entities\Event;
@@ -52,6 +53,16 @@ class CoeApiController extends Controller
             'color' => $request->color,
         ]);
 
+        UserActivityLogService::log(
+            module: 'coe',
+            action: 'create',
+            resource: 'CoeCategory',
+            resourceId: $category->id,
+            description: "Membuat kategori COE baru '{$category->name}'",
+            newData: $category->toArray(),
+            request: $request,
+        );
+
         return ResponseFormatter::success($category, 'Category created successfully');
     }
 
@@ -67,10 +78,23 @@ class CoeApiController extends Controller
             'color' => 'required|string|max:7',
         ]);
 
+        $oldData = $category->toArray();
+
         $category->update([
             'name'  => $request->name,
             'color' => $request->color,
         ]);
+
+        UserActivityLogService::log(
+            module: 'coe',
+            action: 'update',
+            resource: 'CoeCategory',
+            resourceId: $category->id,
+            description: "Memperbarui kategori COE '{$category->name}'",
+            oldData: $oldData,
+            newData: $category->fresh()->toArray(),
+            request: $request,
+        );
 
         return ResponseFormatter::success($category, 'Category updated successfully');
     }
@@ -81,7 +105,17 @@ class CoeApiController extends Controller
     public function deleteCategory($id)
     {
         $category = Category::findOrFail($id);
+        $oldData = $category->toArray();
         $category->delete();
+
+        UserActivityLogService::log(
+            module: 'coe',
+            action: 'delete',
+            resource: 'CoeCategory',
+            resourceId: (string) $id,
+            description: "Menghapus kategori COE '{$oldData['name']}'",
+            oldData: $oldData,
+        );
 
         return ResponseFormatter::success(null, 'Category deleted successfully');
     }
@@ -159,6 +193,16 @@ class CoeApiController extends Controller
             'blob_respon'     => $blobRespon,
         ]);
 
+        UserActivityLogService::log(
+            module: 'coe',
+            action: 'create',
+            resource: 'CoeEvent',
+            resourceId: $event->id,
+            description: "Membuat event COE baru '{$event->title}'",
+            newData: $event->toArray(),
+            request: $request,
+        );
+
         $this->sendInvitationEmail($event);
 
         return ResponseFormatter::success($event, 'Event created successfully');
@@ -197,6 +241,8 @@ class CoeApiController extends Controller
             $blobRespon = json_encode($uploadResult['blobResponse']);
         }
 
+        $oldData = $event->toArray();
+
         $event->update([
             'category_id'     => $request->category_id,
             'section_id'      => $request->section_id,
@@ -214,6 +260,17 @@ class CoeApiController extends Controller
             'blob_respon'     => $blobRespon,
         ]);
 
+        UserActivityLogService::log(
+            module: 'coe',
+            action: 'update',
+            resource: 'CoeEvent',
+            resourceId: $event->id,
+            description: "Memperbarui event COE '{$event->title}'",
+            oldData: $oldData,
+            newData: $event->fresh()->toArray(),
+            request: $request,
+        );
+
         $this->sendInvitationEmail($event);
 
         return ResponseFormatter::success($event, 'Event updated successfully');
@@ -225,7 +282,17 @@ class CoeApiController extends Controller
     public function deleteEvent($id)
     {
         $event = Event::findOrFail($id);
+        $oldData = $event->toArray();
         $event->delete();
+
+        UserActivityLogService::log(
+            module: 'coe',
+            action: 'delete',
+            resource: 'CoeEvent',
+            resourceId: (string) $id,
+            description: "Menghapus event COE '{$oldData['title']}'",
+            oldData: $oldData,
+        );
 
         return ResponseFormatter::success(null, 'Event deleted successfully');
     }

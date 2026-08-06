@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin\Api;
 use App\Helpers\ResponseFormatter;
 use App\Http\Controllers\Controller;
 use App\Models\BusinessEntity;
+use App\Services\AdminActivityLogService;
 use Illuminate\Http\Request;
 
 class BusinessController extends Controller
@@ -48,6 +49,15 @@ class BusinessController extends Controller
 
             $businessEntity = BusinessEntity::create($request->only(['name', 'description']));
 
+            AdminActivityLogService::log(
+                action: 'create',
+                resource: 'BusinessEntity',
+                resourceId: $businessEntity->id,
+                description: "Membuat business entity '{$businessEntity->name}'",
+                newData: $businessEntity->toArray(),
+                request: $request,
+            );
+
             return ResponseFormatter::success($businessEntity, 'Business entity created successfully');
         } catch (\Exception $e) {
             return ResponseFormatter::error('Error creating business entity: ' . $e->getMessage(), 500);
@@ -57,11 +67,23 @@ class BusinessController extends Controller
     {
         try {
             $businessEntity = BusinessEntity::findOrFail($id);
+            $oldData = $businessEntity->toArray();
+
             $request->validate([
                 'name' => 'required|string|max:255|unique:business_entities,name,' . $id,
             ]);
 
             $businessEntity->update($request->only(['name']));
+
+            AdminActivityLogService::log(
+                action: 'update',
+                resource: 'BusinessEntity',
+                resourceId: $businessEntity->id,
+                description: "Memperbarui business entity '{$businessEntity->name}'",
+                oldData: $oldData,
+                newData: $businessEntity->fresh()->toArray(),
+                request: $request,
+            );
 
             return ResponseFormatter::success($businessEntity, 'Business entity updated successfully');
         } catch (\Exception $e) {
@@ -69,11 +91,21 @@ class BusinessController extends Controller
         }
     }
 
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
         try {
             $businessEntity = BusinessEntity::findOrFail($id);
+            $oldData = $businessEntity->toArray();
             $businessEntity->delete();
+
+            AdminActivityLogService::log(
+                action: 'delete',
+                resource: 'BusinessEntity',
+                resourceId: (string) $id,
+                description: "Menghapus business entity '{$oldData['name']}'",
+                oldData: $oldData,
+                request: $request,
+            );
 
             return ResponseFormatter::success(null, 'Business entity deleted successfully');
         } catch (\Exception $e) {

@@ -119,6 +119,24 @@ Route::middleware(['admin.session', 'auth:admin', 'admin.auth'])
             Route::delete('/{id}', [\App\Http\Controllers\Admin\Api\AimsModuleController::class, 'destroy']);
             Route::post('/{id}/delete', [\App\Http\Controllers\Admin\Api\AimsModuleController::class, 'destroy']); // IIS Spoofing
         });
+
+        // ── Login Logs API ────────────────────────────────────────────────────
+        Route::prefix('login-logs')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Admin\Api\LoginLogController::class, 'index']);
+            Route::get('/stats', [\App\Http\Controllers\Admin\Api\LoginLogController::class, 'stats']);
+        });
+
+        // ── Activity Logs API ─────────────────────────────────────────────────
+        Route::prefix('activity-logs')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Admin\Api\ActivityLogController::class, 'index']);
+            Route::get('/stats', [\App\Http\Controllers\Admin\Api\ActivityLogController::class, 'stats']);
+        });
+
+        // ── User Activity Logs API ────────────────────────────────────────────
+        Route::prefix('user-activity-logs')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Admin\Api\UserActivityLogController::class, 'index']);
+            Route::get('/stats', [\App\Http\Controllers\Admin\Api\UserActivityLogController::class, 'stats']);
+        });
     });
 
 Route::middleware(['web', 'auth'])->prefix('api')->group(function () {

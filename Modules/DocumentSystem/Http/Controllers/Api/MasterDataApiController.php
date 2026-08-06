@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\AreaManager;
 use App\Models\Company;
 use App\Models\Department;
+use App\Services\UserActivityLogService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Modules\DocumentSystem\Entities\Category;
@@ -108,6 +109,16 @@ class MasterDataApiController extends Controller
             'has_document_number' => $request->input('has_document_number', true),
         ]);
 
+        UserActivityLogService::log(
+            module: 'document_system',
+            action: 'create',
+            resource: 'DocModule',
+            resourceId: $module->id,
+            description: "Membuat module dokumen baru '{$module->name}'",
+            newData: $module->toArray(),
+            request: $request,
+        );
+
         return ResponseFormatter::success($module, 'Module created successfully');
     }
 
@@ -124,11 +135,24 @@ class MasterDataApiController extends Controller
             'has_document_number' => 'boolean',
         ]);
 
+        $oldData = $module->toArray();
+
         $module->update([
             'name'  => $request->name,
             'index' => $request->index,
             'has_document_number' => $request->input('has_document_number', true),
         ]);
+
+        UserActivityLogService::log(
+            module: 'document_system',
+            action: 'update',
+            resource: 'DocModule',
+            resourceId: $module->id,
+            description: "Memperbarui module dokumen '{$module->name}'",
+            oldData: $oldData,
+            newData: $module->fresh()->toArray(),
+            request: $request,
+        );
 
         return ResponseFormatter::success($module, 'Module updated successfully');
     }
@@ -139,7 +163,17 @@ class MasterDataApiController extends Controller
     public function deleteModule($id)
     {
         $module = Module::findOrFail($id);
+        $oldData = $module->toArray();
         $module->delete();
+
+        UserActivityLogService::log(
+            module: 'document_system',
+            action: 'delete',
+            resource: 'DocModule',
+            resourceId: (string) $id,
+            description: "Menghapus module dokumen '{$oldData['name']}'",
+            oldData: $oldData,
+        );
 
         return ResponseFormatter::success(null, 'Module deleted successfully');
     }
@@ -200,6 +234,16 @@ class MasterDataApiController extends Controller
             'index'     => $request->index,
         ]);
 
+        UserActivityLogService::log(
+            module: 'document_system',
+            action: 'create',
+            resource: 'DocCategory',
+            resourceId: $category->id,
+            description: "Membuat kategori dokumen baru '{$category->name}'",
+            newData: $category->toArray(),
+            request: $request,
+        );
+
         return ResponseFormatter::success($category, 'Category created successfully');
     }
 
@@ -216,11 +260,24 @@ class MasterDataApiController extends Controller
             'index'     => 'required|string|max:50',
         ]);
 
+        $oldData = $category->toArray();
+
         $category->update([
             'module_id' => $request->module_id,
             'name'      => $request->name,
             'index'     => $request->index,
         ]);
+
+        UserActivityLogService::log(
+            module: 'document_system',
+            action: 'update',
+            resource: 'DocCategory',
+            resourceId: $category->id,
+            description: "Memperbarui kategori dokumen '{$category->name}'",
+            oldData: $oldData,
+            newData: $category->fresh()->toArray(),
+            request: $request,
+        );
 
         return ResponseFormatter::success($category, 'Category updated successfully');
     }
@@ -231,7 +288,17 @@ class MasterDataApiController extends Controller
     public function deleteCategory($id)
     {
         $category = Category::findOrFail($id);
+        $oldData = $category->toArray();
         $category->delete();
+
+        UserActivityLogService::log(
+            module: 'document_system',
+            action: 'delete',
+            resource: 'DocCategory',
+            resourceId: (string) $id,
+            description: "Menghapus kategori dokumen '{$oldData['name']}'",
+            oldData: $oldData,
+        );
 
         return ResponseFormatter::success(null, 'Category deleted successfully');
     }
@@ -315,6 +382,16 @@ class MasterDataApiController extends Controller
             'index'       => $request->index,
         ]);
 
+        UserActivityLogService::log(
+            module: 'document_system',
+            action: 'create',
+            resource: 'DocMapping',
+            resourceId: $mapping->id,
+            description: "Membuat mapping dokumen baru '{$mapping->name}'",
+            newData: $mapping->toArray(),
+            request: $request,
+        );
+
         return ResponseFormatter::success($mapping, 'Mapping created successfully');
     }
 
@@ -331,11 +408,24 @@ class MasterDataApiController extends Controller
             'index'       => 'required|string|max:50',
         ]);
 
+        $oldData = $mapping->toArray();
+
         $mapping->update([
             'category_id' => $request->category_id,
             'name'        => $request->name,
             'index'       => $request->index,
         ]);
+
+        UserActivityLogService::log(
+            module: 'document_system',
+            action: 'update',
+            resource: 'DocMapping',
+            resourceId: $mapping->id,
+            description: "Memperbarui mapping dokumen '{$mapping->name}'",
+            oldData: $oldData,
+            newData: $mapping->fresh()->toArray(),
+            request: $request,
+        );
 
         return ResponseFormatter::success($mapping, 'Mapping updated successfully');
     }
@@ -346,7 +436,17 @@ class MasterDataApiController extends Controller
     public function deleteMapping($id)
     {
         $mapping = Mapping::findOrFail($id);
+        $oldData = $mapping->toArray();
         $mapping->delete();
+
+        UserActivityLogService::log(
+            module: 'document_system',
+            action: 'delete',
+            resource: 'DocMapping',
+            resourceId: (string) $id,
+            description: "Menghapus mapping dokumen '{$oldData['name']}'",
+            oldData: $oldData,
+        );
 
         return ResponseFormatter::success(null, 'Mapping deleted successfully');
     }

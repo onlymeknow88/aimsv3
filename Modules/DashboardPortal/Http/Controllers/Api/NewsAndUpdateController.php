@@ -4,6 +4,7 @@ namespace Modules\DashboardPortal\Http\Controllers\Api;
 
 use App\Helpers\ResponseFormatter;
 use App\Http\Controllers\Controller;
+use App\Services\UserActivityLogService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Modules\DashboardPortal\app\Models\NewsAndUpdate;
@@ -85,6 +86,16 @@ class NewsAndUpdateController extends Controller
 
         $news = NewsAndUpdate::create($data);
 
+        UserActivityLogService::log(
+            module: 'dashboard_portal',
+            action: 'create',
+            resource: 'NewsAndUpdate',
+            resourceId: $news->id,
+            description: "Membuat artikel berita baru '{$news->title}'",
+            newData: $news->toArray(),
+            request: $request,
+        );
+
         return ResponseFormatter::success($news, 'News and update created successfully', 201);
     }
 
@@ -126,7 +137,20 @@ class NewsAndUpdateController extends Controller
             $data['blob_response'] = $uploadResult['blobResponse'];
         }
 
+        $oldData = $news->toArray();
+
         $news->update($data);
+
+        UserActivityLogService::log(
+            module: 'dashboard_portal',
+            action: 'update',
+            resource: 'NewsAndUpdate',
+            resourceId: $news->id,
+            description: "Memperbarui artikel berita '{$news->title}'",
+            oldData: $oldData,
+            newData: $news->fresh()->toArray(),
+            request: $request,
+        );
 
         return ResponseFormatter::success($news, 'News and update updated successfully');
     }
@@ -137,7 +161,17 @@ class NewsAndUpdateController extends Controller
     public function destroy($id)
     {
         $news = NewsAndUpdate::findOrFail($id);
+        $oldData = $news->toArray();
         $news->delete();
+
+        UserActivityLogService::log(
+            module: 'dashboard_portal',
+            action: 'delete',
+            resource: 'NewsAndUpdate',
+            resourceId: (string) $id,
+            description: "Menghapus artikel berita '{$oldData['title']}'",
+            oldData: $oldData,
+        );
 
         return ResponseFormatter::success(null, 'News and update deleted successfully');
     }
