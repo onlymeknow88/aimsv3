@@ -153,7 +153,7 @@ class MasterDataApiController extends Controller
         $moduleId = $request->query('module_id');
         
         $query = Category::select('id', 'module_id', 'name', 'index')
-            ->with('module:id,name')
+            ->with('module:id,name,index')
             ->withCount('mappings')
             ->orderByRaw('CAST(SUBSTRING_INDEX(document_system_categories.index, ".", 1) AS UNSIGNED) ASC')
             ->orderByRaw('CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(document_system_categories.index, ".", 2), ".", -1) AS UNSIGNED) ASC')
@@ -248,7 +248,7 @@ class MasterDataApiController extends Controller
         $filterModule   = $request->query('filter_module');
 
         $query = Mapping::select('id', 'category_id', 'name', 'index')
-            ->with(['category:id,module_id,name', 'category.module:id,name'])
+            ->with(['category:id,module_id,name,index', 'category.module:id,name,index'])
             ->orderByRaw('CAST(SUBSTRING_INDEX(document_system_mappings.index, ".", 1) AS UNSIGNED) ASC')
             ->orderByRaw('CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(document_system_mappings.index, ".", 2), ".", -1) AS UNSIGNED) ASC')
             ->orderByRaw('CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(document_system_mappings.index, ".", 3), ".", -1) AS UNSIGNED) ASC')

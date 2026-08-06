@@ -195,7 +195,7 @@ export default function useMaker(document = null) {
             formData.append('doc_created', docCreated);
             formData.append('status', statusType === 'draft' ? '2' : '1'); // 2 = Draft, 1 = Waiting Review
 
-            if (documentLevel === 'SOP' || documentLevel === 'TS') {
+            if (documentLevel === 'SOP' || documentLevel === 'TS' || documentLevel === 'MN') {
                 formData.append('sop_number', sopNumber);
             } else if (documentLevel === 'WIN') {
                 formData.append('sop_number', sopNumber);

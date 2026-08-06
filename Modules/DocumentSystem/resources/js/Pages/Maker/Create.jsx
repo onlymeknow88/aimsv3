@@ -190,8 +190,8 @@ export default function Create({ document = null }) {
                                         <div style={{ display: 'flex', alignItems: 'stretch', border: '1px solid var(--border-color)', borderRadius: '6px', backgroundColor: '#fff', overflow: 'hidden' }}>
                                             <span style={{ display: 'flex', alignItems: 'center', padding: '0 12px', backgroundColor: '#e2e8f0', color: '#475569', fontSize: '11px', fontWeight: 600, borderRight: '1px solid var(--border-color)', whiteSpace: 'nowrap' }}>
                                                 {parentDocumentId && activeSops.find(s => s.id == parentDocumentId)
-                                                    ? `${documentLevel}-${activeSops.find(s => s.id == parentDocumentId)?.document_number || activeSops.find(s => s.id == parentDocumentId)?.full_code}-`
-                                                    : `${documentLevel}-${companies.find(c => c.id === company)?.code || 'MAC'}-${departments.find(d => d.id === department)?.document_code || ''}-`
+                                                    ? `${documentLevel === 'FORM' ? 'F' : documentLevel}-${activeSops.find(s => s.id == parentDocumentId)?.document_number || activeSops.find(s => s.id == parentDocumentId)?.full_code}-`
+                                                    : `${documentLevel === 'FORM' ? 'F' : documentLevel}-${companies.find(c => c.id === company)?.code || 'MAC'}-${departments.find(d => d.id === department)?.document_code || ''}-`
                                                 }
                                             </span>
                                             <input
@@ -206,7 +206,7 @@ export default function Create({ document = null }) {
                                 </div>
                             )}
 
-                            {uploadType === 'document' && (documentLevel === 'SOP' || documentLevel === 'TS') && (
+                            {uploadType === 'document' && (documentLevel === 'SOP' || documentLevel === 'TS' || documentLevel === 'MN') && (
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                                     <div style={{ backgroundColor: '#f8fafc', padding: '16px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
                                         <label style={{ fontSize: '10px', fontWeight: 700, color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
@@ -214,13 +214,13 @@ export default function Create({ document = null }) {
                                         </label>
                                         <div style={{ display: 'flex', alignItems: 'stretch', border: '1px solid var(--border-color)', borderRadius: '6px', backgroundColor: '#fff', overflow: 'hidden' }}>
                                             <span style={{ display: 'flex', alignItems: 'center', padding: '0 12px', backgroundColor: '#e2e8f0', color: '#475569', fontSize: '11px', fontWeight: 600, borderRight: '1px solid var(--border-color)', whiteSpace: 'nowrap' }}>
-                                                {documentLevel === 'TS' ? 'TS-' : ''}{companies.find(c => c.id === company)?.code || 'MAC'}-{departments.find(d => d.id === department)?.document_code || ''}-
+                                                {documentLevel === 'TS' ? 'TS-' : documentLevel === 'MN' ? 'MN-' : ''}{companies.find(c => c.id === company)?.code || 'MAC'}-{departments.find(d => d.id === department)?.document_code || ''}-
                                             </span>
                                             <input
                                                 value={sopNumber}
                                                 onChange={e => setSopNumber(e.target.value)}
                                                 required
-                                                placeholder={documentLevel === 'TS' ? "e.g. 01" : "e.g. 001"}
+                                                placeholder={documentLevel === 'TS' || documentLevel === 'MN' ? "e.g. 01" : "e.g. 01"}
                                                 style={{ width: '100%', padding: '10px 12px', border: 'none', outline: 'none', fontSize: '11px' }}
                                             />
                                         </div>
