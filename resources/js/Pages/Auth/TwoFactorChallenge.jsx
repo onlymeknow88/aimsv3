@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useState } from 'react';
 
 export default function TwoFactorChallenge({ hasTotpEnabled, email }) {
     const [mode, setMode]         = useState(hasTotpEnabled ? 'totp' : 'otp');
-    const [otpSent, setOtpSent]   = useState(false);
+    const [otpSent, setOtpSent]   = useState(!hasTotpEnabled);
     const [countdown, setCountdown] = useState(0);
     const [digits, setDigits]     = useState(['', '', '', '', '', '']);
     const inputRefs               = useRef([]);
@@ -17,13 +17,6 @@ export default function TwoFactorChallenge({ hasTotpEnabled, email }) {
         const timer = setInterval(() => setCountdown(c => c - 1), 1000);
         return () => clearInterval(timer);
     }, [countdown]);
-
-    // Auto-send OTP saat pertama kali mode OTP aktif
-    useEffect(() => {
-        if (mode === 'otp' && !otpSent) {
-            handleSendOtp();
-        }
-    }, [mode]);
 
     const getCode = () => digits.join('');
 

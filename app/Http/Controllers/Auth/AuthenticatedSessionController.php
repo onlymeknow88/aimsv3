@@ -39,6 +39,11 @@ class AuthenticatedSessionController extends Controller
 
         $user = Auth::user();
 
+        // Jika user tidak mengaktifkan TOTP, langsung buat dan kirim OTP via email secara sinkron
+        if (!$user->google2fa_enabled) {
+            (new TwoFactorController())->generateAndSendOtp($user);
+        }
+
         // Selalu paksa autentikasi 2-Langkah (2FA) untuk setiap user yang login
         // Simpan user ID di session untuk challenge
         $request->session()->put('2fa_pending', true);
