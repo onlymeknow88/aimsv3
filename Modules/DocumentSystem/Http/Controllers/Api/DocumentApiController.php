@@ -347,6 +347,7 @@ class DocumentApiController extends Controller
         $userId = $user ? $user->id : null;
 
         DB::beginTransaction();
+        try {
             $oldData = $doc->toArray();
             $doc->update([
                 'title' => $request->title,
