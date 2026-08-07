@@ -337,6 +337,10 @@ class DocumentApiController extends Controller
 
         DB::beginTransaction();
         try {
+<<<<<<< Updated upstream
+=======
+            $oldData = $doc->toArray();
+>>>>>>> Stashed changes
             $doc->update([
                 'title' => $request->title,
                 'document_level' => $level,
