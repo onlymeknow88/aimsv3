@@ -33,13 +33,13 @@ export default function StatusTimeline({ status, document }) {
         {
             key: 'review',
             label: 'Tahap Review',
-            sublabel: (['1', '6'].includes(String(document?.status))) ? 'Sedang Direview' : null,
-            timestamp: ['1', '3', '4', '5', '6', '7'].includes(String(document?.status)) ? fmt(document?.updated_at) : null,
+            sublabel: (String(document?.status) === '3') ? 'Sedang Direview' : null,
+            timestamp: ['3', '6', '5', '7'].includes(String(document?.status)) ? fmt(document?.approved_at_pja || document?.updated_at) : null,
         },
         {
             key: 'approvalDCIMS',
             label: 'Approval DC IMS',
-            sublabel: document?.approved_by_crs_user?.name || (String(document?.status) === '3' ? 'Menunggu Persetujuan' : null),
+            sublabel: document?.approved_by_crs_user?.name || (String(document?.status) === '6' ? 'Menunggu Persetujuan' : null),
             timestamp: fmt(document?.approved_at_crs),
         },
         {
@@ -53,8 +53,8 @@ export default function StatusTimeline({ status, document }) {
         return (
         <div style={{ display: 'flex', flexDirection: 'column' }}>
             {steps.map((step, idx) => {
-                const done          = idx < currentStep;
-                const active        = idx === currentStep;
+                const done          = idx < currentStep || (idx === currentStep && currentStep === 3);
+                const active        = idx === currentStep && currentStep !== 3;
                 const showConnector = idx < steps.length - 1;
                 const dotBg = done
                     ? 'var(--success)'
