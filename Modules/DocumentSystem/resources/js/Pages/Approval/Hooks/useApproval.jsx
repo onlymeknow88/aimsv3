@@ -14,7 +14,12 @@ export default function useApproval() {
 
     const fetchDocuments = useCallback(() => {
         setLoading(true);
-        axios.get('/api/document-system/documents?status=1,3,4')
+        axios.get('/api/document-system/documents', {
+            params: {
+                status: '3,6',
+                is_approval: true
+            }
+        })
             .then(res => {
                 setDocs(res.data?.result || []);
             })
