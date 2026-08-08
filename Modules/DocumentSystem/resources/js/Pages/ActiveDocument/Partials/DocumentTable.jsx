@@ -7,11 +7,13 @@ import {
     PaginationNext,
     PaginationPrevious,
 } from "@/components/ui/pagination";
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { flexRender, getCoreRowModel, getFilteredRowModel, useReactTable } from '@tanstack/react-table';
+import axios from 'axios';
 
 import BlobPreviewModal from '@/Components/BlobPreviewModal';
+import SearchableSelect from '@/Components/SearchableSelect';
 import { Checkbox } from '@/components/ui/checkbox';
 import { FileText } from 'lucide-react';
 import { DebouncedInput } from '@/lib/utils';
@@ -30,6 +32,48 @@ export default function DocumentTable({
     onColumnFilterChange,
 }) {
     const [previewAttachment, setPreviewAttachment] = useState(null);
+    const [modulesOpt, setModulesOpt] = useState([]);
+    const [categoriesOpt, setCategoriesOpt] = useState([]);
+    const [mappingsOpt, setMappingsOpt] = useState([]);
+
+    useEffect(() => {
+        axios.get('/api/document-system/modules').then(res => {
+            const list = (res.data?.result || []).map(item => ({
+                id: item.id,
+                name: `${item.index || ''} ${item.name}`.trim(),
+            }));
+            setModulesOpt(list);
+        });
+        axios.get('/api/document-system/categories').then(res => {
+            const list = (res.data?.result || []).map(item => ({
+                id: item.id,
+                name: `${item.index || ''} ${item.name}`.trim(),
+                moduleId: item.module_id,
+            }));
+            setCategoriesOpt(list);
+        });
+        axios.get('/api/document-system/mappings').then(res => {
+            const list = (res.data?.result || []).map(item => ({
+                id: item.id,
+                name: `${item.index || ''} ${item.name}`.trim(),
+                categoryId: item.category_id,
+            }));
+            setMappingsOpt(list);
+        });
+    }, []);
+
+    const handleColumnFilterChange = (columnId, val) => {
+        if (columnId === 'module') {
+            onColumnFilterChange('module', val);
+            onColumnFilterChange('category', '');
+            onColumnFilterChange('mapping', '');
+        } else if (columnId === 'category') {
+            onColumnFilterChange('category', val);
+            onColumnFilterChange('mapping', '');
+        } else {
+            onColumnFilterChange(columnId, val);
+        }
+    };
     const getCompanyCode = (doc) => {
         return doc.company?.company_name || doc.company?.document_code || '-';
     };
@@ -300,25 +344,47 @@ export default function DocumentTable({
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', minWidth: isSearchable ? '120px' : 'auto' }}>
                                             <span>{flexRender(h.column.columnDef.header, h.getContext())}</span>
                                             {isSearchable && onColumnFilterChange && (
-                                                <DebouncedInput
-                                                    type="text"
-                                                    placeholder={`Cari...`}
-                                                    value={columnFilters[h.id] || ''}
-                                                    onChange={(val) => onColumnFilterChange(h.id, val)}
-                                                    onClick={(e) => e.stopPropagation()}
-                                                    style={{
-                                                        width: '100%',
-                                                        padding: '4px 8px',
-                                                        fontSize: '11px',
-                                                        fontWeight: 'normal',
-                                                        border: '1px solid #e2e8f0',
-                                                        borderRadius: '4px',
-                                                        outline: 'none',
-                                                        boxSizing: 'border-box',
-                                                        color: '#334155',
-                                                        backgroundColor: '#fff'
-                                                    }}
-                                                />
+                                                ['module', 'category', 'mapping'].includes(h.id) ? (
+                                                    <div onClick={(e) => e.stopPropagation()} style={{ minWidth: '130px' }}>
+                                                        <SearchableSelect
+                                                            options={
+                                                                h.id === 'module' ? [{ id: '', name: 'Semua Modul' }, ...modulesOpt] :
+                                                                    h.id === 'category' ? [
+                                                                        { id: '', name: 'Semua Kategori' },
+                                                                        ...(columnFilters.module ? categoriesOpt.filter(c => c.moduleId === columnFilters.module) : categoriesOpt)
+                                                                    ] :
+                                                                        [
+                                                                            { id: '', name: 'Semua Mapping' },
+                                                                            ...(columnFilters.category ? mappingsOpt.filter(m => m.categoryId === columnFilters.category) : mappingsOpt)
+                                                                        ]
+                                                            }
+                                                            value={columnFilters[h.id] || ''}
+                                                            onChange={(val) => handleColumnFilterChange(h.id, val || '')}
+                                                            placeholder="Cari..."
+                                                            portal={true}
+                                                        />
+                                                    </div>
+                                                ) : (
+                                                    <DebouncedInput
+                                                        type="text"
+                                                        placeholder={`Cari...`}
+                                                        value={columnFilters[h.id] || ''}
+                                                        onChange={(val) => onColumnFilterChange(h.id, val)}
+                                                        onClick={(e) => e.stopPropagation()}
+                                                        style={{
+                                                            width: '100%',
+                                                            padding: '4px 8px',
+                                                            fontSize: '11px',
+                                                            fontWeight: 'normal',
+                                                            border: '1px solid #e2e8f0',
+                                                            borderRadius: '4px',
+                                                            outline: 'none',
+                                                            boxSizing: 'border-box',
+                                                            color: '#334155',
+                                                            backgroundColor: '#fff'
+                                                        }}
+                                                    />
+                                                )
                                             )}
                                         </div>
                                     </TableHead>

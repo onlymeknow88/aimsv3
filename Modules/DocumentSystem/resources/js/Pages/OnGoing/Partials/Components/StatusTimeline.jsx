@@ -5,10 +5,10 @@ import React from 'react';
 const statusToStep = {
     '1': 1,  // Waiting Review -> step 1 (Tahap Review)
     '2': 0,  // Draft -> step 0
-    '3': 2,  // Routing Approval -> step 2 (Approval DC IMS)
+    '3': 1,  // Waiting DC IMS Tahap 1 -> step 1 (Tahap Review)
     '4': 1,  // Revision -> back to step 1 (Tahap Review)
     '5': 3,  // Active -> step 3 (Dokumen Aktif)
-    '6': 1,  // Prepare Approval -> step 1 (Tahap Review)
+    '6': 2,  // Waiting DC IMS Tahap 2 -> step 2 (Approval DC IMS)
     '7': 3,  // Expired -> step 3 (stays at Dokumen Aktif)
     '8': 3,  // Obsolete -> step 3
 };
@@ -33,20 +33,30 @@ export default function StatusTimeline({ status, document }) {
         {
             key: 'review',
             label: 'Tahap Review',
-            sublabel: (String(document?.status) === '3') ? 'Sedang Direview' : null,
-            timestamp: ['3', '6', '5', '7'].includes(String(document?.status)) ? fmt(document?.approved_at_pja || document?.updated_at) : null,
+            sublabel: ['1', '3'].includes(String(document?.status))
+                ? 'Sedang Direview'
+                : (document?.approved_by_crs_user?.name ? `Diteruskan oleh ${document.approved_by_crs_user.name}` : null),
+            timestamp: ['6', '5', '7'].includes(String(document?.status)) ? fmt(document?.approved_at_crs) : null,
         },
         {
             key: 'approvalDCIMS',
             label: 'Approval DC IMS',
-            sublabel: document?.approved_by_crs_user?.name || (String(document?.status) === '6' ? 'Menunggu Persetujuan' : null),
-            timestamp: fmt(document?.approved_at_crs),
+            sublabel: ['5', '7'].includes(String(document?.status))
+                ? (document?.approved_by_pja_user?.name 
+                    ? `Disetujui oleh ${document.approved_by_pja_user.name}` 
+                    : (document?.approved_by_crs_user?.name ? `Disetujui oleh ${document.approved_by_crs_user.name}` : null))
+                : (String(document?.status) === '6' ? 'Menunggu Persetujuan' : null),
+            timestamp: ['5', '7'].includes(String(document?.status)) 
+                ? fmt(document?.approved_at_pja || document?.approved_at_crs) 
+                : null,
         },
         {
             key: 'active',
             label: 'Dokumen Aktif',
             sublabel: String(document?.status) === '5' ? 'Aktif' : String(document?.status) === '7' ? 'Expired' : null,
-            timestamp: String(document?.status) === '5' || String(document?.status) === '7' ? fmt(document?.approved_at_crs) : null,
+            timestamp: String(document?.status) === '5' || String(document?.status) === '7' 
+                ? fmt(document?.approved_at_pja || document?.approved_at_crs) 
+                : null,
         },
     ];
 

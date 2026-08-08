@@ -409,7 +409,7 @@ export default function Detail({ id }) {
                                             </svg>
                                             <span>Processing...</span>
                                         </>
-                                    ) : 'Approve & Rooting'}
+                                    ) : 'Routing for Approval'}
                                 </button>
                             )}
                             {String(document.status) === '6' && (

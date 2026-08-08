@@ -264,8 +264,9 @@ class FieldLeadershipApiController extends Controller
 
         if ($validator->fails()) {
             return response()->json([
-                'message' => 'Data tidak valid.',
-                'errors'  => $validator->errors(),
+                'meta'   => ['code' => 422, 'status' => 'error', 'message' => 'Data tidak valid.'],
+                'errors' => $validator->errors(),
+                'result' => null,
             ], 422);
         }
 

@@ -12,11 +12,13 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Modules\DocumentSystem\Entities\Document;
 use Modules\DocumentSystem\Entities\Attachment;
+use App\Traits\SendsEmail;
 use Modules\DocumentSystem\Services\DocumentSystemService;
 use Modules\DocumentSystem\Services\WatermarkService;
 
 class DocumentApiController extends Controller
 {
+    use SendsEmail;
     /**
      * Get documents list.
      */
@@ -79,21 +81,33 @@ class DocumentApiController extends Controller
         if ($request->filled('filter_module')) {
             $mod = $request->query('filter_module');
             $query->whereHas('mapping.category.module', function ($q) use ($mod) {
-                $q->where('name', 'like', "%{$mod}%");
+                if (\Illuminate\Support\Str::isUuid($mod)) {
+                    $q->where('id', $mod);
+                } else {
+                    $q->where('name', 'like', "%{$mod}%");
+                }
             });
         }
 
         if ($request->filled('filter_category')) {
             $cat = $request->query('filter_category');
             $query->whereHas('mapping.category', function ($q) use ($cat) {
-                $q->where('name', 'like', "%{$cat}%");
+                if (\Illuminate\Support\Str::isUuid($cat)) {
+                    $q->where('id', $cat);
+                } else {
+                    $q->where('name', 'like', "%{$cat}%");
+                }
             });
         }
 
         if ($request->filled('filter_mapping')) {
             $map = $request->query('filter_mapping');
             $query->whereHas('mapping', function ($q) use ($map) {
-                $q->where('name', 'like', "%{$map}%");
+                if (\Illuminate\Support\Str::isUuid($map)) {
+                    $q->where('id', $map);
+                } else {
+                    $q->where('name', 'like', "%{$map}%");
+                }
             });
         }
 
@@ -256,8 +270,8 @@ class DocumentApiController extends Controller
                 }
             }
 
-            // Notify reviewers when submitted for review (status = 3)
-            if ($doc->status === '3') {
+            // Notify reviewers when submitted for review (status = 1 or 3)
+            if (in_array((string)$doc->status, ['1', '3'])) {
                 $dcImsUsers = \App\Models\User::whereHas('documentRoles', function ($q) {
                     $q->whereIn('slug', ['approval_dc_ims']);
                 })
@@ -265,10 +279,6 @@ class DocumentApiController extends Controller
                 ->where('id', '!=', $doc->created_by)
                 ->get();
                 $dcImsEmails = $dcImsUsers->pluck('email')->filter()->unique()->all();
-                if (empty($dcImsEmails)) {
-                    $bustanul = \App\Models\User::where('name', 'like', '%Bustanul%')->first();
-                    $dcImsEmails[] = $bustanul ? $bustanul->email : 'bustanulmuhadisin@aims.test';
-                }
                 $receivers = implode(';', $dcImsEmails);
                 
                 $cc = '';
@@ -450,8 +460,8 @@ class DocumentApiController extends Controller
                 }
             }
 
-            // Notify reviewers when submitted for review (status = 3)
-            if ($doc->status === '3') {
+            // Notify reviewers when submitted for review (status = 1 or 3)
+            if (in_array((string)$doc->status, ['1', '3'])) {
                 $dcImsUsers = \App\Models\User::whereHas('documentRoles', function ($q) {
                     $q->whereIn('slug', ['approval_dc_ims']);
                 })
@@ -459,10 +469,6 @@ class DocumentApiController extends Controller
                 ->where('id', '!=', $doc->created_by)
                 ->get();
                 $dcImsEmails = $dcImsUsers->pluck('email')->filter()->unique()->all();
-                if (empty($dcImsEmails)) {
-                    $bustanul = \App\Models\User::where('name', 'like', '%Bustanul%')->first();
-                    $dcImsEmails[] = $bustanul ? $bustanul->email : 'bustanulmuhadisin@aims.test';
-                }
                 $receivers = implode(';', $dcImsEmails);
                 
                 $doc->load(['mapping.category.module', 'invitedPeople.user', 'owner', 'creator']);
@@ -727,8 +733,8 @@ class DocumentApiController extends Controller
 
             $updatePayload = [
                 'status'          => '5',
-                'approved_by_crs' => $userId,
-                'approved_at_crs' => now(),
+                'approved_by_pja' => $userId,
+                'approved_at_pja' => now(),
             ];
             if ($uncontrolledPath) {
                 $updatePayload['uncontrolled_file_path']   = $uncontrolledPath;
@@ -967,28 +973,29 @@ class DocumentApiController extends Controller
         $doc = Document::findOrFail($id);
 
         $doc->update([
-            'status'          => '3',
+            'status'          => '6',
             'approved_by_crs' => $userId,
             'approved_at_crs' => now(),
         ]);
 
         // Notify invited people: routed for further approval
-        $doc->load(['owner', 'invitedPeople']);
+        $doc->load(['mapping.category.module', 'invitedPeople.user', 'owner', 'creator']);
         $receivers = collect($doc->invitedPeople)->pluck('email')->filter()->implode(';');
         if ($receivers) {
             $html = view('documentsystem::email_templates.document_system_review', [
-                'title'      => $doc->title,
-                'pic'        => $doc->owner?->name ?? '-',
-                'action_url' => route('doc.approval.detail', $doc->id),
+                'document'         => $doc,
+                'title'            => $doc->title,
+                'pic'              => $doc->owner?->name ?? '-',
+                'action_url'       => route('doc.approval.detail', $doc->id),
+                'header_title'     => 'Dokumen Diteruskan untuk Persetujuan',
+                'description_text' => 'Pemberitahuan: Dokumen berikut telah berhasil ditinjau dan diteruskan untuk persetujuan tahap berikutnya.',
             ])->render();
-            sendPowerAutomateEmail([
-                'SendTo'        => $receivers,
-                'Title'         => 'Dokumen Diteruskan untuk Persetujuan: ' . $doc->title,
-                'MsgBody'       => $html,
-                'AttchmentPath' => '',
-                'AttchmentName' => '',
-                'SendCC'        => '',
-            ]);
+            $this->sendSimpleEmail(
+                recipients: $receivers,
+                subject: 'Dokumen Diteruskan untuk Persetujuan: ' . $doc->title,
+                body: $html,
+                isHtml: true
+            );
         }
 
         DB::table('document_system_activities')->insert([
@@ -1075,22 +1082,23 @@ class DocumentApiController extends Controller
             }
 
             // Notify maker: document rejected/returned
-            $doc->load(['owner', 'invitedPeople']);
+            $doc->load(['mapping.category.module', 'invitedPeople.user', 'owner', 'creator']);
             $receivers = collect($doc->invitedPeople)->pluck('email')->filter()->implode(';');
             if ($receivers) {
                 $html = view('documentsystem::email_templates.document_system_review', [
-                    'title'      => $doc->title,
-                    'pic'        => $doc->owner?->name ?? '-',
-                    'action_url' => route('doc.approval.detail', $doc->id),
+                    'document'         => $doc,
+                    'title'            => $doc->title,
+                    'pic'              => $doc->owner?->name ?? '-',
+                    'action_url'       => route('doc.approval.detail', $doc->id),
+                    'header_title'     => 'Dokumen Dikembalikan (Returned/Rejected)',
+                    'description_text' => 'Pemberitahuan: Dokumen berikut telah dikembalikan oleh peninjau untuk dilakukan revisi/perbaikan.',
                 ])->render();
-                sendPowerAutomateEmail([
-                    'SendTo'        => $receivers,
-                    'Title'         => 'Dokumen Returned/Rejected: ' . $doc->title,
-                    'MsgBody'       => $html,
-                    'AttchmentPath' => '',
-                    'AttchmentName' => '',
-                    'SendCC'        => '',
-                ]);
+                $this->sendSimpleEmail(
+                    recipients: $receivers,
+                    subject: 'Dokumen Returned/Rejected: ' . $doc->title,
+                    body: $html,
+                    isHtml: true
+                );
             }
 
             DB::commit();
