@@ -80,7 +80,12 @@ class OtpAuthController extends Controller
             <p style='font-size: 11px; color: #64748b;'>Email ini dikirimkan otomatis oleh sistem AIMS V3. Harap jangan membalas email ini.</p>
         </div>";
 
-        $mailResult = $this->sendSimpleEmail($email, $subject, $body, true);
+        if (config('app.env') === 'production') {
+            $mailResult = $this->sendSimpleEmail($email, $subject, $body, true);
+        } else {
+            \Illuminate\Support\Facades\Log::info("OTP Login AIMS V3 (Local/Dev) for {$email}: {$otp}");
+            $mailResult = ['success' => true];
+        }
 
         if (!$mailResult['success']) {
             return ResponseFormatter::error(

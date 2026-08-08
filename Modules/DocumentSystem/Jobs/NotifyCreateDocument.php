@@ -12,7 +12,7 @@ use Illuminate\Queue\SerializesModels;
 
 class NotifyCreateDocument implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels, \App\Traits\SendsEmail;
 
     public $document_id;
 
@@ -34,7 +34,7 @@ class NotifyCreateDocument implements ShouldQueue
     public function handle()
     {
         $document = Document::with([
-            'peoples:document_id,email',
+            'invitedPeople:document_id,email',
             'attachments:document_id,path',
             'user:id,name'
         ])->find($this->document_id);
@@ -43,24 +43,57 @@ class NotifyCreateDocument implements ShouldQueue
             return;
         }
 
-        $receiver = collect($document->peoples)->pluck('email')->implode(';');
+        $receiver = collect($document->invitedPeople)->pluck('email')->filter()->implode(';');
         $attachments = $document->attachments;
         $attachmentPath = $attachments->isNotEmpty() ? $attachments->first()->path : '';
         $attachmentName = $attachmentPath ? basename($attachmentPath) : '';
 
-        $html = view('documentsystem::email_templates.document_system_review', [
-            'title'      => $document->title,
-            'pic'        => $document->user->name,
-            'action_url' => url('document-systems/login'),
-        ])->render();
+        $attachmentsList = [];
+        if ($attachmentPath) {
+            // If it's a blob storage path, we should fetch it or pass it.
+            // Under Laravel SendsEmail trait, it expects a path or structured array.
+            // Let's download the attachment if it is stored in Azure Blob:
+            try {
+                $sas = GetBlobSasUri('aims-cntr', $attachmentPath);
+                $url = is_array($sas)
+                    ? ($sas['blobUriSas'] ?? $sas['sasUri'] ?? $sas['url'] ?? $sas['blobUri'] ?? null)
+                    : $sas;
+                if ($url) {
+                    $client = new \GuzzleHttp\Client(['verify' => config('app.env') === 'production']);
+                    $contents = $client->get($url)->getBody()->getContents();
+                    $tempPath = tempnam(sys_get_temp_dir(), 'mail_doc_');
+                    file_put_contents($tempPath, $contents);
+                    $attachmentsList[] = [
+                        'name' => $attachmentName ?: 'document.pdf',
+                        'path' => $tempPath,
+                    ];
+                }
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::error('Failed to download attachment for NotifyCreateDocument job: ' . $e->getMessage());
+            }
+        }
 
-        sendPowerAutomateEmail([
-            'SendTo'          => $receiver,
-            'Title'           => 'New Document: ' . $document->title,
-            'MsgBody'         => $html,
-            'AttchmentPath'   => $attachmentPath,
-            'AttchmentName'   => $attachmentName,
-            'SendCC'          => '',
-        ]);
+        if ($receiver) {
+            $this->sendEmailWithTemplate(
+                viewTemplate: 'documentsystem::email_templates.document_system_review',
+                mailData: [
+                    'title'      => $document->title,
+                    'pic'        => $document->user->name ?? '-',
+                    'action_url' => url('document-systems/login'),
+                ],
+                recipients: $receiver,
+                subject: 'New Document: ' . $document->title,
+                cc: null,
+                bcc: null,
+                attachments: $attachmentsList
+            );
+        }
+
+        // Cleanup temporary files
+        foreach ($attachmentsList as $att) {
+            if (isset($att['path']) && file_exists($att['path'])) {
+                @unlink($att['path']);
+            }
+        }
     }
 }
