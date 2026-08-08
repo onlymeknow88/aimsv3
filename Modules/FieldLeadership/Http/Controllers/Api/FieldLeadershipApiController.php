@@ -8,9 +8,11 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
+use App\Traits\SendsEmail;
 
 class FieldLeadershipApiController extends Controller
 {
+    use SendsEmail;
     // ── Status constants ──────────────────────────────────────────────────────
     const STATUS_OPEN              = 'Open';
     const STATUS_ON_REVIEW_PICA   = 'On Review PICA';
@@ -387,6 +389,29 @@ class FieldLeadershipApiController extends Controller
                 'updated_at'  => now(),
             ]);
 
+            // Send email to PJA if published
+            if ($request->input('publish') === 'Publish') {
+                $pja = DB::table('users')->where('id', $request->pja_id)->first();
+                if ($pja && !empty($pja->email)) {
+                    $creatorName = auth()->user()->name ?? 'User AIMS';
+                    $subject = '[AIMS] Penugasan Review Observasi Field Leadership - Baru';
+                    $body = "Halo,\n\n" .
+                            "Sebuah observasi Field Leadership baru telah dikirimkan dan membutuhkan review Anda sebagai Penanggung Jawab Area (PJA).\n\n" .
+                            "Detail Observasi:\n" .
+                            "- Jenis: {$request->type}\n" .
+                            "- Tanggal: {$request->date}\n" .
+                            "- Detail Perusahaan: {$request->detail_company}\n" .
+                            "- Dilaporkan oleh: {$creatorName}\n\n" .
+                            "Silakan masuk ke sistem AIMS untuk melakukan review.";
+
+                    try {
+                        $this->sendSimpleEmail($pja->email, $subject, $body);
+                    } catch (\Throwable $mailError) {
+                        \Log::error('FieldLeadership Mail Error: ' . $mailError->getMessage());
+                    }
+                }
+            }
+
             DB::commit();
             return ResponseFormatter::success(['id' => $id], 'Observation created successfully', 201);
 
@@ -448,6 +473,33 @@ class FieldLeadershipApiController extends Controller
         // Remove status from update data unless explicitly provided
         if (!$request->has('status')) {
             unset($updateData['status']);
+        }
+
+        // Send email to PJA if transition from Draft to Publish
+        if (($fl->published ?? 'Draft') === 'Draft' && $request->input('publish') === 'Publish') {
+            $pjaId = $updateData['pja_id'] ?? $fl->pja_id;
+            $pja = DB::table('users')->where('id', $pjaId)->first();
+            if ($pja && !empty($pja->email)) {
+                $creatorName = auth()->user()->name ?? 'User AIMS';
+                $type = $updateData['type'] ?? $fl->type;
+                $date = $updateData['date'] ?? $fl->date;
+                $detailCompany = $updateData['detail_company'] ?? $fl->detail_company;
+                $subject = '[AIMS] Penugasan Review Observasi Field Leadership - Baru';
+                $body = "Halo,\n\n" .
+                        "Sebuah observasi Field Leadership baru telah dikirimkan dan membutuhkan review Anda sebagai Penanggung Jawab Area (PJA).\n\n" .
+                        "Detail Observasi:\n" .
+                        "- Jenis: {$type}\n" .
+                        "- Tanggal: {$date}\n" .
+                        "- Detail Perusahaan: {$detailCompany}\n" .
+                        "- Dilaporkan oleh: {$creatorName}\n\n" .
+                        "Silakan masuk ke sistem AIMS untuk melakukan review.";
+
+                try {
+                    $this->sendSimpleEmail($pja->email, $subject, $body);
+                } catch (\Throwable $mailError) {
+                    \Log::error('FieldLeadership Mail Error: ' . $mailError->getMessage());
+                }
+            }
         }
 
         DB::table('field_leaderships')->where('id', $id)->update($updateData);

@@ -8,6 +8,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use App\Traits\SendsEmail;
 
 /**
  * Workflow Baru Field Leadership:
@@ -35,6 +36,7 @@ use Illuminate\Support\Str;
  */
 class FieldLeadershipApprovalApiController extends Controller
 {
+    use SendsEmail;
     const STATUS_OPEN            = 'Open';
     const STATUS_ON_REVIEW_PJA   = 'On Review PJA';
     const STATUS_PENDING_CRS     = 'Pending CRS';
@@ -91,6 +93,48 @@ class FieldLeadershipApprovalApiController extends Controller
             $this->createPicaDocumentsForFl($fl);
         }
 
+        // Send Email Notifications
+        if ($nextStatus === self::STATUS_ON_REVIEW_PJA) {
+            $pja = DB::table('users')->where('id', $fl->pja_id)->first();
+            if ($pja && !empty($pja->email)) {
+                $creatorName = auth()->user()->name ?? 'User AIMS';
+                $subject = '[AIMS] Penugasan Review Observasi Field Leadership';
+                $body = "Halo,\n\n" .
+                        "Sebuah observasi Field Leadership baru telah dikirimkan untuk direview oleh Anda sebagai PJA.\n\n" .
+                        "Detail Observasi:\n" .
+                        "- Jenis: {$fl->type}\n" .
+                        "- Tanggal: {$fl->date}\n" .
+                        "- Detail Perusahaan: {$fl->detail_company}\n" .
+                        "- Dilaporkan oleh: {$creatorName}\n\n" .
+                        "Silakan masuk ke sistem AIMS untuk melakukan review.";
+                try {
+                    $this->sendSimpleEmail($pja->email, $subject, $body);
+                } catch (\Throwable $e) {
+                    \Log::error('Mail error in submit PJA: ' . $e->getMessage());
+                }
+            }
+        } else {
+            $crsEmails = $this->getCrsEmails();
+            if (!empty($crsEmails)) {
+                $creatorName = auth()->user()->name ?? 'User AIMS';
+                $subject = '[AIMS] Penugasan Tindak Lanjut Observasi Field Leadership';
+                $body = "Halo,\n\n" .
+                        "Sebuah observasi Field Leadership telah dikirimkan ke CRS untuk ditindaklanjuti/diverifikasi.\n\n" .
+                        "Detail Observasi:\n" .
+                        "- Jenis: {$fl->type}\n" .
+                        "- Tanggal: {$fl->date}\n" .
+                        "- Detail Perusahaan: {$fl->detail_company}\n" .
+                        "- Dilaporkan oleh: {$creatorName}\n" .
+                        "- Status: {$nextStatus}\n\n" .
+                        "Silakan masuk ke sistem AIMS untuk menindaklanjuti.";
+                try {
+                    $this->sendSimpleEmail($crsEmails, $subject, $body);
+                } catch (\Throwable $e) {
+                    \Log::error('Mail error in submit CRS: ' . $e->getMessage());
+                }
+            }
+        }
+
         return ResponseFormatter::success(
             ['id' => $id, 'status' => $nextStatus],
             "Dokumen berhasil disubmit. Status: {$nextStatus}"
@@ -140,6 +184,29 @@ class FieldLeadershipApprovalApiController extends Controller
             $this->createPicaDocumentsForFl($fl);
         }
 
+        // Send Email to CRS
+        $crsEmails = $this->getCrsEmails();
+        if (!empty($crsEmails)) {
+            $reviewerName = auth()->user()->name ?? 'PJA';
+            $subject = '[AIMS] Review PJA Selesai - Observasi Field Leadership';
+            $body = "Halo,\n\n" .
+                    "Review PJA untuk observasi Field Leadership berikut telah selesai dilakukan.\n\n" .
+                    "Detail Observasi:\n" .
+                    "- Jenis: {$fl->type}\n" .
+                    "- Tanggal: {$fl->date}\n" .
+                    "- Detail Perusahaan: {$fl->detail_company}\n" .
+                    "- Direview oleh: {$reviewerName}\n" .
+                    "- Kesesuaian Area PJA: " . ($isAreaSuitable ? 'Sesuai' : 'Tidak Sesuai') . "\n" .
+                    "- Alasan Perubahan (jika ada): " . ($request->input('pja_change_reason') ?: '-') . "\n" .
+                    "- Status Baru: {$nextStatus}\n\n" .
+                    "Silakan masuk ke sistem AIMS untuk menindaklanjuti.";
+            try {
+                $this->sendSimpleEmail($crsEmails, $subject, $body);
+            } catch (\Throwable $e) {
+                \Log::error('Mail error in pjaReview: ' . $e->getMessage());
+            }
+        }
+
         return ResponseFormatter::success(
             ['id' => $id, 'status' => $nextStatus],
             "Review PJA selesai. Status: {$nextStatus}"
@@ -187,6 +254,47 @@ class FieldLeadershipApprovalApiController extends Controller
         $this->logActivity($id, $logMsg);
         $newStatus = $request->action === 'approve' ? self::STATUS_ON_REVIEW_CRS : self::STATUS_NOT_FOLLOWED_UP;
 
+        // Send Email Notifications
+        if ($request->action === 'approve' && $request->pja_id_new) {
+            $newPja = DB::table('users')->where('id', $request->pja_id_new)->first();
+            if ($newPja && !empty($newPja->email)) {
+                $subject = '[AIMS] Penugasan PJA Baru - Observasi Field Leadership';
+                $body = "Halo,\n\n" .
+                        "Anda telah ditunjuk oleh CRS sebagai Penanggung Jawab Area (PJA) baru untuk observasi Field Leadership berikut.\n\n" .
+                        "Detail Observasi:\n" .
+                        "- Jenis: {$fl->type}\n" .
+                        "- Tanggal: {$fl->date}\n" .
+                        "- Detail Perusahaan: {$fl->detail_company}\n\n" .
+                        "Silakan masuk ke sistem AIMS untuk menindaklanjuti perbaikan.";
+                try {
+                    $this->sendSimpleEmail($newPja->email, $subject, $body);
+                } catch (\Throwable $e) {
+                    \Log::error('Mail error in crsAction PJA: ' . $e->getMessage());
+                }
+            }
+        } elseif ($request->action === 'reject') {
+            $maker = DB::table('users')
+                ->where('id', $fl->created_by)
+                ->orWhere('employee_id', $fl->created_by)
+                ->first();
+            if ($maker && !empty($maker->email)) {
+                $subject = '[AIMS] Observasi Tidak Ditindaklanjuti - Field Leadership';
+                $body = "Halo,\n\n" .
+                        "Observasi Field Leadership yang Anda laporkan telah diputuskan oleh CRS untuk tidak ditindaklanjuti.\n\n" .
+                        "Detail Observasi:\n" .
+                        "- Jenis: {$fl->type}\n" .
+                        "- Tanggal: {$fl->date}\n" .
+                        "- Detail Perusahaan: {$fl->detail_company}\n" .
+                        "- Alasan: " . ($request->reason ?: '-') . "\n\n" .
+                        "Silakan cek sistem AIMS untuk informasi lebih lanjut.";
+                try {
+                    $this->sendSimpleEmail($maker->email, $subject, $body);
+                } catch (\Throwable $e) {
+                    \Log::error('Mail error in crsAction Maker: ' . $e->getMessage());
+                }
+            }
+        }
+
         return ResponseFormatter::success(
             ['id' => $id, 'status' => $newStatus],
             "Aksi CRS berhasil. Status: {$newStatus}"
@@ -227,6 +335,27 @@ class FieldLeadershipApprovalApiController extends Controller
                 ->update(['status' => 'Closed', 'updated_at' => now()]);
             $this->logActivity($id, 'CRS memverifikasi perbaikan — Field Leadership CLOSED (Case Closed)');
             $this->closePicaDocumentsForFl($id);
+
+            // Send Email Notification on Approval (Closed)
+            $maker = DB::table('users')->where('id', $fl->created_by)->orWhere('employee_id', $fl->created_by)->first();
+            $pjaId = $fl->pja_id_new ?: $fl->pja_id;
+            $pja = DB::table('users')->where('id', $pjaId)->first();
+            $subject = '[AIMS] CLOSED - Observasi Field Leadership Selesai';
+            $body = "Halo,\n\n" .
+                    "Observasi Field Leadership berikut telah selesai diverifikasi oleh CRS dan berstatus CLOSED.\n\n" .
+                    "Detail Observasi:\n" .
+                    "- Jenis: {$fl->type}\n" .
+                    "- Tanggal: {$fl->date}\n" .
+                    "- Detail Perusahaan: {$fl->detail_company}\n\n" .
+                    "Terima kasih atas kontribusi Anda.";
+
+            if ($maker && !empty($maker->email)) {
+                try { $this->sendSimpleEmail($maker->email, $subject, $body); } catch (\Throwable $e) {}
+            }
+            if ($pja && !empty($pja->email) && ($pja->email !== ($maker->email ?? ''))) {
+                try { $this->sendSimpleEmail($pja->email, $subject, $body); } catch (\Throwable $e) {}
+            }
+
             return ResponseFormatter::success(
                 ['id' => $id, 'status' => self::STATUS_CLOSED],
                 'Field Leadership ditutup. Case Closed.'
@@ -240,6 +369,23 @@ class FieldLeadershipApprovalApiController extends Controller
             $logMsg = 'CRS menolak verifikasi — dikembalikan ke PJA untuk perbaikan ulang';
             if ($reason) $logMsg .= ". Alasan: {$reason}";
             $this->logActivity($id, $logMsg);
+
+            // Send Email Notification on Rejection (Return to PJA)
+            $pjaId = $fl->pja_id_new ?: $fl->pja_id;
+            $pja = DB::table('users')->where('id', $pjaId)->first();
+            if ($pja && !empty($pja->email)) {
+                $subject = '[AIMS] Perbaikan Ditolak - Observasi Field Leadership';
+                $body = "Halo,\n\n" .
+                        "Verifikasi perbaikan untuk observasi Field Leadership berikut ditolak oleh CRS dan dikembalikan ke PJA untuk perbaikan ulang.\n\n" .
+                        "Detail Observasi:\n" .
+                        "- Jenis: {$fl->type}\n" .
+                        "- Tanggal: {$fl->date}\n" .
+                        "- Detail Perusahaan: {$fl->detail_company}\n" .
+                        "- Alasan Penolakan: " . ($reason ?: '-') . "\n\n" .
+                        "Silakan masuk ke sistem AIMS untuk melakukan perbaikan ulang.";
+                try { $this->sendSimpleEmail($pja->email, $subject, $body); } catch (\Throwable $e) {}
+            }
+
             return ResponseFormatter::success(
                 ['id' => $id, 'status' => self::STATUS_ON_REVIEW_PJA],
                 'Dikembalikan ke PJA untuk perbaikan ulang.'
@@ -307,6 +453,46 @@ class FieldLeadershipApprovalApiController extends Controller
                     ]);
                 } catch (\Throwable $e) {
                     \Log::error('Failed to upload return activity file: ' . $e->getMessage());
+                }
+            }
+        }
+
+        // Send Email Notification on Return
+        if ($prevStatus === self::STATUS_OPEN) {
+            $maker = DB::table('users')->where('id', $fl->created_by)->orWhere('employee_id', $fl->created_by)->first();
+            if ($maker && !empty($maker->email)) {
+                $subject = '[AIMS] Observasi Dikembalikan - Field Leadership';
+                $body = "Halo,\n\n" .
+                        "Observasi Field Leadership yang Anda laporkan telah dikembalikan untuk direvisi.\n\n" .
+                        "Detail Observasi:\n" .
+                        "- Jenis: {$fl->type}\n" .
+                        "- Tanggal: {$fl->date}\n" .
+                        "- Detail Perusahaan: {$fl->detail_company}\n" .
+                        "- Catatan Pengembalian: {$comment}\n\n" .
+                        "Silakan masuk ke sistem AIMS untuk merevisi dokumen.";
+                try {
+                    $this->sendSimpleEmail($maker->email, $subject, $body);
+                } catch (\Throwable $e) {
+                    \Log::error('Mail error in returnMaker: ' . $e->getMessage());
+                }
+            }
+        } elseif ($prevStatus === self::STATUS_ON_REVIEW_PJA) {
+            $pjaId = $fl->pja_id_new ?: $fl->pja_id;
+            $pja = DB::table('users')->where('id', $pjaId)->first();
+            if ($pja && !empty($pja->email)) {
+                $subject = '[AIMS] Review Dikembalikan - Observasi Field Leadership';
+                $body = "Halo,\n\n" .
+                        "Review observasi Field Leadership berikut dikembalikan untuk dievaluasi ulang.\n\n" .
+                        "Detail Observasi:\n" .
+                        "- Jenis: {$fl->type}\n" .
+                        "- Tanggal: {$fl->date}\n" .
+                        "- Detail Perusahaan: {$fl->detail_company}\n" .
+                        "- Catatan Pengembalian: {$comment}\n\n" .
+                        "Silakan masuk ke sistem AIMS untuk meninjau kembali.";
+                try {
+                    $this->sendSimpleEmail($pja->email, $subject, $body);
+                } catch (\Throwable $e) {
+                    \Log::error('Mail error in returnPja: ' . $e->getMessage());
                 }
             }
         }
@@ -432,5 +618,18 @@ class FieldLeadershipApprovalApiController extends Controller
             'created_at'  => now(),
             'updated_at'  => now(),
         ]);
+    }
+
+    private function getCrsEmails()
+    {
+        return DB::table('users as u')
+            ->join('aims_user_roles as ur', 'u.id', '=', 'ur.user_id')
+            ->join('aims_roles as r', 'ur.role_id', '=', 'r.id')
+            ->join('aims_modules as m', 'r.module_id', '=', 'm.id')
+            ->where('m.slug', 'field-leadership')
+            ->whereIn('r.slug', ['super_admin', 'fls_admin'])
+            ->whereNotNull('u.email')
+            ->pluck('u.email')
+            ->toArray();
     }
 }
