@@ -290,7 +290,11 @@ class TwoFactorController extends Controller
             <p style='font-size: 11px; color: #64748b;'>Email ini dikirimkan otomatis oleh sistem AIMS V3. Harap jangan membalas email ini.</p>
         </div>";
 
-        $this->sendSimpleEmail($user->email, $subject, $body, true);
+        if (config('app.env') === 'production') {
+            $this->sendSimpleEmail($user->email, $subject, $body, true);
+        } else {
+            \Illuminate\Support\Facades\Log::info("OTP Login AIMS V3 (Local/Dev) for {$user->email}: {$otp}");
+        }
     }
 
     private function generateRecoveryCodes(): array
