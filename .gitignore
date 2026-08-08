@@ -22,3 +22,7 @@ yarn-error.log
 /.agents
 /.kilo
 /.kilocode
+/.gemini
+/skills
+/commands
+/docs

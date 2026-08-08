@@ -140,7 +140,7 @@ export default function ObsoleteTable({
             accessorKey: 'revision',
             id: 'revision',
             header: 'Rev',
-            cell: info => <span style={{ color: 'var(--text-secondary)' }}>Rev {info.getValue() || 0}</span>
+            cell: info => <span style={{ color: 'var(--text-secondary)' }}>{info.getValue() || 0}.0</span>
         },
         {
             accessorKey: 'status',
@@ -340,149 +340,149 @@ export default function ObsoleteTable({
         </div>
 
         {/* Pagination Controls */}
-                {pagination && (
-                    <div
-                        style={{
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "space-between",
-                            padding: "14px 24px",
-                            borderTop: "1px solid #f1f5f9",
-                            backgroundColor: "#fafafa",
-                            fontSize: "13px",
-                            color: "#64748b",
-                            flexWrap: "wrap",
-                            gap: "12px",
-                        }}
-                    >
+        {pagination && (
+            <div
+                style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    padding: "14px 24px",
+                    borderTop: "1px solid #f1f5f9",
+                    backgroundColor: "#fafafa",
+                    fontSize: "13px",
+                    color: "#64748b",
+                    flexWrap: "wrap",
+                    gap: "12px",
+                }}
+            >
+                <div
+                    style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "16px",
+                        flexWrap: "wrap",
+                    }}
+                >
+                    <div>
+                        Menampilkan Halaman{" "}
+                        <strong>{pagination.current_page}</strong> dari{" "}
+                        <strong>{pagination.last_page}</strong> (Total{" "}
+                        <strong>{pagination.total}</strong> data)
+                    </div>
+                    {onLimitChange && (
                         <div
                             style={{
                                 display: "flex",
                                 alignItems: "center",
-                                gap: "16px",
-                                flexWrap: "wrap",
+                                gap: "6px",
                             }}
                         >
-                            <div>
-                                Menampilkan Halaman{" "}
-                                <strong>{pagination.current_page}</strong> dari{" "}
-                                <strong>{pagination.last_page}</strong> (Total{" "}
-                                <strong>{pagination.total}</strong> data)
-                            </div>
-                            {onLimitChange && (
-                                <div
-                                    style={{
-                                        display: "flex",
-                                        alignItems: "center",
-                                        gap: "6px",
-                                    }}
-                                >
-                                    <span
-                                        style={{
-                                            fontSize: "12px",
-                                            color: "#64748b",
-                                        }}
-                                    >
-                                        Baris per halaman:
-                                    </span>
-                                    <select
-                                        value={limit}
-                                        onChange={(e) =>
-                                            onLimitChange(Number(e.target.value))
-                                        }
-                                        style={{
-                                            padding: "4px 24px 4px 8px",
-                                            border: "1.5px solid #e2e8f0",
-                                            borderRadius: "6px",
-                                            backgroundColor: "#fff",
-                                            fontSize: "12px",
-                                            color: "#475569",
-                                            cursor: "pointer",
-                                            outline: "none",
-                                        }}
-                                    >
-                                        <option value={10}>10</option>
-                                        <option value={25}>25</option>
-                                        <option value={50}>50</option>
-                                        <option value={100}>100</option>
-                                    </select>
-                                </div>
-                            )}
+                            <span
+                                style={{
+                                    fontSize: "12px",
+                                    color: "#64748b",
+                                }}
+                            >
+                                Baris per halaman:
+                            </span>
+                            <select
+                                value={limit}
+                                onChange={(e) =>
+                                    onLimitChange(Number(e.target.value))
+                                }
+                                style={{
+                                    padding: "4px 24px 4px 8px",
+                                    border: "1.5px solid #e2e8f0",
+                                    borderRadius: "6px",
+                                    backgroundColor: "#fff",
+                                    fontSize: "12px",
+                                    color: "#475569",
+                                    cursor: "pointer",
+                                    outline: "none",
+                                }}
+                            >
+                                <option value={10}>10</option>
+                                <option value={25}>25</option>
+                                <option value={50}>50</option>
+                                <option value={100}>100</option>
+                            </select>
                         </div>
-                        <Pagination className="mx-0 w-auto">
-                            <PaginationContent>
-                                <PaginationItem>
-                                    <PaginationPrevious
-                                        onClick={() =>
-                                            onPageChange(
-                                                pagination.current_page - 1,
-                                            )
+                    )}
+                </div>
+                <Pagination className="mx-0 w-auto">
+                    <PaginationContent>
+                        <PaginationItem>
+                            <PaginationPrevious
+                                onClick={() =>
+                                    onPageChange(
+                                        pagination.current_page - 1,
+                                    )
+                                }
+                                disabled={pagination.current_page === 1}
+                                style={{
+                                    opacity:
+                                        pagination.current_page === 1
+                                            ? 0.5
+                                            : 1,
+                                    cursor:
+                                        pagination.current_page === 1
+                                            ? "not-allowed"
+                                            : "pointer",
+                                }}
+                            />
+                        </PaginationItem>
+
+                        {getPageNumbers().map((p, idx) => {
+                            if (p === "ellipsis") {
+                                return (
+                                    <PaginationItem key={`ellipsis-${idx}`}>
+                                        <PaginationEllipsis />
+                                    </PaginationItem>
+                                );
+                            }
+                            return (
+                                <PaginationItem key={p}>
+                                    <PaginationLink
+                                        isActive={
+                                            p === pagination.current_page
                                         }
-                                        disabled={pagination.current_page === 1}
-                                        style={{
-                                            opacity:
-                                                pagination.current_page === 1
-                                                    ? 0.5
-                                                    : 1,
-                                            cursor:
-                                                pagination.current_page === 1
-                                                    ? "not-allowed"
-                                                    : "pointer",
-                                        }}
-                                    />
+                                        onClick={() => onPageChange(p)}
+                                    >
+                                        {p}
+                                    </PaginationLink>
                                 </PaginationItem>
-        
-                                {getPageNumbers().map((p, idx) => {
-                                    if (p === "ellipsis") {
-                                        return (
-                                            <PaginationItem key={`ellipsis-${idx}`}>
-                                                <PaginationEllipsis />
-                                            </PaginationItem>
-                                        );
-                                    }
-                                    return (
-                                        <PaginationItem key={p}>
-                                            <PaginationLink
-                                                isActive={
-                                                    p === pagination.current_page
-                                                }
-                                                onClick={() => onPageChange(p)}
-                                            >
-                                                {p}
-                                            </PaginationLink>
-                                        </PaginationItem>
-                                    );
-                                })}
-        
-                                <PaginationItem>
-                                    <PaginationNext
-                                        onClick={() =>
-                                            onPageChange(
-                                                pagination.current_page + 1,
-                                            )
-                                        }
-                                        disabled={
-                                            pagination.current_page ===
+                            );
+                        })}
+
+                        <PaginationItem>
+                            <PaginationNext
+                                onClick={() =>
+                                    onPageChange(
+                                        pagination.current_page + 1,
+                                    )
+                                }
+                                disabled={
+                                    pagination.current_page ===
+                                    pagination.last_page
+                                }
+                                style={{
+                                    opacity:
+                                        pagination.current_page ===
                                             pagination.last_page
-                                        }
-                                        style={{
-                                            opacity:
-                                                pagination.current_page ===
-                                                pagination.last_page
-                                                    ? 0.5
-                                                    : 1,
-                                            cursor:
-                                                pagination.current_page ===
-                                                pagination.last_page
-                                                    ? "not-allowed"
-                                                    : "pointer",
-                                        }}
-                                    />
-                                </PaginationItem>
-                            </PaginationContent>
-                        </Pagination>
-                    </div>
-                )}
+                                            ? 0.5
+                                            : 1,
+                                    cursor:
+                                        pagination.current_page ===
+                                            pagination.last_page
+                                            ? "not-allowed"
+                                            : "pointer",
+                                }}
+                            />
+                        </PaginationItem>
+                    </PaginationContent>
+                </Pagination>
+            </div>
+        )}
 
         {previewAttachment && (
             <BlobPreviewModal

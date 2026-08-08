@@ -395,54 +395,56 @@ export default function Detail({ id }) {
                             >
                                 {loadingReject ? 'Processing...' : 'Reject & Return'}
                             </button>
-                            <button
-                                onClick={() => setIsConfirmRoutingOpen(true)}
-                                disabled={loadingApprove || loadingRouting || loadingReject}
-                                style={{ border: '1px solid var(--primary)', color: 'var(--primary)', background: '#fff', borderRadius: '6px', padding: '8px 16px', cursor: (loadingApprove || loadingRouting || loadingReject) ? 'not-allowed' : 'pointer', fontSize: '11px', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '6px' }}
-                            >
-                                {loadingRouting ? (
-                                    <>
-                                        <svg style={{ animation: 'spin 1s linear infinite', width: '12px', height: '12px' }} fill="none" viewBox="0 0 24 24">
-                                            <circle style={{ opacity: 0.25 }} cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                                            <path style={{ opacity: 0.75 }} fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                                        </svg>
-                                        <span>Processing...</span>
-                                    </>
-                                ) : 'Approve & Rooting'}
-                            </button>
-                            <button
-                                onClick={() => setIsConfirmApproveOpen(true)}
-                                disabled={loadingApprove || loadingRouting || loadingReject}
-                                style={{
-                                    border: 'none',
-                                    color: '#fff',
-                                    backgroundColor: 'var(--primary)',
-                                    borderRadius: '6px',
-                                    padding: '8px 16px',
-                                    cursor: (loadingApprove || loadingRouting || loadingReject) ? 'not-allowed' : 'pointer',
-                                    opacity: loadingApprove ? 0.7 : 1,
-                                    fontSize: '11px',
-                                    fontWeight: 700,
-                                    display: 'inline-flex',
-                                    alignItems: 'center',
-                                    gap: '6px'
-                                }}
-                            >
-                                {loadingApprove ? (
-                                    <>
-                                        <svg style={{ animation: 'spin 1s linear infinite', width: '12px', height: '12px', color: '#fff' }} fill="none" viewBox="0 0 24 24">
-                                            <circle style={{ opacity: 0.25 }} cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                                            <path style={{ opacity: 0.75 }} fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                                        </svg>
-                                        <span>Processing...</span>
-                                    </>
-                                ) : 'Approve to Publish'}
-                            </button>
+                            {['1', '3'].includes(String(document.status)) && (
+                                <button
+                                    onClick={() => setIsConfirmRoutingOpen(true)}
+                                    disabled={loadingApprove || loadingRouting || loadingReject}
+                                    style={{ border: '1px solid var(--primary)', color: 'var(--primary)', background: '#fff', borderRadius: '6px', padding: '8px 16px', cursor: (loadingApprove || loadingRouting || loadingReject) ? 'not-allowed' : 'pointer', fontSize: '11px', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                                >
+                                    {loadingRouting ? (
+                                        <>
+                                            <svg style={{ animation: 'spin 1s linear infinite', width: '12px', height: '12px' }} fill="none" viewBox="0 0 24 24">
+                                                <circle style={{ opacity: 0.25 }} cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                                <path style={{ opacity: 0.75 }} fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                                            </svg>
+                                            <span>Processing...</span>
+                                        </>
+                                    ) : 'Approve & Rooting'}
+                                </button>
+                            )}
+                            {String(document.status) === '6' && (
+                                <button
+                                    onClick={() => setIsConfirmApproveOpen(true)}
+                                    disabled={loadingApprove || loadingRouting || loadingReject}
+                                    style={{
+                                        border: 'none',
+                                        color: '#fff',
+                                        backgroundColor: 'var(--primary)',
+                                        borderRadius: '6px',
+                                        padding: '8px 16px',
+                                        cursor: (loadingApprove || loadingRouting || loadingReject) ? 'not-allowed' : 'pointer',
+                                        opacity: loadingApprove ? 0.7 : 1,
+                                        fontSize: '11px',
+                                        fontWeight: 700,
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        gap: '6px'
+                                    }}
+                                >
+                                    {loadingApprove ? (
+                                        <>
+                                            <svg style={{ animation: 'spin 1s linear infinite', width: '12px', height: '12px', color: '#fff' }} fill="none" viewBox="0 0 24 24">
+                                                <circle style={{ opacity: 0.25 }} cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                                <path style={{ opacity: 0.75 }} fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                                            </svg>
+                                            <span>Processing...</span>
+                                        </>
+                                    ) : 'Approve to Publish'}
+                                </button>
+                            )}
                         </div>
                     )}
-                </main>
-
-                {/* Modal Reject & Return */}
+                </main>                {/* Modal Reject & Return */}
                 {isRejectModalOpen && (
                     <div style={{
                         position: 'fixed',
