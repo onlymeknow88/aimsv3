@@ -89,7 +89,8 @@ export default function useDetail(id) {
     }, [document, notes, rejectFiles, fetchDocumentDetails]);
 
     const showApproval = document ? (
-        canApproveL1 && (String(document.status) === '1' || String(document.status) === '3')
+        (canApproveL1 && (String(document.status) === '1' || String(document.status) === '3')) ||
+        (canApproveL2 && String(document.status) === '6')
     ) : false;
 
     const handleDeleteAttachment = useCallback((attachmentId) => {
