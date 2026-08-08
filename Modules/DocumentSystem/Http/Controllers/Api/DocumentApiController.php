@@ -255,25 +255,45 @@ class DocumentApiController extends Controller
                 }
             }
 
-            // Notify reviewers when submitted for review (status = 1)
-            if ($doc->status === '1' && $request->has('invited_emails')) {
-                $receivers = collect($request->input('invited_emails', []))
-                    ->filter()
-                    ->implode(';');
+            // Notify reviewers when submitted for review (status = 3)
+            if ($doc->status === '3') {
+                $dcImsUsers = \App\Models\User::whereHas('documentRoles', function ($q) {
+                    $q->whereIn('slug', ['approval_dc_ims']);
+                })
+                ->where('id', '!=', $doc->user_id)
+                ->where('id', '!=', $doc->created_by)
+                ->get();
+                $dcImsEmails = $dcImsUsers->pluck('email')->filter()->unique()->all();
+                if (empty($dcImsEmails)) {
+                    $bustanul = \App\Models\User::where('name', 'like', '%Bustanul%')->first();
+                    $dcImsEmails[] = $bustanul ? $bustanul->email : 'bustanulmuhadisin@aims.test';
+                }
+                $receivers = implode(';', $dcImsEmails);
+                
+                $cc = '';
+                if ($request->has('invited_emails')) {
+                    $cc = collect($request->input('invited_emails', []))
+                        ->filter()
+                        ->implode(';');
+                }
+
                 if ($receivers) {
+                    $doc->load(['mapping.category.module', 'invitedPeople.user', 'owner', 'creator']);
                     $html = view('documentsystem::email_templates.document_system_review', [
-                        'title'      => $doc->title,
-                        'pic'        => optional(\App\Models\User::find($doc->user_id))->name ?? '-',
-                        'action_url' => route('doc.approval.detail', $doc->id),
+                        'document'     => $doc,
+                        'title'        => $doc->title,
+                        'pic'          => optional(\App\Models\User::find($doc->user_id))->name ?? '-',
+                        'action_url'   => route('doc.approval.detail', $doc->id),
+                        'show_buttons' => true,
                     ])->render();
-                    sendPowerAutomateEmail([
-                        'SendTo'        => $receivers,
-                        'Title'         => 'Dokumen Submitted for Review: ' . $doc->title,
-                        'MsgBody'       => $html,
-                        'AttchmentPath' => '',
-                        'AttchmentName' => '',
-                        'SendCC'        => '',
-                    ]);
+                    
+                    $this->sendSimpleEmail(
+                        recipients: $receivers,
+                        subject: 'Dokumen Submitted for Review: ' . $doc->title,
+                        body: $html,
+                        isHtml: true,
+                        cc: $cc ?: null
+                    );
                 }
             }
 
@@ -422,24 +442,40 @@ class DocumentApiController extends Controller
                 }
             }
 
-            // Notify reviewers when submitted for review (status = 1)
-            if ($doc->status === '1' && $request->has('invited_emails')) {
-                $doc->load('invitedPeople');
-                $receivers = collect($doc->invitedPeople)->pluck('email')->filter()->implode(';');
+            // Notify reviewers when submitted for review (status = 3)
+            if ($doc->status === '3') {
+                $dcImsUsers = \App\Models\User::whereHas('documentRoles', function ($q) {
+                    $q->whereIn('slug', ['approval_dc_ims']);
+                })
+                ->where('id', '!=', $doc->user_id)
+                ->where('id', '!=', $doc->created_by)
+                ->get();
+                $dcImsEmails = $dcImsUsers->pluck('email')->filter()->unique()->all();
+                if (empty($dcImsEmails)) {
+                    $bustanul = \App\Models\User::where('name', 'like', '%Bustanul%')->first();
+                    $dcImsEmails[] = $bustanul ? $bustanul->email : 'bustanulmuhadisin@aims.test';
+                }
+                $receivers = implode(';', $dcImsEmails);
+                
+                $doc->load(['mapping.category.module', 'invitedPeople.user', 'owner', 'creator']);
+                $cc = collect($doc->invitedPeople)->pluck('email')->filter()->unique()->implode(';');
+
                 if ($receivers) {
                     $html = view('documentsystem::email_templates.document_system_review', [
-                        'title'      => $doc->title,
-                        'pic'        => optional(\App\Models\User::find($doc->user_id))->name ?? '-',
-                        'action_url' => route('doc.approval.detail', $doc->id),
+                        'document'     => $doc,
+                        'title'        => $doc->title,
+                        'pic'          => optional(\App\Models\User::find($doc->user_id))->name ?? '-',
+                        'action_url'   => route('doc.approval.detail', $doc->id),
+                        'show_buttons' => true,
                     ])->render();
-                    sendPowerAutomateEmail([
-                        'SendTo'        => $receivers,
-                        'Title'         => 'Dokumen Submitted for Review: ' . $doc->title,
-                        'MsgBody'       => $html,
-                        'AttchmentPath' => '',
-                        'AttchmentName' => '',
-                        'SendCC'        => '',
-                    ]);
+                    
+                    $this->sendSimpleEmail(
+                        recipients: $receivers,
+                        subject: 'Dokumen Submitted for Review: ' . $doc->title,
+                        body: $html,
+                        isHtml: true,
+                        cc: $cc ?: null
+                    );
                 }
             }
 
@@ -686,19 +722,52 @@ class DocumentApiController extends Controller
             $doc->load(['owner', 'invitedPeople']);
             $receivers = collect($doc->invitedPeople)->pluck('email')->filter()->implode(';');
             if ($receivers) {
-                $html = view('documentsystem::email_templates.document_system_review', [
-                    'title'      => $doc->title,
-                    'pic'        => $doc->owner?->name ?? '-',
-                    'action_url' => route('doc.approval.detail', $doc->id),
-                ])->render();
-                sendPowerAutomateEmail([
-                    'SendTo'        => $receivers,
-                    'Title'         => 'Dokumen Disetujui & Aktif: ' . $doc->title,
-                    'MsgBody'       => $html,
-                    'AttchmentPath' => $uncontrolledPath ?? '',
-                    'AttchmentName' => $uncontrolledPath ? basename($uncontrolledPath) : '',
-                    'SendCC'        => '',
-                ]);
+                $attachmentsList = [];
+                if ($uncontrolledPath) {
+                    try {
+                        $sas = GetBlobSasUri('aims-cntr', $uncontrolledPath);
+                        $url = is_array($sas)
+                            ? ($sas['blobUriSas'] ?? $sas['sasUri'] ?? $sas['url'] ?? $sas['blobUri'] ?? null)
+                            : $sas;
+                        if ($url) {
+                            $client = new \GuzzleHttp\Client(['verify' => config('app.env') === 'production']);
+                            $contents = $client->get($url)->getBody()->getContents();
+                            $tempPath = tempnam(sys_get_temp_dir(), 'mail_doc_');
+                            file_put_contents($tempPath, $contents);
+                            $attachmentsList[] = [
+                                'name' => basename($uncontrolledPath),
+                                'path' => $tempPath,
+                            ];
+                        }
+                    } catch (\Throwable $e) {
+                        \Log::error('Failed to download attachment for level 1 email: ' . $e->getMessage());
+                    }
+                }
+
+                $doc->load(['mapping.category.module', 'invitedPeople.user', 'owner', 'creator']);
+                $this->sendEmailWithTemplate(
+                    viewTemplate: 'documentsystem::email_templates.document_system_review',
+                    mailData: [
+                        'document'         => $doc,
+                        'title'            => $doc->title,
+                        'pic'              => $doc->owner?->name ?? '-',
+                        'action_url'       => route('doc.approval.detail', $doc->id),
+                        'header_title'     => 'Dokumen Disetujui & Aktif',
+                        'description_text' => 'Kabar baik! Dokumen berikut telah disetujui secara penuh dan kini berstatus aktif di sistem:',
+                    ],
+                    recipients: $receivers,
+                    subject: 'Dokumen Disetujui & Aktif: ' . $doc->title,
+                    cc: null,
+                    bcc: null,
+                    attachments: $attachmentsList
+                );
+
+                // Cleanup
+                foreach ($attachmentsList as $att) {
+                    if (isset($att['path']) && file_exists($att['path'])) {
+                        @unlink($att['path']);
+                    }
+                }
             }
         } else {
             // ── Level 2 (PJA / Final Approval) ───────────────────────────────
@@ -791,19 +860,52 @@ class DocumentApiController extends Controller
             $doc->load(['owner', 'invitedPeople']);
             $receivers = collect($doc->invitedPeople)->pluck('email')->filter()->implode(';');
             if ($receivers) {
-                $html = view('documentsystem::email_templates.document_system_review', [
-                    'title'      => $doc->title,
-                    'pic'        => $doc->owner?->name ?? '-',
-                    'action_url' => route('doc.approval.detail', $doc->id),
-                ])->render();
-                sendPowerAutomateEmail([
-                    'SendTo'        => $receivers,
-                    'Title'         => 'Dokumen Disetujui & Aktif: ' . $doc->title,
-                    'MsgBody'       => $html,
-                    'AttchmentPath' => $uncontrolledPath ?? '',
-                    'AttchmentName' => $uncontrolledPath ? basename($uncontrolledPath) : '',
-                    'SendCC'        => '',
-                ]);
+                $attachmentsList = [];
+                if ($uncontrolledPath) {
+                    try {
+                        $sas = GetBlobSasUri('aims-cntr', $uncontrolledPath);
+                        $url = is_array($sas)
+                            ? ($sas['blobUriSas'] ?? $sas['sasUri'] ?? $sas['url'] ?? $sas['blobUri'] ?? null)
+                            : $sas;
+                        if ($url) {
+                            $client = new \GuzzleHttp\Client(['verify' => config('app.env') === 'production']);
+                            $contents = $client->get($url)->getBody()->getContents();
+                            $tempPath = tempnam(sys_get_temp_dir(), 'mail_doc_');
+                            file_put_contents($tempPath, $contents);
+                            $attachmentsList[] = [
+                                'name' => basename($uncontrolledPath),
+                                'path' => $tempPath,
+                            ];
+                        }
+                    } catch (\Throwable $e) {
+                        \Log::error('Failed to download attachment for level 2 email: ' . $e->getMessage());
+                    }
+                }
+
+                $doc->load(['mapping.category.module', 'invitedPeople.user', 'owner', 'creator']);
+                $this->sendEmailWithTemplate(
+                    viewTemplate: 'documentsystem::email_templates.document_system_review',
+                    mailData: [
+                        'document'         => $doc,
+                        'title'            => $doc->title,
+                        'pic'              => $doc->owner?->name ?? '-',
+                        'action_url'       => route('doc.approval.detail', $doc->id),
+                        'header_title'     => 'Dokumen Disetujui & Aktif',
+                        'description_text' => 'Kabar baik! Dokumen berikut telah disetujui secara penuh dan kini berstatus aktif di sistem:',
+                    ],
+                    recipients: $receivers,
+                    subject: 'Dokumen Disetujui & Aktif: ' . $doc->title,
+                    cc: null,
+                    bcc: null,
+                    attachments: $attachmentsList
+                );
+
+                // Cleanup
+                foreach ($attachmentsList as $att) {
+                    if (isset($att['path']) && file_exists($att['path'])) {
+                        @unlink($att['path']);
+                    }
+                }
             }
         }
 
