@@ -106,7 +106,7 @@ export default function Sidebar({
                 </div>
 
                 {/* Filter Panel at Bottom of Sidebar */}
-                <div style={{
+                {/* <div style={{
                     padding: '20px',
                     borderTop: '1px solid rgba(255, 255, 255, 0.05)',
                     backgroundColor: 'rgba(0,0,0,0.15)'
@@ -210,7 +210,7 @@ export default function Sidebar({
                         <RefreshCw size={12} />
                         Reset Filter
                     </button>
-                </div>
+                </div> */}
             </div>
         </>
     );

@@ -1,9 +1,19 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
+import { Search } from "lucide-react";
 import { X, AlertTriangle, Plus, Pencil, Check, Trash2 } from "lucide-react";
 
 function MultiCheckboxList({ label, items = [], value = [], onChange, onEditItem, onDeleteItem, getLabel, emptyText }) {
     const selected = Array.isArray(value) ? value : [];
-    const allSelected = items.length > 0 && selected.length === items.length;
+    const [searchQuery, setSearchQuery] = useState("");
+
+    const filteredItems = useMemo(() => {
+        if (!searchQuery.trim()) return items;
+        const q = searchQuery.toLowerCase();
+        return items.filter((item) => getLabel(item).toLowerCase().includes(q));
+    }, [items, searchQuery, getLabel]);
+
+    const allFilteredSelected =
+        filteredItems.length > 0 && filteredItems.every((item) => selected.includes(item.id));
 
     const toggleItem = (id) => {
         onChange(
@@ -11,6 +21,12 @@ function MultiCheckboxList({ label, items = [], value = [], onChange, onEditItem
                 ? selected.filter((itemId) => itemId !== id)
                 : [...selected, id]
         );
+    };
+
+    const selectAllFiltered = () => {
+        const newIds = filteredItems.map((item) => item.id);
+        const merged = [...new Set([...selected, ...newIds])];
+        onChange(merged);
     };
 
     return (
@@ -22,17 +38,17 @@ function MultiCheckboxList({ label, items = [], value = [], onChange, onEditItem
                 <div style={{ display: "flex", gap: "6px" }}>
                     <button
                         type="button"
-                        onClick={() => onChange(items.map((item) => item.id))}
-                        disabled={allSelected || items.length === 0}
+                        onClick={selectAllFiltered}
+                        disabled={allFilteredSelected || filteredItems.length === 0}
                         style={{
                             border: "1px solid #dbeafe",
-                            backgroundColor: allSelected ? "#f8fafc" : "#eff6ff",
-                            color: allSelected ? "#94a3b8" : "#1d4ed8",
+                            backgroundColor: allFilteredSelected ? "#f8fafc" : "#eff6ff",
+                            color: allFilteredSelected ? "#94a3b8" : "#1d4ed8",
                             borderRadius: "7px",
                             padding: "5px 8px",
                             fontSize: "11px",
                             fontWeight: 700,
-                            cursor: allSelected || items.length === 0 ? "not-allowed" : "pointer",
+                            cursor: allFilteredSelected || filteredItems.length === 0 ? "not-allowed" : "pointer",
                         }}
                     >
                         Pilih Semua
@@ -57,6 +73,43 @@ function MultiCheckboxList({ label, items = [], value = [], onChange, onEditItem
                 </div>
             </div>
 
+            {/* Search Input */}
+            {items.length > 0 && (
+                <div style={{ position: "relative" }}>
+                    <Search
+                        size={13}
+                        style={{
+                            position: "absolute",
+                            left: "9px",
+                            top: "50%",
+                            transform: "translateY(-50%)",
+                            color: "#94a3b8",
+                            pointerEvents: "none",
+                        }}
+                    />
+                    <input
+                        type="text"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        placeholder={`Cari ${label.toLowerCase()}...`}
+                        style={{
+                            width: "100%",
+                            boxSizing: "border-box",
+                            paddingLeft: "28px",
+                            paddingRight: "10px",
+                            paddingTop: "7px",
+                            paddingBottom: "7px",
+                            borderRadius: "7px",
+                            border: "1px solid #e2e8f0",
+                            fontSize: "12px",
+                            color: "#0f172a",
+                            backgroundColor: "#fff",
+                            outline: "none",
+                        }}
+                    />
+                </div>
+            )}
+
             <div
                 style={{
                     border: "1px solid #e2e8f0",
@@ -66,12 +119,12 @@ function MultiCheckboxList({ label, items = [], value = [], onChange, onEditItem
                     backgroundColor: "#fff",
                 }}
             >
-                {items.length === 0 ? (
+                {filteredItems.length === 0 ? (
                     <div style={{ padding: "12px", color: "#94a3b8", fontSize: "13px" }}>
-                        {emptyText}
+                        {searchQuery.trim() ? `Tidak ada hasil untuk "${searchQuery}"` : emptyText}
                     </div>
                 ) : (
-                    items.map((item) => (
+                    filteredItems.map((item) => (
                         <div
                             key={item.id}
                             style={{
@@ -234,6 +287,7 @@ export default function SectionModal({
     });
 
     const filteredAreaLocations = areaLocations.filter((loc) => {
+        if ((form.area_location_ids || []).includes(loc.id)) return true;
         if (!loc.sections || loc.sections.length === 0) return true;
         return !loc.sections.some((sec) => sec.department_id && sec.department_id !== form.department_id);
     });

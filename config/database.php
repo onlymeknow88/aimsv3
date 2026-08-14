@@ -109,6 +109,20 @@ return [
             // 'trust_server_certificate' => env('DB_TRUST_SERVER_CERTIFICATE', 'false'),
         ],
 
+        'aims_legacy' => [
+            'driver' => 'sqlsrv',
+            'host' => env('DB_HOST_LEGACY', '10.102.128.11'),
+            'port' => env('DB_PORT_LEGACY', '1433'),
+            'database' => env('DB_DATABASE_LEGACY', 'AIMS'),
+            'username' => env('DB_USERNAME_LEGACY', 'sa'),
+            'password' => env('DB_PASSWORD_LEGACY', 'p@$$w0rd'),
+            'charset' => 'utf8',
+            'prefix' => '',
+            'prefix_indexes' => true,
+            'encrypt' => 'no',
+            'trust_server_certificate' => 'yes',
+        ],
+
     ],
 
     /*

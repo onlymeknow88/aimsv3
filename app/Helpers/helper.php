@@ -54,7 +54,7 @@ if (! function_exists('uploadToBlobStorage')) {
             // rtrim trailing slash to prevent double slash in blob URL (e.g. uuid//filename.pdf)
             $DirectoryPath = config('app.env') === 'local'
                 ? 'test/' . rtrim($directPath, '/')
-                : 'complianceCMS/' . rtrim($directPath, '/');
+                : 'aims/' . rtrim($directPath, '/');
 
             $fileHandle = fopen($filePathTemp, 'r');
             if ($fileHandle === false) {

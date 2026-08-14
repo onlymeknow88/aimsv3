@@ -26,3 +26,5 @@ yarn-error.log
 /skills
 /commands
 /docs
+/.claude
+/.claude-plugin
