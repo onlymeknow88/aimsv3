@@ -82,6 +82,11 @@ Route::middleware(['web', 'auth'])->prefix('document-system')->group(function ()
     Route::get('/master', [DocumentSystemController::class, 'master'])
         ->middleware('module.permission:document-system,can_view,doc.master')
         ->name('doc.master');
+
+    // AIMS Legacy Documents
+    Route::get('/aims-legacy', [DocumentSystemController::class, 'aimsLegacy'])
+        ->middleware('module.permission:document-system,can_view,doc.maker')
+        ->name('doc.aims-legacy');
 });
 
 Route::middleware(['web'])->group(function () {

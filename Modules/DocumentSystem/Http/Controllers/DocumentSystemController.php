@@ -169,4 +169,12 @@ class DocumentSystemController extends Controller
             'taxonomy'    => $taxonomy,
         ]);
     }
+
+    /**
+     * AIMS Legacy Documents browser.
+     */
+    public function aimsLegacy()
+    {
+        return inertia('DocumentSystem/AimsLegacy/Index');
+    }
 }

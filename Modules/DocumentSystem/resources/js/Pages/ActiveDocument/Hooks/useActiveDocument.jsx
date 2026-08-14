@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import axios from 'axios';
 
 export default function useActiveDocument() {
@@ -13,7 +13,7 @@ export default function useActiveDocument() {
     const [columnFilters, setColumnFilters] = useState({
         company: '',
         department: '',
-        pic: '',
+        head_id: '',
         module: '',
         category: '',
         document_level: '',
@@ -32,7 +32,7 @@ export default function useActiveDocument() {
                 limit,
                 filter_company: columnFilters.company,
                 filter_department: columnFilters.department,
-                filter_pic: columnFilters.pic,
+                filter_head_id: columnFilters.head_id,
                 filter_module: columnFilters.module,
                 filter_category: columnFilters.category,
                 filter_document_level: columnFilters.document_level,
@@ -151,6 +151,48 @@ export default function useActiveDocument() {
         }
     }, [search, columnFilters]);
 
+    const exportTemplate = useCallback(async () => {
+        try {
+            const response = await axios.get('/api/document-system/documents/export-template', {
+                responseType: 'blob',
+            });
+            const url = window.URL.createObjectURL(new Blob([response.data]));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', `Template_Import_Dokumen.xlsx`);
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+        } catch (err) {
+            console.error('Export template failed', err);
+            alert('Gagal mengunduh template.');
+        }
+    }, []);
+
+    const [importing, setImporting] = useState(false);
+    const importFileRef = useRef(null);
+
+    const importUpdate = useCallback(async (file) => {
+        if (!file) return;
+        setImporting(true);
+        try {
+            const formData = new FormData();
+            formData.append('file', file);
+            const res = await axios.post('/api/document-system/documents/import-update', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' },
+            });
+            const count = res.data?.result?.updated_count ?? 0;
+            alert(`Berhasil memperbarui ${count} dokumen dari file Excel.`);
+            fetchDocuments();
+        } catch (err) {
+            const msg = err.response?.data?.message || 'Gagal mengimpor file Excel.';
+            alert(msg);
+        } finally {
+            setImporting(false);
+            if (importFileRef.current) importFileRef.current.value = '';
+        }
+    }, [fetchDocuments]);
+
     return { 
         search, 
         setSearch, 
@@ -166,6 +208,10 @@ export default function useActiveDocument() {
         handleEdit,
         handleDelete,
         exportDocuments,
+        exportTemplate,
+        importUpdate,
+        importing,
+        importFileRef,
         pagination,
         page,
         setPage,

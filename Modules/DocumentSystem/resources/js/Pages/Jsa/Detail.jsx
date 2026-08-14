@@ -262,7 +262,7 @@ export default function Detail({ id }) {
                             {[
                                 { label: 'No. Dokumen', value: document.document_number || '-', bold: true },
                                 { label: 'Detail Location', value: document.detail_location || '-' },
-                                { label: 'Revisi No.', value: (!document.revision || document.revision === '' ? '0' : document.revision) + '.0' },
+                                { label: 'Revisi No.', value: (() => { const v = String(!document.revision || document.revision === '' ? '0' : document.revision); return v.includes('.') ? v : v + '.0'; })() },
                             ].map(row => (
                                 <div key={row.label} style={{ display: 'flex', borderBottom: '1px solid #f8fafc', paddingBottom: '8px' }}>
                                     <span style={{ width: '160px', fontWeight: 600, color: 'var(--text-secondary)', flexShrink: 0 }}>{row.label}</span>

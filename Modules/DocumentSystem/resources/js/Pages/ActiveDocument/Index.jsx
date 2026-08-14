@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Head } from '@inertiajs/react';
 import DocumentSystemLayout from '@DS/Layouts/DocumentSystemLayout';
-import { Search, FileText, Plus, Edit, Trash2, X, SlidersHorizontal } from 'lucide-react';
+import { Search, FileText, Plus, Edit, Trash2, X, SlidersHorizontal, Download, Upload } from 'lucide-react';
 import useActiveDocument from './Hooks/useActiveDocument';
 import DocumentTable from './Partials/DocumentTable';
 import DocumentPreviewModal from './Partials/DocumentPreviewModal';
@@ -30,6 +30,10 @@ export default function Index() {
         handleEdit,
         handleDelete,
         exportDocuments,
+        exportTemplate,
+        importUpdate,
+        importing,
+        importFileRef,
         pagination,
         page,
         setPage,
@@ -249,6 +253,60 @@ export default function Index() {
                             }}
                         >
                             <FileText size={14} /> Export All
+                        </button>
+
+                        {/* Export Template */}
+                        <button
+                            onClick={exportTemplate}
+                            style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '6px',
+                                backgroundColor: '#fff',
+                                border: '1px solid var(--border-color)',
+                                borderRadius: '6px',
+                                padding: '8px 12px',
+                                fontSize: '11px',
+                                fontWeight: 600,
+                                color: 'var(--text-primary)',
+                                cursor: 'pointer',
+                                flex: isMobile ? 1 : 'initial',
+                                justifyContent: 'center'
+                            }}
+                            title="Download template Excel untuk import"
+                        >
+                            <Download size={14} /> Template
+                        </button>
+
+                        {/* Import */}
+                        <input
+                            type="file"
+                            ref={importFileRef}
+                            accept=".xlsx,.xls,.csv"
+                            style={{ display: 'none' }}
+                            onChange={e => importUpdate(e.target.files?.[0])}
+                        />
+                        <button
+                            onClick={() => importFileRef.current?.click()}
+                            disabled={importing}
+                            style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '6px',
+                                backgroundColor: '#fff',
+                                border: '1px solid var(--border-color)',
+                                borderRadius: '6px',
+                                padding: '8px 12px',
+                                fontSize: '11px',
+                                fontWeight: 600,
+                                color: importing ? 'var(--text-muted)' : 'var(--text-primary)',
+                                cursor: importing ? 'not-allowed' : 'pointer',
+                                flex: isMobile ? 1 : 'initial',
+                                justifyContent: 'center'
+                            }}
+                            title="Import update dokumen dari Excel"
+                        >
+                            <Upload size={14} /> {importing ? 'Importing...' : 'Import'}
                         </button>
 
                         <a 

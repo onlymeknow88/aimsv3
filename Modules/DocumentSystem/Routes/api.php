@@ -18,6 +18,11 @@ Route::middleware(['web', 'auth'])->prefix('document-system')->group(function ()
 
     Route::middleware('module.permission:document-system,can_view,doc.maker')->group(function () {
         Route::get('/documents/export', [DocumentApiController::class, 'export']);
+        Route::get('/documents/export-template', [DocumentApiController::class, 'exportTemplate']);
+    });
+
+    Route::middleware('module.permission:document-system,can_edit,doc.maker')->group(function () {
+        Route::post('/documents/import-update', [DocumentApiController::class, 'importUpdate']);
     });
 
     // GET /documents dan /documents/{id} dapat diakses oleh semua role yang punya can_view
@@ -48,6 +53,7 @@ Route::middleware(['web', 'auth'])->prefix('document-system')->group(function ()
     });
 
     Route::middleware('module.permission:document-system,can_edit,doc.maker')->group(function () {
+        Route::post('/documents/{id}/revise-from-obsolete', [DocumentApiController::class, 'reviseFromObsolete']); // Buat revisi baru dari dokumen obsolete
         Route::post('/documents/{id}', [DocumentApiController::class, 'update']);
         Route::delete('/attachments/{id}', [DocumentApiController::class, 'deleteAttachment']);
         Route::post('/attachments/{id}/delete', [DocumentApiController::class, 'deleteAttachment']); // _method:DELETE spoofing untuk IIS
@@ -68,6 +74,8 @@ Route::middleware(['web', 'auth'])->prefix('document-system')->group(function ()
         Route::get('/active-sops', [DocumentApiController::class, 'getActiveSops']);
         Route::get('/employees', [MasterDataApiController::class, 'getEmployees']);
         Route::get('/pjs-by-department', [MasterDataApiController::class, 'getPjsByDepartment']);
+        Route::get('/aims-legacy', [\Modules\DocumentSystem\Http\Controllers\Api\AimsLegacyApiController::class, 'index']);
+        Route::get('/aims-legacy/file/{id}', [\Modules\DocumentSystem\Http\Controllers\Api\AimsLegacyApiController::class, 'getFile']);
     });
 
     // Master settings modification endpoints (restricted to doc.master permission)

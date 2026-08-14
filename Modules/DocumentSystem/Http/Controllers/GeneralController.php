@@ -24,7 +24,21 @@ class GeneralController extends Controller
             $filePath = $request->query('path');
             if (!$filePath) abort(404, 'Path tidak ditemukan.');
             $fileName = basename($filePath);
-            $mimeType = 'application/pdf';
+            $ext = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
+            $mimeType = match($ext) {
+                'pdf'                    => 'application/pdf',
+                'png'                    => 'image/png',
+                'jpg', 'jpeg'            => 'image/jpeg',
+                'gif'                    => 'image/gif',
+                'webp'                   => 'image/webp',
+                'docx'                   => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                'doc'                    => 'application/msword',
+                'xlsx'                   => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                'xls'                    => 'application/vnd.ms-excel',
+                'pptx'                   => 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+                'ppt'                    => 'application/vnd.ms-powerpoint',
+                default                  => 'application/octet-stream',
+            };
             $localPath = Storage::disk('public')->path($filePath);
             if (!file_exists($localPath)) {
                 $sas = GetBlobSasUri('aims-cntr', $filePath);
@@ -244,6 +258,16 @@ class GeneralController extends Controller
     public function sasUrl(Request $request, string $id)
     {
         $type = $request->query('type', 'document');
+
+        // Uncontrolled — path passed directly via query string, no DB lookup needed
+        if ($type === 'uncontrolled') {
+            $filePath = $request->query('path');
+            if (!$filePath) return response()->json(['url' => null], 404);
+            $sas = GetBlobSasUri('aims-cntr', $filePath);
+            $url = is_array($sas) ? ($sas['blobUriSas'] ?? $sas['sasUri'] ?? $sas['url'] ?? $sas['blobUri'] ?? $sas[0]['sasUri'] ?? null) : $sas;
+            return response()->json(['url' => $url]);
+        }
+
         if ($type === 'activity') {
             $attachment = \Modules\DocumentSystem\Entities\ActivityAttachment::findOrFail($id);
         } elseif ($type === 'jsa') {
@@ -256,7 +280,7 @@ class GeneralController extends Controller
 
         $filePath = ($type === 'jsa' || $type === 'ptw') ? ($attachment->file_path ?? '') : ($attachment->path ?? '');
 
-        if (str_starts_with($filePath, 'test/') || str_starts_with($filePath, 'complianceCMS/') || !file_exists(Storage::disk('public')->path($filePath))) {
+        if (str_starts_with($filePath, 'test/') || str_starts_with($filePath, 'aims/') || !file_exists(Storage::disk('public')->path($filePath))) {
             $sas = GetBlobSasUri('aims-cntr', $filePath);
             $url = is_array($sas) ? ($sas['blobUriSas'] ?? $sas['sasUri'] ?? $sas['url'] ?? $sas['blobUri'] ?? $sas[0]['sasUri'] ?? null) : $sas;
             return response()->json(['url' => $url]);

@@ -23,7 +23,8 @@ export default function Index() {
         selectedIds, 
         setSelectedIds, 
         handleEdit, 
-        handleDelete, 
+        handleDelete,
+        handleRevise,
         pagination,
         limit,
         setLimit,
@@ -104,28 +105,6 @@ export default function Index() {
                     </div>
 
                     <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', width: isMobile ? '100%' : 'auto' }}>
-                        {selectedIds.length === 1 && (
-                            <button 
-                                onClick={handleEdit}
-                                style={{
-                                    display: 'inline-flex',
-                                    alignItems: 'center',
-                                    gap: '6px',
-                                    backgroundColor: '#fff',
-                                    border: '1px solid var(--border-color)',
-                                    borderRadius: '6px',
-                                    padding: '6px 12px',
-                                    fontSize: '11px',
-                                    fontWeight: 600,
-                                    color: 'var(--text-primary)',
-                                    cursor: 'pointer',
-                                    flex: isMobile ? 1 : 'initial',
-                                    justifyContent: 'center'
-                                }}
-                            >
-                                <Edit size={12} /> Edit
-                            </button>
-                        )}
                         <button 
                             onClick={handleDelete}
                             style={{
@@ -206,26 +185,6 @@ export default function Index() {
                                 ))}
                             </DropdownMenuContent>
                         </DropdownMenu>
-
-                        <a 
-                            href="/document-system/active/create"
-                            style={{
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                gap: '8px',
-                                backgroundColor: 'var(--primary)',
-                                color: '#fff',
-                                border: 'none',
-                                borderRadius: '6px',
-                                padding: '8px 12px',
-                                fontSize: '11px',
-                                fontWeight: 600,
-                                cursor: 'pointer',
-                                textDecoration: 'none'
-                            }}
-                        >
-                            <Plus size={14} /> New
-                        </a>
                     </div>
                 </div>
             )}
@@ -243,6 +202,7 @@ export default function Index() {
                     onPageChange={setPage}
                     columnFilters={columnFilters}
                     onColumnFilterChange={(colId, val) => setColumnFilters(prev => ({ ...prev, [colId]: val }))}
+                    onRevise={handleRevise}
                 />
             </div>
         </DocumentSystemLayout>

@@ -28,11 +28,11 @@ class DocumentApiController extends Controller
         $search = $request->query('search');
 
         if ($status === '8') {
-            $query = Document::with(['company', 'department', 'areaManager.user', 'owner', 'mapping.category.module', 'attachments'])
+            $query = Document::with(['company', 'department.head', 'areaManager.user', 'owner', 'mapping.category.module', 'attachments'])
                 ->where('is_obsolate', true)
                 ->orderBy('updated_at', 'desc');
         } else {
-            $query = Document::with(['company', 'department', 'areaManager.user', 'owner', 'mapping.category.module', 'attachments'])
+            $query = Document::with(['company', 'department.head', 'areaManager.user', 'owner', 'mapping.category.module', 'attachments'])
                 ->latest();
 
             if ($status) {
@@ -57,24 +57,34 @@ class DocumentApiController extends Controller
         if ($request->filled('filter_company')) {
             $comp = $request->query('filter_company');
             $query->whereHas('company', function ($q) use ($comp) {
-                $q->where('company_name', 'like', "%{$comp}%")
-                  ->orWhere('document_code', 'like', "%{$comp}%");
+                if (\Illuminate\Support\Str::isUuid($comp)) {
+                    $q->where('id', $comp);
+                } else {
+                    $q->where('company_name', 'like', "%{$comp}%")
+                      ->orWhere('document_code', 'like', "%{$comp}%");
+                }
             });
         }
 
         if ($request->filled('filter_department')) {
             $dept = $request->query('filter_department');
             $query->whereHas('department', function ($q) use ($dept) {
-                $q->where('name', 'like', "%{$dept}%")
-                  ->orWhere('code', 'like', "%{$dept}%")
-                  ->orWhere('document_code', 'like', "%{$dept}%");
+                if (\Illuminate\Support\Str::isUuid($dept)) {
+                    $q->where('id', $dept);
+                } else {
+                    $q->where('name', 'like', "%{$dept}%")
+                      ->orWhere('code', 'like', "%{$dept}%")
+                      ->orWhere('document_code', 'like', "%{$dept}%");
+                }
             });
         }
 
-        if ($request->filled('filter_pic')) {
-            $pic = $request->query('filter_pic');
-            $query->whereHas('owner', function ($q) use ($pic) {
-                $q->where('name', 'like', "%{$pic}%");
+        if ($request->filled('filter_head_id')) {
+            $headId = $request->query('filter_head_id');
+            $query->whereHas('department', function ($q) use ($headId) {
+                $q->whereHas('head', function ($q2) use ($headId) {
+                    $q2->where('name', 'like', "%{$headId}%");
+                });
             });
         }
 
@@ -516,6 +526,54 @@ class DocumentApiController extends Controller
             ]);
 
             return ResponseFormatter::error('Failed to update document: ' . $e->getMessage() . ' in ' . basename($e->getFile()) . ' on line ' . $e->getLine(), 500);
+        }
+    }
+
+    /**
+     * Buat revisi baru dari dokumen yang sudah obsolete.
+     * POST /api/document-system/documents/{id}/revise-from-obsolete
+     */
+    public function reviseFromObsolete(string $id)
+    {
+        $document = Document::findOrFail($id);
+
+        if (!$document->is_obsolate) {
+            return ResponseFormatter::error('Dokumen ini bukan obsolete, gunakan alur revisi normal.', 422);
+        }
+
+        try {
+            DB::beginTransaction();
+
+            $service = new DocumentSystemService();
+            $newDoc = $service->replicateFromObsolete($document);
+
+            DB::table('document_system_activities')->insert([
+                'id'          => Str::uuid(),
+                'document_id' => $newDoc->id,
+                'user_id'     => auth()->id() ?? auth('admin')->id(),
+                'activity'    => "Revisi baru (Rev {$newDoc->revision}) dibuat dari dokumen obsolete Rev {$document->revision}.",
+                'created_at'  => now(),
+                'updated_at'  => now(),
+            ]);
+
+            UserActivityLogService::log(
+                module: 'document_system',
+                action: 'create',
+                resource: 'Document',
+                resourceId: $newDoc->id,
+                description: "Membuat revisi baru Rev {$newDoc->revision} dari dokumen obsolete '{$document->document_number}'",
+                newData: $newDoc->toArray(),
+            );
+
+            DB::commit();
+
+            return ResponseFormatter::success($newDoc, "Revisi baru Rev {$newDoc->revision} berhasil dibuat sebagai Draft.");
+        } catch (\RuntimeException $e) {
+            DB::rollBack();
+            return ResponseFormatter::error($e->getMessage(), 422);
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            return ResponseFormatter::error('Gagal membuat revisi: ' . $e->getMessage(), 500);
         }
     }
 
@@ -1425,5 +1483,44 @@ class DocumentApiController extends Controller
             new \Modules\DocumentSystem\Exports\DocumentSystemExport($data, $maxRevisionCol),
             'Dokumen Induk - ' . date('Y-m-d') . '.xlsx'
         );
+    }
+
+    /**
+     * Download Excel template for document updates.
+     */
+    public function exportTemplate(Request $request)
+    {
+        $idsStr = $request->query('ids');
+        $ids = $idsStr ? explode(',', $idsStr) : [];
+
+        return \Maatwebsite\Excel\Facades\Excel::download(
+            new \Modules\DocumentSystem\Exports\DocumentTemplateExport($ids),
+            'Template_Update_Dokumen_' . date('Y-m-d') . '.xlsx'
+        );
+    }
+
+    /**
+     * Import Excel file to update existing documents in database.
+     */
+    public function importUpdate(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|mimes:xlsx,xls,csv|max:10240'
+        ]);
+
+        try {
+            $importer = new \Modules\DocumentSystem\Imports\DocumentImportUpdate();
+            \Maatwebsite\Excel\Facades\Excel::import($importer, $request->file('file'));
+
+            return ResponseFormatter::success(
+                ['updated_count' => $importer->getUpdatedCount()],
+                'Berhasil memperbarui ' . $importer->getUpdatedCount() . ' dokumen dari file Excel.'
+            );
+        } catch (\Exception $e) {
+            return ResponseFormatter::error(
+                'Gagal memproses file Excel: ' . $e->getMessage(),
+                500
+            );
+        }
     }
 }

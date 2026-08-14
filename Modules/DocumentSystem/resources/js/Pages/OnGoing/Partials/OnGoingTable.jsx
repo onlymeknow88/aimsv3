@@ -142,7 +142,7 @@ export default function OnGoingTable({
             accessorKey: 'revision',
             id: 'revision',
             header: 'Rev',
-            cell: info => <span style={{ color: 'var(--text-secondary)' }}>{info.getValue() || 0}.0</span>
+            cell: info => <span style={{ color: 'var(--text-secondary)' }}>{(() => { const v = String(info.getValue() ?? '0'); return v.includes('.') ? v : v + '.0'; })()}</span>
         },
         {
             accessorKey: 'status',

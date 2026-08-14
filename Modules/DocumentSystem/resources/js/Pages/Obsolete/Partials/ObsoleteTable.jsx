@@ -25,6 +25,7 @@ export default function ObsoleteTable({
     onLimitChange,
     columnFilters = {},
     onColumnFilterChange,
+    onRevise,
 }) {
     const [previewAttachment, setPreviewAttachment] = useState(null);
     const getCompanyCode = (doc) => {
@@ -140,7 +141,7 @@ export default function ObsoleteTable({
             accessorKey: 'revision',
             id: 'revision',
             header: 'Rev',
-            cell: info => <span style={{ color: 'var(--text-secondary)' }}>{info.getValue() || 0}.0</span>
+            cell: info => <span style={{ color: 'var(--text-secondary)' }}>{(() => { const v = String(info.getValue() ?? '0'); return v.includes('.') ? v : v + '.0'; })()}</span>
         },
         {
             accessorKey: 'status',
@@ -169,11 +170,14 @@ export default function ObsoleteTable({
                 const items = [];
 
                 if (doc.uncontrolled_file_path) {
+                    const ext = (doc.uncontrolled_file_path.split('.').pop() || 'pdf').toLowerCase();
+                    const baseName = doc.uncontrolled_file_path.split('/').pop() || `FINAL_${doc.document_number}`;
                     items.push({
                         id: 'uncontrolled',
-                        file_name: `FINAL-${doc.document_number} ${doc.title}.pdf`,
-                        file_type: 'pdf',
+                        file_name: baseName,
+                        file_type: ext,
                         path: doc.uncontrolled_file_path,
+                        blob_url: doc.uncontrolled_blob_url ?? null,
                         type: 'uncontrolled'
                     });
                 } else {
@@ -217,8 +221,31 @@ export default function ObsoleteTable({
                     </div>
                 );
             }
+        },
+        {
+            id: 'actions',
+            header: 'Aksi',
+            cell: ({ row }) => (
+                <button
+                    onClick={() => onRevise && onRevise(row.original.id)}
+                    title="Buat Revisi Baru dari dokumen obsolete ini"
+                    style={{
+                        padding: '4px 10px',
+                        fontSize: '11px',
+                        fontWeight: 600,
+                        background: 'var(--primary)',
+                        color: '#fff',
+                        border: 'none',
+                        borderRadius: '6px',
+                        cursor: 'pointer',
+                        whiteSpace: 'nowrap',
+                    }}
+                >
+                    Buat Revisi
+                </button>
+            )
         }
-    ], [selectedIds, isAllSelected, previewAttachment]);
+    ], [selectedIds, isAllSelected, previewAttachment, onRevise]);
 
     const columnVisibility = useMemo(() => {
         if (!visibleColumns) return {};

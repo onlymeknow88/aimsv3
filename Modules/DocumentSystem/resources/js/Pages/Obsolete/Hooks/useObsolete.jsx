@@ -92,6 +92,20 @@ export default function useObsolete() {
         }
     }, [selectedIds, fetchDocuments]);
 
+    const handleRevise = useCallback(async (docId) => {
+        if (!confirm('Buat revisi baru dari dokumen obsolete ini? Dokumen baru akan dibuat sebagai Draft.')) return;
+        try {
+            const res = await axios.post(`/api/document-system/documents/${docId}/revise-from-obsolete`);
+            const newDoc = res.data?.result;
+            if (newDoc?.id) {
+                window.location.href = `/document-system/active/edit/${newDoc.id}`;
+            }
+        } catch (err) {
+            const msg = err.response?.data?.message || 'Gagal membuat revisi baru.';
+            alert(msg);
+        }
+    }, []);
+
     return { 
         search, 
         setSearch, 
@@ -101,6 +115,7 @@ export default function useObsolete() {
         setSelectedIds, 
         handleEdit, 
         handleDelete,
+        handleRevise,
         pagination,
         setPagination,
         limit,

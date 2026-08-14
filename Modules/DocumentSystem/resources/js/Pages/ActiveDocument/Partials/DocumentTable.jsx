@@ -7,16 +7,16 @@ import {
     PaginationNext,
     PaginationPrevious,
 } from "@/components/ui/pagination";
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { flexRender, getCoreRowModel, getFilteredRowModel, useReactTable } from '@tanstack/react-table';
-import axios from 'axios';
 
 import BlobPreviewModal from '@/Components/BlobPreviewModal';
-import SearchableSelect from '@/Components/SearchableSelect';
 import { Checkbox } from '@/components/ui/checkbox';
-import { FileText } from 'lucide-react';
 import { DebouncedInput } from '@/lib/utils';
+import { FileText } from 'lucide-react';
+import SearchableSelect from '@/Components/SearchableSelect';
+import axios from 'axios';
 
 export default function DocumentTable({
     documents = [],
@@ -32,11 +32,27 @@ export default function DocumentTable({
     onColumnFilterChange,
 }) {
     const [previewAttachment, setPreviewAttachment] = useState(null);
+    const [companiesOpt, setCompaniesOpt] = useState([]);
+    const [departmentsOpt, setDepartmentsOpt] = useState([]);
     const [modulesOpt, setModulesOpt] = useState([]);
     const [categoriesOpt, setCategoriesOpt] = useState([]);
     const [mappingsOpt, setMappingsOpt] = useState([]);
 
     useEffect(() => {
+        axios.get('/api/document-system/companies').then(res => {
+            const list = (res.data?.result || []).map(item => ({
+                id: item.id,
+                name: item.company_name || item.document_code || String(item.id),
+            }));
+            setCompaniesOpt(list);
+        });
+        axios.get('/api/document-system/departments').then(res => {
+            const list = (res.data?.result || []).map(item => ({
+                id: item.id,
+                name: item.name || item.document_code || String(item.id),
+            }));
+            setDepartmentsOpt(list);
+        });
         axios.get('/api/document-system/modules').then(res => {
             const list = (res.data?.result || []).map(item => ({
                 id: item.id,
@@ -63,7 +79,10 @@ export default function DocumentTable({
     }, []);
 
     const handleColumnFilterChange = (columnId, val) => {
-        if (columnId === 'module') {
+        if (columnId === 'company') {
+            onColumnFilterChange('company', val);
+            onColumnFilterChange('department', '');
+        } else if (columnId === 'module') {
             onColumnFilterChange('module', val);
             onColumnFilterChange('category', '');
             onColumnFilterChange('mapping', '');
@@ -124,9 +143,9 @@ export default function DocumentTable({
             cell: ({ row }) => <span style={{ fontSize: '12px' }}>{row.original.department?.name || '-'}</span>
         },
         {
-            id: 'pic',
-            header: 'PIC',
-            cell: ({ row }) => <span style={{ fontSize: '12px' }}>{row.original.owner?.name || '-'}</span>
+            id: 'head_id',
+            header: 'Department Head',
+            cell: ({ row }) => <span style={{ fontSize: '12px' }}>{row.original.department?.head?.name || '-'}</span>
         },
         {
             id: 'module',
@@ -188,7 +207,7 @@ export default function DocumentTable({
             accessorKey: 'revision',
             id: 'revision',
             header: 'Revisi',
-            cell: info => <span style={{ color: 'var(--text-secondary)' }}>{info.getValue() || 0}.0</span>
+            cell: info => <span style={{ color: 'var(--text-secondary)' }}>{(() => { const v = String(info.getValue() ?? '0'); return v.includes('.') ? v : v + '.0'; })()}</span>
         },
         {
             accessorKey: 'status',
@@ -229,11 +248,14 @@ export default function DocumentTable({
                 const items = [];
 
                 if (doc.uncontrolled_file_path) {
+                    const ext = (doc.uncontrolled_file_path.split('.').pop() || 'pdf').toLowerCase();
+                    const baseName = doc.uncontrolled_file_path.split('/').pop() || `FINAL_${doc.document_number}`;
                     items.push({
                         id: 'uncontrolled',
-                        file_name: `FINAL-${doc.document_number} ${doc.title}.pdf`,
-                        file_type: 'pdf',
+                        file_name: baseName,
+                        file_type: ext,
                         path: doc.uncontrolled_file_path,
+                        blob_url: doc.uncontrolled_blob_url ?? null,
                         type: 'uncontrolled'
                     });
                 } else {
@@ -338,16 +360,18 @@ export default function DocumentTable({
                     {table.getHeaderGroups().map(hg => (
                         <TableRow key={hg.id}>
                             {hg.headers.map(h => {
-                                const isSearchable = ['company', 'department', 'pic', 'module', 'category', 'document_level', 'mapping', 'document_number', 'title'].includes(h.id);
+                                const isSearchable = ['company', 'department', 'head_id', 'module', 'category', 'document_level', 'mapping', 'document_number', 'title'].includes(h.id);
                                 return (
                                     <TableHead key={h.id} style={{ fontWeight: 700, color: 'var(--text-secondary)', padding: '10px 12px', verticalAlign: 'top' }}>
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', minWidth: isSearchable ? '120px' : 'auto' }}>
                                             <span>{flexRender(h.column.columnDef.header, h.getContext())}</span>
                                             {isSearchable && onColumnFilterChange && (
-                                                ['module', 'category', 'mapping'].includes(h.id) ? (
+                                                ['company', 'department', 'module', 'category', 'mapping'].includes(h.id) ? (
                                                     <div onClick={(e) => e.stopPropagation()} style={{ minWidth: '130px' }}>
                                                         <SearchableSelect
                                                             options={
+                                                                h.id === 'company' ? [{ id: '', name: 'Semua Company' }, ...companiesOpt] :
+                                                                h.id === 'department' ? [{ id: '', name: 'Semua Department' }, ...departmentsOpt] :
                                                                 h.id === 'module' ? [{ id: '', name: 'Semua Modul' }, ...modulesOpt] :
                                                                     h.id === 'category' ? [
                                                                         { id: '', name: 'Semua Kategori' },
