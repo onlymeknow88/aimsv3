@@ -233,12 +233,14 @@ class HandleInertiaRequests extends Middleware
                     ->pluck('aims_roles.slug')
                     ->toArray() : [],
             ],
-            'flsMenus'  => $flsMenus,
-            'csmsMenus' => $csmsMenus,
-            'picaMenus' => $picaMenus,
-            'dsMenus'   => $dsMenus,
-            'dpMenus'   => $dpMenus,
-            'coeMenus'  => $coeMenus,
+            'flsMenus'          => $flsMenus,
+            'csmsMenus'         => $csmsMenus,
+            'picaMenus'         => $picaMenus,
+            'dsMenus'           => $dsMenus,
+            'dpMenus'           => $dpMenus,
+            'coeMenus'          => $coeMenus,
+            'microsoftLoginUrl'        => env('MICROSOFT_LOGIN_URL'),
+            'microsoftRedirectEnabled' => app()->environment('production'),
         ];
     }
 }

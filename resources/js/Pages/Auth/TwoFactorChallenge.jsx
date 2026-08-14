@@ -7,9 +7,11 @@ export default function TwoFactorChallenge({ hasTotpEnabled, email }) {
     const [otpSent, setOtpSent]   = useState(!hasTotpEnabled);
     const [countdown, setCountdown] = useState(0);
     const [digits, setDigits]     = useState(['', '', '', '', '', '']);
+    const [loading, setLoading]   = useState(false);
     const inputRefs               = useRef([]);
     const { errors, processing }  = usePage().props;
     const flash                   = usePage().props.flash ?? {};
+    const isLoading               = loading || processing;
 
     // Countdown timer untuk resend OTP
     useEffect(() => {
@@ -67,12 +69,15 @@ export default function TwoFactorChallenge({ hasTotpEnabled, email }) {
             ? route('two-factor.totp')
             : route('two-factor.otp');
 
+        setLoading(true);
         router.post(url, { code }, {
             preserveScroll: true,
             onError: () => {
                 setDigits(['', '', '', '', '', '']);
                 inputRefs.current[0]?.focus();
+                setLoading(false);
             },
+            onFinish: () => setLoading(false),
         });
     };
 
@@ -212,19 +217,19 @@ export default function TwoFactorChallenge({ hasTotpEnabled, email }) {
                     {/* Submit button */}
                     <button
                         type="submit"
-                        disabled={processing || getCode().length < 6}
+                        disabled={isLoading || getCode().length < 6}
                         style={{
                             width: '100%',
                             padding: '14px',
-                            background: processing || getCode().length < 6
+                            background: isLoading || getCode().length < 6
                                 ? '#e2e8f0'
                                 : 'linear-gradient(135deg, #153B73, #1E4E96)',
-                            color: processing || getCode().length < 6 ? '#94a3b8' : '#fff',
+                            color: isLoading || getCode().length < 6 ? '#94a3b8' : '#fff',
                             border: 'none',
                             borderRadius: '12px',
                             fontSize: '14px',
                             fontWeight: 700,
-                            cursor: processing || getCode().length < 6 ? 'not-allowed' : 'pointer',
+                            cursor: isLoading || getCode().length < 6 ? 'not-allowed' : 'pointer',
                             marginTop: errors?.code ? '0' : '16px',
                             display: 'flex',
                             alignItems: 'center',
@@ -233,10 +238,10 @@ export default function TwoFactorChallenge({ hasTotpEnabled, email }) {
                             transition: 'all 0.2s',
                         }}
                     >
-                        {processing ? (
+                        {isLoading ? (
                             <><RefreshCw size={16} style={{ animation: 'spin 1s linear infinite' }} /> Memverifikasi...</>
                         ) : (
-                            <><KeyRound size={16} /> Verifikasi</>  
+                            <><KeyRound size={16} /> Verifikasi</>
                         )}
                     </button>
                 </form>

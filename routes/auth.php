@@ -4,6 +4,8 @@ use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\ConfirmablePasswordController;
 use App\Http\Controllers\Auth\EmailVerificationNotificationController;
 use App\Http\Controllers\Auth\EmailVerificationPromptController;
+use App\Http\Controllers\Auth\MicrosoftHandoverController;
+use App\Http\Controllers\Auth\MicrosoftSocialiteController;
 use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Auth\PasswordController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
@@ -35,6 +37,20 @@ Route::middleware('guest')->group(function () {
         ->name('login');
 
     Route::post('login', [AuthenticatedSessionController::class, 'store']);
+
+    // Microsoft handover from CMS (signed HMAC token) — local environment
+    Route::get('auth/handover', [MicrosoftHandoverController::class, 'handle'])
+        ->name('handover');
+
+    // Microsoft session restore on canonical domain (aimsv3.test)
+    Route::get('auth/microsoft/session-restore', [MicrosoftHandoverController::class, 'sessionRestore'])
+        ->name('microsoft.session-restore');
+
+    // Microsoft direct Socialite — production environment only
+    Route::get('auth/microsoft/redirect', [MicrosoftSocialiteController::class, 'redirect'])
+        ->name('microsoft.redirect');
+    Route::get('auth/microsoft/callback', [MicrosoftSocialiteController::class, 'callback'])
+        ->name('microsoft.callback');
 
     Route::post('otp/send', [OtpAuthController::class, 'sendOtp'])
         ->name('otp.send');

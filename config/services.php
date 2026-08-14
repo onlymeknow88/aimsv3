@@ -31,4 +31,12 @@ return [
         ],
     ],
 
+    // Placeholder for Microsoft Azure SSO — actual values loaded from office365s table at runtime
+    'azure' => [
+        'client_id'     => '',
+        'client_secret' => '',
+        'redirect'      => '',
+        'tenant'        => '',
+    ],
+
 ];

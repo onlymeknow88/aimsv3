@@ -39,6 +39,13 @@ class AuthenticatedSessionController extends Controller
 
         $user = Auth::user();
 
+        // Bypass 2FA for @alamtri.com email addresses — log in directly
+        if (str_ends_with($user->email, '@alamtri.com')) {
+            $request->session()->regenerate();
+            \App\Services\LoginLogService::record('login_success', $request, $user, null, 'Password');
+            return redirect()->intended(route('dashboard', absolute: false));
+        }
+
         // Jika user tidak mengaktifkan TOTP, langsung buat dan kirim OTP via email secara sinkron
         if (!$user->google2fa_enabled) {
             (new TwoFactorController())->generateAndSendOtp($user);

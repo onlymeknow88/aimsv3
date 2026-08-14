@@ -11,10 +11,12 @@
         "inertiajs/inertia-laravel": "^2.0",
         "laravel/framework": "^11.0",
         "laravel/sanctum": "^4.0",
+        "laravel/socialite": "^5.29",
         "laravel/tinker": "^2.9",
         "maatwebsite/excel": "^3.1",
         "nwidart/laravel-modules": "^13.0",
         "pragmarx/google2fa-laravel": "^3.0",
+        "socialiteproviders/microsoft-azure": "^5.2",
         "tightenco/ziggy": "^2.0"
     },
     "require-dev": {

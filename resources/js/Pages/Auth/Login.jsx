@@ -1,5 +1,5 @@
 import { ChevronRight, Eye, EyeOff, HardHat, Lock, Mail, ShieldCheck } from 'lucide-react';
-import { Head, Link, useForm } from '@inertiajs/react';
+import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { useEffect } from 'react';
 
 import Checkbox from '@/Components/Checkbox';
@@ -9,6 +9,7 @@ import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
 
 export default function Login({ status, canResetPassword }) {
+    const { microsoftLoginUrl, microsoftRedirectEnabled } = usePage().props;
     const { data, setData, post, processing, errors, reset } = useForm({
         email: '',
         password: '',
@@ -258,10 +259,17 @@ export default function Login({ status, canResetPassword }) {
                             <div style={{ flex: 1, height: '1px', backgroundColor: '#E7ECF3' }} />
                         </div>
 
-                        {/* Microsoft Login Button */}
+                        {/* Microsoft Login Button — production: direct Socialite, local: CMS handover */}
+                        {(microsoftRedirectEnabled || microsoftLoginUrl) && (
                         <button
                             type="button"
-                            onClick={() => window.location.href = '/login/microsoft'}
+                            onClick={() => {
+                                if (microsoftRedirectEnabled) {
+                                    window.location.href = route('microsoft.redirect');
+                                } else {
+                                    window.location.href = microsoftLoginUrl;
+                                }
+                            }}
                             style={{
                                 width: '100%',
                                 padding: '11px',
@@ -289,6 +297,7 @@ export default function Login({ status, canResetPassword }) {
                             </svg>
                             Microsoft 365
                         </button>
+                        )}
                     </form>
 
                     {/* Bottom Links */}

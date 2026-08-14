@@ -26,7 +26,7 @@ class Department extends Model
 
     public function head()
     {
-        return $this->belongsTo(User::class, 'head_id');
+        return $this->belongsTo(Employee::class, 'head_id', 'user_id');
     }
 
     public function sections()
