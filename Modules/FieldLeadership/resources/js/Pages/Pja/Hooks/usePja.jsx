@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+﻿import { useState, useCallback, useEffect } from 'react';
 import axios from 'axios';
 
 export default function usePja(defaultStatus = 'On Review PJA') {
@@ -13,13 +13,25 @@ export default function usePja(defaultStatus = 'On Review PJA') {
     const [selectedItem, setSelectedItem] = useState(null);
 
     const [columnFilters, setColumnFilters] = useState({
-        type:        '',
-        status:      defaultStatus,
-        company:     '',
-        department:  '',
-        date_from:   '',
-        date_to:     '',
+        type:           '',
+        status:         defaultStatus,
+        company:        '',
+        department:     '',
+        date_from:      '',
+        date_to:        '',
+        // Header column search
+        date:           '',
+        ccow:           '',
+        detail_company: '',
+        section:        '',
+        location:       '',
+        detail_location:'',
+        repair_action:  '',
     });
+
+    const setColumnFilter = useCallback((key, val) => {
+        setColumnFilters(prev => ({ ...prev, [key]: val }));
+    }, []);
 
     const fetchDocs = useCallback(() => {
         setLoading(true);
@@ -28,11 +40,21 @@ export default function usePja(defaultStatus = 'On Review PJA') {
                 search,
                 page,
                 limit,
-                type:        columnFilters.type,
-                status:      columnFilters.status,
-                company_id:  columnFilters.company,
-                date_from:   columnFilters.date_from,
-                date_to:     columnFilters.date_to,
+                type:               columnFilters.type,
+                status:             columnFilters.status,
+                company_id:         columnFilters.company,
+                date_from:          columnFilters.date_from,
+                date_to:            columnFilters.date_to,
+                // Header column search
+                col_date:           columnFilters.date           || undefined,
+                col_company:        columnFilters.company        || undefined,
+                col_ccow:           columnFilters.ccow           || undefined,
+                col_detail_company: columnFilters.detail_company || undefined,
+                col_department:     columnFilters.department     || undefined,
+                col_section:        columnFilters.section        || undefined,
+                col_location:       columnFilters.location       || undefined,
+                col_detail_location:columnFilters.detail_location|| undefined,
+                col_repair_action:  columnFilters.repair_action  || undefined,
             },
         })
             .then(res => {
@@ -99,7 +121,7 @@ export default function usePja(defaultStatus = 'On Review PJA') {
         limit, setLimit,
         pagination,
         selectedIds, setSelectedIds,
-        columnFilters, setColumnFilters,
+        columnFilters, setColumnFilters, setColumnFilter,
         fetchDocs,
         requestDelete, confirmDelete, cancelDelete,
         deleteConfirmOpen, deleting,

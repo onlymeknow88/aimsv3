@@ -34,7 +34,7 @@ export default function Index({ defaultType = '' }) {
         limit, setLimit,
         pagination,
         selectedIds, setSelectedIds,
-        columnFilters, setColumnFilters,
+        columnFilters, setColumnFilters, setColumnFilter,
         requestDelete, confirmDelete, cancelDelete,
         deleteConfirmOpen, deleting,
         openDrawer,
@@ -190,7 +190,7 @@ export default function Index({ defaultType = '' }) {
                     limit={limit}
                     onLimitChange={setLimit}
                     columnFilters={columnFilters}
-                    onColumnFilterChange={(colId, val) => setColumnFilters(prev => ({ ...prev, [colId]: val }))}
+                    onColumnFilterChange={setColumnFilter}
                     onView={(item) => window.location.href = `/field-leadership/${item.id}`}
                 />
             </div>

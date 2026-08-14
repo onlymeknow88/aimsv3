@@ -113,7 +113,7 @@ export default function SectionInfoUmum({
                     rows={3}
                     value={detailLocation}
                     onChange={e => setDetailLocation(e.target.value)}
-                    placeholder="Deskripsi detail lokasi observasi..."
+                    placeholder="Deskripsi detail lokasi..."
                     style={{ ...inputStyle, resize: 'vertical' }}
                 />
             </div>

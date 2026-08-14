@@ -79,7 +79,7 @@ export default function SectionPenanggungJawab({
             </div>
 
             {/* Checkbox: Tindak Lanjut Saat Itu */}
-            <div style={{ marginBottom: '12px' }}>
+            {/* <div style={{ marginBottom: '12px' }}>
                 <label style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '12px', color: 'var(--text-primary)' }}>
                     <input
                         type="checkbox"
@@ -91,10 +91,10 @@ export default function SectionPenanggungJawab({
                 <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '3px', marginLeft: '20px' }}>
                     Centang jika tindakan korektif langsung dilakukan di tempat saat observasi.
                 </div>
-            </div>
+            </div> */}
 
             {/* Checkbox Area Suitable — tampil hanya jika is_immediate_action = true */}
-            {isImmediateAction && (
+            {/* {isImmediateAction && (
                 <div style={{ marginBottom: '16px', padding: '10px 12px', backgroundColor: 'rgba(21,59,115,0.04)', borderRadius: '8px', border: '1px solid rgba(21,59,115,0.1)' }}>
                     <label style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '12px', color: 'var(--text-primary)' }}>
                         <input
@@ -110,7 +110,7 @@ export default function SectionPenanggungJawab({
                         </div>
                     )}
                 </div>
-            )}
+            )} */}
 
             {/* Tugas / SOP */}
             <div>

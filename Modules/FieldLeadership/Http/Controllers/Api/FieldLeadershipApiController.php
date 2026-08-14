@@ -76,11 +76,39 @@ class FieldLeadershipApiController extends Controller
             });
         }
 
+        $colDate          = $request->query('col_date', '');
+        $colCompany       = $request->query('col_company', '');
+        $colCcow          = $request->query('col_ccow', '');
+        $colDetailCompany = $request->query('col_detail_company', '');
+        $colDepartment    = $request->query('col_department', '');
+        $colSection       = $request->query('col_section', '');
+        $colLocation      = $request->query('col_location', '');
+        $colDetailLocation= $request->query('col_detail_location', '');
+        $colRepairAction  = $request->query('col_repair_action', '');
+
         if ($type)      $query->where('fl.type', $type);
         if ($status)    $query->where('fl.status', $status);
         if ($companyId) $query->where('fl.company_id', $companyId);
         if ($dateFrom)  $query->where('fl.date', '>=', $dateFrom);
         if ($dateTo)    $query->where('fl.date', '<=', $dateTo);
+
+        // Column search per-kolom dari header tabel
+        if ($colDate)           $query->whereDate('fl.date', $colDate);
+        if ($colCompany)        $query->where('c.company_name', 'like', "%{$colCompany}%");
+        if ($colCcow)           $query->where('ccow.company_name', 'like', "%{$colCcow}%");
+        if ($colDetailCompany)  $query->where('fl.detail_company', 'like', "%{$colDetailCompany}%");
+        if ($colDepartment)     $query->where('d.name', 'like', "%{$colDepartment}%");
+        if ($colSection)        $query->where('sec.name', 'like', "%{$colSection}%");
+        if ($colLocation)       $query->where('loc.name', 'like', "%{$colLocation}%");
+        if ($colDetailLocation) $query->where('fl.detail_location', 'like', "%{$colDetailLocation}%");
+        if ($colRepairAction) {
+            $query->whereExists(function ($sub) use ($colRepairAction) {
+                $sub->select(DB::raw(1))
+                    ->from('field_leadership_risks')
+                    ->whereColumn('fl_id', 'fl.id')
+                    ->where('repair_action', 'like', "%{$colRepairAction}%");
+            });
+        }
 
         $query->orderBy('fl.date', 'desc')->orderBy('fl.created_at', 'desc');
 
@@ -274,8 +302,9 @@ class FieldLeadershipApiController extends Controller
 
         DB::beginTransaction();
         try {
-            $id     = (string) Str::uuid();
-            $status = self::STATUS_OPEN;
+            $id        = (string) Str::uuid();
+            $published = $request->input('publish', 'Draft');
+            $status    = $published === 'Draft' ? 'Draft' : self::STATUS_OPEN;
 
             DB::table('field_leaderships')->insert([
                 'id'                      => $id,
@@ -470,9 +499,11 @@ class FieldLeadershipApiController extends Controller
             'updated_at'       => now(),
         ]);
 
-        // Remove status from update data unless explicitly provided
-        if (!$request->has('status')) {
-            unset($updateData['status']);
+        // Force status to Draft if publish is Draft. Otherwise, if transitioning to Publish, set to Open.
+        if ($request->input('publish') === 'Draft') {
+            $updateData['status'] = 'Draft';
+        } elseif (($fl->published ?? 'Draft') === 'Draft' && $request->input('publish') === 'Publish') {
+            $updateData['status'] = self::STATUS_OPEN;
         }
 
         // Send email to PJA if transition from Draft to Publish
@@ -569,6 +600,8 @@ class FieldLeadershipApiController extends Controller
         // Area managers — via pivot section_area_managers
         $pjaQuery = DB::table('area_managers as am')
             ->leftJoin('users as u', 'am.user_id', '=', 'u.id')
+            ->whereNull('am.deleted_at')
+            ->whereNull('u.deleted_at')
             ->select('am.id', DB::raw("COALESCE(u.name, '—') as name"), 'am.user_id');
         if ($sectionId) {
             $pjaQuery->join('section_area_managers as sam', 'sam.area_manager_id', '=', 'am.id')
@@ -578,6 +611,7 @@ class FieldLeadershipApiController extends Controller
 
         // Users for PJO/KTT
         $users = DB::table('users')
+            ->whereNull('deleted_at')
             ->select('id', 'name')
             ->orderBy('name')
             ->get();

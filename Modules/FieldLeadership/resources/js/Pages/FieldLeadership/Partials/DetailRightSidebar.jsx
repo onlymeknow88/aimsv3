@@ -13,20 +13,57 @@ const STATUS_STEPS = [
     { key: 'Closed',        label: 'Closed' },
 ];
 
-function ApprovalTimeline({ currentStatus }) {
+function ApprovalTimeline({ currentStatus, obs }) {
     const isSpecial = ['Not Followed Up'].includes(currentStatus);
     const currentIdx = STATUS_STEPS.findIndex(s => s.key === currentStatus);
+
+    const getStepDetails = (stepKey) => {
+        const formatDt = (dt) => dt ? new Date(dt).toLocaleString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : null;
+
+        switch (stepKey) {
+            case 'Open':
+                return {
+                    user: obs.created_by_name || '—',
+                    time: formatDt(obs.submitted_at || obs.created_at),
+                };
+            case 'On Review PJA':
+                return {
+                    user: obs.pja_name || '—',
+                    time: formatDt(obs.pja_reviewed_at),
+                };
+            case 'Pending CRS':
+                // Diisi jika PJA menyatakan area tidak sesuai dan diteruskan ke CRS
+                return !obs.is_area_suitable ? {
+                    user: 'CRS (Super Admin)',
+                    time: formatDt(obs.pja_reviewed_at),
+                } : null;
+            case 'On Review CRS':
+                return {
+                    user: 'CRS (Super Admin)',
+                    time: formatDt(obs.crs_approved_at),
+                };
+            case 'Closed':
+                return {
+                    user: 'System',
+                    time: formatDt(obs.closed_at),
+                };
+            default:
+                return null;
+        }
+    };
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
             {isSpecial && (
-                <div style={{ fontSize: '11px', fontWeight: 700, color: '#64748b', padding: '6px 10px', backgroundColor: '#f1f5f9', borderRadius: '6px', marginBottom: '8px' }}>
+                <div style={{ fontSize: '11px', fontWeight: 700, color: '#dc2626', padding: '6px 10px', backgroundColor: '#fef2f2', borderRadius: '6px', marginBottom: '8px' }}>
                     ✗ Tidak Ditindaklanjuti
                 </div>
             )}
             {STATUS_STEPS.map((step, idx) => {
                 const done    = idx < currentIdx;
                 const active  = idx === currentIdx;
+                const details = getStepDetails(step.key);
+
                 return (
                     <div key={step.key} style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0 }}>
@@ -40,13 +77,19 @@ function ApprovalTimeline({ currentStatus }) {
                                 {active && <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#fff' }} />}
                             </div>
                             {idx < STATUS_STEPS.length - 1 && (
-                                <div style={{ width: '2px', height: '28px', backgroundColor: done ? 'var(--success)' : '#e2e8f0' }} />
+                                <div style={{ width: '2px', height: '36px', backgroundColor: done ? 'var(--success)' : '#e2e8f0' }} />
                             )}
                         </div>
                         <div style={{ paddingTop: '2px', paddingBottom: '14px' }}>
                             <div style={{ fontSize: '11px', fontWeight: active ? 700 : 600, color: done ? 'var(--success)' : active ? 'var(--primary)' : 'var(--text-muted)' }}>
                                 {step.label}
                             </div>
+                            {details?.time && (
+                                <div style={{ fontSize: '9px', color: 'var(--text-muted)', marginTop: '2px', display: 'flex', flexDirection: 'column', gap: '1px' }}>
+                                    <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>By: {details.user}</span>
+                                    <span>{details.time}</span>
+                                </div>
+                            )}
                         </div>
                     </div>
                 );
@@ -121,7 +164,7 @@ export default function DetailRightSidebar({ obs, activities, approval }) {
             {/* Alur Persetujuan */}
             <div style={card}>
                 <h4 style={sectionTitle}>Alur Persetujuan</h4>
-                <ApprovalTimeline currentStatus={obs.status} />
+                <ApprovalTimeline currentStatus={obs.status} obs={obs} />
             </div>
 
             {/* Aksi */}

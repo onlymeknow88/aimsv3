@@ -14,6 +14,7 @@ const SLUG_URL = {
     'fls.master.limit-parameter':        '/field-leadership/master?tab=limit-parameter',
     'fls.master.jenis-kta-tta':          '/field-leadership/master?tab=jenis-kta-tta',
     'fls.master.potensi-konsekuensi':    '/field-leadership/master?tab=potensi-konsekuensi',
+    'fls.master.kategori':    '/field-leadership/master?tab=kategori',
 };
 
 function isActivePath(slug, currentPath, currentSearch) {

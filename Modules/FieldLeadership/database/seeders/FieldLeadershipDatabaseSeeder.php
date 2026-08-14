@@ -13,7 +13,6 @@ class FieldLeadershipDatabaseSeeder extends Seeder
     {
         $this->call([
             FieldLeadershipMenuSeeder::class,
-            FieldLeadershipDummySeeder::class,
         ]);
     }
 }

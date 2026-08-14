@@ -76,12 +76,12 @@ export default function DetailLeftSidebar({ obs }) {
             </div>
 
             {/* Area warning */}
-            {!obs.is_area_suitable && (
+            {/* {!obs.is_area_suitable && (
                 <div style={{ backgroundColor: '#fef2f2', border: '1px solid #fecaca', borderRadius: '12px', padding: '12px 14px' }}>
                     <div style={{ fontSize: '11px', fontWeight: 700, color: '#dc2626', marginBottom: '3px' }}>⚠ Area Tidak Sesuai PJA</div>
                     <div style={{ fontSize: '11px', color: '#991b1b', lineHeight: 1.4 }}>Perbarui PJA melalui tombol Edit.</div>
                 </div>
-            )}
+            )} */}
 
             {/* PJA card */}
             <div style={card}>

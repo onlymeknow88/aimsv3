@@ -1,4 +1,4 @@
-import {
+﻿import {
     DropdownMenu,
     DropdownMenuCheckboxItem,
     DropdownMenuContent,
@@ -28,10 +28,9 @@ export default function Index({ defaultStatus = 'On Review PJA', title = 'Penang
         limit, setLimit,
         pagination,
         selectedIds, setSelectedIds,
-        columnFilters, setColumnFilters,
+        columnFilters, setColumnFilters, setColumnFilter,
         requestDelete, confirmDelete, cancelDelete,
         deleteConfirmOpen, deleting,
-        openDrawer,
     } = usePja(defaultStatus);
 
     const [isMobile, setIsMobile] = useState(false);
@@ -42,9 +41,21 @@ export default function Index({ defaultStatus = 'On Review PJA', title = 'Penang
     }, []);
 
     const [visibleColumns, setVisibleColumns] = useState({
-        'Tanggal': true, 'Tipe': true, 'Company': true,
-        'Departemen': true, 'Pekerjaan': true, 'Dibuat Oleh': true,
-        'Status': true, 'Aksi': true,
+        'Tanggal': true,
+        'Tipe': true,
+        'Company': true,
+        'CCOW': true,
+        'Detail Company': true,
+        'Departemen': true,
+        'Section': true,
+        'Location': true,
+        'Detail Location': true,
+        'Members': true,
+        'Positive Condition': true,
+        'Risk Condition': true,
+        'Repair Action': true,
+        'Status': true,
+        'Aksi': true,
     });
     const toggleColumn = col => setVisibleColumns(prev => ({ ...prev, [col]: !prev[col] }));
 
@@ -73,7 +84,7 @@ export default function Index({ defaultStatus = 'On Review PJA', title = 'Penang
             <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', flexWrap: 'wrap' }}>
                 <select
                     value={columnFilters.type}
-                    onChange={e => setColumnFilters(prev => ({ ...prev, type: e.target.value }))}
+                    onChange={e => setColumnFilter('type', e.target.value)}
                     style={{ padding: '7px 12px', border: '1px solid var(--border-color)', borderRadius: '6px', fontSize: '12px', outline: 'none', cursor: 'pointer' }}
                 >
                     <option value="">Semua Tipe</option>
@@ -84,7 +95,7 @@ export default function Index({ defaultStatus = 'On Review PJA', title = 'Penang
 
                 <select
                     value={columnFilters.status}
-                    onChange={e => setColumnFilters(prev => ({ ...prev, status: e.target.value }))}
+                    onChange={e => setColumnFilter('status', e.target.value)}
                     style={{ padding: '7px 12px', border: '1px solid var(--border-color)', borderRadius: '6px', fontSize: '12px', outline: 'none', cursor: 'pointer' }}
                 >
                     <option value="">Semua Status</option>
@@ -92,11 +103,11 @@ export default function Index({ defaultStatus = 'On Review PJA', title = 'Penang
                 </select>
 
                 <input type="date" value={columnFilters.date_from}
-                    onChange={e => setColumnFilters(prev => ({ ...prev, date_from: e.target.value }))}
+                    onChange={e => setColumnFilter('date_from', e.target.value)}
                     style={{ padding: '7px 12px', border: '1px solid var(--border-color)', borderRadius: '6px', fontSize: '12px', outline: 'none' }}
                 />
                 <input type="date" value={columnFilters.date_to}
-                    onChange={e => setColumnFilters(prev => ({ ...prev, date_to: e.target.value }))}
+                    onChange={e => setColumnFilter('date_to', e.target.value)}
                     style={{ padding: '7px 12px', border: '1px solid var(--border-color)', borderRadius: '6px', fontSize: '12px', outline: 'none' }}
                 />
             </div>
@@ -166,6 +177,8 @@ export default function Index({ defaultStatus = 'On Review PJA', title = 'Penang
                     onPageChange={setPage}
                     limit={limit}
                     onLimitChange={setLimit}
+                    columnFilters={columnFilters}
+                    onColumnFilterChange={setColumnFilter}
                     onView={(doc) => window.location.href = `/field-leadership/${doc.id}`}
                 />
             </div>

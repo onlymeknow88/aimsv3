@@ -54,18 +54,16 @@ class FieldLeadershipMenuSeeder extends Seeder
             'created_at'=> $now,
             'updated_at'=> $now,
         ]);
-
         // 2. Field Leadership
         $menuIds[] = DB::table('aims_menus')->insertGetId([
             'module_id' => $moduleId,
             'parent_id' => null,
             'order_by'  => 2,
             'name'      => 'Field Leadership',
-            'slug'      => 'fls.observations',
+            'slug'      => 'fls.field-leadership',
             'created_at'=> $now,
             'updated_at'=> $now,
         ]);
-
         // 3. Penanggung Jawab Area (Parent)
         $pjaParentId = DB::table('aims_menus')->insertGetId([
             'module_id' => $moduleId,
@@ -155,6 +153,7 @@ class FieldLeadershipMenuSeeder extends Seeder
 
         // 2. Seed Roles
         $roles = [
+            ['name' => 'System Admin', 'slug' => 'system_admin', 'is_system' => true],
             ['name' => 'Super Admin', 'slug' => 'super_admin', 'is_system' => true],
             ['name' => 'Field Leadership Admin', 'slug' => 'fls_admin', 'is_system' => true],
             ['name' => 'PJA Reviewer', 'slug' => 'pja_reviewer', 'is_system' => true],

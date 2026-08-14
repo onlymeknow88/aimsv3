@@ -67,6 +67,8 @@ class FieldLeadershipMasterApiController extends Controller
             ->leftJoin('users as u', 'am.user_id', '=', 'u.id')
             ->leftJoin('area_manager_locations as aml', 'aml.area_manager_id', '=', 'am.id')
             ->leftJoin('area_locations as al', 'al.id', '=', 'aml.area_location_id')
+            ->whereNull('am.deleted_at')
+            ->whereNull('u.deleted_at')
             ->select(
                 'am.id',
                 DB::raw("COALESCE(u.name, '—') as name"),
@@ -119,7 +121,7 @@ class FieldLeadershipMasterApiController extends Controller
 
     public function getKtaTta(Request $request)
     {
-        $query = DB::table('field_leadership_kta_and_ttas')->orderBy('type')->orderBy('name');
+        $query = DB::table('field_leadership_kta_and_ttas')->orderBy('type')->orderBy('code');
         if ($request->filled('type')) $query->where('type', $request->query('type'));
         return ResponseFormatter::success($query->get(), 'KTA & TTA retrieved');
     }
