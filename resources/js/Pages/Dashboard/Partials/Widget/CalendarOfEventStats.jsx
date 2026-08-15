@@ -74,7 +74,7 @@ function MiniCalendar({ coeEvents = [] }) {
                         <div key={i} style={{
                             position: 'relative', textAlign: 'center',
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            padding: '8px 4px',
+                            aspectRatio: '1',
                             borderRadius: '8px',
                             fontSize: '13px',
                             fontWeight: isToday(d) ? 800 : 400,
