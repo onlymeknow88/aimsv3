@@ -21,13 +21,17 @@ export default function useCsmsWidget(filters = {}) {
     const yearsKey = Array.isArray(filters.years)
         ? filters.years.join(',')
         : (filters.years ?? '');
+    const monthsKey = Array.isArray(filters.months)
+        ? filters.months.join(',')
+        : (filters.months ?? '');
 
-    const fetchStats = useCallback(async (yearsParam) => {
+    const fetchStats = useCallback(async (yr, mn) => {
         setLoading(true);
         setError(false);
         try {
             const params = {};
-            if (yearsParam) params.year = yearsParam;
+            if (yr) params.year = yr;
+            if (mn) params.month = mn;
 
             const res    = await axios.get('/api/csms/main-dashboard-stats', { params });
             const result = res.data?.result ?? null;
@@ -44,12 +48,12 @@ export default function useCsmsWidget(filters = {}) {
     }, []);
 
     useEffect(() => {
-        fetchStats(yearsKey);
-    }, [yearsKey, fetchStats]);
+        fetchStats(yearsKey, monthsKey);
+    }, [yearsKey, monthsKey, fetchStats]);
 
     const refetch = useCallback(() => {
-        fetchStats(yearsKey);
-    }, [fetchStats, yearsKey]);
+        fetchStats(yearsKey, monthsKey);
+    }, [fetchStats, yearsKey, monthsKey]);
 
     return { stats, loading, error, refetch };
 }

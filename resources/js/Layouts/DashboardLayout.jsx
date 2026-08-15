@@ -20,7 +20,7 @@ import Header from './Partials/Header';
 import Sidebar from './Partials/Sidebar';
 import { usePage } from '@inertiajs/react';
 
-export default function DashboardLayout({ children }) {
+export default function DashboardLayout({ children, onFilterOpen }) {
     const { auth } = usePage().props;
     const [sidebarOpen, setSidebarOpen] = useState(true);
     const [department, setDepartment] = useState('');
@@ -140,13 +140,7 @@ export default function DashboardLayout({ children }) {
                 sidebarOpen={sidebarOpen}
                 setSidebarOpen={setSidebarOpen}
                 visibleNavigationItems={visibleNavigationItems}
-                department={department}
-                setDepartment={setDepartment}
-                location={location}
-                setLocation={setLocation}
-                period={period}
-                setPeriod={setPeriod}
-                handleResetFilter={handleResetFilter}
+                onFilterOpen={onFilterOpen}
             />
 
             {/* Main Area */}

@@ -113,13 +113,14 @@ class FieldLeadershipStatsController extends Controller
         ];
 
         // ── Monthly comparison ────────────────────────────────────────────────
-        $thisMonth   = $now->month;
-        $lastMonthDt = $now->copy()->subMonth();
-        $lastMonth   = $lastMonthDt->month;
-        $lastMonthYr = $lastMonthDt->year;
+        $thisMonth     = !empty($months) ? $months[0] : $now->month;
+        $thisMonthYear = $primaryYear;
+        $lastMonthDt   = Carbon::create($thisMonthYear, $thisMonth, 1)->subMonth();
+        $lastMonth     = $lastMonthDt->month;
+        $lastMonthYr   = $lastMonthDt->year;
 
-        $thisMonthDone   = $this->countClosedInMonth($thisMonth,  $now->year,   $companyIds);
-        $thisMonthTarget = $this->countInMonth($thisMonth,        $now->year,   $companyIds);
+        $thisMonthDone   = $this->countClosedInMonth($thisMonth,  $thisMonthYear, $companyIds);
+        $thisMonthTarget = $this->countInMonth($thisMonth,        $thisMonthYear, $companyIds);
         $thisMonthPct    = $thisMonthTarget > 0 ? round(($thisMonthDone / $thisMonthTarget) * 100) : 0;
 
         $pastMonthDone   = $this->countClosedInMonth($lastMonth,  $lastMonthYr, $companyIds);
@@ -127,8 +128,8 @@ class FieldLeadershipStatsController extends Controller
         $pastMonthPct    = $pastMonthTarget > 0 ? round(($pastMonthDone / $pastMonthTarget) * 100) : 0;
 
         // ── Yearly comparison ─────────────────────────────────────────────────
-        $thisYear = $now->year;
-        $lastYear = $now->year - 1;
+        $thisYear = $primaryYear;
+        $lastYear = $primaryYear - 1;
 
         $thisYearDone   = $this->countClosedInYear($thisYear, $companyIds);
         $thisYearTarget = $this->countInYear($thisYear,       $companyIds);

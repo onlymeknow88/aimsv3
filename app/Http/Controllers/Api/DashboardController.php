@@ -16,7 +16,7 @@ class DashboardController extends Controller
     public function getData(Request $request)
     {
         return ResponseFormatter::success([
-            'coeEvents'    => $this->getCoeEvents(),
+            'coeEvents'    => $this->getCoeEvents($request),
             'slideshows'   => $this->getSlideshows(),
             'generalStats' => $this->getGeneralStats(),
             'newsItems'    => $this->getNewsItems(),
@@ -96,14 +96,30 @@ class DashboardController extends Controller
      * GET /api/dashboard/coe/stats
      * Stats untuk widget CalendarOfEventStats.
      */
-    public function coeStats()
+    public function coeStats(Request $request)
     {
         if (!class_exists('Modules\Coe\Entities\Event')) {
             return ResponseFormatter::success($this->getDefaultCoeStats(), 'No COE data available');
         }
 
-        $year = Carbon::now()->year;
-        $month = Carbon::now()->month;
+        $years = [];
+        if ($request->has('years')) {
+            $years = is_array($request->query('years')) ? $request->query('years') : explode(',', $request->query('years'));
+        } elseif ($request->has('year')) {
+            $years = is_array($request->query('year')) ? $request->query('year') : explode(',', $request->query('year'));
+        }
+        $years = array_filter(array_map('intval', $years));
+        $year = !empty($years) ? reset($years) : Carbon::now()->year;
+
+        $months = [];
+        if ($request->has('months')) {
+            $months = is_array($request->query('months')) ? $request->query('months') : explode(',', $request->query('months'));
+        } elseif ($request->has('month')) {
+            $months = is_array($request->query('month')) ? $request->query('month') : explode(',', $request->query('month'));
+        }
+        $months = array_filter(array_map('intval', $months));
+        $month = !empty($months) ? reset($months) : Carbon::now()->month;
+
         $lastYear = $year - 1;
 
         // YTD (Year to Date)
@@ -127,10 +143,14 @@ class DashboardController extends Controller
         $thisYearLastYear = $ytdLastYear;
         $thisYearTrend = $ytdTrend;
 
-        // Complete & OnGoing
-        $completeCount = \Modules\Coe\Entities\Event::where('status', 'DONE')->count();
-        $onGoingCount = \Modules\Coe\Entities\Event::where('status', 'PENDING')->count();
-        $totalEvents = \Modules\Coe\Entities\Event::count();
+        // Complete & OnGoing (filtered by current year)
+        $completeCount = \Modules\Coe\Entities\Event::where('status', 'DONE')
+            ->whereYear('start_date', $year)
+            ->count();
+        $onGoingCount = \Modules\Coe\Entities\Event::where('status', 'PENDING')
+            ->whereYear('start_date', $year)
+            ->count();
+        $totalEvents = \Modules\Coe\Entities\Event::whereYear('start_date', $year)->count();
 
         // Monthly chart data (actual vs target dummy)
         $monthlyActual = \Modules\Coe\Entities\Event::selectRaw('MONTH(start_date) as month, COUNT(*) as count')
@@ -149,7 +169,9 @@ class DashboardController extends Controller
         }
 
         // By category — dynamic dari tabel coe_categories
-        $categories = \Modules\Coe\Entities\Category::withCount('events')
+        $categories = \Modules\Coe\Entities\Category::withCount(['events' => function ($q) use ($year) {
+            $q->whereYear('start_date', $year);
+        }])
             ->orderBy('name', 'asc')
             ->get();
         $totalCategoryEvents = $categories->sum('events_count') ?: 1;
@@ -216,24 +238,52 @@ class DashboardController extends Controller
      * 7 upcoming events terdekat dari hari ini, diurutkan ASC.
      * Fix bug V2: ordering DESC & tanpa filter >= today.
      */
-    private function getCoeEvents(): array
+    private function getCoeEvents(Request $request = null): array
     {
         if (!class_exists('Modules\Coe\Entities\Event')) {
             return [];
         }
 
-        $events = \Modules\Coe\Entities\Event::with(['category', 'section.department'])
-            ->where('start_date', '>=', Carbon::today()->toDateString())
-            ->orderBy('start_date', 'asc')
-            ->take(7)
-            ->get();
+        $query = \Modules\Coe\Entities\Event::with(['category', 'section.department']);
 
-        // Jika tidak ada event mendatang, ambil 7 event terdekat tanpa filter
-        if ($events->isEmpty()) {
-            $events = \Modules\Coe\Entities\Event::with(['category', 'section.department'])
-                ->orderBy('start_date', 'desc')
+        if ($request) {
+            $years = [];
+            if ($request->has('years')) {
+                $years = is_array($request->query('years')) ? $request->query('years') : explode(',', $request->query('years'));
+            } elseif ($request->has('year')) {
+                $years = is_array($request->query('year')) ? $request->query('year') : explode(',', $request->query('year'));
+            }
+            $years = array_filter(array_map('intval', $years));
+
+            $months = [];
+            if ($request->has('months')) {
+                $months = is_array($request->query('months')) ? $request->query('months') : explode(',', $request->query('months'));
+            } elseif ($request->has('month')) {
+                $months = is_array($request->query('month')) ? $request->query('month') : explode(',', $request->query('month'));
+            }
+            $months = array_filter(array_map('intval', $months));
+
+            if (!empty($years)) {
+                $query->whereIn(\DB::raw('YEAR(start_date)'), $years);
+            }
+            if (!empty($months)) {
+                $query->whereIn(\DB::raw('MONTH(start_date)'), $months);
+            }
+
+            $events = $query->orderBy('start_date', 'asc')->get();
+        } else {
+            $events = $query->where('start_date', '>=', Carbon::today()->toDateString())
+                ->orderBy('start_date', 'asc')
                 ->take(7)
                 ->get();
+
+            // Jika tidak ada event mendatang, ambil 7 event terdekat tanpa filter
+            if ($events->isEmpty()) {
+                $events = \Modules\Coe\Entities\Event::with(['category', 'section.department'])
+                    ->orderBy('start_date', 'desc')
+                    ->take(7)
+                    ->get();
+            }
         }
 
         return $events->map(function ($event) {

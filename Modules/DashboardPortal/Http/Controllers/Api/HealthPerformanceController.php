@@ -154,16 +154,12 @@ class HealthPerformanceController extends Controller
     {
         try {
             $year = $request->query('year', date('Y'));
+            $parsedYears = array_filter(array_map('intval', explode(',', $year)));
+            $primaryYear = !empty($parsedYears) ? $parsedYears[0] : (int) $year;
 
             $rows = HealthPerformance::where('visible', 'true')
-                ->whereYear('month', $year)
-                ->orderBy('month')
-                ->get();
-
-            // Ambil 3 record terbaru seperti aimsv2
-            $rows = HealthPerformance::where('visible', 'true')
-                ->orderBy('created_at', 'DESC')
-                ->take(3)
+                ->whereYear('month', $primaryYear)
+                ->orderBy('month', 'asc')
                 ->get();
 
             // Sumbu X = nama metric (RKK, CMR, MMR, SSR, ASR)

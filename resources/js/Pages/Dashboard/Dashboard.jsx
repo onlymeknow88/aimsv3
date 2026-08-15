@@ -27,6 +27,8 @@ import CalendarOfEventStats from './Partials/Widget/CalendarOfEventStats';
 import CalendarofEvent from './Partials/Widget/CalendarofEvent';
 import CsmsWidget from './Partials/Widget/CSMS';
 import DashboardLayout from '@/Layouts/DashboardLayout';
+import { DashboardFilterProvider, useDashboardFilter } from '@/Context/DashboardFilterContext';
+import FilterModal from './Partials/FilterModal';
 import HealthPerformanceWidget from './Partials/Widget/HealthPerformanceWidget';
 import IncidentNotificationWidget from './Partials/Widget/IncidentNotification';
 import ProductionMtdWidget from './Partials/Widget/Production/ProductionMtdWidget';
@@ -46,6 +48,19 @@ ChartJS.register(
 );
 
 export default function Dashboard({ coeEvents: initialEvents = [], slideshows: initialSlideshows = [], widgetSettings = {} }) {
+    return (
+        <DashboardFilterProvider>
+            <DashboardInner
+                initialEvents={initialEvents}
+                initialSlideshows={initialSlideshows}
+                widgetSettings={widgetSettings}
+            />
+        </DashboardFilterProvider>
+    );
+}
+
+function DashboardInner({ initialEvents, initialSlideshows, widgetSettings }) {
+    const { filters, setFilterModalOpen } = useDashboardFilter();
     const {
         activeSlide,
         setActiveSlide,
@@ -60,7 +75,7 @@ export default function Dashboard({ coeEvents: initialEvents = [], slideshows: i
         generalStats,
         newsItems,
         coeStats,
-    } = useDashboard(initialEvents, initialSlideshows);
+    } = useDashboard(initialEvents, initialSlideshows, filters);
 
     // KPI Cards — data dari API dashboard_general (lihat SafetyKPI widget)
 
@@ -141,8 +156,9 @@ export default function Dashboard({ coeEvents: initialEvents = [], slideshows: i
     }
 
     return (
-        <DashboardLayout>
+        <DashboardLayout onFilterOpen={() => setFilterModalOpen(true)}>
             <Head title="AIMS Dashboard" />
+            <FilterModal />
 
             {/* Section 1: KPI Cards — Safety Performance dari dashboard_general */}
             {widgetSettings['widget_safety_performance_chart'] !== "false" && (
@@ -194,44 +210,44 @@ export default function Dashboard({ coeEvents: initialEvents = [], slideshows: i
 
             {/* Section 4: Document System Widget */}
             {widgetSettings['widget_ds'] !== "false" && (
-                <DocumentSystemWidget />
+                <DocumentSystemWidget filters={filters} />
             )}
 
             {/* Section 5: Field Leadership Widget */}
             {widgetSettings['widget_fls'] !== "false" && (
-                <FieldLeadership />
+                <FieldLeadership filters={filters} />
             )}
 
             {/* Section 6: CSMS Widget */}
             {widgetSettings['widget_csms'] !== "false" && (
-                <CsmsWidget />
+                <CsmsWidget filters={filters} />
             )}
 
             {/* Section 7: Incident Notification Widget */}
             {widgetSettings['widget_incident_notification'] !== "false" && (
-                <IncidentNotificationWidget />
+                <IncidentNotificationWidget filters={filters} />
             )}
 
             {/* Section 8 & 9: Safety + Health Performance — 1 row */}
             {(widgetSettings['widget_safety_performance_chart'] !== "false" || widgetSettings['widget_health_performance_chart'] !== "false") && (
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', marginBottom: '32px' }}>
                     {widgetSettings['widget_safety_performance_chart'] !== "false" && (
-                        <SafetyPerformanceWidget />
+                        <SafetyPerformanceWidget filters={filters} />
                     )}
                     {widgetSettings['widget_health_performance_chart'] !== "false" && (
-                        <HealthPerformanceWidget />
+                        <HealthPerformanceWidget filters={filters} />
                     )}
                 </div>
             )}
 
             {/* Section 10: Production MTD Widget */}
             {widgetSettings['widget_production_mtd'] !== "false" && (
-                <ProductionMtdWidget />
+                <ProductionMtdWidget filters={filters} />
             )}
 
             {/* Section 11: Production YTD Widget */}
             {widgetSettings['widget_production_ytd_chart'] !== "false" && (
-                <ProductionYtdWidget />
+                <ProductionYtdWidget filters={filters} />
             )}
 
             {/* Section 12: News & Update */}

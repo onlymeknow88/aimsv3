@@ -222,10 +222,21 @@ class ProductionController extends Controller
             $thisYear  = date('Y');
             $year      = $request->query('year', $thisYear);
             $thisMonth = date('m');
+            
+            $month = $request->query('month');
+            if (!$month && $request->has('months')) {
+                $months = explode(',', $request->query('months'));
+                $month = $months[0] ?? null;
+            }
+            $month = $month ? (int) $month : (int) $thisMonth;
+            
+            // ── Parse year safely in case it is comma-separated list
+            $parsedYears = array_filter(array_map('intval', explode(',', $year)));
+            $primaryYear = !empty($parsedYears) ? $parsedYears[0] : (int) $year;
 
             // ── Summary ───────────────────────────────────────────────────────
             $ytdData = Production::where('visible', 'true')
-                ->whereYear('month', $year)
+                ->whereYear('month', $primaryYear)
                 ->selectRaw("
                     COALESCE(SUM(coal_shiping),0)  as coal_shiping,
                     COALESCE(SUM(waste_removal),0) as waste_removal,
@@ -240,8 +251,8 @@ class ProductionController extends Controller
                 : 0;
 
             $mtdData = Production::where('visible', 'true')
-                ->whereYear('month', $thisYear)
-                ->whereMonth('month', $thisMonth)
+                ->whereYear('month', $primaryYear)
+                ->whereMonth('month', $month)
                 ->selectRaw("
                     COALESCE(SUM(coal_shiping),0)  as coal_shiping,
                     COALESCE(SUM(waste_removal),0) as waste_removal,
@@ -258,12 +269,12 @@ class ProductionController extends Controller
             $summary = [
                 'ytd'  => round($totalYtd, 2),
                 'mtd'  => round($totalMtd, 2),
-                'year' => (int) $year,
+                'year' => (int) $primaryYear,
             ];
 
             // ── Monthly trend (per bulan dalam tahun yang dipilih) ───────────
             $monthly = Production::where('visible', 'true')
-                ->whereYear('month', $year)
+                ->whereYear('month', $primaryYear)
                 ->selectRaw("
                     DATE_FORMAT(month, '%b') as month_label,
                     MONTH(month) as month_num,
@@ -281,6 +292,7 @@ class ProductionController extends Controller
 
             // ── Yearly trend (per tahun, multi-year, dengan breakdown kategori) ─
             $dataYears = Production::where('visible', 'true')
+                ->whereYear('month', $primaryYear)
                 ->selectRaw("DATE_FORMAT(month, '%Y') as year")
                 ->groupByRaw("DATE_FORMAT(month, '%Y')")
                 ->orderByRaw("DATE_FORMAT(month, '%Y')")
@@ -315,7 +327,7 @@ class ProductionController extends Controller
             $category = [];
             foreach (self::CATEGORIES as $cat) {
                 $total = Production::where('visible', 'true')
-                    ->whereYear('month', $year)
+                    ->whereYear('month', $primaryYear)
                     ->sum($cat['slug']);
                 $category[] = [
                     'category' => $cat['name'],

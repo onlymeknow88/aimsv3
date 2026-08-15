@@ -151,11 +151,13 @@ class SafetyPerformanceController extends Controller
     {
         try {
             $year = $request->query('year', date('Y'));
+            $parsedYears = array_filter(array_map('intval', explode(',', $year)));
+            $primaryYear = !empty($parsedYears) ? $parsedYears[0] : (int) $year;
 
-            // Ambil 5 record terbaru seperti aimsv2
+            // Filter by the selected year
             $rows = SafetyPerformance::where('visible', 'true')
-                ->orderBy('created_at', 'DESC')
-                ->take(5)
+                ->whereYear('month', $primaryYear)
+                ->orderBy('month', 'ASC')
                 ->get();
 
             // Sumbu X = nama metric

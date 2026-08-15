@@ -139,11 +139,14 @@ export default function HealthPerformanceWidget({ filters = {} }) {
     const [error, setError]     = useState(false);
 
     const yearsKey = Array.isArray(filters.years) ? filters.years.join(',') : (filters.years ?? '');
+    const monthsKey = Array.isArray(filters.months) ? filters.months.join(',') : (filters.months ?? '');
 
-    const fetchStats = useCallback(async (y) => {
+    const fetchStats = useCallback(async (y, m) => {
         setLoading(true); setError(false);
         try {
-            const params = {}; if (y) params.year = y;
+            const params = {};
+            if (y) params.year = y;
+            if (m) params.month = m;
             const res = await axios.get('/api/dashboard/health-performance/stats', { params });
             if (res.data?.result) setStats(res.data.result);
             else setError(true);
@@ -151,7 +154,7 @@ export default function HealthPerformanceWidget({ filters = {} }) {
         finally { setLoading(false); }
     }, []);
 
-    useEffect(() => { fetchStats(yearsKey); }, [yearsKey, fetchStats]);
+    useEffect(() => { fetchStats(yearsKey, monthsKey); }, [yearsKey, monthsKey, fetchStats]);
 
     const isEmpty = !loading && !error && (stats?.datasets ?? []).length === 0;
 
@@ -178,7 +181,7 @@ export default function HealthPerformanceWidget({ filters = {} }) {
             {error ? (
                 <div style={{ textAlign: 'center', padding: '32px', color: MUTED, fontSize: '13px' }}>
                     Gagal memuat data.{' '}
-                    <button onClick={() => fetchStats(yearsKey)} style={{ color: P, background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600 }}>Coba lagi</button>
+                    <button onClick={() => fetchStats(yearsKey, monthsKey)} style={{ color: P, background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600 }}>Coba lagi</button>
                 </div>
             ) : isEmpty ? (
                 <div style={{ textAlign: 'center', padding: '32px', color: MUTED, fontSize: '13px' }}>Belum ada data Health Performance.</div>

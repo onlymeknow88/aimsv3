@@ -69,10 +69,11 @@ class DocumentSystemWidgetController extends Controller
         $ytdActual = $totalActive;
 
         // ── Monthly comparison ────────────────────────────────────────────────
-        $thisMonth     = $now->month;
-        $thisMonthYear = $now->year;
-        $lastMonth     = $now->copy()->subMonth()->month;
-        $lastMonthYear = $now->copy()->subMonth()->year;
+        $thisMonth     = !empty($months) ? $months[0] : $now->month;
+        $thisMonthYear = $years[0]; // primary year filter
+        $lastMonthDt   = Carbon::create($thisMonthYear, $thisMonth, 1)->subMonth();
+        $lastMonth     = $lastMonthDt->month;
+        $lastMonthYear = $lastMonthDt->year;
 
         $thisMonthDone   = $this->countActiveInMonth($thisMonth, $thisMonthYear, $companyIds);
         $thisMonthTarget = $this->countNonDraftInMonth($thisMonth, $thisMonthYear, $companyIds);
@@ -85,8 +86,8 @@ class DocumentSystemWidgetController extends Controller
         $monthMark = $thisMonthDone >= $pastMonthDone ? 'up' : 'down';
 
         // ── Yearly comparison ─────────────────────────────────────────────────
-        $thisYear = $now->year;
-        $lastYear = $now->year - 1;
+        $thisYear = $years[0]; // primary year filter
+        $lastYear = $years[0] - 1;
 
         $thisYearDone   = $this->countActiveInYear($thisYear, $companyIds);
         $thisYearTarget = $this->countNonDraftInYear($thisYear, $companyIds);

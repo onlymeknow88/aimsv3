@@ -224,16 +224,20 @@ class IncidentNotificationController extends Controller
     {
         try {
             $year = $request->query('year');
+            $parsedYears = array_filter(array_map('intval', explode(',', $year)));
+            $primaryYear = !empty($parsedYears) ? $parsedYears[0] : null;
+            $trendYear = $primaryYear ?: now()->year;
 
-            $all = IncidentNotification::all();
+            $baseQuery = $primaryYear
+                ? IncidentNotification::whereYear('date', $primaryYear)
+                : IncidentNotification::query();
 
             $summary = [
-                'total'    => $all->count(),
-                'thisYear' => IncidentNotification::whereYear('date', now()->year)->count(),
-                'visible'  => $all->where('visible', 'true')->count(),
+                'total'    => (clone $baseQuery)->count(),
+                'thisYear' => IncidentNotification::whereYear('date', $trendYear)->count(),
+                'visible'  => (clone $baseQuery)->where('visible', 'true')->count(),
             ];
 
-            $trendYear = $year ?: now()->year;
             $monthly   = IncidentNotification::selectRaw(
                     "DATE_FORMAT(date, '%b') as month, MONTH(date) as month_num, COUNT(*) as count"
                 )
@@ -242,10 +246,6 @@ class IncidentNotificationController extends Controller
                 ->orderBy('month_num')
                 ->get()
                 ->map(fn($r) => ['month' => $r->month, 'count' => (int) $r->count]);
-
-            $baseQuery = $year
-                ? IncidentNotification::whereYear('date', $year)
-                : IncidentNotification::query();
 
             $category = (clone $baseQuery)
                 ->selectRaw('category, COUNT(*) as count')

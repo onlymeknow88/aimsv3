@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 
 import axios from 'axios';
 
-export default function useDashboard(initialEvents = [], initialSlideshows = []) {
+export default function useDashboard(initialEvents = [], initialSlideshows = [], filters = {}) {
     const [activeSlide, setActiveSlide] = useState(0);
     const [previewVideo, setPreviewVideo] = useState(null);
     const [coeEvents, setCoeEvents] = useState(initialEvents);
@@ -13,13 +13,24 @@ export default function useDashboard(initialEvents = [], initialSlideshows = [])
 
     const [loading, setLoading] = useState(true);
 
+    const yearsKey = Array.isArray(filters.years)
+        ? filters.years.join(',')
+        : (filters.years ?? '');
+    const monthsKey = Array.isArray(filters.months)
+        ? filters.months.join(',')
+        : (filters.months ?? '');
+
     useEffect(() => {
         setLoading(true);
 
+        const params = {};
+        if (yearsKey) params.years = yearsKey;
+        if (monthsKey) params.months = monthsKey;
+
         // Fetch dashboard data + COE stats secara paralel
         Promise.all([
-            axios.get('/api/dashboard/data'),
-            axios.get('/api/dashboard/coe/stats'),
+            axios.get('/api/dashboard/data', { params }),
+            axios.get('/api/dashboard/coe/stats', { params }),
         ])
             .then(([dashRes, statsRes]) => {
                 if (dashRes.data?.result) {
@@ -38,7 +49,7 @@ export default function useDashboard(initialEvents = [], initialSlideshows = [])
             .finally(() => {
                 setLoading(false);
             });
-    }, []);
+    }, [yearsKey, monthsKey]);
 
     const slides = slidesData.length > 0 ? slidesData : [
         {

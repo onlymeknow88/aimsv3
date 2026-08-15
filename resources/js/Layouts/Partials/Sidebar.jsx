@@ -1,4 +1,4 @@
-import { ChevronDown, Menu, RefreshCw, X } from 'lucide-react';
+import { Menu, SlidersHorizontal, X } from 'lucide-react';
 
 import React from 'react';
 
@@ -6,13 +6,7 @@ export default function Sidebar({
     sidebarOpen,
     setSidebarOpen,
     visibleNavigationItems,
-    department,
-    setDepartment,
-    location,
-    setLocation,
-    period,
-    setPeriod,
-    handleResetFilter
+    onFilterOpen,
 }) {
     return (
         <>
@@ -105,112 +99,39 @@ export default function Sidebar({
                     `}} />
                 </div>
 
-                {/* Filter Panel at Bottom of Sidebar */}
-                {/* <div style={{
-                    padding: '20px',
-                    borderTop: '1px solid rgba(255, 255, 255, 0.05)',
-                    backgroundColor: 'rgba(0,0,0,0.15)'
-                }}>
-                    <h4 style={{ color: '#fff', fontSize: '12px', fontWeight: 600, marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Filter Tampilan</h4>
-
-                    <div style={{ marginBottom: '10px', position: 'relative' }}>
-                        <select
-                            value={department}
-                            onChange={(e) => setDepartment(e.target.value)}
+                {/* Filter Button at Bottom of Sidebar */}
+                {onFilterOpen && (
+                    <div style={{
+                        padding: '16px 20px',
+                        borderTop: '1px solid rgba(255, 255, 255, 0.05)',
+                        backgroundColor: 'rgba(0,0,0,0.15)'
+                    }}>
+                        <button
+                            onClick={onFilterOpen}
                             style={{
                                 width: '100%',
-                                padding: '8px 12px',
+                                padding: '10px 14px',
                                 backgroundColor: 'rgba(255,255,255,0.05)',
                                 border: '1px solid rgba(255,255,255,0.1)',
-                                borderRadius: '6px',
+                                borderRadius: '8px',
                                 color: '#fff',
                                 fontSize: '13px',
-                                appearance: 'none',
-                                outline: 'none',
-                                cursor: 'pointer'
+                                fontWeight: 600,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: '8px',
+                                cursor: 'pointer',
+                                transition: 'all 0.2s',
                             }}
+                            onMouseEnter={e => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.1)'}
+                            onMouseLeave={e => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.05)'}
                         >
-                            <option value="" style={{ background: '#10233f' }}>Semua Departemen</option>
-                            <option value="ohs" style={{ background: '#10233f' }}>OHS (Safety)</option>
-                            <option value="plant" style={{ background: '#10233f' }}>Plant Maintenance</option>
-                            <option value="operation" style={{ background: '#10233f' }}>Mine Operation</option>
-                        </select>
-                        <ChevronDown size={12} style={{ position: 'absolute', right: '12px', top: '11px', pointerEvents: 'none', color: 'rgba(255,255,255,0.4)' }} />
+                            <SlidersHorizontal size={14} />
+                            Filter Dashboard
+                        </button>
                     </div>
-
-                    <div style={{ marginBottom: '10px', position: 'relative' }}>
-                        <select
-                            value={location}
-                            onChange={(e) => setLocation(e.target.value)}
-                            style={{
-                                width: '100%',
-                                padding: '8px 12px',
-                                backgroundColor: 'rgba(255,255,255,0.05)',
-                                border: '1px solid rgba(255,255,255,0.1)',
-                                borderRadius: '6px',
-                                color: '#fff',
-                                fontSize: '13px',
-                                appearance: 'none',
-                                outline: 'none',
-                                cursor: 'pointer'
-                            }}
-                        >
-                            <option value="" style={{ background: '#10233f' }}>Semua Lokasi</option>
-                            <option value="pit3" style={{ background: '#10233f' }}>Area Pit 3</option>
-                            <option value="workshop" style={{ background: '#10233f' }}>Workshop Main</option>
-                            <option value="port" style={{ background: '#10233f' }}>Port Facility</option>
-                        </select>
-                        <ChevronDown size={12} style={{ position: 'absolute', right: '12px', top: '11px', pointerEvents: 'none', color: 'rgba(255,255,255,0.4)' }} />
-                    </div>
-
-                    <div style={{ marginBottom: '14px', position: 'relative' }}>
-                        <select
-                            value={period}
-                            onChange={(e) => setPeriod(e.target.value)}
-                            style={{
-                                width: '100%',
-                                padding: '8px 12px',
-                                backgroundColor: 'rgba(255,255,255,0.05)',
-                                border: '1px solid rgba(255,255,255,0.1)',
-                                borderRadius: '6px',
-                                color: '#fff',
-                                fontSize: '13px',
-                                appearance: 'none',
-                                outline: 'none',
-                                cursor: 'pointer'
-                            }}
-                        >
-                            <option value="YTD 2026" style={{ background: '#10233f' }}>YTD 2026</option>
-                            <option value="2025" style={{ background: '#10233f' }}>Full Year 2025</option>
-                        </select>
-                        <ChevronDown size={12} style={{ position: 'absolute', right: '12px', top: '11px', pointerEvents: 'none', color: 'rgba(255,255,255,0.4)' }} />
-                    </div>
-
-                    <button
-                        onClick={handleResetFilter}
-                        style={{
-                            width: '100%',
-                            padding: '8px 12px',
-                            backgroundColor: 'transparent',
-                            border: '1px solid rgba(255,255,255,0.15)',
-                            borderRadius: '6px',
-                            color: '#fff',
-                            fontSize: '13px',
-                            fontWeight: 500,
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            gap: '8px',
-                            cursor: 'pointer',
-                            transition: 'all 0.2s'
-                        }}
-                        onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.05)'; }}
-                        onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}
-                    >
-                        <RefreshCw size={12} />
-                        Reset Filter
-                    </button>
-                </div> */}
+                )}
             </div>
         </>
     );
