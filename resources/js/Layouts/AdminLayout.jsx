@@ -9,7 +9,6 @@ import {
     Menu,
     Settings,
     Shield,
-    ShieldAlert,
     Users,
     X
 } from 'lucide-react';

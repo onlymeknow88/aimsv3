@@ -37,41 +37,49 @@ export default function CalendarofEvent({ coeEvents, loading }) {
     }
 
     return (
-        <div style={{ backgroundColor: '#fff', border: '1px solid var(--border-color)', borderRadius: '16px', padding: '24px', boxShadow: 'var(--shadow-sm)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: '200px' }}>
+        <div style={{ backgroundColor: '#fff', border: '1px solid var(--border-color)', borderRadius: '16px', padding: '24px', boxShadow: 'var(--shadow-sm)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
             <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
                     <h4 style={{ fontSize: '14.5px', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>CALENDAR OF EVENT</h4>
-                    <a href="/coe/calendar" style={{ fontSize: '12px', color: 'var(--primary)', fontWeight: 600, textDecoration: 'none' }}>Lihat Semua</a>
+                    <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 500 }}>
+                        {new Date().toLocaleDateString('id-ID', { month: 'long', year: 'numeric' })}
+                    </span>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                    {coeEvents && coeEvents.length > 0 ? (
-                        coeEvents.map((evt, idx) => {
-                            // Fix data mapping: gunakan evt.day + evt.month (API baru)
-                            // dengan fallback ke evt.date.split untuk kompatibilitas API lama
-                            const day   = evt.day   ?? (evt.date ? evt.date.split(' ')[0] : '-');
-                            const month = evt.month ?? (evt.date ? evt.date.split(' ')[1] : '-');
-
-                            // Fix status color: derive dari status string, bukan dari evt.color
-                            const STATUS_COLOR = {
-                                DONE:      '#2FBF71',
-                                PENDING:   '#FF8C24',
-                                CANCELED:  '#EF4444',
-                                CANCELLED: '#EF4444',
-                                DRAFT:     '#94A3B8',
-                            };
-                            const statusColor = STATUS_COLOR[evt.status?.toUpperCase()] ?? '#FF8C24';
+                    {(coeEvents ?? []).length > 0 ? (
+                        (coeEvents ?? []).slice(0, 5).map((evt, idx) => {
+                            const startDate   = evt.start_date ? new Date(evt.start_date) : null;
+                            const evtColor    = evt.category_color ?? 'var(--primary)';
+                            const statusColor =
+                                evt.status === 'Completed'  ? '#16a34a' :
+                                evt.status === 'Ongoing'    ? '#2563eb' :
+                                evt.status === 'Cancelled'  ? '#dc2626' : '#d97706';
+                            const statusBg =
+                                evt.status === 'Completed'  ? '#dcfce7' :
+                                evt.status === 'Ongoing'    ? '#dbeafe' :
+                                evt.status === 'Cancelled'  ? '#fee2e2' : '#fef3c7';
 
                             return (
-                                <div key={evt.id || idx} style={{ display: 'flex', gap: '16px', borderBottom: idx !== coeEvents.length - 1 ? '1px solid var(--border-color)' : 'none', paddingBottom: '10px', alignItems: 'center' }}>
-                                    <div style={{ backgroundColor: '#f1f5f9', borderRadius: '8px', padding: '6px 10px', textAlign: 'center', minWidth: '50px' }}>
-                                        <span style={{ fontSize: '13.5px', fontWeight: 800, color: 'var(--primary)', display: 'block' }}>{day}</span>
-                                        <span style={{ fontSize: '9.5px', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>{month}</span>
+                                <div key={evt.id ?? idx} style={{ display: 'flex', gap: '16px', borderBottom: idx !== Math.min((coeEvents ?? []).length, 5) - 1 ? '1px solid var(--border-color)' : 'none', paddingBottom: '10px', alignItems: 'center' }}>
+                                    <div style={{ backgroundColor: `${evtColor}18`, borderRadius: '8px', width: '50px', minWidth: '50px', height: '46px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', border: `1px solid ${evtColor}40` }}>
+                                        <span style={{ fontSize: '18px', fontWeight: 800, color: evtColor, lineHeight: 1 }}>
+                                            {startDate ? startDate.getDate() : '?'}
+                                        </span>
+                                        <span style={{ fontSize: '9px', color: evtColor, fontWeight: 600, textTransform: 'uppercase', opacity: 0.8 }}>
+                                            {startDate ? startDate.toLocaleDateString('id-ID', { month: 'short' }) : ''}
+                                        </span>
                                     </div>
-                                    <div style={{ flex: 1 }}>
-                                        <h5 style={{ fontSize: '12.5px', fontWeight: 700, color: 'var(--text-primary)', margin: '0 0 2px 0' }}>{evt.title}</h5>
-                                        <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{evt.dept}</span>
+                                    <div style={{ flex: 1, minWidth: 0 }}>
+                                        <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                            {evt.title}
+                                        </div>
+                                        {evt.end_date && (
+                                            <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                                                s/d {new Date(evt.end_date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                            </div>
+                                        )}
                                     </div>
-                                    <span style={{ fontSize: '9.5px', fontWeight: 800, backgroundColor: `${statusColor}20`, color: statusColor, padding: '2px 6px', borderRadius: '4px' }}>
+                                    <span style={{ fontSize: '10px', fontWeight: 700, padding: '3px 8px', borderRadius: '999px', backgroundColor: statusBg, color: statusColor, whiteSpace: 'nowrap', flexShrink: 0 }}>
                                         {evt.status?.toUpperCase()}
                                     </span>
                                 </div>

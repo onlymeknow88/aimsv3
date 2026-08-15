@@ -252,8 +252,9 @@ class DashboardController extends Controller
                 'dept'       => $event->section?->department?->name
                     ?? $event->section?->name
                     ?? '-',
-                'status'     => strtoupper($event->status),
-                'category'   => $event->category?->name ?? null,
+                'status'          => strtoupper($event->status),
+                'category'        => $event->category?->name ?? null,
+                'category_color'  => $event->category?->color ?? '#153B73',
             ];
         })->toArray();
     }

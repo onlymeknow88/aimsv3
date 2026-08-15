@@ -1,9 +1,12 @@
 import {
     ArrowLeft,
     BarChart2,
+    Heart,
     Image,
     LayoutDashboard,
     Newspaper,
+    ShieldAlert,
+    ShieldCheck,
     Video,
 } from 'lucide-react';
 
@@ -11,19 +14,27 @@ import React from 'react';
 import { usePage } from '@inertiajs/react';
 
 const SLUG_URL = {
-    'dashboard-portal.dashboard': '/dashboard-portal/dashboard',
-    'dashboard-portal.slideshow': '/dashboard-portal/slideshow',
-    'dashboard-portal.banner': '/dashboard-portal/banner',
-    'dashboard-portal.general': '/dashboard-portal/general',
-    'dashboard-portal.news-and-update': '/dashboard-portal/news-and-update',
+    'dashboard-portal.dashboard':             '/dashboard-portal/dashboard',
+    'dashboard-portal.slideshow':             '/dashboard-portal/slideshow',
+    'dashboard-portal.banner':               '/dashboard-portal/banner',
+    'dashboard-portal.general':              '/dashboard-portal/general',
+    'dashboard-portal.news-and-update':      '/dashboard-portal/news-and-update',
+    'dashboard-portal.incident-notification': '/dashboard-portal/incident-notification',
+    'dashboard-portal.production':           '/dashboard-portal/production',
+    'dashboard-portal.safety-performance':   '/dashboard-portal/safety-performance',
+    'dashboard-portal.health-performance':   '/dashboard-portal/health-performance',
 };
 
 const ICON_MAP = {
-    'dashboard-portal.dashboard': <LayoutDashboard size={14} />,
-    'dashboard-portal.slideshow': <Video size={14} />,
-    'dashboard-portal.banner': <Image size={14} />,
-    'dashboard-portal.general': <BarChart2 size={14} />,
-    'dashboard-portal.news-and-update': <Newspaper size={14} />,
+    'dashboard-portal.dashboard':             <LayoutDashboard size={14} />,
+    'dashboard-portal.slideshow':             <Video size={14} />,
+    'dashboard-portal.banner':               <Image size={14} />,
+    'dashboard-portal.general':              <BarChart2 size={14} />,
+    'dashboard-portal.news-and-update':      <Newspaper size={14} />,
+    'dashboard-portal.incident-notification': <ShieldAlert size={14} />,
+    'dashboard-portal.production':           <BarChart2 size={14} />,
+    'dashboard-portal.safety-performance':   <ShieldCheck size={14} />,
+    'dashboard-portal.health-performance':   <Heart size={14} />,
 };
 
 export default function Sidebar({

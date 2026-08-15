@@ -27,6 +27,11 @@ import CalendarOfEventStats from './Partials/Widget/CalendarOfEventStats';
 import CalendarofEvent from './Partials/Widget/CalendarofEvent';
 import CsmsWidget from './Partials/Widget/CSMS';
 import DashboardLayout from '@/Layouts/DashboardLayout';
+import HealthPerformanceWidget from './Partials/Widget/HealthPerformanceWidget';
+import IncidentNotificationWidget from './Partials/Widget/IncidentNotification';
+import ProductionMtdWidget from './Partials/Widget/Production/ProductionMtdWidget';
+import ProductionYtdWidget from './Partials/Widget/Production/ProductionYtdWidget';
+import SafetyPerformanceWidget from './Partials/Widget/SafetyPerformanceWidget';
 import DocumentSystemWidget from './Partials/Widget/DocumentSystem/DocumentSystemWidget';
 import FieldLeadership from './Partials/Widget/FieldLeadership';
 import NewsUpdate from './Partials/Widget/NewsUpdate';
@@ -184,7 +189,7 @@ export default function Dashboard({ coeEvents: initialEvents = [], slideshows: i
 
             {/* Section 3: Calendar of Event Stats */}
             {widgetSettings['widget_calendar_of_event_list'] !== "false" && (
-                <CalendarOfEventStats stats={coeStats} loading={loading} />
+                <CalendarOfEventStats stats={coeStats} loading={loading} coeEvents={coeEvents} />
             )}
 
             {/* Section 4: Document System Widget */}
@@ -202,7 +207,34 @@ export default function Dashboard({ coeEvents: initialEvents = [], slideshows: i
                 <CsmsWidget />
             )}
 
-            {/* Section 7: News & Update */}
+            {/* Section 7: Incident Notification Widget */}
+            {widgetSettings['widget_incident_notification'] !== "false" && (
+                <IncidentNotificationWidget />
+            )}
+
+            {/* Section 8 & 9: Safety + Health Performance — 1 row */}
+            {(widgetSettings['widget_safety_performance_chart'] !== "false" || widgetSettings['widget_health_performance_chart'] !== "false") && (
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', marginBottom: '32px' }}>
+                    {widgetSettings['widget_safety_performance_chart'] !== "false" && (
+                        <SafetyPerformanceWidget />
+                    )}
+                    {widgetSettings['widget_health_performance_chart'] !== "false" && (
+                        <HealthPerformanceWidget />
+                    )}
+                </div>
+            )}
+
+            {/* Section 10: Production MTD Widget */}
+            {widgetSettings['widget_production_mtd'] !== "false" && (
+                <ProductionMtdWidget />
+            )}
+
+            {/* Section 11: Production YTD Widget */}
+            {widgetSettings['widget_production_ytd_chart'] !== "false" && (
+                <ProductionYtdWidget />
+            )}
+
+            {/* Section 12: News & Update */}
             {widgetSettings['widget_news_update'] !== "false" && (
                 <NewsUpdate newsItems={newsItems} loading={loading} />
             )}

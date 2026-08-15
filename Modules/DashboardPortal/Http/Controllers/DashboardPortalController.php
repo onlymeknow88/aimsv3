@@ -75,4 +75,30 @@ class DashboardPortalController extends Controller
     {
         return Inertia::render('DashboardPortal/NewsAndUpdate/Index');
     }
+
+    /**
+     * Display incident notification page.
+     */
+    public function incidentNotificationIndex()
+    {
+        return Inertia::render('DashboardPortal/IncidentNotification/Index');
+    }
+
+    /**
+     * Display production page.
+     */
+    public function productionIndex()
+    {
+        return Inertia::render('DashboardPortal/Production/Index');
+    }
+
+    public function safetyPerformanceIndex()
+    {
+        return Inertia::render('DashboardPortal/SafetyPerformance/Index');
+    }
+
+    public function healthPerformanceIndex()
+    {
+        return Inertia::render('DashboardPortal/HealthPerformance/Index');
+    }
 }

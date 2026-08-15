@@ -28,4 +28,20 @@ Route::middleware(['web', 'auth'])->prefix('dashboard-portal')->group(function (
     Route::get('/news-and-update', [DashboardPortalController::class, 'newsAndUpdateIndex'])
         ->middleware('module.permission:dashboard-portal,can_view')
         ->name('dashboard-portal.news-and-update');
+
+    Route::get('/incident-notification', [DashboardPortalController::class, 'incidentNotificationIndex'])
+        ->middleware('module.permission:dashboard-portal,can_view')
+        ->name('dashboard-portal.incident-notification');
+
+    Route::get('/production', [DashboardPortalController::class, 'productionIndex'])
+        ->middleware('module.permission:dashboard-portal,can_view')
+        ->name('dashboard-portal.production');
+
+    Route::get('/safety-performance', [DashboardPortalController::class, 'safetyPerformanceIndex'])
+        ->middleware('module.permission:dashboard-portal,can_view')
+        ->name('dashboard-portal.safety-performance');
+
+    Route::get('/health-performance', [DashboardPortalController::class, 'healthPerformanceIndex'])
+        ->middleware('module.permission:dashboard-portal,can_view')
+        ->name('dashboard-portal.health-performance');
 });

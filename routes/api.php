@@ -17,6 +17,7 @@ Route::middleware(['admin.session', 'auth:admin', 'admin.auth'])
     ->prefix('api/admin')
     ->group(function () {
 
+
         // ── AIMS Menu API ─────────────────────────────────────────────
         Route::prefix('aims-menu')->group(function () {
             Route::get('/',        [\App\Http\Controllers\Admin\Api\AimsMenuController::class, 'apiIndex']);
@@ -157,4 +158,16 @@ Route::middleware(['web', 'auth'])->prefix('api')->group(function () {
 
     // ── Field Leadership widget stats for the dashboard ───────────────────────
     Route::get('/dashboard/field-leadership/stats', [\App\Http\Controllers\Api\FieldLeadershipStatsController::class, 'index']);
+
+    // ── Incident Notification widget stats for the dashboard ─────────────────
+    Route::get('/dashboard/incident-stats', [\Modules\DashboardPortal\Http\Controllers\Api\IncidentNotificationController::class, 'stats']);
+
+    // ── Production widget stats for the dashboard ─────────────────────────
+    Route::get('/dashboard/production/stats', [\Modules\DashboardPortal\Http\Controllers\Api\ProductionController::class, 'stats']);
+
+    // ── Safety Performance widget stats for the dashboard ─────────────────
+    Route::get('/dashboard/safety-performance/stats', [\Modules\DashboardPortal\Http\Controllers\Api\SafetyPerformanceController::class, 'stats']);
+
+    // ── Health Performance widget stats for the dashboard ──────────────────
+    Route::get('/dashboard/health-performance/stats', [\Modules\DashboardPortal\Http\Controllers\Api\HealthPerformanceController::class, 'stats']);
 });
