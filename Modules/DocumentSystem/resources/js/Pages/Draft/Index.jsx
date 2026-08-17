@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Head } from '@inertiajs/react';
 import DocumentSystemLayout from '@DS/Layouts/DocumentSystemLayout';
-import { AlertCircle, Search, Plus, Edit, Trash2, X, SlidersHorizontal } from 'lucide-react';
+import { AlertCircle, Search, Plus, Edit, Trash2, X, SlidersHorizontal, RefreshCw } from 'lucide-react';
 import useDraft from './Hooks/useDraft';
 import DraftTable from './Partials/DraftTable';
 import {
@@ -32,6 +32,7 @@ export default function Index() {
         setPagination,
         columnFilters,
         setColumnFilters,
+        fetchDocuments,
     } = useDraft();
 
     const [visibleColumns, setVisibleColumns] = useState({
@@ -168,6 +169,29 @@ export default function Index() {
                     </div>
 
                     <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap', width: isMobile ? '100%' : 'auto' }}>
+                        <button 
+                            onClick={fetchDocuments}
+                            disabled={loading}
+                            style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '6px',
+                                backgroundColor: '#fff',
+                                border: '1px solid var(--border-color)',
+                                borderRadius: '6px',
+                                padding: '8px 12px',
+                                fontSize: '11px',
+                                fontWeight: 600,
+                                color: 'var(--text-primary)',
+                                cursor: 'pointer',
+                                flex: isMobile ? 1 : 'initial',
+                                justifyContent: 'center'
+                            }}
+                            title="Refresh Data"
+                        >
+                            <RefreshCw size={14} className={loading ? 'animate-spin' : ''} /> Refresh
+                        </button>
+
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                                 <button style={{

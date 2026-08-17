@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Head } from '@inertiajs/react';
 import DocumentSystemLayout from '@DS/Layouts/DocumentSystemLayout';
-import { Search, FileText, Plus, Edit, Trash2, X, SlidersHorizontal, Download, Upload } from 'lucide-react';
+import { Search, FileText, Plus, Edit, Trash2, X, SlidersHorizontal, Download, Upload, RefreshCw } from 'lucide-react';
 import useActiveDocument from './Hooks/useActiveDocument';
 import DocumentTable from './Partials/DocumentTable';
 import DocumentPreviewModal from './Partials/DocumentPreviewModal';
@@ -21,6 +21,7 @@ export default function Index() {
         setSearch, 
         docs, 
         loading, 
+        fetchDocuments,
         selectedIds, 
         setSelectedIds, 
         previewDoc, 
@@ -233,6 +234,29 @@ export default function Index() {
                                 ))}
                             </DropdownMenuContent>
                         </DropdownMenu>
+
+                        <button 
+                            onClick={fetchDocuments}
+                            disabled={loading}
+                            style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '6px',
+                                backgroundColor: '#fff',
+                                border: '1px solid var(--border-color)',
+                                borderRadius: '6px',
+                                padding: '8px 12px',
+                                fontSize: '11px',
+                                fontWeight: 600,
+                                color: 'var(--text-primary)',
+                                cursor: 'pointer',
+                                flex: isMobile ? 1 : 'initial',
+                                justifyContent: 'center'
+                            }}
+                            title="Refresh Data"
+                        >
+                            <RefreshCw size={14} className={loading ? 'animate-spin' : ''} /> Refresh
+                        </button>
 
                         <button 
                             onClick={() => exportDocuments([])}

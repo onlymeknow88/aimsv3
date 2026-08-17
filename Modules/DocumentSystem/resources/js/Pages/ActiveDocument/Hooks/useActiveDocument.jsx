@@ -199,6 +199,7 @@ export default function useActiveDocument() {
         docs, 
         setDocs, 
         loading, 
+        fetchDocuments,
         selectedIds, 
         setSelectedIds, 
         previewDoc, 

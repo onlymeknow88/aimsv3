@@ -5,7 +5,7 @@ import useApproval from './Hooks/useApproval';
 import ApprovalDetailDrawer from './Partials/ApprovalDetailDrawer';
 import ApproveModal from './Partials/ApproveModal';
 import RejectModal from './Partials/RejectModal';
-import { CheckSquare, Search, Edit, Trash2, X } from 'lucide-react';
+import { CheckSquare, Search, Edit, Trash2, X, RefreshCw } from 'lucide-react';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
 import { Checkbox } from '@/components/ui/checkbox';
 
@@ -31,7 +31,8 @@ export default function Index() {
         approveDocument, 
         rejectDocument,
         handleEdit,
-        handleDelete
+        handleDelete,
+        fetchDocuments
     } = useApproval();
 
     const [isMobile, setIsMobile] = useState(false);
@@ -164,6 +165,30 @@ export default function Index() {
                             placeholder="Cari judul atau nomor dokumen..."
                             style={{ width: '100%', padding: '8px 12px 8px 36px', border: '1px solid var(--border-color)', borderRadius: '6px', fontSize: '11px', outline: 'none', boxSizing: 'border-box' }}
                         />
+                    </div>
+                    <div>
+                        <button 
+                            onClick={fetchDocuments}
+                            disabled={loading}
+                            style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '6px',
+                                backgroundColor: '#fff',
+                                border: '1px solid var(--border-color)',
+                                borderRadius: '6px',
+                                padding: '8px 12px',
+                                fontSize: '11px',
+                                fontWeight: 600,
+                                color: 'var(--text-primary)',
+                                cursor: 'pointer',
+                                width: isMobile ? '100%' : 'auto',
+                                justifyContent: 'center'
+                            }}
+                            title="Refresh Data"
+                        >
+                            <RefreshCw size={14} className={loading ? 'animate-spin' : ''} /> Refresh
+                        </button>
                     </div>
                 </div>
             )}

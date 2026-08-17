@@ -107,6 +107,7 @@ export default function useDraft() {
         setPage,
         pagination,
         setPagination,
+        fetchDocuments,
         columnFilters,
         setColumnFilters,
     };

@@ -86,5 +86,6 @@ export default function useApproval() {
         closeReject,
         approveDocument,
         rejectDocument,
+        fetchDocuments,
     };
 }
