@@ -50,6 +50,14 @@ class LoginRequest extends FormRequest
             ]);
         }
 
+        $user = Auth::user();
+        if (!$user->is_active) {
+            Auth::logout();
+            throw ValidationException::withMessages([
+                'email' => 'Akun Anda belum diaktifkan. Silakan hubungi administrator untuk persetujuan.',
+            ]);
+        }
+
         RateLimiter::clear($this->throttleKey());
     }
 

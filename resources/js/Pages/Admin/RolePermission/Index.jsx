@@ -5,6 +5,7 @@ import AdminLayout from '@/Layouts/AdminLayout';
 import useRolePermission from './Hooks/useRolePermission';
 import RolePermissionTable from './Partials/RolePermissionTable';
 import RoleModal from './Partials/RoleModal';
+import DeleteConfirmModal from '@/Components/DeleteConfirmModal';
 
 export default function Index({ selectedModuleId }) {
     const {
@@ -12,6 +13,7 @@ export default function Index({ selectedModuleId }) {
         selectedModule,
         roles,
         menus,
+        permissions,
         loading,
         error,
         changedKeys,
@@ -42,6 +44,12 @@ export default function Index({ selectedModuleId }) {
         setEditRoleSlug,
         handleEditRole,
         handleDeleteRole,
+        // Delete Confirmation Modal states
+        deleteTarget,
+        deleting,
+        deleteError,
+        closeDeleteModal,
+        confirmDelete,
     } = useRolePermission(selectedModuleId);
 
     const hasChanges = changedKeys.size > 0;
@@ -274,6 +282,29 @@ export default function Index({ selectedModuleId }) {
                 title="Edit Role"
                 buttonText="Perbarui Role"
                 makeSlug={makeSlug}
+            />
+
+            {/* Delete Confirmation Modal */}
+            <DeleteConfirmModal
+                isOpen={!!deleteTarget}
+                onClose={closeDeleteModal}
+                onConfirm={confirmDelete}
+                itemName={deleteTarget?.name}
+                deleting={deleting}
+                errorMessage={deleteError}
+                description={
+                    deleteTarget ? (
+                        <>
+                            Apakah Anda yakin ingin menghapus role <strong>{deleteTarget.name}</strong>?
+                            <br /><br />
+                            <strong>Perhatian:</strong>
+                            <ul style={{ margin: '8px 0 0 0', paddingLeft: '20px', listStyleType: 'disc' }}>
+                                <li>Semua izin (permission) role ini akan dihapus permanen.</li>
+                                <li>Pengguna (user) yang memiliki role ini akan langsung kehilangan hak akses terkait.</li>
+                            </ul>
+                        </>
+                    ) : null
+                }
             />
         </AdminLayout>
     );

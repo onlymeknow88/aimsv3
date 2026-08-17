@@ -15,6 +15,7 @@ import React from "react";
 import SearchableSelect from "@/Components/SearchableSelect";
 import UsersTable from "./Partials/UsersTable";
 import useUsers from "./Hooks/useUsers";
+import DeleteConfirmModal from "@/Components/DeleteConfirmModal";
 
 // ─── Toggle Switch Component ──────────────────────────────────────────────────
 function Toggle({ checked, onChange, label, description }) {
@@ -192,6 +193,11 @@ export default function Index() {
         closeModal,
         handleSubmit,
         handleDelete,
+        deleteTarget,
+        deleting,
+        deleteError,
+        closeDeleteModal,
+        confirmDelete,
     } = useUsers();
 
     const {
@@ -687,6 +693,41 @@ export default function Index() {
                                                 onFocus={onFocus}
                                                 onBlur={onBlur}
                                             />
+                                        </Field>
+                                        <Field label="Status Akun" required>
+                                            <select
+                                                value={form.is_active ? "1" : "0"}
+                                                onChange={(e) =>
+                                                    setField(
+                                                        "is_active",
+                                                        e.target.value === "1"
+                                                    )
+                                                }
+                                                style={selectStyle}
+                                                onFocus={onFocus}
+                                                onBlur={onBlur}
+                                            >
+                                                <option value="1">Aktif</option>
+                                                <option value="0">Nonaktif (Menunggu Persetujuan)</option>
+                                            </select>
+                                        </Field>
+                                        <Field label="Peran Akun (Sistem)" required>
+                                            <select
+                                                value={form.role}
+                                                onChange={(e) =>
+                                                    setField(
+                                                        "role",
+                                                        e.target.value,
+                                                    )
+                                                }
+                                                style={selectStyle}
+                                                onFocus={onFocus}
+                                                onBlur={onBlur}
+                                            >
+                                                <option value="viewer">Viewer (Akses Baca Saja)</option>
+                                                <option value="user">User (Pengguna Biasa)</option>
+                                                <option value="super_admin">Super Admin (Administrator)</option>
+                                            </select>
                                         </Field>
                                     </div>
                                 </div>
@@ -1272,6 +1313,23 @@ export default function Index() {
                     </div>
                 </div>
             )}
+
+            {/* Delete Confirmation Modal */}
+            <DeleteConfirmModal
+                isOpen={!!deleteTarget}
+                onClose={closeDeleteModal}
+                onConfirm={confirmDelete}
+                itemName={deleteTarget?.name}
+                deleting={deleting}
+                errorMessage={deleteError}
+                description={
+                    deleteTarget ? (
+                        <>
+                            Apakah Anda yakin ingin menghapus user <strong>{deleteTarget.name}</strong> ({deleteTarget.email}) beserta seluruh data profil karyawan (employee) miliknya? Tindakan ini bersifat permanen dan tidak dapat dibatalkan.
+                        </>
+                    ) : null
+                }
+            />
         </AdminLayout>
     );
 }

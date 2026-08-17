@@ -13,6 +13,8 @@ const emptyEmployee = {
 
 const emptyForm = {
     name: '', email: '', password: '',
+    is_active: true,
+    role: 'viewer',
     with_employee: false,
     role_ids: [],
     ...emptyEmployee,
@@ -38,6 +40,11 @@ export default function useUsers() {
 
     // Module expand tracking for roles
     const [expandedModules, setExpandedModules] = useState([]);
+
+    // Delete Confirmation
+    const [deleteTarget, setDeleteTarget] = useState(null);
+    const [deleting, setDeleting] = useState(false);
+    const [deleteError, setDeleteError] = useState(null);
 
     // ── Fetch ──────────────────────────────────────────────────────────────────
     const fetchUsers = useCallback(async () => {
@@ -95,6 +102,8 @@ export default function useUsers() {
         setForm({
             name: user.name || '',
             email: user.email || '',
+            is_active: user.is_active !== false,
+            role: user.role || 'viewer',
             password: '',
             with_employee: !!user.employee,
             role_ids: roleIds,
@@ -173,13 +182,30 @@ export default function useUsers() {
     };
 
     // ── Delete ─────────────────────────────────────────────────────────────────
-    const handleDelete = async (user) => {
-        if (!confirm(`Hapus user "${user.name}" dan data employee-nya?`)) return;
+    const handleDelete = (user) => {
+        setDeleteTarget(user);
+        setDeleteError(null);
+    };
+
+    const closeDeleteModal = () => {
+        setDeleteTarget(null);
+        setDeleting(false);
+        setDeleteError(null);
+    };
+
+    const confirmDelete = async () => {
+        if (!deleteTarget) return;
+        setDeleting(true);
+        setDeleteError(null);
         try {
-            await axios.post(`${BASE}/${user.id}/delete`);
+            await axios.post(`${BASE}/${deleteTarget.id}/delete`);
+            closeDeleteModal();
             fetchUsers();
         } catch (err) {
-            alert(err.response?.data?.message || 'Gagal menghapus.');
+            const msg = err.response?.data?.message || 'Gagal menghapus data user.';
+            setDeleteError(msg);
+        } finally {
+            setDeleting(false);
         }
     };
 
@@ -210,5 +236,11 @@ export default function useUsers() {
         closeModal,
         handleSubmit,
         handleDelete,
+        // Delete Confirmation Modal states
+        deleteTarget,
+        deleting,
+        deleteError,
+        closeDeleteModal,
+        confirmDelete,
     };
 }

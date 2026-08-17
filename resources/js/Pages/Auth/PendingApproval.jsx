@@ -1,80 +1,46 @@
+import { AlertTriangle, ArrowLeft } from 'lucide-react';
 import { Head, Link } from '@inertiajs/react';
 
 export default function PendingApproval({ message }) {
     return (
-        <div style={{
-            display: 'flex',
-            minHeight: '100vh',
-            backgroundColor: '#F7F9FC',
-            fontFamily: 'Inter, system-ui, sans-serif',
-            alignItems: 'center',
-            justifyContent: 'center',
-        }}>
+        <div className="min-h-screen bg-[#F7F9FC] flex items-center justify-center p-4 font-sans antialiased">
             <Head title="AIMS - Menunggu Persetujuan" />
 
-            <div style={{
-                backgroundColor: '#fff',
-                borderRadius: '16px',
-                boxShadow: '0 4px 24px rgba(0,0,0,0.08)',
-                padding: '48px 40px',
-                maxWidth: '480px',
-                width: '100%',
-                textAlign: 'center',
-            }}>
-                {/* Icon */}
-                <div style={{
-                    width: '64px',
-                    height: '64px',
-                    borderRadius: '50%',
-                    backgroundColor: 'rgba(255, 140, 36, 0.1)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    margin: '0 auto 24px',
-                }}>
-                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#FF8C24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <circle cx="12" cy="12" r="10" />
-                        <line x1="12" y1="8" x2="12" y2="12" />
-                        <line x1="12" y1="16" x2="12.01" y2="16" />
-                    </svg>
+            <div className="w-full max-w-md bg-white rounded-2xl p-6 sm:p-8 shadow-xl shadow-slate-200/60 border border-slate-100 text-center">
+                {/* Brand Header */}
+                <div className="flex items-center justify-center gap-2.5 mb-6 pb-5 border-b border-slate-100">
+                    <div className="bg-white p-1 rounded-lg border border-slate-100 shadow-sm flex items-center justify-center">
+                        <img src="/images/Alamtri Geo Logo - Full Color 1.png" alt="Alamtri Geo Logo" className="h-8 w-auto object-contain" />
+                    </div>
+                    <div className="text-left">
+                        <h2 className="text-lg font-extrabold text-[#10233F] tracking-wide leading-none">AIMS</h2>
+                        <span className="text-[9px] text-slate-500 block mt-0.5 tracking-wider uppercase font-semibold">Integrated Management System</span>
+                    </div>
+                </div>
+
+                {/* Status Icon */}
+                <div className="w-16 h-16 rounded-full bg-[#FF8C24]/10 flex items-center justify-center mx-auto mb-5">
+                    <AlertTriangle size={32} className="text-[#FF8C24]" />
                 </div>
 
                 {/* Title */}
-                <h1 style={{
-                    fontSize: '22px',
-                    fontWeight: 700,
-                    color: '#10233F',
-                    marginBottom: '12px',
-                }}>
+                <h1 className="text-xl sm:text-22px font-extrabold text-[#10233F] mb-3">
                     Menunggu Persetujuan
                 </h1>
 
                 {/* Message */}
-                <p style={{
-                    fontSize: '14px',
-                    color: '#64748B',
-                    lineHeight: '1.6',
-                    marginBottom: '32px',
-                }}>
-                    {message || 'Akun Anda sedang menunggu persetujuan administrator. Anda akan dapat masuk setelah akun diaktifkan.'}
+                <p className="text-xs sm:text-sm text-slate-500 leading-relaxed mb-6">
+                    {message || 'Akun Anda sedang menunggu persetujuan administrator. Anda akan menerima email pemberitahuan setelah akun diaktifkan.'}
                 </p>
 
-                {/* Divider */}
-                <div style={{ borderTop: '1px solid #E7ECF3', paddingTop: '24px' }}>
+                {/* Navigation Button */}
+                <div className="border-t border-slate-100 pt-5">
                     <Link
-                        href="/login"
-                        style={{
-                            display: 'inline-block',
-                            fontSize: '14px',
-                            fontWeight: 600,
-                            color: '#153B73',
-                            textDecoration: 'none',
-                            padding: '10px 24px',
-                            border: '1.5px solid #153B73',
-                            borderRadius: '8px',
-                        }}
+                        href={route('login')}
+                        className="w-full inline-flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-[#10233F] text-xs sm:text-sm font-semibold transition-all duration-200 shadow-sm"
                     >
-                        Kembali ke Halaman Login
+                        <ArrowLeft size={16} />
+                        <span>Kembali ke Halaman Login</span>
                     </Link>
                 </div>
             </div>

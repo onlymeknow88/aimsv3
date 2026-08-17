@@ -4,6 +4,7 @@ import AdminLayout from '@/Layouts/AdminLayout';
 import AimsMenuTable from './Partials/AimsMenuTable';
 import React from 'react';
 import useAimsMenu from './Hooks/useAimsMenu';
+import DeleteConfirmModal from '@/Components/DeleteConfirmModal';
 
 export default function Index() {
     const {
@@ -27,6 +28,12 @@ export default function Index() {
         handleFormChange,
         handleSubmit,
         handleDelete,
+        // Delete Confirmation Modal states
+        deleteTarget,
+        deleting,
+        deleteError,
+        closeDeleteModal,
+        confirmDelete,
     } = useAimsMenu();
 
     const labelStyle = {
@@ -253,6 +260,29 @@ export default function Index() {
                     </div>
                 </div>
             )}
+
+            {/* Delete Confirmation Modal */}
+            <DeleteConfirmModal
+                isOpen={!!deleteTarget}
+                onClose={closeDeleteModal}
+                onConfirm={confirmDelete}
+                itemName={deleteTarget?.name}
+                deleting={deleting}
+                errorMessage={deleteError}
+                description={
+                    deleteTarget ? (
+                        deleteTarget.children?.length > 0 ? (
+                            <>
+                                Menu <strong>{deleteTarget.name}</strong> memiliki <strong>{deleteTarget.children.length} sub-menu</strong>. Menghapus menu utama ini akan otomatis menghapus seluruh sub-menu di bawahnya. Apakah Anda yakin?
+                            </>
+                        ) : (
+                            <>
+                                Apakah Anda yakin ingin menghapus menu <strong>{deleteTarget.name}</strong>? Tindakan ini tidak dapat dibatalkan.
+                            </>
+                        )
+                    ) : null
+                }
+            />
         </AdminLayout>
     );
 }

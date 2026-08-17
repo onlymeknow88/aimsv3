@@ -36,6 +36,11 @@ export default function useAimsMenu() {
     const [submitting, setSubmitting] = useState(false);
     const [formError, setFormError]   = useState(null);
 
+    // Delete Confirmation
+    const [deleteTarget, setDeleteTarget] = useState(null);
+    const [deleting, setDeleting] = useState(false);
+    const [deleteError, setDeleteError] = useState(null);
+
     // ── Fetch ──────────────────────────────────────────────────────────────────
 
     const fetchAll = useCallback(async () => {
@@ -137,19 +142,30 @@ export default function useAimsMenu() {
 
     // ── Delete ─────────────────────────────────────────────────────────────────
 
-    const handleDelete = async (menu) => {
-        const childCount = menu.children?.length || 0;
-        const msg = childCount > 0
-            ? `Menu "${menu.name}" memiliki ${childCount} sub-menu. Menghapus ini akan menghapus semua sub-menu. Lanjutkan?`
-            : `Hapus menu "${menu.name}"?`;
+    const handleDelete = (menu) => {
+        setDeleteTarget(menu);
+        setDeleteError(null);
+    };
 
-        if (!confirm(msg)) return;
+    const closeDeleteModal = () => {
+        setDeleteTarget(null);
+        setDeleting(false);
+        setDeleteError(null);
+    };
 
+    const confirmDelete = async () => {
+        if (!deleteTarget) return;
+        setDeleting(true);
+        setDeleteError(null);
         try {
-            await axios.post(`${BASE}/${menu.id}/delete`);
+            await axios.post(`${BASE}/${deleteTarget.id}/delete`);
+            closeDeleteModal();
             fetchAll();
         } catch (err) {
-            alert(err.response?.data?.message || 'Gagal menghapus menu.');
+            const msg = err.response?.data?.message || 'Gagal menghapus menu.';
+            setDeleteError(msg);
+        } finally {
+            setDeleting(false);
         }
     };
 
@@ -188,5 +204,11 @@ export default function useAimsMenu() {
         handleFormChange,
         handleSubmit,
         handleDelete,
+        // Delete Confirmation Modal states
+        deleteTarget,
+        deleting,
+        deleteError,
+        closeDeleteModal,
+        confirmDelete,
     };
 }

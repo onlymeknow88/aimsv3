@@ -13,6 +13,7 @@ use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Auth\TwoFactorController;
 use App\Http\Controllers\Auth\VerifyEmailController;
 use App\Http\Controllers\Auth\OtpAuthController;
+use App\Http\Controllers\Auth\RegistrationApprovalController;
 use Illuminate\Support\Facades\Route;
 
 // ── 2FA Challenge routes (session pending, bukan auth) ──────────────────────
@@ -100,3 +101,15 @@ Route::middleware('auth')->group(function () {
 
     Route::put('password', [PasswordController::class, 'update'])->name('password.update');
 });
+
+// ── Registration Approval (signed URL, wajib auth) ──────────────────────
+Route::middleware(['web', 'auth'])->group(function () {
+    Route::get('admin/registration/{id}/approve', [RegistrationApprovalController::class, 'approve'])
+        ->name('registration.approve')
+        ->middleware('signed');
+
+    Route::get('admin/registration/{id}/reject', [RegistrationApprovalController::class, 'reject'])
+        ->name('registration.reject')
+        ->middleware('signed');
+});
+

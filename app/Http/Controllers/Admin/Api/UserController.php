@@ -102,6 +102,8 @@ class UserController extends Controller
             'name'          => 'required|string|max:255',
             'email'         => 'required|email|unique:users,email',
             'password'      => 'required|string|min:8',
+            'is_active'     => 'nullable|boolean',
+            'role'          => 'nullable|string|in:super_admin,user,viewer',
             'role_ids'      => 'nullable|array',
             'role_ids.*'    => 'integer|exists:aims_roles,id',
             // Employee fields (optional)
@@ -119,13 +121,14 @@ class UserController extends Controller
         ]);
 
         try {
-            $user = DB::transaction(function () use ($validated) {
+            $user = DB::transaction(function () use ($validated, $request) {
                 $user = User::create([
                     'name'     => $validated['name'],
                     'email'    => $validated['email'],
                     'password' => Hash::make($validated['password']),
-                    'role'     => 'user',
+                    'role'     => $validated['role'] ?? 'viewer',
                     'department_id' => $validated['department_id'] ?? null,
+                    'is_active' => $request->has('is_active') ? (bool) $validated['is_active'] : true,
                 ]);
 
                 if (!empty($validated['with_employee'])) {
@@ -183,6 +186,8 @@ class UserController extends Controller
             'name'          => 'required|string|max:255',
             'email'         => 'required|email|unique:users,email,' . $id,
             'password'      => 'nullable|string|min:8',
+            'is_active'     => 'nullable|boolean',
+            'role'          => 'nullable|string|in:super_admin,user,viewer',
             'role_ids'      => 'nullable|array',
             'role_ids.*'    => 'integer|exists:aims_roles,id',
             'with_employee'    => 'boolean',
@@ -199,8 +204,17 @@ class UserController extends Controller
         ]);
 
         try {
-            DB::transaction(function () use ($validated, $user) {
-                $userData = ['name' => $validated['name'], 'email' => $validated['email']];
+            DB::transaction(function () use ($validated, $user, $request) {
+                $userData = [
+                    'name' => $validated['name'],
+                    'email' => $validated['email']
+                ];
+                if ($request->has('is_active')) {
+                    $userData['is_active'] = (bool) $validated['is_active'];
+                }
+                if ($request->has('role')) {
+                    $userData['role'] = $validated['role'];
+                }
                 if (!empty($validated['password'])) {
                     $userData['password'] = Hash::make($validated['password']);
                 }

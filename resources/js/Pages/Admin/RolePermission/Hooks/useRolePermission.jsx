@@ -26,6 +26,11 @@ export default function useRolePermission(initialModuleId) {
     const [editRoleName, setEditRoleName] = useState("");
     const [editRoleSlug, setEditRoleSlug] = useState("");
 
+    // Delete Confirmation
+    const [deleteTarget, setDeleteTarget] = useState(null);
+    const [deleting, setDeleting] = useState(false);
+    const [deleteError, setDeleteError] = useState(null);
+
     // Fetch Role & Permission Matrix
     const fetchData = useCallback(async () => {
         setLoading(true);
@@ -227,20 +232,30 @@ export default function useRolePermission(initialModuleId) {
         }
     };
 
-    const handleDeleteRole = async (roleId, roleName) => {
-        if (
-            !confirm(
-                `Apakah Anda yakin ingin menghapus role "${roleName}"?\n\nPerhatian:\n- Semua permission role ini akan dihapus\n- User yang memiliki role ini akan kehilangan akses`
-            )
-        ) {
-            return;
-        }
+    const handleDeleteRole = (roleId, roleName) => {
+        setDeleteTarget({ id: roleId, name: roleName });
+        setDeleteError(null);
+    };
+
+    const closeDeleteModal = () => {
+        setDeleteTarget(null);
+        setDeleting(false);
+        setDeleteError(null);
+    };
+
+    const confirmDelete = async () => {
+        if (!deleteTarget) return;
+        setDeleting(true);
+        setDeleteError(null);
         try {
-            await axios.post(`${BASE}/roles/${roleId}/delete`);
+            await axios.post(`${BASE}/roles/${deleteTarget.id}/delete`);
+            closeDeleteModal();
             fetchData();
         } catch (err) {
             const msg = err.response?.data?.message || "Gagal menghapus role.";
-            alert(msg);
+            setDeleteError(msg);
+        } finally {
+            setDeleting(false);
         }
     };
 
@@ -281,5 +296,11 @@ export default function useRolePermission(initialModuleId) {
         setEditRoleSlug,
         handleEditRole,
         handleDeleteRole,
+        // Delete Confirmation Modal states
+        deleteTarget,
+        deleting,
+        deleteError,
+        closeDeleteModal,
+        confirmDelete,
     };
 }
