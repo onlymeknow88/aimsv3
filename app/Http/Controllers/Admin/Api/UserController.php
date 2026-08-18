@@ -12,6 +12,7 @@ use App\Services\AdminActivityLogService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rules\Password;
 
 class UserController extends Controller
 {
@@ -101,7 +102,7 @@ class UserController extends Controller
         $validated = $request->validate([
             'name'          => 'required|string|max:255',
             'email'         => 'required|email|unique:users,email',
-            'password'      => 'required|string|min:8',
+            'password'      => ['required', Password::defaults()],
             'is_active'     => 'nullable|boolean',
             'role'          => 'nullable|string|in:super_admin,user,viewer',
             'role_ids'      => 'nullable|array',
@@ -185,7 +186,7 @@ class UserController extends Controller
         $validated = $request->validate([
             'name'          => 'required|string|max:255',
             'email'         => 'required|email|unique:users,email,' . $id,
-            'password'      => 'nullable|string|min:8',
+            'password'      => ['nullable', Password::defaults()],
             'is_active'     => 'nullable|boolean',
             'role'          => 'nullable|string|in:super_admin,user,viewer',
             'role_ids'      => 'nullable|array',
