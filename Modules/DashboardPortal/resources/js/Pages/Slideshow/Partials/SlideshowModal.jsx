@@ -1,5 +1,5 @@
-import React from 'react';
 import FileDropzone from '@/Components/FileDropzone';
+import React from 'react';
 
 const inputStyle = {
     width: "100%",
@@ -30,7 +30,7 @@ export default function SlideshowModal({
             <form onSubmit={onSubmit} style={{ backgroundColor: '#fff', borderRadius: '16px', width: '100%', maxWidth: '600px', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
                 <div style={{ padding: '16px 24px', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <h3 style={{ fontSize: '15px', fontWeight: 800, color: '#0f172a', margin: 0 }}>
-                        {editId ? 'Edit Video Slideshow' : 'Tambah Video Slideshow'}
+                        {editId ? 'Edit Slideshow' : 'Tambah Slideshow'}
                     </h3>
                     <button type="button" onClick={onClose} style={{ border: 'none', background: 'none', fontSize: '20px', cursor: 'pointer', color: '#64748b' }}>&times;</button>
                 </div>
@@ -43,12 +43,12 @@ export default function SlideshowModal({
                     )}
 
                     <div>
-                        <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '6px' }}>Nama Video *</label>
+                        <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '6px' }}>Nama Slideshow *</label>
                         <input
                             required
                             value={form.name || ''}
                             onChange={e => setField('name', e.target.value)}
-                            placeholder="Masukkan nama video..."
+                            placeholder="Masukkan nama slideshow..."
                             style={inputStyle}
                         />
                     </div>
@@ -76,9 +76,9 @@ export default function SlideshowModal({
                     </div>
 
                     <div>
-                        <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '6px' }}>Upload Video (MP4) *</label>
+                        <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '6px' }}>Upload Berkas (MP4, JPG, JPEG, PNG, WEBP) *</label>
                         <FileDropzone
-                            accept="video/mp4"
+                            accept="video/mp4,image/jpeg,image/png,image/jpg,image/webp,.mp4,.jpg,.jpeg,.png,.webp"
                             onFileDrop={(files) => setField('file', files[0])}
                         />
                         {form.file && (
@@ -105,11 +105,20 @@ export default function SlideshowModal({
                             </div>
                         )}
                         {form.file && (
-                            <div style={{ marginTop: '12px', border: '1px solid #e2e8f0', borderRadius: '8px', overflow: 'hidden' }}>
-                                <video key={form.file.name} width="100%" height="auto" controls style={{ display: 'block' }}>
-                                    <source src={URL.createObjectURL(form.file)} type={form.file.type} />
-                                    Browser Anda tidak mendukung pemutaran video.
-                                </video>
+                            <div style={{ marginTop: '12px', border: '1px solid #e2e8f0', borderRadius: '8px', overflow: 'hidden', padding: '12px', backgroundColor: '#f8fafc', textAlign: 'center' }}>
+                                {form.file.type?.startsWith('image/') || /\.(jpg|jpeg|png|webp)$/i.test(form.file.name) ? (
+                                    <img
+                                        key={form.file.name}
+                                        src={URL.createObjectURL(form.file)}
+                                        alt="Preview"
+                                        style={{ maxWidth: '100%', maxHeight: '240px', objectFit: 'contain', borderRadius: '6px' }}
+                                    />
+                                ) : (
+                                    <video key={form.file.name} width="100%" height="auto" controls style={{ display: 'block', borderRadius: '6px' }}>
+                                        <source src={URL.createObjectURL(form.file)} type={form.file.type} />
+                                        Browser Anda tidak mendukung pemutaran video.
+                                    </video>
+                                )}
                             </div>
                         )}
                     </div>

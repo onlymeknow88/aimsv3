@@ -60,17 +60,17 @@ export default function SlideshowIndex() {
             
             <div style={{ marginBottom: "20px" }}>
                 <h1 style={{ fontSize: "20px", fontWeight: 800, color: "var(--primary)", margin: 0 }}>
-                    Daftar SlideShow (Video)
+                    Daftar SlideShow
                 </h1>
                 <p style={{ color: "var(--text-secondary)", fontSize: "11px", marginTop: "4px" }}>
-                    Kelola video promosi keselamatan untuk tayangan banner portal utama AIMS.
+                    Kelola gambar dan video promosi keselamatan untuk tayangan banner portal utama AIMS.
                 </p>
             </div>
 
             <div style={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '24px', boxShadow: 'var(--shadow-sm)' }}>
                 {/* Header / Actions */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
-                    <h3 style={{ fontSize: '14px', fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>Video Slides</h3>
+                    <h3 style={{ fontSize: '14px', fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>Slide Items</h3>
 
                     <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
                         {/* Search */}
@@ -79,7 +79,7 @@ export default function SlideshowIndex() {
                             <input
                                 value={search}
                                 onChange={e => setSearch(e.target.value)}
-                                placeholder="Cari video..."
+                                placeholder="Cari slideshow..."
                                 style={{ ...inputStyle, paddingLeft: '34px', width: '200px' }}
                             />
                         </div>
@@ -120,7 +120,7 @@ export default function SlideshowIndex() {
                                 boxShadow: "0 3px 10px rgba(21,59,115,0.25)",
                             }}
                         >
-                            <Plus size={16} /> Tambah Video
+                            <Plus size={16} /> Tambah Slide
                         </button>
                     </div>
                 </div>
@@ -139,7 +139,7 @@ export default function SlideshowIndex() {
                             <TableHeader>
                                 <TableRow style={{ backgroundColor: '#f8fafc' }}>
                                     <TableHead style={{ fontWeight: 700, fontSize: '11px', color: '#475569', textTransform: 'uppercase', padding: '14px 16px', width: '80px', textAlign: 'center' }}>Visible</TableHead>
-                                    <TableHead style={{ fontWeight: 700, fontSize: '11px', color: '#475569', textTransform: 'uppercase', padding: '14px 16px' }}>Nama Video</TableHead>
+                                    <TableHead style={{ fontWeight: 700, fontSize: '11px', color: '#475569', textTransform: 'uppercase', padding: '14px 16px' }}>Nama Slideshow</TableHead>
                                     <TableHead style={{ fontWeight: 700, fontSize: '11px', color: '#475569', textTransform: 'uppercase', padding: '14px 16px' }}>Deskripsi</TableHead>
                                     <TableHead style={{ fontWeight: 700, fontSize: '11px', color: '#475569', textTransform: 'uppercase', padding: '14px 16px', width: '200px' }}>Attachment / File</TableHead>
                                     <TableHead style={{ fontWeight: 700, fontSize: '11px', color: '#475569', textTransform: 'uppercase', padding: '14px 16px', textAlign: 'center', width: '120px' }}>Aksi</TableHead>
@@ -174,7 +174,7 @@ export default function SlideshowIndex() {
                                                         onClick={() => setPreviewVideo(slide)}
                                                         style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', border: 'none', background: 'none', color: 'var(--primary)', cursor: 'pointer', fontSize: '12px', fontWeight: 600, padding: 0 }}
                                                     >
-                                                        <Play size={12} fill="currentColor" /> Preview Video
+                                                        <Play size={12} fill="currentColor" /> Preview Berkas
                                                     </button>
                                                 ) : (
                                                     <span style={{ color: '#94a3b8', fontSize: '12px' }}>Tidak ada file</span>
@@ -220,7 +220,7 @@ export default function SlideshowIndex() {
                     />
                 </div>
 
-                {/* Video Preview Modal */}
+                {/* Media Preview Modal */}
                 {previewVideo && (
                     <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(15, 23, 42, 0.6)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '20px' }}>
                         <div style={{ backgroundColor: '#fff', borderRadius: '16px', width: '100%', maxWidth: '800px', padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -228,10 +228,18 @@ export default function SlideshowIndex() {
                                 <h3 style={{ fontSize: '16px', fontWeight: 800, color: '#0f172a', margin: 0 }}>Preview: {previewVideo.name}</h3>
                                 <button onClick={() => setPreviewVideo(null)} style={{ border: 'none', background: 'none', fontSize: '20px', cursor: 'pointer', color: '#64748b' }}>&times;</button>
                             </div>
-                            <video key={previewVideo.blob_url} width="100%" height="auto" controls autoPlay style={{ borderRadius: '8px' }}>
-                                <source src={previewVideo.blob_url} type="video/mp4" />
-                                Browser Anda tidak mendukung pemutaran video.
-                            </video>
+                            {/\.(jpg|jpeg|png|webp)$/i.test(previewVideo.attc || previewVideo.blob_url || '') ? (
+                                <img
+                                    src={previewVideo.blob_url}
+                                    alt={previewVideo.name}
+                                    style={{ maxWidth: '100%', maxHeight: '500px', objectFit: 'contain', borderRadius: '8px', display: 'block', margin: '0 auto' }}
+                                />
+                            ) : (
+                                <video key={previewVideo.blob_url} width="100%" height="auto" controls autoPlay style={{ borderRadius: '8px' }}>
+                                    <source src={previewVideo.blob_url} type="video/mp4" />
+                                    Browser Anda tidak mendukung pemutaran video.
+                                </video>
+                            )}
                         </div>
                     </div>
                 )}

@@ -53,11 +53,11 @@ class SlideshowController extends Controller
             'name' => 'required|string|max:255',
             'visible' => 'required|string',
             'description' => 'nullable|string',
-            'file' => 'required|file|mimes:mp4|max:50000', // Max 50MB
+            'file' => 'required|file|mimes:mp4,jpg,jpeg,png,webp|max:50000', // Max 50MB
         ]);
 
         if (!$request->hasFile('file')) {
-            return ResponseFormatter::error('File video wajib diunggah.', 400);
+            return ResponseFormatter::error('File slideshow wajib diunggah.', 400);
         }
 
         $file = $request->file('file');
@@ -67,7 +67,7 @@ class SlideshowController extends Controller
         $uploadResult = uploadToBlobStorage($fileName, $file->getRealPath(), 'slideshow');
 
         if (!$uploadResult || empty($uploadResult['fileBlobPathName'])) {
-            return ResponseFormatter::error('Gagal mengunggah video ke Blob Storage.', 500);
+            return ResponseFormatter::error('Gagal mengunggah berkas ke Blob Storage.', 500);
         }
 
         $slideshow = Slideshow::create([
@@ -100,7 +100,7 @@ class SlideshowController extends Controller
             'name' => 'required|string|max:255',
             'visible' => 'required|string',
             'description' => 'nullable|string',
-            'file' => 'nullable|file|mimes:mp4|max:50000', // Max 50MB
+            'file' => 'nullable|file|mimes:mp4,jpg,jpeg,png,webp|max:50000', // Max 50MB
         ]);
 
         $slideshow = Slideshow::findOrFail($id);
