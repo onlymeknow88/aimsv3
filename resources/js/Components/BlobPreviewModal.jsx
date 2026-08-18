@@ -67,17 +67,31 @@ export default function BlobPreviewModal({ attachment, onClose }) {
                         ? null
                         : `/api/document-system/attachments/${attachmentId}/sas-url${queryString}`;
 
-    const fileExtension = (
-        attachment?.file_type ||
-        (attachment?.name      ? attachment.name.split('.').pop()      : '') ||
-        (attachment?.file_name ? attachment.file_name.split('.').pop() : '') ||
-        (attachment?.file_path ? attachment.file_path.split('.').pop() : '') ||
-        ''
-    ).toLowerCase();
+    const fileExtension = (() => {
+        let raw = (
+            attachment?.file_type ||
+            (attachment?.file_name ? attachment.file_name.split('.').pop() : '') ||
+            (attachment?.name      ? attachment.name.split('.').pop()      : '') ||
+            (attachment?.file_path ? attachment.file_path.split('.').pop() : '') ||
+            (attachment?.path      ? attachment.path.split('.').pop()      : '') ||
+            ''
+        ).toLowerCase().trim();
+
+        if (raw.includes('/')) raw = raw.split('/').pop();
+        if (raw.includes('.')) raw = raw.split('.').pop();
+        return raw;
+    })();
 
     const isImage  = ['png', 'jpg', 'jpeg', 'gif', 'webp'].includes(fileExtension);
     const isPdf    = fileExtension === 'pdf';
     const isOffice = ['docx', 'doc', 'xlsx', 'xls', 'pptx', 'ppt'].includes(fileExtension);
+
+    const isLocalUrl = officeSasUrl ? (
+        officeSasUrl.includes('localhost') ||
+        officeSasUrl.includes('127.0.0.1') ||
+        officeSasUrl.includes('.test') ||
+        officeSasUrl.includes('.local')
+    ) : false;
 
     // Fetch SAS URL fresh setiap kali modal dibuka untuk Office files.
     // SAS URL tidak disimpan permanen di DB karena akan expired.
@@ -208,7 +222,7 @@ export default function BlobPreviewModal({ attachment, onClose }) {
                                 <FileText size={32} style={{ color: '#94a3b8', marginBottom: '12px' }} />
                                 <p>Memuat preview...</p>
                             </div>
-                        ) : officeSasUrl ? (
+                        ) : officeSasUrl && !isLocalUrl ? (
                             <iframe
                                 src={`https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(officeSasUrl)}`}
                                 title="Office Document Preview"
@@ -224,10 +238,12 @@ export default function BlobPreviewModal({ attachment, onClose }) {
                             <div style={{ textAlign: 'center', padding: '40px' }}>
                                 <FileText size={48} style={{ color: '#94a3b8', marginBottom: '16px' }} />
                                 <p style={{ fontSize: '13px', fontWeight: 600, color: '#334155', margin: '0 0 8px 0' }}>
-                                    Preview tidak tersedia
+                                    Pratinjau Dokumen Office ({fileExtension.toUpperCase()})
                                 </p>
-                                <p style={{ fontSize: '11px', color: '#64748b', margin: '0 0 20px 0' }}>
-                                    Gagal memuat URL untuk preview. Silakan download file untuk membukanya.
+                                <p style={{ fontSize: '11px', color: '#64748b', margin: '0 0 20px 0', maxWidth: '420px', lineHeight: '1.5' }}>
+                                    {isLocalUrl 
+                                        ? 'Pratinjau online Office memerlukan URL server publik. Silakan unduh berkas untuk membukanya di aplikasi lokal.'
+                                        : 'Tidak dapat memuat URL pratinjau. Silakan unduh berkas untuk membukanya.'}
                                 </p>
                                 <a
                                     href={downloadUrl}

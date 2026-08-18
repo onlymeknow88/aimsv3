@@ -69,13 +69,7 @@ class GeneralController extends Controller
         if ($type === 'activity') {
             $attachment = \Modules\DocumentSystem\Entities\ActivityAttachment::findOrFail($id);
             $fileName = $attachment->name;
-            $mimeType = 'application/octet-stream';
-            $ext = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
-            if ($ext === 'pdf') {
-                $mimeType = 'application/pdf';
-            } elseif (in_array($ext, ['png', 'jpg', 'jpeg', 'gif', 'webp'])) {
-                $mimeType = 'image/' . ($ext === 'jpg' ? 'jpeg' : $ext);
-            }
+            $mimeType = $this->getMimeType($fileName, $attachment->file_type ?? null);
         } elseif ($type === 'jsa_activity') {
             $path = $request->query('path');
             if ($id !== 'none') {
@@ -92,13 +86,7 @@ class GeneralController extends Controller
                 abort(404);
             }
             $fileName = $attachmentData['file_name'];
-            $mimeType = 'application/octet-stream';
-            $ext = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
-            if ($ext === 'pdf') {
-                $mimeType = 'application/pdf';
-            } elseif (in_array($ext, ['png', 'jpg', 'jpeg', 'gif', 'webp'])) {
-                $mimeType = 'image/' . ($ext === 'jpg' ? 'jpeg' : $ext);
-            }
+            $mimeType = $this->getMimeType($fileName, $attachmentData['file_type'] ?? null);
             $filePath = $attachmentData['path'] ?? '';
             $attachment = (object)[
                 'path' => $filePath,
@@ -107,30 +95,15 @@ class GeneralController extends Controller
         } elseif ($type === 'jsa') {
             $attachment = \Modules\DocumentSystem\Entities\JsaDocumentAttachment::findOrFail($id);
             $fileName = basename($attachment->file_path);
-            $mimeType = 'application/octet-stream';
-            $ext = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
-            if ($ext === 'pdf') {
-                $mimeType = 'application/pdf';
-            } elseif (in_array($ext, ['png', 'jpg', 'jpeg', 'gif', 'webp'])) {
-                $mimeType = 'image/' . ($ext === 'jpg' ? 'jpeg' : $ext);
-            }
+            $mimeType = $this->getMimeType($fileName, $attachment->file_type ?? null);
         } elseif ($type === 'ptw') {
             $attachment = \Modules\DocumentSystem\Entities\PtwDocumentAttachment::findOrFail($id);
             $fileName = $attachment->file_name;
-            $mimeType = $attachment->mime_type ?? 'application/octet-stream';
+            $mimeType = $this->getMimeType($fileName, $attachment->mime_type ?? null);
         } else {
             $attachment = Attachment::findOrFail($id);
             $fileName = $attachment->file_name;
-            // Derive mime type from file_type column or file extension since mime_type may not be stored
-            $ext = strtolower($attachment->file_type ?? pathinfo($fileName, PATHINFO_EXTENSION));
-            $mimeType = match($ext) {
-                'pdf'          => 'application/pdf',
-                'png'          => 'image/png',
-                'jpg', 'jpeg'  => 'image/jpeg',
-                'gif'          => 'image/gif',
-                'webp'         => 'image/webp',
-                default        => $attachment->mime_type ?? 'application/octet-stream',
-            };
+            $mimeType = $this->getMimeType($fileName, $attachment->file_type ?? null);
         }
 
         $filePath = ($type === 'jsa' || $type === 'jsa_activity' || $type === 'ptw') ? ($attachment->file_path ?? '') : ($attachment->path ?? '');
@@ -289,5 +262,32 @@ class GeneralController extends Controller
         $url = Storage::disk('public')->temporaryUrl($filePath, now()->addMinutes(30));
 
         return response()->json(['url' => $url]);
+    }
+
+    /**
+     * Helper method to derive exact MIME type from file extension or file_type column
+     */
+    private function getMimeType(string $fileName, ?string $fileType = null): string
+    {
+        $ext = strtolower($fileType ?? pathinfo($fileName, PATHINFO_EXTENSION));
+        if (str_contains($ext, '/')) {
+            $ext = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
+        }
+
+        return match ($ext) {
+            'pdf'         => 'application/pdf',
+            'png'         => 'image/png',
+            'jpg', 'jpeg' => 'image/jpeg',
+            'gif'         => 'image/gif',
+            'webp'        => 'image/webp',
+            'docx'        => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'doc'         => 'application/msword',
+            'xlsx'        => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'xls'         => 'application/vnd.ms-excel',
+            'pptx'        => 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+            'ppt'         => 'application/vnd.ms-powerpoint',
+            'txt'         => 'text/plain',
+            default       => 'application/octet-stream',
+        };
     }
 }

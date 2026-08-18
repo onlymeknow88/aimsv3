@@ -1184,7 +1184,7 @@ class DocumentApiController extends Controller
      */
     public function show(string $id)
     {
-        $document = Document::with(['company', 'department', 'areaManager.user', 'owner', 'creator', 'mapping.category.module', 'attachments', 'invitedPeople', 'activities.user', 'activities.attachments', 'approvedByCrsUser', 'approvedByPjaUser'])
+        $document = Document::with(['company', 'department.head.user', 'areaManager.user', 'owner', 'creator', 'mapping.category.module', 'attachments', 'invitedPeople', 'activities.user', 'activities.attachments', 'approvedByCrsUser', 'approvedByPjaUser'])
             ->findOrFail($id);
 
         // Dynamically resolve legacy UUIDs stored in email column

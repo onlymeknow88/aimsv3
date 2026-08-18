@@ -84,6 +84,17 @@ export default function Detail({ id }) {
 
     const statusColors = getStatusColors(document.status);
 
+    const getDepartmentHeadName = (doc) => {
+        if (!doc) return '-';
+        return (
+            doc.department?.head?.user?.name ||
+            doc.department?.head?.name ||
+            doc.areaManager?.user?.name ||
+            doc.area_manager?.user?.name ||
+            '-'
+        );
+    };
+
     return (
         <div style={{ backgroundColor: 'var(--bg-color)', minHeight: '100vh', padding: '40px 20px' }}>
             <Head title={`Detail Dokumen: ${document.title}`} />
@@ -175,10 +186,10 @@ export default function Detail({ id }) {
                                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                                     color: '#fff', fontWeight: 700, fontSize: '12px'
                                 }}>
-                                    {getInitials(document.area_manager?.user?.name)}
+                                    {getInitials(getDepartmentHeadName(document))}
                                 </div>
                                 <div>
-                                    <span style={{ fontWeight: 600, color: 'var(--text-primary)', display: 'block' }}>{document.area_manager?.user?.name || '-'}</span>
+                                    <span style={{ fontWeight: 600, color: 'var(--text-primary)', display: 'block' }}>{getDepartmentHeadName(document)}</span>
                                     <span style={{ fontSize: '9px', color: 'var(--text-muted)', fontWeight: 600 }}>Department Head</span>
                                 </div>
                             </div>
@@ -334,17 +345,21 @@ export default function Detail({ id }) {
                             </p>
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px', border: '1px solid var(--border-color)', borderRadius: '8px', backgroundColor: '#fafbfc' }}>
                                 <span
-                                    onClick={() => setPreviewAttachment({
-                                        id: 'uncontrolled',
-                                        file_name: `FINAL-${document.document_number} ${document.title}.pdf`,
-                                        file_type: 'pdf',
-                                        path: document.uncontrolled_file_path,
-                                        type: 'uncontrolled'
-                                    })}
+                                    onClick={() => {
+                                        const ext = (document.uncontrolled_file_path ? document.uncontrolled_file_path.split('.').pop() : 'pdf').toLowerCase();
+                                        const fileName = document.uncontrolled_file_path ? document.uncontrolled_file_path.split('/').pop() : `FINAL-${document.document_number} ${document.title}.${ext}`;
+                                        setPreviewAttachment({
+                                            id: 'uncontrolled',
+                                            file_name: fileName,
+                                            file_type: ext,
+                                            path: document.uncontrolled_file_path,
+                                            type: 'uncontrolled'
+                                        });
+                                    }}
                                     style={{ fontSize: '12px', fontWeight: 600, color: 'var(--primary)', cursor: 'pointer', textDecoration: 'underline' }}
                                     title="Klik untuk preview dokumen"
                                 >
-                                    FINAL-{document.document_number} {document.title}.pdf
+                                    {document.uncontrolled_file_path ? document.uncontrolled_file_path.split('/').pop() : `FINAL-${document.document_number} ${document.title}`}
                                 </span>
                                 <a
                                     href={`/api/document-system/attachments/uncontrolled/download?type=uncontrolled&path=${encodeURIComponent(document.uncontrolled_file_path)}`}
@@ -371,7 +386,7 @@ export default function Detail({ id }) {
                                 {document.attachments.map(att => (
                                     <div key={att.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px', border: '1px solid var(--border-color)', borderRadius: '8px', backgroundColor: '#fafbfc' }}>
                                         <span
-                                            onClick={() => setPreviewAttachment(att)}
+                                            onClick={() => setPreviewAttachment({ ...att, type: att.type || 'document' })}
                                             style={{ fontSize: '12px', fontWeight: 600, color: 'var(--primary)', cursor: 'pointer', textDecoration: 'underline' }}
                                             title="Klik untuk preview lampiran"
                                         >
