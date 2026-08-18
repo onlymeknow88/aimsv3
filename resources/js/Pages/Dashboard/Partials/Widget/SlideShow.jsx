@@ -112,25 +112,41 @@ export default function SlideShow({
                 }
             `}</style>
 
-            {/* Video Background (Plays inline) */}
+            {/* Media Background (Image or Video) */}
             {currentSlide.blob_url ? (
-                <video
-                    key={currentSlide.id}
-                    autoPlay
-                    muted
-                    loop
-                    playsInline
-                    style={{
-                        position: 'absolute',
-                        inset: 0,
-                        width: '100%',
-                        height: '100%',
-                        objectFit: 'cover',
-                        zIndex: 1
-                    }}
-                >
-                    <source src={currentSlide.blob_url} type="video/mp4" />
-                </video>
+                /\.(jpg|jpeg|png|webp)$/i.test(currentSlide.attc || currentSlide.blob_url || '') ? (
+                    <img
+                        key={currentSlide.id}
+                        src={currentSlide.blob_url}
+                        alt={currentSlide.name || 'Slideshow'}
+                        style={{
+                            position: 'absolute',
+                            inset: 0,
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'cover',
+                            zIndex: 1
+                        }}
+                    />
+                ) : (
+                    <video
+                        key={currentSlide.id}
+                        autoPlay
+                        muted
+                        loop
+                        playsInline
+                        style={{
+                            position: 'absolute',
+                            inset: 0,
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'cover',
+                            zIndex: 1
+                        }}
+                    >
+                        <source src={currentSlide.blob_url} type="video/mp4" />
+                    </video>
+                )
             ) : (
                 <div className="slideshow-fallback" style={{ position: 'absolute', right: '40px', bottom: '40px', top: '40px', width: '35%', backgroundImage: 'url("/images/Alamtri Geo Monochrome - Full Color.png")', backgroundSize: 'contain', backgroundRepeat: 'no-repeat', backgroundPosition: 'center', opacity: 1, zIndex: 3 }} />
             )}
