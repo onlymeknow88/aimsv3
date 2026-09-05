@@ -135,7 +135,7 @@ export default function ApprovalTable({
             header: 'Revisi',
             cell: ({ row }) => (
                 <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
-                    {(() => { const v = String(row.original.revision ?? '0'); return v.includes('.') ? v : v + '.0'; })()}
+                    {(() => { const n = parseFloat(String(row.original.revision ?? '0')); return (isNaN(n) ? 0 : n).toFixed(1); })()}
                 </span>
             ),
         },

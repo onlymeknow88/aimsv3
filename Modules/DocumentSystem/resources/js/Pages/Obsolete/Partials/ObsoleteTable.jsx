@@ -11,8 +11,7 @@ import {
     PaginationItem,
     PaginationLink,
     PaginationNext,
-    PaginationPrevious,
-} from "@/components/ui/pagination";
+    PaginationPrevious} from "@/components/ui/pagination";
 export default function ObsoleteTable({
     documents = [],
     selectedIds = [],
@@ -25,8 +24,7 @@ export default function ObsoleteTable({
     onLimitChange,
     columnFilters = {},
     onColumnFilterChange,
-    onRevise,
-}) {
+    onRevise}) {
     const [previewAttachment, setPreviewAttachment] = useState(null);
     const getCompanyCode = (doc) => {
         return doc.company?.company_name || doc.company?.document_code || '-';
@@ -141,7 +139,7 @@ export default function ObsoleteTable({
             accessorKey: 'revision',
             id: 'revision',
             header: 'Rev',
-            cell: info => <span style={{ color: 'var(--text-secondary)' }}>{(() => { const v = String(info.getValue() ?? '0'); return v.includes('.') ? v : v + '.0'; })()}</span>
+            cell: info => <span style={{ color: 'var(--text-secondary)' }}>{(() => { const n = parseFloat(String(info.getValue() ?? '0')); return (isNaN(n) ? 0 : n).toFixed(1); })()}</span>
         },
         {
             accessorKey: 'status',
@@ -238,8 +236,7 @@ export default function ObsoleteTable({
                         border: 'none',
                         borderRadius: '6px',
                         cursor: 'pointer',
-                        whiteSpace: 'nowrap',
-                    }}
+                        whiteSpace: 'nowrap'}}
                 >
                     Buat Revisi
                 </button>
@@ -261,19 +258,16 @@ export default function ObsoleteTable({
             'title': visibleColumns['Judul Dokumen'] ?? true,
             'revision': visibleColumns['Rev'] ?? true,
             'status': visibleColumns['Status'] ?? true,
-            'actions': visibleColumns['Aksi'] ?? true,
-        };
+            'actions': visibleColumns['Aksi'] ?? true};
     }, [visibleColumns]);
 
     const table = useReactTable({
         data: documents,
         columns,
         state: {
-            columnVisibility,
-        },
+            columnVisibility},
         getCoreRowModel: getCoreRowModel(),
-        getFilteredRowModel: getFilteredRowModel(),
-    });
+        getFilteredRowModel: getFilteredRowModel()});
 
     const visibleColsCount = table.getVisibleFlatColumns().length;
 
@@ -319,15 +313,15 @@ export default function ObsoleteTable({
                                                     onClick={(e) => e.stopPropagation()}
                                                     style={{
                                                         width: '100%',
-                                                        padding: '4px 8px',
-                                                        fontSize: '11px',
+                                                        padding: '6px 8px',
+                                                        minHeight: '44px',
+                                                        fontSize: '12px',
                                                         fontWeight: 'normal',
-                                                        border: '1px solid #e2e8f0',
-                                                        borderRadius: '4px',
-                                                        outline: 'none',
+                                                        border: '1px solid var(--border-color)',
+                                                        borderRadius: '6px',
                                                         boxSizing: 'border-box',
-                                                        color: '#334155',
-                                                        backgroundColor: '#fff'
+                                                        color: 'var(--text-primary)',
+                                                        backgroundColor: 'var(--card-bg)'
                                                     }}
                                                 />
                                             )}
@@ -379,16 +373,14 @@ export default function ObsoleteTable({
                     fontSize: "13px",
                     color: "#64748b",
                     flexWrap: "wrap",
-                    gap: "12px",
-                }}
+                    gap: "12px"}}
             >
                 <div
                     style={{
                         display: "flex",
                         alignItems: "center",
                         gap: "16px",
-                        flexWrap: "wrap",
-                    }}
+                        flexWrap: "wrap"}}
                 >
                     <div>
                         Menampilkan Halaman{" "}
@@ -401,14 +393,12 @@ export default function ObsoleteTable({
                             style={{
                                 display: "flex",
                                 alignItems: "center",
-                                gap: "6px",
-                            }}
+                                gap: "6px"}}
                         >
                             <span
                                 style={{
                                     fontSize: "12px",
-                                    color: "#64748b",
-                                }}
+                                    color: "#64748b"}}
                             >
                                 Baris per halaman:
                             </span>
@@ -424,9 +414,7 @@ export default function ObsoleteTable({
                                     backgroundColor: "#fff",
                                     fontSize: "12px",
                                     color: "#475569",
-                                    cursor: "pointer",
-                                    outline: "none",
-                                }}
+                                    cursor: "pointer"}}
                             >
                                 <option value={10}>10</option>
                                 <option value={25}>25</option>
@@ -454,8 +442,7 @@ export default function ObsoleteTable({
                                     cursor:
                                         pagination.current_page === 1
                                             ? "not-allowed"
-                                            : "pointer",
-                                }}
+                                            : "pointer"}}
                             />
                         </PaginationItem>
 
@@ -502,8 +489,7 @@ export default function ObsoleteTable({
                                         pagination.current_page ===
                                             pagination.last_page
                                             ? "not-allowed"
-                                            : "pointer",
-                                }}
+                                            : "pointer"}}
                             />
                         </PaginationItem>
                     </PaginationContent>

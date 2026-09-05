@@ -86,7 +86,7 @@ export default function StatusTimeline({ status, document }) {
                                 flexShrink: 0,
                                 color: (done || active) ? '#fff' : 'var(--text-muted)',
                                 boxShadow: active ? '0 0 0 3px rgba(21,59,115,0.15)' : 'none',
-                                transition: 'all 0.2s',
+                                transition: 'background-color 0.2s ease, border-color 0.2s ease',
                             }}>
                                                                     {done
                                     ? <Check size={12} />

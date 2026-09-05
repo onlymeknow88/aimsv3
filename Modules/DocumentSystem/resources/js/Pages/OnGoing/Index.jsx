@@ -76,7 +76,7 @@ export default function Index() {
 
             <div style={{ marginBottom: '20px' }}>
                 <h1 style={{ fontSize: '20px', fontWeight: 800, color: 'var(--primary)', margin: 0 }}>Ongoing Workflows</h1>
-                <p style={{ color: 'var(--text-secondary)', fontSize: '11px', marginTop: '4px' }}>Daftar dokumen yang sedang dalam proses review dan persetujuan.</p>
+                <p style={{ color: 'var(--text-secondary)', fontSize: '13px', marginTop: '4px' }}>Daftar dokumen yang sedang dalam proses review dan persetujuan.</p>
             </div>
 
             <div style={{
@@ -93,7 +93,7 @@ export default function Index() {
                         value={search}
                         onChange={e => setSearch(e.target.value)}
                         placeholder="Cari judul atau nomor dokumen..."
-                        style={{ width: '100%', padding: '8px 12px 8px 36px', border: '1px solid var(--border-color)', borderRadius: '6px', fontSize: '11px', outline: 'none', boxSizing: 'border-box' }}
+                        style={{ width: '100%', padding: '10px 12px 10px 36px', minHeight: '44px', border: '1px solid var(--border-color)', borderRadius: '6px', fontSize: '13px', boxSizing: 'border-box' }}
                     />
                 </div>
 
@@ -109,7 +109,7 @@ export default function Index() {
                             border: '1px solid var(--border-color)',
                             borderRadius: '6px',
                             padding: '8px 12px',
-                            fontSize: '11px',
+                            fontSize: '13px',
                             fontWeight: 600,
                             color: 'var(--text-primary)',
                             cursor: 'pointer',
@@ -131,7 +131,7 @@ export default function Index() {
                                 border: '1px solid var(--border-color)',
                                 borderRadius: '6px',
                                 padding: '8px 12px',
-                                fontSize: '11px',
+                                fontSize: '13px',
                                 fontWeight: 600,
                                 color: 'var(--text-primary)',
                                 cursor: 'pointer',

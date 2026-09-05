@@ -577,9 +577,66 @@ class MasterDataApiController extends Controller
             ];
         }
 
+        // ── Chart: dokumen per department × document_level (SOP/WIN/FORM/TS/MEMO) ──
+        // Ambil semua document_level yang ada di DB, urutkan alfabetis
+        $docLevels = DB::table('document_system_documents')
+            ->select('document_level')
+            ->distinct()
+            ->whereNotNull('document_level')
+            ->orderBy('document_level')
+            ->pluck('document_level');
+
+        // Query aggregate: hitung total, update (active=5), tidak update (expired=7/8/obsolete) per dept × document_level
+        $rawCounts = DB::table('document_system_documents')
+            ->select(
+                'department_id',
+                'document_level',
+                DB::raw('COUNT(*) as total'),
+                DB::raw("SUM(CASE WHEN status = '5' THEN 1 ELSE 0 END) as update_count"),
+                DB::raw("SUM(CASE WHEN status IN ('7','8') OR is_obsolate = 1 THEN 1 ELSE 0 END) as tidak_update_count")
+            )
+            ->whereNotNull('department_id')
+            ->whereNotNull('document_level')
+            ->groupBy('department_id', 'document_level')
+            ->get()
+            ->groupBy('department_id');
+
+        // Bangun data chart per departemen
+        $deptModuleChartData = [];
+        foreach ($departments->sortBy('name') as $dept) {
+            $deptRows = $rawCounts->get($dept->id, collect());
+
+            // Key by document_level untuk lookup cepat
+            $byLevel = $deptRows->keyBy('document_level');
+
+            $levelData = [];
+            foreach ($docLevels as $level) {
+                $row         = $byLevel->get($level);
+                $total       = $row ? (int) $row->total             : 0;
+                $updateCount = $row ? (int) $row->update_count      : 0;
+                $tidakUpdate = $row ? (int) $row->tidak_update_count : 0;
+                $pctUpdate   = $total > 0 ? round(($updateCount / $total) * 100, 1) : 0;
+
+                $levelData[$level] = [
+                    'total'        => $total,
+                    'update'       => $updateCount,
+                    'tidak_update' => $tidakUpdate,
+                    'pct_update'   => $pctUpdate,
+                ];
+            }
+
+            $deptModuleChartData[] = [
+                'department'   => $dept->name,
+                'company_code' => $dept->company->document_code ?? '',
+                'levels'       => $levelData,
+            ];
+        }
+
         return ResponseFormatter::success([
-            'stats'       => $stats,
-            'departments' => $departmentsData
+            'stats'             => $stats,
+            'departments'       => $departmentsData,         // backward compat
+            'doc_levels'        => $docLevels->toArray(),    // list document_level untuk label X-axis
+            'dept_module_chart' => $deptModuleChartData,     // data chart per dept × document_level
         ], 'Dashboard statistics retrieved successfully');
     }
 }

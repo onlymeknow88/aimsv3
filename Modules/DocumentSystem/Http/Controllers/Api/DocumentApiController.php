@@ -1095,11 +1095,8 @@ class DocumentApiController extends Controller
 
         $doc = Document::findOrFail($id);
 
-        // Kembalikan ke status ON_REVISION (4) atau ke DRAFT (2) tergantung kondisi
-        // Jika sedang di tahap review (1), kembalikan ke DRAFT (2)
-        // Jika sudah di tahap approval lanjut (3 atau 6), kembalikan ke ON_REVISION (4)
-        $currentStatus = (int) $doc->status;
-        $newStatus = in_array($currentStatus, [3, 6]) ? '4' : '2';
+        // Kembalikan ke status RETURN (4) — semua reject jadi RETURN agar maker tau perlu revisi
+        $newStatus = '4';
 
         DB::beginTransaction();
         try {

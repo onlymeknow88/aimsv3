@@ -105,11 +105,13 @@ export default function Index() {
                             {selectedIds.length} Row Selected
                         </span>
                         <button 
+                            type="button"
+                            aria-label="Hapus pilihan"
                             onClick={() => setSelectedIds([])}
-                            style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', color: 'var(--text-muted)' }}
+                            style={{ background: 'none', border: '1.5px solid var(--border-color)', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)', minWidth: '44px', minHeight: '44px', borderRadius: '6px', padding: '6px' }}
                             title="Clear Selection"
                         >
-                            <X size={14} />
+                            <X size={14} aria-hidden="true" />
                         </button>
                     </div>
 
@@ -121,10 +123,11 @@ export default function Index() {
                                     display: 'inline-flex',
                                     alignItems: 'center',
                                     gap: '6px',
-                                    backgroundColor: '#fff',
+                                    backgroundColor: 'var(--card-bg)',
                                     border: '1px solid var(--border-color)',
                                     borderRadius: '6px',
-                                    padding: '6px 12px',
+                                    padding: '10px 14px',
+                                    minHeight: '44px',
                                     fontSize: '11px',
                                     fontWeight: 600,
                                     color: 'var(--text-primary)',
@@ -142,10 +145,11 @@ export default function Index() {
                                 display: 'inline-flex',
                                 alignItems: 'center',
                                 gap: '6px',
-                                backgroundColor: '#fff',
+                                backgroundColor: 'var(--card-bg)',
                                 border: '1px solid var(--border-color)',
                                 borderRadius: '6px',
-                                padding: '6px 12px',
+                                padding: '10px 14px',
+                                    minHeight: '44px',
                                 fontSize: '11px',
                                 fontWeight: 600,
                                 color: 'var(--text-primary)',
@@ -165,7 +169,8 @@ export default function Index() {
                                 backgroundColor: 'var(--danger)',
                                 border: 'none',
                                 borderRadius: '6px',
-                                padding: '6px 12px',
+                                padding: '10px 14px',
+                                    minHeight: '44px',
                                 fontSize: '11px',
                                 fontWeight: 600,
                                 color: '#fff',
@@ -188,12 +193,13 @@ export default function Index() {
                     gap: '16px'
                 }}>
                     <div style={{ position: 'relative', flex: 1, maxWidth: isMobile ? '100%' : '320px' }}>
-                        <Search size={16} style={{ position: 'absolute', left: '12px', top: '10px', color: 'var(--text-muted)' }} />
+                        <Search size={16} aria-hidden="true" style={{ position: 'absolute', left: '12px', top: '10px', color: 'var(--text-secondary)' }} />
                         <input
+                            aria-label="Cari judul atau nomor dokumen"
                             value={search}
                             onChange={e => setSearch(e.target.value)}
                             placeholder="Cari judul atau nomor dokumen..."
-                            style={{ width: '100%', padding: '8px 12px 8px 36px', border: '1px solid var(--border-color)', borderRadius: '6px', fontSize: '11px', outline: 'none', boxSizing: 'border-box' }}
+                            style={{ width: '100%', padding: '10px 12px 10px 36px', minHeight: '44px', border: '1px solid var(--border-color)', borderRadius: '6px', fontSize: '13px', boxSizing: 'border-box' }}
                         />
                     </div>
 
@@ -203,7 +209,7 @@ export default function Index() {
                                     display: 'inline-flex',
                                     alignItems: 'center',
                                     gap: '6px',
-                                    backgroundColor: '#fff',
+                                    backgroundColor: 'var(--card-bg)',
                                     border: '1px solid var(--border-color)',
                                     borderRadius: '6px',
                                     padding: '8px 12px',
@@ -242,7 +248,7 @@ export default function Index() {
                                 display: 'inline-flex',
                                 alignItems: 'center',
                                 gap: '6px',
-                                backgroundColor: '#fff',
+                                backgroundColor: 'var(--card-bg)',
                                 border: '1px solid var(--border-color)',
                                 borderRadius: '6px',
                                 padding: '8px 12px',
@@ -264,7 +270,7 @@ export default function Index() {
                                 display: 'inline-flex',
                                 alignItems: 'center',
                                 gap: '8px',
-                                backgroundColor: '#fff',
+                                backgroundColor: 'var(--card-bg)',
                                 border: '1px solid var(--border-color)',
                                 borderRadius: '6px',
                                 padding: '8px 16px',
@@ -286,7 +292,7 @@ export default function Index() {
                                 display: 'inline-flex',
                                 alignItems: 'center',
                                 gap: '6px',
-                                backgroundColor: '#fff',
+                                backgroundColor: 'var(--card-bg)',
                                 border: '1px solid var(--border-color)',
                                 borderRadius: '6px',
                                 padding: '8px 12px',
@@ -317,7 +323,7 @@ export default function Index() {
                                 display: 'inline-flex',
                                 alignItems: 'center',
                                 gap: '6px',
-                                backgroundColor: '#fff',
+                                backgroundColor: 'var(--card-bg)',
                                 border: '1px solid var(--border-color)',
                                 borderRadius: '6px',
                                 padding: '8px 12px',

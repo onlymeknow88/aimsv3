@@ -25,15 +25,17 @@ return [
 
     /*
     | Document status codes
-    | 1 = Draft, 2 = Ongoing, 3 = Approved Level 1, 4 = Expired, 5 = Active, 6 = Obsolete
+    | 1 = Waiting Review, 2 = Draft, 3 = Rooting Approval, 4 = Revision, 5 = Active, 6 = Prepare Approval, 7 = Expired, 8 = Obsolete
     */
     'status_codes' => [
-        '1' => 'Draft',
-        '2' => 'Ongoing',
-        '3' => 'Approved L1',
-        '4' => 'Expired',
+        '1' => 'Waiting Review',
+        '2' => 'Draft',
+        '3' => 'Rooting Approval',
+        '4' => 'Revision',
         '5' => 'Active',
-        '6' => 'Obsolete',
+        '6' => 'Prepare Approval',
+        '7' => 'Expired',
+        '8' => 'Obsolete',
     ],
 
     /*

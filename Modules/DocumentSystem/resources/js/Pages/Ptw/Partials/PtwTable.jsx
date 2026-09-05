@@ -17,8 +17,7 @@ export default function PtwTable({
     limit = 10,
     onLimitChange,
     columnFilters,
-    onColumnFilterChange,
-}) {
+    onColumnFilterChange}) {
     const [selectedRowIds, setSelectedRowIds] = useState(new Set());
     const [deleteTargetId, setDeleteTargetId] = useState(null);
     const [deleting, setDeleting] = useState(false);
@@ -130,8 +129,7 @@ export default function PtwTable({
                     '1': { bg: 'rgba(99,102,241,0.1)',  color: '#6366F1', label: 'DRAFT'          },
                     '2': { bg: 'rgba(245,158,11,0.1)',  color: '#F59E0B', label: 'PENDING REVIEW'  },
                     '3': { bg: 'rgba(239,68,68,0.1)',   color: '#EF4444', label: 'REJECTED'        },
-                    '5': { bg: 'rgba(16,185,129,0.1)',  color: '#10B981', label: 'ACTIVE'          },
-                };
+                    '5': { bg: 'rgba(16,185,129,0.1)',  color: '#10B981', label: 'ACTIVE'          }};
                 const cfg = STATUS_MAP[String(info.row.original.status)] || STATUS_MAP['1'];
                 return (
                     <span style={{
@@ -227,8 +225,7 @@ export default function PtwTable({
     const table = useReactTable({
         data: documents,
         columns,
-        getCoreRowModel: getCoreRowModel(),
-    });
+        getCoreRowModel: getCoreRowModel()});
 
     const colsCount = columns.length;
 
@@ -254,15 +251,15 @@ export default function PtwTable({
                                                     onClick={(e) => e.stopPropagation()}
                                                     style={{
                                                         width: '100%',
-                                                        padding: '4px 8px',
-                                                        fontSize: '11px',
+                                                        padding: '6px 8px',
+                                                        minHeight: '44px',
+                                                        fontSize: '12px',
                                                         fontWeight: 'normal',
-                                                        border: '1px solid #e2e8f0',
-                                                        borderRadius: '4px',
-                                                        outline: 'none',
+                                                        border: '1px solid var(--border-color)',
+                                                        borderRadius: '6px',
                                                         boxSizing: 'border-box',
-                                                        color: '#334155',
-                                                        backgroundColor: '#fff'
+                                                        color: 'var(--text-primary)',
+                                                        backgroundColor: 'var(--card-bg)'
                                                     }}
                                                 />
                                             )}

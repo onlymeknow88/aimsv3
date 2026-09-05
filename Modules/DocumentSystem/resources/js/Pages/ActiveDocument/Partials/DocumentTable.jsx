@@ -39,43 +39,51 @@ export default function DocumentTable({
     const [mappingsOpt, setMappingsOpt] = useState([]);
 
     useEffect(() => {
-        axios.get('/api/document-system/companies').then(res => {
-            const list = (res.data?.result || []).map(item => ({
-                id: item.id,
-                name: item.company_name || item.document_code || String(item.id),
-            }));
-            setCompaniesOpt(list);
-        });
-        axios.get('/api/document-system/departments').then(res => {
-            const list = (res.data?.result || []).map(item => ({
-                id: item.id,
-                name: item.name || item.document_code || String(item.id),
-            }));
-            setDepartmentsOpt(list);
-        });
-        axios.get('/api/document-system/modules').then(res => {
-            const list = (res.data?.result || []).map(item => ({
-                id: item.id,
-                name: `${item.index || ''} ${item.name}`.trim(),
-            }));
-            setModulesOpt(list);
-        });
-        axios.get('/api/document-system/categories').then(res => {
-            const list = (res.data?.result || []).map(item => ({
-                id: item.id,
-                name: `${item.index || ''} ${item.name}`.trim(),
-                moduleId: item.module_id,
-            }));
-            setCategoriesOpt(list);
-        });
-        axios.get('/api/document-system/mappings').then(res => {
-            const list = (res.data?.result || []).map(item => ({
-                id: item.id,
-                name: `${item.index || ''} ${item.name}`.trim(),
-                categoryId: item.category_id,
-            }));
-            setMappingsOpt(list);
-        });
+        const controller = new AbortController();
+        const { signal } = controller;
+        const fetchOpts = { signal };
+
+        Promise.all([
+            axios.get('/api/document-system/companies', fetchOpts).then(res => {
+                const list = (res.data?.result || []).map(item => ({
+                    id: item.id,
+                    name: item.company_name || item.document_code || String(item.id),
+                }));
+                setCompaniesOpt(list);
+            }).catch(e => { if (!axios.isCancel(e)) console.error(e); }),
+            axios.get('/api/document-system/departments', fetchOpts).then(res => {
+                const list = (res.data?.result || []).map(item => ({
+                    id: item.id,
+                    name: item.name || item.document_code || String(item.id),
+                }));
+                setDepartmentsOpt(list);
+            }).catch(e => { if (!axios.isCancel(e)) console.error(e); }),
+            axios.get('/api/document-system/modules', fetchOpts).then(res => {
+                const list = (res.data?.result || []).map(item => ({
+                    id: item.id,
+                    name: `${item.index || ''} ${item.name}`.trim(),
+                }));
+                setModulesOpt(list);
+            }).catch(e => { if (!axios.isCancel(e)) console.error(e); }),
+            axios.get('/api/document-system/categories', fetchOpts).then(res => {
+                const list = (res.data?.result || []).map(item => ({
+                    id: item.id,
+                    name: `${item.index || ''} ${item.name}`.trim(),
+                    moduleId: item.module_id,
+                }));
+                setCategoriesOpt(list);
+            }).catch(e => { if (!axios.isCancel(e)) console.error(e); }),
+            axios.get('/api/document-system/mappings', fetchOpts).then(res => {
+                const list = (res.data?.result || []).map(item => ({
+                    id: item.id,
+                    name: `${item.index || ''} ${item.name}`.trim(),
+                    categoryId: item.category_id,
+                }));
+                setMappingsOpt(list);
+            }).catch(e => { if (!axios.isCancel(e)) console.error(e); }),
+        ]).catch(() => {});
+
+        return () => controller.abort();
     }, []);
 
     const handleColumnFilterChange = (columnId, val) => {
@@ -207,7 +215,7 @@ export default function DocumentTable({
             accessorKey: 'revision',
             id: 'revision',
             header: 'Revisi',
-            cell: info => <span style={{ color: 'var(--text-secondary)' }}>{(() => { const v = String(info.getValue() ?? '0'); return v.includes('.') ? v : v + '.0'; })()}</span>
+            cell: info => <span style={{ color: 'var(--text-secondary)' }}>{(() => { const v = info.getValue(); const n = parseFloat(String(v ?? '0')); return (isNaN(n) ? 0 : n).toFixed(1); })()}</span>
         },
         {
             accessorKey: 'status',
@@ -354,7 +362,7 @@ export default function DocumentTable({
     };
 
     return (<>
-        <div style={{ width: '100%', overflowX: 'auto', WebkitOverflowScrolling: 'touch', border: '1px solid var(--border-color)', borderRadius: '8px', marginBottom: '16px' }}>
+        <div role="region" aria-label="Daftar dokumen aktif" tabIndex={0} className="table-region" style={{ width: '100%', overflowX: 'auto', WebkitOverflowScrolling: 'touch', border: '1px solid var(--border-color)', borderRadius: '8px', marginBottom: '16px' }}>
             <Table style={{ fontSize: '12px', minWidth: '1100px' }}>
                 <TableHeader>
                     {table.getHeaderGroups().map(hg => (
@@ -362,7 +370,7 @@ export default function DocumentTable({
                             {hg.headers.map(h => {
                                 const isSearchable = ['company', 'department', 'head_id', 'module', 'category', 'document_level', 'mapping', 'document_number', 'title'].includes(h.id);
                                 return (
-                                    <TableHead key={h.id} style={{ fontWeight: 700, color: 'var(--text-secondary)', padding: '10px 12px', verticalAlign: 'top' }}>
+                                    <TableHead key={h.id} scope="col" style={{ fontWeight: 700, color: 'var(--text-secondary)', padding: '10px 12px', verticalAlign: 'top' }}>
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', minWidth: isSearchable ? '120px' : 'auto' }}>
                                             <span>{flexRender(h.column.columnDef.header, h.getContext())}</span>
                                             {isSearchable && onColumnFilterChange && (
@@ -397,15 +405,15 @@ export default function DocumentTable({
                                                         onClick={(e) => e.stopPropagation()}
                                                         style={{
                                                             width: '100%',
-                                                            padding: '4px 8px',
-                                                            fontSize: '11px',
+                                                            padding: '6px 8px',
+                                                            minHeight: '44px',
+                                                            fontSize: '12px',
                                                             fontWeight: 'normal',
-                                                            border: '1px solid #e2e8f0',
-                                                            borderRadius: '4px',
-                                                            outline: 'none',
+                                                            border: '1px solid var(--border-color)',
+                                                            borderRadius: '6px',
                                                             boxSizing: 'border-box',
-                                                            color: '#334155',
-                                                            backgroundColor: '#fff'
+                                                            color: 'var(--text-primary)',
+                                                            backgroundColor: 'var(--card-bg)'
                                                         }}
                                                     />
                                                 )
@@ -420,7 +428,7 @@ export default function DocumentTable({
                 <TableBody>
                     {loading ? (
                         <TableRow>
-                            <TableCell colSpan={visibleColsCount} style={{ textAlign: 'center', padding: '40px 24px', color: 'var(--text-secondary)' }}>
+                            <TableCell colSpan={visibleColsCount} style={{ textAlign: 'center', padding: '40px 24px', color: 'var(--text-secondary)' }} aria-live="polite">
                                 Memuat data dokumen keselamatan...
                             </TableCell>
                         </TableRow>
@@ -436,7 +444,7 @@ export default function DocumentTable({
                         ))
                     ) : (
                         <TableRow>
-                            <TableCell colSpan={visibleColsCount} style={{ padding: '32px', textAlign: 'center', color: 'var(--text-muted)' }}>
+                            <TableCell colSpan={visibleColsCount} style={{ padding: '32px', textAlign: 'center', color: 'var(--text-secondary)' }} role="status">
                                 Belum ada dokumen aktif.
                             </TableCell>
                         </TableRow>
@@ -504,7 +512,6 @@ export default function DocumentTable({
                                     fontSize: "12px",
                                     color: "#475569",
                                     cursor: "pointer",
-                                    outline: "none",
                                 }}
                             >
                                 <option value={10}>10</option>
@@ -553,6 +560,8 @@ export default function DocumentTable({
                                             p === pagination.current_page
                                         }
                                         onClick={() => onPageChange(p)}
+                                        aria-label={`Halaman ${p}`}
+                                        aria-current={p === pagination.current_page ? 'page' : undefined}
                                     >
                                         {p}
                                     </PaginationLink>

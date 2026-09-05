@@ -4,6 +4,7 @@ import DocumentSystemLayout from '@DS/Layouts/DocumentSystemLayout';
 import { FileText, Clock, AlertCircle, Trash2, ShieldAlert, Activity, BarChart3 } from 'lucide-react';
 import { Bar } from 'react-chartjs-2';
 import axios from 'axios';
+import ChartDataLabels from 'chartjs-plugin-datalabels';
 import {
     Chart as ChartJS,
     CategoryScale,
@@ -25,7 +26,7 @@ ChartJS.register(
 );
 
 export default function Index() {
-    const [data, setData] = useState({ stats: {}, departments: [] });
+    const [data, setData] = useState({ stats: {}, departments: [], doc_levels: [], dept_module_chart: [] });
     const [loading, setLoading] = useState(true);
     const [isMobile, setIsMobile] = useState(false);
 
@@ -52,7 +53,106 @@ export default function Index() {
     }, []);
 
     const stats = data.stats || {};
-    const departments = data.departments || [];
+    const docLevels = data.doc_levels || [];
+    const deptModuleChart = data.dept_module_chart || [];
+
+    // Bar chart per departemen: X = document_level (SOP, WIN, FORM, TS, MEMO)
+    const buildDeptChartData = (dept) => ({
+        labels: docLevels,
+        datasets: [
+            {
+                label: 'Total',
+                data: docLevels.map(l => dept.levels?.[l]?.total ?? 0),
+                backgroundColor: '#153B73',
+                borderRadius: 3,
+                barThickness: isMobile ? 8 : 14,
+                datalabels: {
+                    anchor: 'end',
+                    align: 'end',
+                    formatter: (v) => v > 0 ? v : '',
+                    color: '#153B73',
+                    font: { size: 8, family: 'Inter', weight: 'bold' },
+                },
+            },
+            {
+                label: 'Update',
+                data: docLevels.map(l => dept.levels?.[l]?.update ?? 0),
+                backgroundColor: '#F59E0B',
+                borderRadius: 3,
+                barThickness: isMobile ? 8 : 14,
+                datalabels: {
+                    anchor: 'end',
+                    align: 'end',
+                    formatter: (v) => v > 0 ? v : '',
+                    color: '#F59E0B',
+                    font: { size: 8, family: 'Inter', weight: 'bold' },
+                },
+            },
+            {
+                label: 'Tidak Update',
+                data: docLevels.map(l => dept.levels?.[l]?.tidak_update ?? 0),
+                backgroundColor: '#2FBF71',
+                borderRadius: 3,
+                barThickness: isMobile ? 8 : 14,
+                datalabels: {
+                    anchor: 'end',
+                    align: 'end',
+                    formatter: (v) => v > 0 ? v : '',
+                    color: '#2FBF71',
+                    font: { size: 8, family: 'Inter', weight: 'bold' },
+                },
+            },
+        ],
+    });
+
+    const deptChartOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        layout: { padding: { top: 16 } },
+        plugins: {
+            datalabels: {
+                display: false, // default off, tiap dataset override sendiri
+            },
+            legend: {
+                display: true,
+                position: 'bottom',
+                labels: {
+                    boxWidth: 8,
+                    font: { size: 9, family: 'Inter' },
+                    color: '#6B7280',
+                }
+            },
+            tooltip: {
+                backgroundColor: '#10233F',
+                titleFont: { size: 10, family: 'Inter' },
+                bodyFont: { size: 10, family: 'Inter' },
+                padding: 8,
+                cornerRadius: 6,
+            }
+        },
+        scales: {
+            x: {
+                grid: { display: false },
+                ticks: {
+                    font: { size: 9, family: 'Inter' },
+                    color: '#6B7280',
+                    maxRotation: 30,
+                    minRotation: 0,
+                }
+            },
+            y: {
+                beginAtZero: true,
+                border: { dash: [4, 4] },
+                grid: { color: '#E7ECF3' },
+                ticks: {
+                    stepSize: 1,
+                    font: { size: 9, family: 'Inter' },
+                    color: '#6B7280',
+                }
+            },
+        }
+    };
 
     const statCards = [
         { title: 'Active Documents', count: stats.active_docs ?? 0, icon: FileText, color: 'var(--success)', bg: 'rgba(47, 191, 113, 0.05)', href: '/document-system/active' },
@@ -62,39 +162,6 @@ export default function Index() {
         { title: 'Active JSA', count: stats.jsa_active ?? 0, icon: ShieldAlert, color: '#8B5CF6', bg: 'rgba(139, 92, 246, 0.05)', href: '/document-system/jsa' },
         { title: 'Active PTW', count: stats.ptw_active ?? 0, icon: Activity, color: '#06B6D4', bg: 'rgba(6, 182, 212, 0.05)', href: '/document-system/ptw' },
     ];
-
-    const chartOptions = {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-            legend: {
-                display: true,
-                position: 'bottom',
-                labels: {
-                    boxWidth: 8,
-                    font: { size: 9, family: 'Inter' }
-                }
-            },
-            tooltip: {
-                backgroundColor: '#10233F',
-                titleFont: { size: 10, family: 'Inter' },
-                bodyFont: { size: 10, family: 'Inter' },
-                padding: 8,
-                cornerRadius: 6
-            }
-        },
-        scales: {
-            x: {
-                grid: { display: false },
-                ticks: { font: { size: 8, family: 'Inter' }, color: 'var(--text-secondary)' }
-            },
-            y: {
-                border: { dash: [4, 4] },
-                grid: { color: '#E7ECF3' },
-                ticks: { font: { size: 8, family: 'Inter' }, color: 'var(--text-secondary)' }
-            }
-        }
-    };
 
     return (
         <DocumentSystemLayout>
@@ -106,7 +173,7 @@ export default function Index() {
             </div>
 
             {loading ? (
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '300px', color: 'var(--text-secondary)' }}>
+                <div role="status" aria-live="polite" aria-label="Memuat dashboard" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '300px', color: 'var(--text-secondary)' }}>
                     Memuat data dashboard...
                 </div>
             ) : (
@@ -123,7 +190,8 @@ export default function Index() {
                             return (
                                 <a 
                                     key={idx} 
-                                    href={card.href} 
+                                    href={card.href}
+                                    aria-label={`${card.title}: ${card.count} dokumen`}
                                     style={{
                                         textDecoration: 'none',
                                         backgroundColor: 'var(--card-bg)',
@@ -134,7 +202,7 @@ export default function Index() {
                                         alignItems: 'center',
                                         justifyContent: 'space-between',
                                         boxShadow: 'var(--shadow-sm)',
-                                        transition: 'all 0.2s ease',
+                                        transition: 'transform 0.2s ease, box-shadow 0.2s ease',
                                     }}
                                     className="hover-lift"
                                 >
@@ -142,7 +210,7 @@ export default function Index() {
                                         <span style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{card.title}</span>
                                         <h3 style={{ fontSize: '32px', fontWeight: 800, color: 'var(--text-primary)', margin: '8px 0 0 0' }}>{card.count}</h3>
                                     </div>
-                                    <div style={{ padding: '12px', borderRadius: '8px', backgroundColor: card.bg, color: card.color, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    <div aria-hidden="true" style={{ padding: '12px', borderRadius: '8px', backgroundColor: card.bg, color: card.color, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                         <IconComponent size={28} />
                                     </div>
                                 </a>
@@ -150,67 +218,38 @@ export default function Index() {
                         })}
                     </div>
 
-                    {/* Department Charts Section */}
+                    {/* Chart: Distribusi Dokumen per Departemen × Modul */}
                     <div style={{ marginBottom: '32px' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
                             <BarChart3 size={18} style={{ color: 'var(--primary)' }} />
-                            <h2 style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>Statistik Dokumen Departemen</h2>
+                            <h2 style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>Distribusi Dokumen per Departemen &amp; Modul</h2>
                         </div>
 
-                        {departments.length > 0 ? (
+                        {deptModuleChart.length > 0 && docLevels.length > 0 ? (
                             <div style={{
                                 display: 'grid',
                                 gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(320px, 1fr))',
                                 gap: '20px'
                             }}>
-                                {departments.map((dept, idx) => {
-                                    const chartData = {
-                                        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agt', 'Sep', 'Okt', 'Nov', 'Des'],
-                                        datasets: [
-                                            {
-                                                label: 'Total Document',
-                                                data: dept.total,
-                                                backgroundColor: '#153B73',
-                                                borderRadius: 3,
-                                                barThickness: 6
-                                            },
-                                            {
-                                                label: 'Document Active',
-                                                data: dept.active,
-                                                backgroundColor: '#2FBF71',
-                                                borderRadius: 3,
-                                                barThickness: 6
-                                            },
-                                            {
-                                                label: 'Document Expired',
-                                                data: dept.expired,
-                                                backgroundColor: '#F44336',
-                                                borderRadius: 3,
-                                                barThickness: 6
-                                            }
-                                        ]
-                                    };
-
-                                    return (
-                                        <div key={idx} style={{
-                                            backgroundColor: 'var(--card-bg)',
-                                            border: '1px solid var(--border-color)',
-                                            borderRadius: '12px',
-                                            padding: '16px',
-                                            boxShadow: 'var(--shadow-sm)',
-                                            display: 'flex',
-                                            flexDirection: 'column',
-                                            height: '280px'
-                                        }}>
-                                            <h4 style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '12px', borderBottom: '1px solid var(--border-color)', paddingBottom: '6px' }}>
-                                                {dept.name} {dept.company_code ? `- ${dept.company_code}` : ''}
-                                            </h4>
-                                            <div style={{ flex: 1, position: 'relative' }}>
-                                                <Bar data={chartData} options={chartOptions} />
-                                            </div>
+                                {deptModuleChart.map((dept, idx) => (
+                                    <div key={idx} style={{
+                                        backgroundColor: 'var(--card-bg)',
+                                        border: '1px solid var(--border-color)',
+                                        borderRadius: '12px',
+                                        padding: '16px',
+                                        boxShadow: 'var(--shadow-sm)',
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        height: '280px'
+                                    }}>
+                                        <h4 style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '12px', borderBottom: '1px solid var(--border-color)', paddingBottom: '6px', margin: '0 0 12px 0' }}>
+                                            {dept.department}{dept.company_code ? ` - ${dept.company_code}` : ''}
+                                        </h4>
+                                        <div style={{ flex: 1, position: 'relative' }}>
+                                            <Bar data={buildDeptChartData(dept)} options={deptChartOptions} plugins={[ChartDataLabels]} />
                                         </div>
-                                    );
-                                })}
+                                    </div>
+                                ))}
                             </div>
                         ) : (
                             <div style={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '24px', textAlign: 'center', color: 'var(--text-secondary)', fontSize: '13px' }}>

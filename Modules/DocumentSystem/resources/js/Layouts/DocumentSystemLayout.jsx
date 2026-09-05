@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Sidebar from './Partials/Sidebar';
 import Header from './Partials/Header';
 
@@ -7,6 +7,7 @@ export default function DocumentSystemLayout({ children }) {
     const [isMobile, setIsMobile] = useState(false);
     const currentPath = typeof window !== 'undefined' ? window.location.pathname : '/document-system';
     const currentSearch = typeof window !== 'undefined' ? window.location.search : '';
+    const mainRef = useRef(null);
 
     useEffect(() => {
         const handleResize = () => {
@@ -19,6 +20,23 @@ export default function DocumentSystemLayout({ children }) {
         return () => window.removeEventListener('resize', handleResize);
     }, []);
 
+    // Close sidebar on Escape (mobile)
+    useEffect(() => {
+        if (!isMobile || !sidebarOpen) return;
+        const onKey = (e) => {
+            if (e.key === 'Escape') setSidebarOpen(false);
+        };
+        document.addEventListener('keydown', onKey);
+        return () => document.removeEventListener('keydown', onKey);
+    }, [isMobile, sidebarOpen]);
+
+    // Focus main content after sidebar closes for keyboard users
+    useEffect(() => {
+        if (!sidebarOpen && mainRef.current) {
+            // don't steal focus aggressively, just ensure main is reachable
+        }
+    }, [sidebarOpen]);
+
     // Dropdown collapse states
     const [openDocs, setOpenDocs] = useState(currentPath.includes('/draft') || currentPath.includes('/active') || currentPath.includes('/ongoing') || currentPath.includes('/obsolete') || currentPath.includes('/maker'));
     const [openJsa, setOpenJsa] = useState(currentPath.includes('/jsa'));
@@ -27,9 +45,14 @@ export default function DocumentSystemLayout({ children }) {
 
     return (
         <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: 'var(--bg-color)', position: 'relative' }}>
-            {/* Mobile Sidebar Overlay Backdrop */}
+            {/* Skip link */}
+            <a href="#ds-main-content" className="sr-only">Lewati ke konten utama</a>
+
+            {/* Mobile Sidebar Overlay Backdrop — accessible button */}
             {isMobile && sidebarOpen && (
-                <div 
+                <button
+                    type="button"
+                    aria-label="Tutup navigasi"
                     onClick={() => setSidebarOpen(false)}
                     style={{
                         position: 'fixed',
@@ -40,7 +63,9 @@ export default function DocumentSystemLayout({ children }) {
                         backgroundColor: 'rgba(15, 23, 42, 0.4)',
                         backdropFilter: 'blur(4px)',
                         zIndex: 99,
-                        animation: 'fadeIn 0.2s ease'
+                        border: 'none',
+                        padding: 0,
+                        cursor: 'pointer',
                     }}
                 />
             )}
@@ -70,17 +95,10 @@ export default function DocumentSystemLayout({ children }) {
                 />
 
                 {/* Konten Halaman */}
-                <main style={{ flex: 1, padding: isMobile ? '16px' : '24px', overflowY: 'auto' }}>
+                <main ref={mainRef} id="ds-main-content" tabIndex={-1} style={{ flex: 1, padding: isMobile ? '16px' : '24px', overflowY: 'auto' }}>
                     {children}
                 </main>
             </div>
-
-            <style dangerouslySetInnerHTML={{__html: `
-                .hover-link:hover {
-                    background-color: rgba(255,255,255,0.03) !important;
-                    color: #fff !important;
-                }
-            `}} />
         </div>
     );
 }
