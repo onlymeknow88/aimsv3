@@ -471,10 +471,11 @@ class MasterDataApiController extends Controller
         $headUser = $department->head;
 
         // Find or create AreaManager record for the department head user
-        $mgr = AreaManager::where('user_id', $headUser->id)->first();
+        // NOTE: $headUser adalah model Employee; kolom user_id-lah yang merujuk ke users.id
+        $mgr = AreaManager::where('user_id', $headUser->user_id)->first();
         if (!$mgr) {
             $mgr = AreaManager::create([
-                'user_id' => $headUser->id,
+                'user_id' => $headUser->user_id,
             ]);
         }
 
@@ -482,7 +483,7 @@ class MasterDataApiController extends Controller
             [
                 'id'    => $mgr->id,
                 'name'  => $headUser->name ?? 'Unknown',
-                'email' => $headUser->email ?? '',
+                'email' => $headUser->user->email ?? '',
             ]
         ];
 
@@ -495,9 +496,13 @@ class MasterDataApiController extends Controller
     public function getEmployees(Request $request)
     {
         $companyId = $request->query('company_id');
+        $departmentId = $request->query('department_id');
         $query = \App\Models\Employee::with('user');
         if ($companyId) {
             $query->where('company_id', $companyId);
+        }
+        if ($departmentId) {
+            $query->where('department_id', $departmentId);
         }
         $employees = $query->get()->map(function ($emp) {
             return [

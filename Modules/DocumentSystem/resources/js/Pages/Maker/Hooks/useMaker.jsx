@@ -11,6 +11,7 @@ export default function useMaker(document = null) {
     const [companies, setCompanies] = useState([]);
     const [departments, setDepartments] = useState([]);
     const [pjs, setPjs] = useState([]);
+    const [employees, setEmployees] = useState([]);
     const [modules, setModules] = useState([]);
     const [categories, setCategories] = useState([]);
     const [mappings, setMappings] = useState([]);
@@ -65,6 +66,9 @@ export default function useMaker(document = null) {
                 axios.get(`/api/document-system/pjs-by-department?department_id=${document.department_id}`).then(res => {
                     setPjs(res.data?.result || []);
                 });
+                axios.get(`/api/document-system/employees?department_id=${document.department_id}`).then(res => {
+                    setEmployees(res.data?.result || []);
+                });
             }
             if (document.module_id) {
                 axios.get(`/api/document-system/categories?module_id=${document.module_id}`).then(res => {
@@ -95,8 +99,12 @@ export default function useMaker(document = null) {
             axios.get(`/api/document-system/pjs-by-department?department_id=${val}`).then(res => {
                 setPjs(res.data?.result || []);
             });
+            axios.get(`/api/document-system/employees?department_id=${val}`).then(res => {
+                setEmployees(res.data?.result || []);
+            });
         } else {
             setPjs([]);
+            setEmployees([]);
         }
     };
 
@@ -233,7 +241,7 @@ export default function useMaker(document = null) {
 
     return {
         loading,
-        companies, departments, pjs, modules, categories, mappings, activeSops,
+        companies, departments, pjs, employees, modules, categories, mappings, activeSops,
         company, setCompany: changeCompany,
         department, setDepartment: changeDepartment,
         pj, setPj,

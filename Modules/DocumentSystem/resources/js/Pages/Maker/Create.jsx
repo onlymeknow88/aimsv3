@@ -29,7 +29,7 @@ export default function Create({ document = null }) {
 
     const {
         loading,
-        companies, departments, pjs, modules, categories, mappings, activeSops,
+        companies, departments, pjs, employees, modules, categories, mappings, activeSops,
         company, setCompany,
         department, setDepartment,
         pj, setPj,
@@ -266,7 +266,7 @@ export default function Create({ document = null }) {
                         </h3>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                             <div>
-                                <SearchableSelect options={pjs} value={invitedEmails} onChange={setInvitedEmails} placeholder="Select Employee" isMulti={true} />
+                                <SearchableSelect options={employees} value={invitedEmails} onChange={setInvitedEmails} placeholder="Select Employee" isMulti={true} />
                             </div>
                         </div>
                     </div>
