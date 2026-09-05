@@ -7,7 +7,7 @@ import LoginLogTable from './Partials/LoginLogTable';
 import TablePagination from '@/Components/TablePagination';
 
 const cardStyle = {
-    backgroundColor: '#fff',
+    backgroundColor: 'var(--card-bg)',
     border: '1px solid #e2e8f0',
     borderRadius: '12px',
     padding: '24px',
@@ -21,7 +21,7 @@ const inputStyle = {
     fontSize: '13px',
     color: '#0f172a',
     outline: 'none',
-    backgroundColor: '#fff',
+    backgroundColor: 'var(--card-bg)',
     height: '40px',
     boxSizing: 'border-box',
 };
@@ -69,7 +69,7 @@ export default function Index() {
                 {/* Title Banner */}
                 <div>
                     <h1 style={{ fontSize: '20px', fontWeight: 800, color: '#0f172a', margin: 0 }}>Audit Trail Login Log</h1>
-                    <p style={{ color: '#64748b', fontSize: '12px', marginTop: '4px' }}>
+                    <p style={{ color: 'var(--text-secondary)', fontSize: '12px', marginTop: '4px' }}>
                         Pencatatan riwayat autentikasi login, logout, dan aktivitas percobaan akses administrator backoffice.
                     </p>
                 </div>
@@ -84,7 +84,7 @@ export default function Index() {
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'center', flex: '1' }}>
                             {/* Search Input */}
                             <div style={{ position: 'relative', minWidth: '220px' }}>
-                                <Search size={14} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+                                <Search size={14} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-secondary)' }} />
                                 <input
                                     value={search}
                                     onChange={e => setSearch(e.target.value)}
@@ -114,7 +114,7 @@ export default function Index() {
                                     style={{ ...inputStyle, width: '140px' }}
                                     placeholder="Mulai"
                                 />
-                                <span style={{ fontSize: '12px', color: '#94a3b8' }}>s/d</span>
+                                <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>s/d</span>
                                 <input
                                     type="date"
                                     value={dateTo}
@@ -137,7 +137,7 @@ export default function Index() {
                                         border: '1px solid #cbd5e1',
                                         borderRadius: '8px',
                                         backgroundColor: '#f8fafc',
-                                        color: '#64748b',
+                                        color: 'var(--text-secondary)',
                                         fontSize: '13px',
                                         fontWeight: 600,
                                         cursor: 'pointer',
@@ -160,7 +160,7 @@ export default function Index() {
                                     padding: '0 16px',
                                     border: '1px solid #cbd5e1',
                                     borderRadius: '8px',
-                                    backgroundColor: '#fff',
+                                    backgroundColor: 'var(--card-bg)',
                                     color: '#334155',
                                     fontSize: '13px',
                                     fontWeight: 600,

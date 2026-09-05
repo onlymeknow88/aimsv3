@@ -25,7 +25,7 @@ export default function RoleModal({
 
     return (
         <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(15,23,42,0.65)', backdropFilter: 'blur(5px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }}>
-            <div style={{ backgroundColor: '#fff', borderRadius: '16px', width: '100%', maxWidth: '460px', overflow: 'hidden', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.35)' }}>
+            <div style={{ backgroundColor: 'var(--card-bg)', borderRadius: '16px', width: '100%', maxWidth: '460px', overflow: 'hidden', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.35)' }}>
                 {/* Modal Header */}
                 <div style={{ padding: '20px 24px', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -36,7 +36,7 @@ export default function RoleModal({
                     </div>
                     <button
                         onClick={onClose}
-                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', display: 'flex', alignItems: 'center', padding: '4px', borderRadius: '6px' }}
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', padding: '4px', borderRadius: '6px' }}
                         onMouseEnter={e => e.currentTarget.style.backgroundColor = '#f1f5f9'}
                         onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}
                     >
@@ -65,7 +65,7 @@ export default function RoleModal({
                         <div>
                             <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '6px' }}>
                                 Slug Role <span style={{ color: '#ef4444' }}>*</span>
-                                <span style={{ fontWeight: 400, color: '#94a3b8', marginLeft: '6px' }}>(auto dari nama)</span>
+                                <span style={{ fontWeight: 400, color: 'var(--text-secondary)', marginLeft: '6px' }}>(auto dari nama)</span>
                             </label>
                             <input
                                 type="text"
@@ -85,7 +85,7 @@ export default function RoleModal({
                         <button
                             type="button"
                             onClick={onClose}
-                            style={{ padding: '9px 18px', borderRadius: '8px', border: '1.5px solid #e2e8f0', backgroundColor: '#fff', color: '#475569', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}
+                            style={{ padding: '9px 18px', borderRadius: '8px', border: '1.5px solid #e2e8f0', backgroundColor: 'var(--card-bg)', color: '#475569', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}
                         >
                             Batal
                         </button>

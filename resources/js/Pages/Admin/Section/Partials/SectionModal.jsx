@@ -43,7 +43,7 @@ function MultiCheckboxList({ label, items = [], value = [], onChange, onEditItem
                         style={{
                             border: "1px solid #dbeafe",
                             backgroundColor: allFilteredSelected ? "#f8fafc" : "#eff6ff",
-                            color: allFilteredSelected ? "#94a3b8" : "#1d4ed8",
+                            color: allFilteredSelected ? "var(--text-secondary)" : "#1d4ed8",
                             borderRadius: "7px",
                             padding: "5px 8px",
                             fontSize: "11px",
@@ -83,7 +83,7 @@ function MultiCheckboxList({ label, items = [], value = [], onChange, onEditItem
                             left: "9px",
                             top: "50%",
                             transform: "translateY(-50%)",
-                            color: "#94a3b8",
+                            color: "var(--text-secondary)",
                             pointerEvents: "none",
                         }}
                     />
@@ -120,7 +120,7 @@ function MultiCheckboxList({ label, items = [], value = [], onChange, onEditItem
                 }}
             >
                 {filteredItems.length === 0 ? (
-                    <div style={{ padding: "12px", color: "#94a3b8", fontSize: "13px" }}>
+                    <div style={{ padding: "12px", color: "var(--text-secondary)", fontSize: "13px" }}>
                         {searchQuery.trim() ? `Tidak ada hasil untuk "${searchQuery}"` : emptyText}
                     </div>
                 ) : (
@@ -396,7 +396,7 @@ export default function SectionModal({
                             background: "none",
                             border: "none",
                             cursor: "pointer",
-                            color: "#94a3b8",
+                            color: "var(--text-secondary)",
                             display: "flex",
                             alignItems: "center",
                             padding: "4px",
@@ -522,7 +522,7 @@ export default function SectionModal({
                                         )}
                                     </div>
                                 </div>
-                                <p style={{ fontSize: "11px", color: "#64748b", margin: "4px 0 10px 0", lineHeight: 1.4 }}>
+                                <p style={{ fontSize: "11px", color: "var(--text-secondary)", margin: "4px 0 10px 0", lineHeight: 1.4 }}>
                                     💡 <i>Cukup hilangkan centang untuk melepas lokasi dari Section ini. Tombol merah (tong sampah) digunakan untuk menghapus lokasi permanen dari database (hanya bisa jika tidak sedang digunakan).</i>
                                 </p>
                                 <MultiCheckboxList

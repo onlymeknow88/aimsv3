@@ -184,7 +184,7 @@ export default function DepartmentTable({
                                 style={{
                                     textAlign: "center",
                                     padding: "48px",
-                                    color: "#94a3b8",
+                                    color: "var(--text-secondary)",
                                 }}
                             >
                                 Memuat data department...
@@ -219,7 +219,7 @@ export default function DepartmentTable({
                                 style={{
                                     textAlign: "center",
                                     padding: "48px",
-                                    color: "#94a3b8",
+                                    color: "var(--text-secondary)",
                                     fontSize: "14px",
                                 }}
                             >
@@ -241,7 +241,7 @@ export default function DepartmentTable({
                         borderTop: "1px solid #f1f5f9",
                         backgroundColor: "#fafafa",
                         fontSize: "13px",
-                        color: "#64748b",
+                        color: "var(--text-secondary)",
                         flexWrap: "wrap",
                         gap: "12px",
                     }}
@@ -271,7 +271,7 @@ export default function DepartmentTable({
                                 <span
                                     style={{
                                         fontSize: "12px",
-                                        color: "#64748b",
+                                        color: "var(--text-secondary)",
                                     }}
                                 >
                                     Baris per halaman:

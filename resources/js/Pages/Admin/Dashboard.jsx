@@ -17,19 +17,19 @@ export default function Dashboard({ stats = {} }) {
             <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
                 <div style={{ marginBottom: '24px' }}>
                     <h1 style={{ fontSize: '24px', fontWeight: 800, color: '#1e293b', margin: 0 }}>Backoffice Control Panel</h1>
-                    <p style={{ color: '#64748b', fontSize: '13px', marginTop: '4px' }}>Ringkasan statistik data master sistem administrasi terintegrasi AIMS.</p>
+                    <p style={{ color: 'var(--text-secondary)', fontSize: '13px', marginTop: '4px' }}>Ringkasan statistik data master sistem administrasi terintegrasi AIMS.</p>
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px' }}>
                     {statCards.map((c, i) => {
                         const Icon = c.icon;
                         return (
-                            <div key={i} style={{ backgroundColor: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '24px', display: 'flex', alignItems: 'center', gap: '20px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+                            <div key={i} style={{ backgroundColor: 'var(--card-bg)', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '24px', display: 'flex', alignItems: 'center', gap: '20px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
                                 <div style={{ width: '48px', height: '48px', borderRadius: '50%', backgroundColor: c.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', color: c.color }}>
                                     <Icon size={24} />
                                 </div>
                                 <div>
-                                    <span style={{ fontSize: '12px', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', display: 'block', marginBottom: '4px' }}>{c.name}</span>
+                                    <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', display: 'block', marginBottom: '4px' }}>{c.name}</span>
                                     <h3 style={{ fontSize: '24px', fontWeight: 800, color: '#0f172a', margin: 0 }}>{c.value}</h3>
                                 </div>
                             </div>

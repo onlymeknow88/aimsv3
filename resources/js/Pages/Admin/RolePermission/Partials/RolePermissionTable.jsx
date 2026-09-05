@@ -54,12 +54,12 @@ export default function RolePermissionTable({
 
     if (menus.length === 0 || roles.length === 0) {
         return (
-            <div style={{ padding: '60px 24px', textAlign: 'center', color: '#94a3b8' }}>
+            <div style={{ padding: '60px 24px', textAlign: 'center', color: 'var(--text-secondary)' }}>
                 <AlertCircle size={32} style={{ marginBottom: '12px', opacity: 0.5 }} />
-                <p style={{ fontSize: '14px', fontWeight: 600, color: '#64748b', marginBottom: '4px' }}>
+                <p style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '4px' }}>
                     {menus.length === 0 ? 'Belum ada menu di modul ini.' : 'Belum ada role di modul ini.'}
                 </p>
-                <p style={{ fontSize: '12px', color: '#94a3b8' }}>
+                <p style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
                     Tambahkan menu melalui halaman AIMS Menu atau tambah role melalui tombol di atas.
                 </p>
             </div>
@@ -103,7 +103,7 @@ export default function RolePermissionTable({
                                 <div style={{ fontSize: '13px', fontWeight: 800, color: '#0f172a', padding: '0 48px' }}>
                                     {role.name}
                                 </div>
-                                <code style={{ fontSize: '10px', color: '#94a3b8', fontWeight: 400 }}>
+                                <code style={{ fontSize: '10px', color: 'var(--text-secondary)', fontWeight: 400 }}>
                                     {role.slug}
                                 </code>
                                 <div style={{ marginTop: '6px' }}>
@@ -207,7 +207,7 @@ export default function RolePermissionTable({
                                         >
                                             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
                                                 <Icon size={11} style={{ color: col.color }} />
-                                                <span style={{ fontSize: '9px', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                                                <span style={{ fontSize: '9px', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                                                     {col.label}
                                                 </span>
                                             </div>
@@ -232,7 +232,7 @@ export default function RolePermissionTable({
                                             <div style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#153B73', flexShrink: 0 }} />
                                             <span style={{ fontSize: '13px', fontWeight: 700, color: '#0f172a' }}>{menu.name}</span>
                                         </div>
-                                        <code style={{ fontSize: '10px', color: '#94a3b8', marginLeft: '14px' }}>{menu.slug}</code>
+                                        <code style={{ fontSize: '10px', color: 'var(--text-secondary)', marginLeft: '14px' }}>{menu.slug}</code>
                                     </td>
 
                                     {roles.map(role => (

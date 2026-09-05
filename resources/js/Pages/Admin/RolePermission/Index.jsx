@@ -72,7 +72,7 @@ export default function Index({ selectedModuleId }) {
                                 Role & Permission Matrix
                             </h1>
                         </div>
-                        <p style={{ color: '#64748b', fontSize: '13px', marginLeft: '52px' }}>
+                        <p style={{ color: 'var(--text-secondary)', fontSize: '13px', marginLeft: '52px' }}>
                             Kelola izin dan hak akses per role untuk setiap modul AIMS.
                         </p>
                     </div>
@@ -98,7 +98,7 @@ export default function Index({ selectedModuleId }) {
 
                 {/* ── Module Tab Selector ──────────────────────────────── */}
                 <div style={{ marginBottom: '24px' }}>
-                    <p style={{ fontSize: '11px', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '10px' }}>
+                    <p style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '10px' }}>
                         Pilih Modul
                     </p>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
@@ -117,13 +117,13 @@ export default function Index({ selectedModuleId }) {
                                         background: active
                                             ? 'linear-gradient(135deg, #1d4ed8, #153B73)'
                                             : '#fff',
-                                        color: active ? '#fff' : '#64748b',
+                                        color: active ? '#fff' : 'var(--text-secondary)',
                                         cursor: 'pointer',
                                         boxShadow: active ? '0 3px 10px rgba(21,59,115,0.25)' : 'none',
                                         transition: 'all 0.2s',
                                     }}
                                     onMouseEnter={e => { if (!active) { e.currentTarget.style.borderColor = '#153B73'; e.currentTarget.style.color = '#153B73'; } }}
-                                    onMouseLeave={e => { if (!active) { e.currentTarget.style.borderColor = '#e2e8f0'; e.currentTarget.style.color = '#64748b'; } }}
+                                    onMouseLeave={e => { if (!active) { e.currentTarget.style.borderColor = '#e2e8f0'; e.currentTarget.style.color = 'var(--text-secondary)'; } }}
                                 >
                                     {m.name}
                                 </button>
@@ -133,7 +133,7 @@ export default function Index({ selectedModuleId }) {
                 </div>
 
                 {/* ── Permission Matrix Card ────────────────────────────── */}
-                <div style={{ backgroundColor: '#fff', borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 4px 20px rgba(0,0,0,0.04)', overflow: 'hidden' }}>
+                <div style={{ backgroundColor: 'var(--card-bg)', borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 4px 20px rgba(0,0,0,0.04)', overflow: 'hidden' }}>
 
                     {/* Card Header */}
                     <div style={{ padding: '16px 24px', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#fafafa', flexWrap: 'wrap', gap: '12px' }}>
@@ -176,7 +176,7 @@ export default function Index({ selectedModuleId }) {
                                     display: 'flex', alignItems: 'center', gap: '6px',
                                     padding: '7px 14px', borderRadius: '8px',
                                     border: '1.5px solid #e2e8f0',
-                                    backgroundColor: '#fff',
+                                    backgroundColor: 'var(--card-bg)',
                                     color: hasChanges ? '#475569' : '#cbd5e1',
                                     fontSize: '12px', fontWeight: 600,
                                     cursor: hasChanges && !updating ? 'pointer' : 'not-allowed',
@@ -197,7 +197,7 @@ export default function Index({ selectedModuleId }) {
                                     background: hasChanges && !updating
                                         ? 'linear-gradient(135deg, #1d4ed8, #153B73)'
                                         : '#e2e8f0',
-                                    color: hasChanges && !updating ? '#fff' : '#94a3b8',
+                                    color: hasChanges && !updating ? '#fff' : 'var(--text-secondary)',
                                     fontSize: '12px', fontWeight: 700,
                                     cursor: hasChanges && !updating ? 'pointer' : 'not-allowed',
                                     boxShadow: hasChanges && !updating ? '0 3px 10px rgba(21,59,115,0.25)' : 'none',
@@ -211,9 +211,9 @@ export default function Index({ selectedModuleId }) {
 
                     {/* Table Container */}
                     {loading ? (
-                        <div style={{ padding: '60px 24px', textAlign: 'center', color: '#94a3b8' }}>
+                        <div style={{ padding: '60px 24px', textAlign: 'center', color: 'var(--text-secondary)' }}>
                             <Loader2 size={32} style={{ animation: 'spin 1s linear infinite', marginBottom: '12px', opacity: 0.5, marginLeft: 'auto', marginRight: 'auto' }} />
-                            <p style={{ fontSize: '14px', color: '#64748b' }}>Memuat data role dan permission...</p>
+                            <p style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>Memuat data role dan permission...</p>
                         </div>
                     ) : (
                         <RolePermissionTable
@@ -231,24 +231,24 @@ export default function Index({ selectedModuleId }) {
                     {/* Legend */}
                     {!loading && menus.length > 0 && roles.length > 0 && (
                         <div style={{ padding: '12px 20px', borderTop: '1px solid #f1f5f9', backgroundColor: '#fafafa', display: 'flex', alignItems: 'center', gap: '20px', flexWrap: 'wrap' }}>
-                            <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 600 }}>LEGEND:</span>
+                            <span style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 600 }}>LEGEND:</span>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                                 <div style={{ width: '20px', height: '20px', borderRadius: '5px', backgroundColor: '#2563eb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                     <Check size={11} style={{ color: '#fff', strokeWidth: 3 }} />
                                 </div>
-                                <span style={{ fontSize: '11px', color: '#64748b' }}>Diizinkan</span>
+                                <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Diizinkan</span>
                             </div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                                 <div style={{ width: '20px', height: '20px', borderRadius: '5px', border: '1.5px solid #cbd5e1', backgroundColor: '#f8fafc' }} />
-                                <span style={{ fontSize: '11px', color: '#64748b' }}>Tidak diizinkan</span>
+                                <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Tidak diizinkan</span>
                             </div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                                 <div style={{ width: '20px', height: '20px', borderRadius: '5px', backgroundColor: '#f59e0b', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                     <Check size={11} style={{ color: '#fff', strokeWidth: 3 }} />
                                 </div>
-                                <span style={{ fontSize: '11px', color: '#64748b' }}>Perubahan belum disimpan</span>
+                                <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Perubahan belum disimpan</span>
                             </div>
-                            <div style={{ marginLeft: 'auto', fontSize: '11px', color: '#94a3b8' }}>
+                            <div style={{ marginLeft: 'auto', fontSize: '11px', color: 'var(--text-secondary)' }}>
                                 {roles.length} role · {menus.length} menu
                             </div>
                         </div>

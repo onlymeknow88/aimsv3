@@ -1,12 +1,13 @@
-import React from 'react';
-import { Search, RefreshCw, Plus, Edit2, Trash2, Cpu } from 'lucide-react';
-import useAimsModule from '../Hooks/useAimsModule';
+import { Cpu, Edit2, Plus, RefreshCw, Search, Trash2 } from 'lucide-react';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+
+import AdminLayout from '@/Layouts/AdminLayout';
 import AimsModuleModal from './AimsModuleModal';
 import DeleteConfirmModal from '@/Components/DeleteConfirmModal';
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
-import TablePagination from '@/Components/TablePagination';
-import AdminLayout from '@/Layouts/AdminLayout';
 import { Head } from '@inertiajs/react';
+import React from 'react';
+import TablePagination from '@/Components/TablePagination';
+import useAimsModule from '../Hooks/useAimsModule';
 
 // Form field helpers
 const inputStyle = {
@@ -73,14 +74,14 @@ export default function AimsModuleTable() {
                         </div>
                         <div>
                             <h1 style={{ fontSize: "24px", fontWeight: 800, color: "#1e293b", margin: 0 }}>AIMS Modules</h1>
-                            <p style={{ color: '#64748b', fontSize: '12px', marginTop: '2px' }}>Kelola daftar modul sistem di portal AIMS.</p>
+                            <p style={{ color: 'var(--text-secondary)', fontSize: '12px', marginTop: '2px' }}>Kelola daftar modul sistem di portal AIMS.</p>
                         </div>
                     </div>
-                    
+
                     <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
                         {/* Search */}
                         <div style={{ position: 'relative' }}>
-                            <Search size={14} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+                            <Search size={14} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-secondary)' }} />
                             <input
                                 value={search}
                                 onChange={e => setSearch(e.target.value)}
@@ -138,7 +139,7 @@ export default function AimsModuleTable() {
                 )}
 
                 {/* Table Container */}
-                <div style={{ backgroundColor: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '24px', boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.05)', overflow: 'hidden' }}>
+                <div style={{ backgroundColor: 'var(--card-bg)', border: '1px solid #e2e8f0', borderRadius: '12px', boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.05)', overflow: 'hidden' }}>
                     <div style={{ overflowX: 'auto' }}>
                         <Table>
                             <TableHeader>
@@ -151,7 +152,7 @@ export default function AimsModuleTable() {
                             <TableBody>
                                 {loading ? (
                                     <TableRow>
-                                        <TableCell colSpan={3} style={{ textAlign: 'center', padding: '48px', color: '#94a3b8' }}>
+                                        <TableCell colSpan={3} style={{ textAlign: 'center', padding: '48px', color: 'var(--text-secondary)' }}>
                                             Memuat data module...
                                         </TableCell>
                                     </TableRow>
@@ -182,7 +183,7 @@ export default function AimsModuleTable() {
                                     ))
                                 ) : (
                                     <TableRow>
-                                        <TableCell colSpan={3} style={{ textAlign: 'center', padding: '48px', color: '#94a3b8' }}>
+                                        <TableCell colSpan={3} style={{ textAlign: 'center', padding: '48px', color: 'var(--text-secondary)' }}>
                                             Tidak ada data module.
                                         </TableCell>
                                     </TableRow>

@@ -55,7 +55,7 @@ export default function Index() {
         color: '#0f172a',
         outline: 'none',
         boxSizing: 'border-box',
-        backgroundColor: '#fff',
+        backgroundColor: 'var(--card-bg)',
     };
 
     return (
@@ -66,7 +66,7 @@ export default function Index() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
                     <div>
                         <h1 style={{ fontSize: '24px', fontWeight: 800, color: '#1e293b', margin: 0 }}>AIMS Menu</h1>
-                        <p style={{ color: '#64748b', fontSize: '13px', marginTop: '4px' }}>
+                        <p style={{ color: 'var(--text-secondary)', fontSize: '13px', marginTop: '4px' }}>
                             Kelola struktur menu dan folder hooks untuk setiap modul.
                         </p>
                     </div>
@@ -76,7 +76,7 @@ export default function Index() {
                         <select
                             value={filterModule}
                             onChange={e => setFilterModule(e.target.value)}
-                            style={{ padding: '9px 14px', border: '1px solid #cbd5e1', borderRadius: '8px', fontSize: '13px', color: '#334155', backgroundColor: '#fff', cursor: 'pointer', outline: 'none' }}
+                            style={{ padding: '9px 14px', border: '1px solid #cbd5e1', borderRadius: '8px', fontSize: '13px', color: '#334155', backgroundColor: 'var(--card-bg)', cursor: 'pointer', outline: 'none' }}
                         >
                             <option value="">Semua Modul</option>
                             {modules.map(m => (
@@ -87,7 +87,7 @@ export default function Index() {
                         {/* Refresh */}
                         <button
                             onClick={fetchAll}
-                            style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '9px 14px', border: '1px solid #cbd5e1', borderRadius: '8px', backgroundColor: '#fff', color: '#475569', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}
+                            style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '9px 14px', border: '1px solid #cbd5e1', borderRadius: '8px', backgroundColor: 'var(--card-bg)', color: '#475569', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}
                         >
                             <RefreshCw size={14} /> Refresh
                         </button>
@@ -110,7 +110,7 @@ export default function Index() {
                 )}
 
                 {/* ── Table Card ───────────────────────────────────────────── */}
-                <div style={{ backgroundColor: '#fff', borderRadius: '12px', border: '1px solid #e2e8f0', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+                <div style={{ backgroundColor: 'var(--card-bg)', borderRadius: '12px', border: '1px solid #e2e8f0', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
                     <AimsMenuTable
                         menus={menus}
                         loading={loading}
@@ -121,7 +121,7 @@ export default function Index() {
 
                 {/* ── Summary ──────────────────────────────────────────────── */}
                 {!loading && menus.length > 0 && (
-                    <p style={{ marginTop: '12px', fontSize: '12px', color: '#94a3b8', textAlign: 'right' }}>
+                    <p style={{ marginTop: '12px', fontSize: '12px', color: 'var(--text-secondary)', textAlign: 'right' }}>
                         {menus.length} folder/menu parent · {totalChildren} sub-menu (hooks)
                     </p>
                 )}
@@ -130,7 +130,7 @@ export default function Index() {
             {/* ── Modal Create / Edit ──────────────────────────────────────── */}
             {modalOpen && (
                 <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(15,23,42,0.65)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }}>
-                    <div style={{ backgroundColor: '#fff', borderRadius: '16px', width: '100%', maxWidth: '520px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.35)', overflow: 'hidden' }}>
+                    <div style={{ backgroundColor: 'var(--card-bg)', borderRadius: '16px', width: '100%', maxWidth: '520px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.35)', overflow: 'hidden' }}>
 
                         {/* Modal Header */}
                         <div style={{ padding: '20px 24px', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -142,7 +142,7 @@ export default function Index() {
                                     {editId ? 'Edit Menu' : 'Tambah Menu Baru'}
                                 </h3>
                             </div>
-                            <button onClick={closeModal} style={{ background: 'none', border: 'none', fontSize: '22px', cursor: 'pointer', color: '#94a3b8', lineHeight: 1 }}>×</button>
+                            <button onClick={closeModal} style={{ background: 'none', border: 'none', fontSize: '22px', cursor: 'pointer', color: 'var(--text-secondary)', lineHeight: 1 }}>×</button>
                         </div>
 
                         {/* Modal Form */}
@@ -177,12 +177,12 @@ export default function Index() {
                                 <div>
                                     <label style={labelStyle}>
                                         Parent Menu{' '}
-                                        <span style={{ color: '#94a3b8', fontWeight: 400 }}>(opsional — untuk sub-menu / hook)</span>
+                                        <span style={{ color: 'var(--text-secondary)', fontWeight: 400 }}>(opsional — untuk sub-menu / hook)</span>
                                     </label>
                                     <select
                                         value={form.parent_id}
                                         onChange={e => handleFormChange('parent_id', e.target.value)}
-                                        style={{ ...inputStyle, color: form.parent_id ? '#0f172a' : '#94a3b8' }}
+                                        style={{ ...inputStyle, color: form.parent_id ? '#0f172a' : 'var(--text-secondary)' }}
                                         disabled={!form.module_id}
                                     >
                                         <option value="">— Tidak ada (menu utama / folder) —</option>
@@ -191,7 +191,7 @@ export default function Index() {
                                         ))}
                                     </select>
                                     {form.parent_id && (
-                                        <p style={{ fontSize: '11px', color: '#64748b', marginTop: '5px' }}>
+                                        <p style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '5px' }}>
                                             Menu ini akan menjadi <strong>hook / sub-item</strong> di dalam folder yang dipilih.
                                         </p>
                                     )}
@@ -226,7 +226,7 @@ export default function Index() {
                                 <div>
                                     <label style={labelStyle}>
                                         Slug <span style={{ color: '#ef4444' }}>*</span>{' '}
-                                        <span style={{ color: '#94a3b8', fontWeight: 400 }}>(auto dari nama)</span>
+                                        <span style={{ color: 'var(--text-secondary)', fontWeight: 400 }}>(auto dari nama)</span>
                                     </label>
                                     <input
                                         type="text"
@@ -244,7 +244,7 @@ export default function Index() {
                                 <button
                                     type="button"
                                     onClick={closeModal}
-                                    style={{ padding: '9px 20px', borderRadius: '8px', border: '1px solid #cbd5e1', backgroundColor: '#fff', color: '#475569', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}
+                                    style={{ padding: '9px 20px', borderRadius: '8px', border: '1px solid #cbd5e1', backgroundColor: 'var(--card-bg)', color: '#475569', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}
                                 >
                                     Batal
                                 </button>

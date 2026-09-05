@@ -19,7 +19,7 @@ class DepartmentController extends Controller
             $limit  = $request->query('limit', 10);   // Default limit 10
             $search = $request->query('search', '');  // Default search kosong
 
-            $query = Department::with('head:id,name,email');
+            $query = Department::with(['head:id,name,user_id', 'head.user:id,name,email']);
 
             if ($search) {
                 $query->where(function ($q) use ($search) {

@@ -27,27 +27,27 @@ export default function AdminLayout({ children, title = "Backoffice Admin" }) {
     const [logsDropdownOpen, setLogsDropdownOpen] = useState(isLogActive);
 
     const mainMenuItems = [
-        { name: 'Dashboard', icon: () => <span style={{ fontSize: '16px' }}>🏠</span>, href: '/admin/dashboard', active: currentPath === '/admin/dashboard' },
-        { name: 'Business Entities', icon: () => <span style={{ fontSize: '16px' }}>🏬</span>, href: '/admin/business-entities', active: currentPath === '/admin/business-entities' },
-        { name: 'Roles', icon: () => <span style={{ fontSize: '16px' }}>🛡️</span>, href: '/admin/role-permissions', active: currentPath.startsWith('/admin/role-permissions') },
-        { name: 'Users & Employee', icon: () => <span style={{ fontSize: '16px' }}>👥</span>, href: '/admin/users', active: currentPath.startsWith('/admin/users') },
+        { name: 'Dashboard', icon: () => <span aria-hidden="true" style={{ fontSize: '16px' }}>🏠</span>, href: '/admin/dashboard', active: currentPath === '/admin/dashboard' },
+        { name: 'Business Entities', icon: () => <span aria-hidden="true" style={{ fontSize: '16px' }}>🏬</span>, href: '/admin/business-entities', active: currentPath === '/admin/business-entities' },
+        { name: 'Roles', icon: () => <span aria-hidden="true" style={{ fontSize: '16px' }}>🛡️</span>, href: '/admin/role-permissions', active: currentPath.startsWith('/admin/role-permissions') },
+        { name: 'Users & Employee', icon: () => <span aria-hidden="true" style={{ fontSize: '16px' }}>👥</span>, href: '/admin/users', active: currentPath.startsWith('/admin/users') },
     ];
 
     const logSubmenuItems = [
-        { name: 'Login Log', icon: () => <span style={{ fontSize: '14px' }}>🗒️</span>, href: '/admin/login-logs', active: currentPath.startsWith('/admin/login-logs') },
-        { name: 'Activity Log', icon: () => <span style={{ fontSize: '14px' }}>📋</span>, href: '/admin/activity-logs', active: currentPath.startsWith('/admin/activity-logs') },
-        { name: 'User Activity Log', icon: () => <span style={{ fontSize: '14px' }}>📝</span>, href: '/admin/user-activity-logs', active: currentPath.startsWith('/admin/user-activity-logs') },
+        { name: 'Login Log', icon: () => <span aria-hidden="true" style={{ fontSize: '14px' }}>🗒️</span>, href: '/admin/login-logs', active: currentPath.startsWith('/admin/login-logs') },
+        { name: 'Activity Log', icon: () => <span aria-hidden="true" style={{ fontSize: '14px' }}>📋</span>, href: '/admin/activity-logs', active: currentPath.startsWith('/admin/activity-logs') },
+        { name: 'User Activity Log', icon: () => <span aria-hidden="true" style={{ fontSize: '14px' }}>📝</span>, href: '/admin/user-activity-logs', active: currentPath.startsWith('/admin/user-activity-logs') },
     ];
 
     const masterMenuItems = [
-        { name: 'Companies', icon: () => <span style={{ fontSize: '16px' }}>🏛️</span>, href: '/admin/companies', active: currentPath.startsWith('/admin/companies') },
-        { name: 'Departments', icon: () => <span style={{ fontSize: '16px' }}>🏢</span>, href: '/admin/departments', active: currentPath.startsWith('/admin/departments') },
-        { name: 'Sections', icon: () => <span style={{ fontSize: '16px' }}>📁</span>, href: '/admin/sections', active: currentPath.startsWith('/admin/sections') },
+        { name: 'Companies', icon: () => <span aria-hidden="true" style={{ fontSize: '16px' }}>🏛️</span>, href: '/admin/companies', active: currentPath.startsWith('/admin/companies') },
+        { name: 'Departments', icon: () => <span aria-hidden="true" style={{ fontSize: '16px' }}>🏢</span>, href: '/admin/departments', active: currentPath.startsWith('/admin/departments') },
+        { name: 'Sections', icon: () => <span aria-hidden="true" style={{ fontSize: '16px' }}>📁</span>, href: '/admin/sections', active: currentPath.startsWith('/admin/sections') },
     ];
 
     const systemMenuItems = [
-        { name: 'AIMS Menu', icon: () => <FolderOpen size={16} />, href: '/admin/aims-menu', active: currentPath.startsWith('/admin/aims-menu') },
-        { name: 'AIMS Modules', icon: () => <span style={{ fontSize: '16px' }}>⚙️</span>, href: '/admin/modules', active: currentPath.startsWith('/admin/modules') },
+        { name: 'AIMS Menu', icon: () => <FolderOpen size={16} aria-hidden="true" />, href: '/admin/aims-menu', active: currentPath.startsWith('/admin/aims-menu') },
+        { name: 'AIMS Modules', icon: () => <span aria-hidden="true" style={{ fontSize: '16px' }}>⚙️</span>, href: '/admin/modules', active: currentPath.startsWith('/admin/modules') },
     ];
 
     return (
@@ -55,19 +55,21 @@ export default function AdminLayout({ children, title = "Backoffice Admin" }) {
             <Head title={title} />
 
             {/* Sidebar Admin Custom */}
-            <div style={{
+            <nav id="admin-sidebar" aria-label="Navigasi Admin" style={{
                 width: sidebarOpen ? '260px' : '0px',
+                minWidth: sidebarOpen ? '260px' : '0px',
                 transform: sidebarOpen ? 'translateX(0)' : 'translateX(-260px)',
-                backgroundColor: '#0a0a0c', // Gelap premium seperti di screenshot
-                color: '#94a3b8',
+                backgroundColor: 'var(--sidebar-bg, #0a0a0c)',
+                color: 'var(--sidebar-text, #a1a1aa)',
                 display: 'flex',
                 flexDirection: 'column',
                 height: '100vh',
                 position: 'sticky',
                 top: 0,
-                transition: 'all 0.3s ease-in-out',
+                transition: 'transform 0.3s cubic-bezier(0.4,0,0.2,1), width 0.3s cubic-bezier(0.4,0,0.2,1)',
                 borderRight: '1px solid #1f2937',
                 overflowX: 'hidden',
+                overflowY: sidebarOpen ? 'auto' : 'hidden',
                 zIndex: 100,
                 flexShrink: 0
             }}>
@@ -78,7 +80,7 @@ export default function AdminLayout({ children, title = "Backoffice Admin" }) {
                     </div>
                     <div>
                         <h1 style={{ color: '#fff', fontSize: '15px', fontWeight: 800, margin: 0 }}>AIMS BACKOFFICE</h1>
-                        <span style={{ fontSize: '11px', color: '#64748b' }}>Custom Management Console</span>
+                        <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Custom Management Console</span>
                     </div>
                 </div>
 
@@ -93,18 +95,20 @@ export default function AdminLayout({ children, title = "Backoffice Admin" }) {
                                 <li key={idx} style={{ marginBottom: '6px' }}>
                                     <Link
                                         href={item.href}
+                                        aria-current={item.active ? 'page' : undefined}
                                         style={{
                                             display: 'flex',
                                             alignItems: 'center',
                                             gap: '12px',
                                             padding: '10px 16px',
+                                            minHeight: '44px',
                                             borderRadius: '8px',
                                             fontSize: '14px',
                                             fontWeight: 600,
                                             textDecoration: 'none',
                                             color: item.active ? '#3b82f6' : '#a1a1aa',
                                             backgroundColor: item.active ? 'rgba(59, 130, 246, 0.1)' : 'transparent',
-                                            transition: 'all 0.2s'
+                                            transition: 'background-color 0.2s ease, color 0.2s ease'
                                         }}
                                         className={!item.active ? 'nav-hover' : ''}
                                     >
@@ -118,6 +122,9 @@ export default function AdminLayout({ children, title = "Backoffice Admin" }) {
                         {/* Logs Dropdown Item */}
                         <li style={{ marginBottom: '6px' }}>
                             <button
+                                type="button"
+                                aria-expanded={logsDropdownOpen}
+                                aria-controls="admin-submenu-logs"
                                 onClick={() => setLogsDropdownOpen(!logsDropdownOpen)}
                                 style={{
                                     width: '100%',
@@ -125,6 +132,7 @@ export default function AdminLayout({ children, title = "Backoffice Admin" }) {
                                     alignItems: 'center',
                                     justifyContent: 'space-between',
                                     padding: '10px 16px',
+                                    minHeight: '44px',
                                     borderRadius: '8px',
                                     fontSize: '14px',
                                     fontWeight: 600,
@@ -132,7 +140,7 @@ export default function AdminLayout({ children, title = "Backoffice Admin" }) {
                                     backgroundColor: isLogActive ? 'rgba(59, 130, 246, 0.05)' : 'transparent',
                                     border: 'none',
                                     cursor: 'pointer',
-                                    transition: 'all 0.2s',
+                                    transition: 'background-color 0.2s ease, color 0.2s ease',
                                     textAlign: 'left'
                                 }}
                                 className={!isLogActive ? 'nav-hover' : ''}
@@ -149,7 +157,7 @@ export default function AdminLayout({ children, title = "Backoffice Admin" }) {
 
                             {/* Dropdown Menu Items */}
                             {logsDropdownOpen && (
-                                <ul style={{ listStyle: 'none', margin: '4px 0 0 0', padding: '0 0 0 16px' }}>
+                                <ul id="admin-submenu-logs" role="list" style={{ listStyle: 'none', margin: '4px 0 0 0', padding: '0 0 0 16px' }}>
                                     {logSubmenuItems.map((item, idx) => {
                                         const Icon = item.icon;
                                         return (
@@ -259,16 +267,26 @@ export default function AdminLayout({ children, title = "Backoffice Admin" }) {
                             background-color: rgba(255,255,255,0.03) !important;
                             color: #ffffff !important;
                         }
+                        *:focus-visible {
+                            outline: 2px solid var(--primary, #3b82f6);
+                            outline-offset: 2px;
+                        }
+                        @media (prefers-reduced-motion: reduce) {
+                            *, *::before, *::after {
+                                animation-duration: 0.01ms !important;
+                                transition-duration: 0.01ms !important;
+                            }
+                        }
                     `}} />
                 </div>
-            </div>
+            </nav>
 
             {/* Content Container */}
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
                 {/* Navbar Header */}
                 <header style={{
                     height: '64px',
-                    backgroundColor: '#fff',
+                    backgroundColor: 'var(--card-bg)',
                     borderBottom: '1px solid #e2e8f0',
                     display: 'flex',
                     alignItems: 'center',
@@ -297,7 +315,7 @@ export default function AdminLayout({ children, title = "Backoffice Admin" }) {
 
                         {userDropdown && (
 
-                            <div style={{ position: 'absolute', right: 0, marginTop: '8px', width: '200px', backgroundColor: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', overflow: 'hidden' }}>
+                            <div style={{ position: 'absolute', right: 0, marginTop: '8px', width: '200px', backgroundColor: 'var(--card-bg)', border: '1px solid #e2e8f0', borderRadius: '8px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', overflow: 'hidden' }}>
                                 <Link
                                     href={route('two-factor.setup')}
                                     style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 16px', fontSize: '13px', color: '#334155', background: 'none', border: 'none', textAlign: 'left', cursor: 'pointer', textDecoration: 'none' }}

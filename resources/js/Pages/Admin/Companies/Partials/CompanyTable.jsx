@@ -26,21 +26,25 @@ import {
 } from "@tanstack/react-table";
 
 // ── Action buttons ────────────────────────────────────────────────────────────
-function ActionBtns({ onEdit, onDelete }) {
+function ActionBtns({ onEdit, onDelete, companyName }) {
     return (
         <div style={{ display: "inline-flex", gap: "2px" }}>
             <button
                 onClick={onEdit}
+                aria-label={companyName ? `Edit perusahaan ${companyName}` : 'Edit perusahaan'}
                 title="Edit"
                 style={{
                     background: "none",
                     border: "none",
                     cursor: "pointer",
                     color: "#3b82f6",
-                    padding: "6px",
+                    padding: "10px",
+                    minWidth: "44px",
+                    minHeight: "44px",
                     borderRadius: "6px",
-                    display: "flex",
+                    display: "inline-flex",
                     alignItems: "center",
+                    justifyContent: "center",
                 }}
                 onMouseEnter={(e) =>
                     (e.currentTarget.style.backgroundColor = "#eff6ff")
@@ -49,20 +53,24 @@ function ActionBtns({ onEdit, onDelete }) {
                     (e.currentTarget.style.backgroundColor = "transparent")
                 }
             >
-                <Edit2 size={14} />
+                <Edit2 size={14} aria-hidden="true" />
             </button>
             <button
                 onClick={onDelete}
+                aria-label={companyName ? `Hapus perusahaan ${companyName}` : 'Hapus perusahaan'}
                 title="Hapus"
                 style={{
                     background: "none",
                     border: "none",
                     cursor: "pointer",
                     color: "#ef4444",
-                    padding: "6px",
+                    padding: "10px",
+                    minWidth: "44px",
+                    minHeight: "44px",
                     borderRadius: "6px",
-                    display: "flex",
+                    display: "inline-flex",
                     alignItems: "center",
+                    justifyContent: "center",
                 }}
                 onMouseEnter={(e) =>
                     (e.currentTarget.style.backgroundColor = "#fef2f2")
@@ -71,7 +79,7 @@ function ActionBtns({ onEdit, onDelete }) {
                     (e.currentTarget.style.backgroundColor = "transparent")
                 }
             >
-                <Trash2 size={14} />
+                <Trash2 size={14} aria-hidden="true" />
             </button>
         </div>
     );
@@ -114,6 +122,7 @@ export default function CompanyTable({
                 cell: ({ row }) => (
                     <div style={{ textAlign: "center" }}>
                         <ActionBtns
+                            companyName={row.original.company_name}
                             onEdit={() => onEdit(row.original)}
                             onDelete={() => onDelete(row.original)}
                         />
@@ -158,19 +167,21 @@ export default function CompanyTable({
     return (
         <div>
             <Table>
+                <caption className="sr-only" style={{ position: 'absolute', width: '1px', height: '1px', overflow: 'hidden', clip: 'rect(0,0,0,0)' }}>Daftar perusahaan</caption>
                 <TableHeader>
                     {table.getHeaderGroups().map((hg) => (
                         <TableRow
                             key={hg.id}
-                            style={{ backgroundColor: "#f8fafc" }}
+                            style={{ backgroundColor: "var(--bg-subtle, #f8fafc)" }}
                         >
                             {hg.headers.map((h) => (
                                 <TableHead
                                     key={h.id}
+                                    scope="col"
                                     style={{
                                         fontWeight: 700,
                                         fontSize: "11px",
-                                        color: "#475569",
+                                        color: "var(--text-secondary, #475569)",
                                         textTransform: "uppercase",
                                         letterSpacing: "0.05em",
                                         padding: "14px 16px",
@@ -197,7 +208,7 @@ export default function CompanyTable({
                                 style={{
                                     textAlign: "center",
                                     padding: "48px",
-                                    color: "#94a3b8",
+                                    color: "var(--text-secondary)",
                                 }}
                             >
                                 Memuat data perusahaan...
@@ -232,7 +243,7 @@ export default function CompanyTable({
                                 style={{
                                     textAlign: "center",
                                     padding: "48px",
-                                    color: "#94a3b8",
+                                    color: "var(--text-secondary)",
                                     fontSize: "14px",
                                 }}
                             >
@@ -255,7 +266,7 @@ export default function CompanyTable({
                         borderTop: "1px solid #f1f5f9",
                         backgroundColor: "#fafafa",
                         fontSize: "13px",
-                        color: "#64748b",
+                        color: "var(--text-secondary)",
                         flexWrap: "wrap",
                         gap: "12px",
                     }}
@@ -285,7 +296,7 @@ export default function CompanyTable({
                                 <span
                                     style={{
                                         fontSize: "12px",
-                                        color: "#64748b",
+                                        color: "var(--text-secondary)",
                                     }}
                                 >
                                     Baris per halaman:
@@ -314,10 +325,11 @@ export default function CompanyTable({
                             </div>
                         )}
                     </div>
+                    <nav aria-label="Pagination perusahaan" style={{ display: 'contents' }}>
                     <Pagination className="mx-0 w-auto">
                         <PaginationContent>
                             <PaginationItem>
-                                <PaginationPrevious
+                                <PaginationPrevious aria-label="Halaman sebelumnya"
                                     onClick={() =>
                                         onPageChange(
                                             pagination.current_page - 1,
@@ -360,7 +372,7 @@ export default function CompanyTable({
                             })}
 
                             <PaginationItem>
-                                <PaginationNext
+                                <PaginationNext aria-label="Halaman berikutnya"
                                     onClick={() =>
                                         onPageChange(
                                             pagination.current_page + 1,
@@ -386,6 +398,7 @@ export default function CompanyTable({
                             </PaginationItem>
                         </PaginationContent>
                     </Pagination>
+                    </nav>
                 </div>
             )}
         </div>

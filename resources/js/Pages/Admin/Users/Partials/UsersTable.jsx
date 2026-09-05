@@ -25,27 +25,17 @@ import {
     useReactTable,
 } from "@tanstack/react-table";
 
-// ── Avatar initials ───────────────────────────────────────────────────────────
-function Avatar({ name }) {
-    const initials = (name || "?")
-        .split(" ")
-        .slice(0, 2)
-        .map((w) => w[0])
-        .join("")
-        .toUpperCase();
-    const colors = [
-        "#6366f1",
-        "#10b981",
-        "#f59e0b",
-        "#ef4444",
-        "#8b5cf6",
-        "#ec4899",
-        "#14b8a6",
-        "#f97316",
-    ];
-    const color = colors[(name?.charCodeAt(0) || 0) % colors.length];
+// ── Avatar initials — memoized ────────────────────────────────────────────
+const avatarColors = ["#6366f1","#10b981","#f59e0b","#ef4444","#8b5cf6","#ec4899","#14b8a6","#f97316"];
+const Avatar = React.memo(function Avatar({ name }) {
+    const { initials, color } = useMemo(() => {
+        const init = (name || "?").split(" ").slice(0, 2).map((w) => w[0]).join("").toUpperCase();
+        const col = avatarColors[(name?.charCodeAt(0) || 0) % avatarColors.length];
+        return { initials: init, color: col };
+    }, [name]);
     return (
         <div
+            aria-hidden="true"
             style={{
                 width: "34px",
                 height: "34px",
@@ -64,7 +54,7 @@ function Avatar({ name }) {
             {initials}
         </div>
     );
-}
+});
 
 // ── Role badge ────────────────────────────────────────────────────────────────
 function RoleBadge({ name }) {
@@ -88,21 +78,25 @@ function RoleBadge({ name }) {
 }
 
 // ── Action buttons ────────────────────────────────────────────────────────────
-function ActionBtns({ onEdit, onDelete }) {
+function ActionBtns({ onEdit, onDelete, userName }) {
     return (
         <div style={{ display: "inline-flex", gap: "2px" }}>
             <button
                 onClick={onEdit}
+                aria-label={userName ? `Edit user ${userName}` : 'Edit user'}
                 title="Edit"
                 style={{
                     background: "none",
                     border: "none",
                     cursor: "pointer",
                     color: "#3b82f6",
-                    padding: "6px",
+                    padding: "10px",
+                    minWidth: "44px",
+                    minHeight: "44px",
                     borderRadius: "6px",
-                    display: "flex",
+                    display: "inline-flex",
                     alignItems: "center",
+                    justifyContent: "center",
                 }}
                 onMouseEnter={(e) =>
                     (e.currentTarget.style.backgroundColor = "#eff6ff")
@@ -111,20 +105,24 @@ function ActionBtns({ onEdit, onDelete }) {
                     (e.currentTarget.style.backgroundColor = "transparent")
                 }
             >
-                <Edit2 size={14} />
+                <Edit2 size={14} aria-hidden="true" />
             </button>
             <button
                 onClick={onDelete}
+                aria-label={userName ? `Hapus user ${userName}` : 'Hapus user'}
                 title="Hapus"
                 style={{
                     background: "none",
                     border: "none",
                     cursor: "pointer",
                     color: "#ef4444",
-                    padding: "6px",
+                    padding: "10px",
+                    minWidth: "44px",
+                    minHeight: "44px",
                     borderRadius: "6px",
-                    display: "flex",
+                    display: "inline-flex",
                     alignItems: "center",
+                    justifyContent: "center",
                 }}
                 onMouseEnter={(e) =>
                     (e.currentTarget.style.backgroundColor = "#fef2f2")
@@ -133,7 +131,7 @@ function ActionBtns({ onEdit, onDelete }) {
                     (e.currentTarget.style.backgroundColor = "transparent")
                 }
             >
-                <Trash2 size={14} />
+                <Trash2 size={14} aria-hidden="true" />
             </button>
         </div>
     );
@@ -179,7 +177,7 @@ export default function UsersTable({
                                 <div
                                     style={{
                                         fontSize: "11.5px",
-                                        color: "#64748b",
+                                        color: "var(--text-secondary)",
                                     }}
                                 >
                                     {u.email}
@@ -201,11 +199,11 @@ export default function UsersTable({
                                     display: "flex",
                                     alignItems: "center",
                                     gap: "5px",
-                                    color: "#cbd5e1",
+                                    color: "var(--text-muted, #64748b)",
                                     fontSize: "12px",
                                 }}
                             >
-                                <UserX size={13} /> <span>Belum ada data</span>
+                                <UserX size={13} aria-hidden="true" /> <span>Belum ada data</span>
                             </div>
                         );
                     return (
@@ -213,7 +211,7 @@ export default function UsersTable({
                             <div
                                 style={{
                                     fontSize: "11px",
-                                    color: "#64748b",
+                                    color: "var(--text-secondary)",
                                     marginTop: "2px",
                                 }}
                             >
@@ -234,7 +232,7 @@ export default function UsersTable({
                     if (roles.length === 0)
                         return (
                             <span
-                                style={{ color: "#cbd5e1", fontSize: "12px" }}
+                                style={{ color: "var(--text-muted, #64748b)", fontSize: "12px" }}
                             >
                                 —
                             </span>
@@ -255,7 +253,7 @@ export default function UsersTable({
                                 <span
                                     style={{
                                         fontSize: "10.5px",
-                                        color: "#94a3b8",
+                                        color: "var(--text-secondary)",
                                         alignSelf: "center",
                                     }}
                                 >
@@ -301,6 +299,7 @@ export default function UsersTable({
                 cell: ({ row }) => (
                     <div style={{ textAlign: "right" }}>
                         <ActionBtns
+                            userName={row.original.name}
                             onEdit={() => onEdit(row.original)}
                             onDelete={() => onDelete(row.original)}
                         />
@@ -344,15 +343,17 @@ export default function UsersTable({
     return (
         <div>
             <Table>
+                <caption className="sr-only" style={{ position: 'absolute', width: '1px', height: '1px', overflow: 'hidden', clip: 'rect(0,0,0,0)' }}>Daftar pengguna AIMS</caption>
                 <TableHeader>
                     {table.getHeaderGroups().map((hg) => (
                         <TableRow
                             key={hg.id}
-                            style={{ backgroundColor: "#f8fafc" }}
+                            style={{ backgroundColor: "var(--bg-subtle, #f8fafc)" }}
                         >
                             {hg.headers.map((h) => (
                                 <TableHead
                                     key={h.id}
+                                    scope="col"
                                     style={{
                                         fontWeight: 700,
                                         fontSize: "11px",
@@ -380,7 +381,7 @@ export default function UsersTable({
                                 style={{
                                     textAlign: "center",
                                     padding: "48px",
-                                    color: "#94a3b8",
+                                    color: "var(--text-secondary)",
                                 }}
                             >
                                 Memuat data user...
@@ -415,7 +416,7 @@ export default function UsersTable({
                                 style={{
                                     textAlign: "center",
                                     padding: "48px",
-                                    color: "#94a3b8",
+                                    color: "var(--text-secondary)",
                                     fontSize: "14px",
                                 }}
                             >
@@ -437,7 +438,7 @@ export default function UsersTable({
                         borderTop: "1px solid #f1f5f9",
                         backgroundColor: "#fafafa",
                         fontSize: "13px",
-                        color: "#64748b",
+                        color: "var(--text-secondary)",
                         flexWrap: "wrap",
                         gap: "12px",
                     }}
@@ -467,7 +468,7 @@ export default function UsersTable({
                                 <span
                                     style={{
                                         fontSize: "12px",
-                                        color: "#64748b",
+                                        color: "var(--text-secondary)",
                                     }}
                                 >
                                     Baris per halaman:
@@ -496,10 +497,11 @@ export default function UsersTable({
                             </div>
                         )}
                     </div>
+                    <nav aria-label="Pagination pengguna" style={{ display: 'contents' }}>
                     <Pagination className="mx-0 w-auto">
                         <PaginationContent>
                             <PaginationItem>
-                                <PaginationPrevious
+                                <PaginationPrevious aria-label="Halaman sebelumnya"
                                     onClick={() =>
                                         onPageChange(
                                             pagination.current_page - 1,
@@ -542,7 +544,7 @@ export default function UsersTable({
                             })}
 
                             <PaginationItem>
-                                <PaginationNext
+                                <PaginationNext aria-label="Halaman berikutnya"
                                     onClick={() =>
                                         onPageChange(
                                             pagination.current_page + 1,
@@ -568,6 +570,7 @@ export default function UsersTable({
                             </PaginationItem>
                         </PaginationContent>
                     </Pagination>
+                    </nav>
                 </div>
             )}
         </div>

@@ -30,7 +30,7 @@ export default function ActivityLogTable({ logs, loading }) {
                 return (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
                         <span style={{ fontWeight: 600, color: '#0f172a' }}>{row.admin_name || '-'}</span>
-                        <span style={{ fontSize: '11px', color: '#64748b' }}>{row.admin_email || '-'}</span>
+                        <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>{row.admin_email || '-'}</span>
                     </div>
                 );
             },
@@ -104,7 +104,7 @@ export default function ActivityLogTable({ logs, loading }) {
         {
             accessorKey: 'ip_address',
             header: 'IP Address',
-            cell: info => <span style={{ fontFamily: 'monospace', fontSize: '12px', color: '#64748b' }}>{info.getValue() || '-'}</span>,
+            cell: info => <span style={{ fontFamily: 'monospace', fontSize: '12px', color: 'var(--text-secondary)' }}>{info.getValue() || '-'}</span>,
             width: 120,
         },
         {
@@ -120,7 +120,7 @@ export default function ActivityLogTable({ logs, loading }) {
                         style={{
                             fontSize: '11px',
                             fontWeight: 600,
-                            color: hasData ? '#2563eb' : '#94a3b8',
+                            color: hasData ? '#2563eb' : 'var(--text-secondary)',
                             backgroundColor: 'transparent',
                             border: 'none',
                             cursor: hasData ? 'pointer' : 'not-allowed',
@@ -174,7 +174,7 @@ export default function ActivityLogTable({ logs, loading }) {
                 <TableBody>
                     {loading ? (
                         <TableRow>
-                            <TableCell colSpan={columns.length} style={{ textAlign: 'center', padding: '48px', color: '#94a3b8' }}>
+                            <TableCell colSpan={columns.length} style={{ textAlign: 'center', padding: '48px', color: 'var(--text-secondary)' }}>
                                 Memuat data log aktivitas...
                             </TableCell>
                         </TableRow>
@@ -190,7 +190,7 @@ export default function ActivityLogTable({ logs, loading }) {
                         ))
                     ) : (
                         <TableRow>
-                            <TableCell colSpan={columns.length} style={{ textAlign: 'center', padding: '48px', color: '#94a3b8' }}>
+                            <TableCell colSpan={columns.length} style={{ textAlign: 'center', padding: '48px', color: 'var(--text-secondary)' }}>
                                 Tidak ada data log aktivitas admin ditemukan.
                             </TableCell>
                         </TableRow>
@@ -214,7 +214,7 @@ export default function ActivityLogTable({ logs, loading }) {
                     zIndex: 9999
                 }}>
                     <div style={{
-                        backgroundColor: '#fff',
+                        backgroundColor: 'var(--card-bg)',
                         borderRadius: '16px',
                         width: '90%',
                         maxWidth: '900px',
@@ -236,7 +236,7 @@ export default function ActivityLogTable({ logs, loading }) {
                                 <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#0f172a', margin: 0 }}>
                                     Detail Data Perubahan
                                 </h3>
-                                <span style={{ fontSize: '12px', color: '#64748b' }}>
+                                <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
                                     {selectedLog.resource} ID: {selectedLog.resource_id}
                                 </span>
                             </div>
@@ -245,7 +245,7 @@ export default function ActivityLogTable({ logs, loading }) {
                                 style={{
                                     border: 'none',
                                     backgroundColor: 'transparent',
-                                    color: '#64748b',
+                                    color: 'var(--text-secondary)',
                                     fontSize: '20px',
                                     cursor: 'pointer',
                                     padding: '4px'
@@ -267,7 +267,7 @@ export default function ActivityLogTable({ logs, loading }) {
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px' }}>
                                 {/* Old Data */}
                                 <div>
-                                    <h4 style={{ fontSize: '13px', fontWeight: 700, color: '#64748b', marginBottom: '8px', textTransform: 'uppercase' }}>
+                                    <h4 style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-secondary)', marginBottom: '8px', textTransform: 'uppercase' }}>
                                         Sebelum Perubahan (Old Data)
                                     </h4>
                                     <div style={{
@@ -286,14 +286,14 @@ export default function ActivityLogTable({ logs, loading }) {
                                                 {JSON.stringify(selectedLog.old_data, null, 2)}
                                             </pre>
                                         ) : (
-                                            <span style={{ color: '#64748b' }}>[Kosong / Tidak Ada Data]</span>
+                                            <span style={{ color: 'var(--text-secondary)' }}>[Kosong / Tidak Ada Data]</span>
                                         )}
                                     </div>
                                 </div>
 
                                 {/* New Data */}
                                 <div>
-                                    <h4 style={{ fontSize: '13px', fontWeight: 700, color: '#64748b', marginBottom: '8px', textTransform: 'uppercase' }}>
+                                    <h4 style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-secondary)', marginBottom: '8px', textTransform: 'uppercase' }}>
                                         Setelah Perubahan (New Data)
                                     </h4>
                                     <div style={{
@@ -312,7 +312,7 @@ export default function ActivityLogTable({ logs, loading }) {
                                                 {JSON.stringify(selectedLog.new_data, null, 2)}
                                             </pre>
                                         ) : (
-                                            <span style={{ color: '#64748b' }}>[Kosong / Tidak Ada Data]</span>
+                                            <span style={{ color: 'var(--text-secondary)' }}>[Kosong / Tidak Ada Data]</span>
                                         )}
                                     </div>
                                 </div>
@@ -325,7 +325,7 @@ export default function ActivityLogTable({ logs, loading }) {
                             borderTop: '1px solid #f1f5f9',
                             display: 'flex',
                             justifyContent: 'flex-end',
-                            backgroundColor: '#fff'
+                            backgroundColor: 'var(--card-bg)'
                         }}>
                             <button
                                 onClick={() => setSelectedLog(null)}

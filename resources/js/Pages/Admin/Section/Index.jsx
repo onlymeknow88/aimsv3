@@ -82,7 +82,7 @@ export default function Index() {
                         <h1 style={{ fontSize: "22px", fontWeight: 800, color: "#0f172a", margin: 0 }}>
                             Sections
                         </h1>
-                        <p style={{ color: "#64748b", fontSize: "13px", marginTop: "4px" }}>
+                        <p style={{ color: "var(--text-secondary)", fontSize: "13px", marginTop: "4px" }}>
                             Manajemen sub-divisi, area kerja atau lokasi spesifik K3LH.
                         </p>
                     </div>
@@ -92,7 +92,7 @@ export default function Index() {
                         <div style={{ position: "relative" }}>
                             <Search
                                 size={14}
-                                style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", color: "#94a3b8" }}
+                                style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", color: "var(--text-secondary)" }}
                             />
                             <input
                                 value={search}
@@ -160,7 +160,7 @@ export default function Index() {
                 </div>
 
                 {!loading && sections.length > 0 && (
-                    <p style={{ marginTop: "10px", fontSize: "12px", color: "#94a3b8", textAlign: "right" }}>
+                    <p style={{ marginTop: "10px", fontSize: "12px", color: "var(--text-secondary)", textAlign: "right" }}>
                         Menampilkan {sections.length} section
                     </p>
                 )}

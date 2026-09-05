@@ -111,8 +111,8 @@ export default function AimsMenuTable({ menus = [], loading = false, onEdit, onD
                 }
                 return (
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', paddingLeft: '24px' }}>
-                        <ChevronRight size={11} style={{ color: '#94a3b8', flexShrink: 0 }} />
-                        <FileText size={13} style={{ color: '#64748b', flexShrink: 0 }} />
+                        <ChevronRight size={11} style={{ color: 'var(--text-secondary)', flexShrink: 0 }} />
+                        <FileText size={13} style={{ color: 'var(--text-secondary)', flexShrink: 0 }} />
                         <span style={{ fontSize: '13px', color: '#334155' }}>{item.name}</span>
                     </div>
                 );
@@ -124,7 +124,7 @@ export default function AimsMenuTable({ menus = [], loading = false, onEdit, onD
             cell: ({ row }) => {
                 const item = row.original;
                 if (item._type === 'child') {
-                    return <span style={{ fontSize: '12px', color: '#94a3b8' }}>└ {item._parentName}</span>;
+                    return <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>└ {item._parentName}</span>;
                 }
                 return item.module_name
                     ? <Badge color="blue">{item.module_name}</Badge>
@@ -135,7 +135,7 @@ export default function AimsMenuTable({ menus = [], loading = false, onEdit, onD
             id: 'order_by',
             header: 'Order',
             cell: ({ row }) => (
-                <span style={{ fontSize: '12px', color: '#64748b', fontVariantNumeric: 'tabular-nums' }}>
+                <span style={{ fontSize: '12px', color: 'var(--text-secondary)', fontVariantNumeric: 'tabular-nums' }}>
                     {row.original.order_by ?? 0}
                 </span>
             ),
@@ -223,7 +223,7 @@ export default function AimsMenuTable({ menus = [], loading = false, onEdit, onD
             <TableBody>
                 {loading ? (
                     <TableRow>
-                        <TableCell colSpan={visibleCount} style={{ textAlign: 'center', padding: '48px 24px', color: '#94a3b8' }}>
+                        <TableCell colSpan={visibleCount} style={{ textAlign: 'center', padding: '48px 24px', color: 'var(--text-secondary)' }}>
                             Memuat data menu...
                         </TableCell>
                     </TableRow>
@@ -251,7 +251,7 @@ export default function AimsMenuTable({ menus = [], loading = false, onEdit, onD
                     })
                 ) : (
                     <TableRow>
-                        <TableCell colSpan={visibleCount} style={{ padding: '48px', textAlign: 'center', color: '#94a3b8', fontSize: '14px' }}>
+                        <TableCell colSpan={visibleCount} style={{ padding: '48px', textAlign: 'center', color: 'var(--text-secondary)', fontSize: '14px' }}>
                             Belum ada menu. Klik "Tambah Menu" untuk mulai.
                         </TableCell>
                     </TableRow>

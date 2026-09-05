@@ -121,7 +121,7 @@ export default function Index() {
                                     left: "12px",
                                     top: "50%",
                                     transform: "translateY(-50%)",
-                                    color: "#94a3b8",
+                                    color: "var(--text-secondary)",
                                 }}
                             />
                             <input
@@ -225,7 +225,7 @@ export default function Index() {
                         style={{
                             marginTop: "10px",
                             fontSize: "12px",
-                            color: "#94a3b8",
+                            color: "var(--text-secondary)",
                             textAlign: "right",
                         }}
                     >

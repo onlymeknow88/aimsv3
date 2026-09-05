@@ -30,7 +30,7 @@ export default function UserActivityLogTable({ logs, loading }) {
                 return (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
                         <span style={{ fontWeight: 600, color: '#0f172a' }}>{row.user_name || '-'}</span>
-                        <span style={{ fontSize: '11px', color: '#64748b' }}>{row.user_email || '-'}</span>
+                        <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>{row.user_email || '-'}</span>
                     </div>
                 );
             },
@@ -125,7 +125,7 @@ export default function UserActivityLogTable({ logs, loading }) {
         {
             accessorKey: 'ip_address',
             header: 'IP Address',
-            cell: info => <span style={{ fontFamily: 'monospace', fontSize: '12px', color: '#64748b' }}>{info.getValue() || '-'}</span>,
+            cell: info => <span style={{ fontFamily: 'monospace', fontSize: '12px', color: 'var(--text-secondary)' }}>{info.getValue() || '-'}</span>,
             width: 120,
         },
         {
@@ -141,7 +141,7 @@ export default function UserActivityLogTable({ logs, loading }) {
                         style={{
                             fontSize: '11px',
                             fontWeight: 600,
-                            color: hasData ? '#2563eb' : '#94a3b8',
+                            color: hasData ? '#2563eb' : 'var(--text-secondary)',
                             backgroundColor: 'transparent',
                             border: 'none',
                             cursor: hasData ? 'pointer' : 'not-allowed',
@@ -195,7 +195,7 @@ export default function UserActivityLogTable({ logs, loading }) {
                 <TableBody>
                     {loading ? (
                         <TableRow>
-                            <TableCell colSpan={columns.length} style={{ textAlign: 'center', padding: '48px', color: '#94a3b8' }}>
+                            <TableCell colSpan={columns.length} style={{ textAlign: 'center', padding: '48px', color: 'var(--text-secondary)' }}>
                                 Memuat data log aktivitas user...
                             </TableCell>
                         </TableRow>
@@ -211,7 +211,7 @@ export default function UserActivityLogTable({ logs, loading }) {
                         ))
                     ) : (
                         <TableRow>
-                            <TableCell colSpan={columns.length} style={{ textAlign: 'center', padding: '48px', color: '#94a3b8' }}>
+                            <TableCell colSpan={columns.length} style={{ textAlign: 'center', padding: '48px', color: 'var(--text-secondary)' }}>
                                 Tidak ada data log aktivitas user ditemukan.
                             </TableCell>
                         </TableRow>
@@ -235,7 +235,7 @@ export default function UserActivityLogTable({ logs, loading }) {
                     zIndex: 9999
                 }}>
                     <div style={{
-                        backgroundColor: '#fff',
+                        backgroundColor: 'var(--card-bg)',
                         borderRadius: '16px',
                         width: '90%',
                         maxWidth: '900px',
@@ -257,7 +257,7 @@ export default function UserActivityLogTable({ logs, loading }) {
                                 <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#0f172a', margin: 0 }}>
                                     Detail Data Perubahan
                                 </h3>
-                                <span style={{ fontSize: '12px', color: '#64748b' }}>
+                                <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
                                     {selectedLog.resource} ID: {selectedLog.resource_id}
                                 </span>
                             </div>
@@ -266,7 +266,7 @@ export default function UserActivityLogTable({ logs, loading }) {
                                 style={{
                                     border: 'none',
                                     backgroundColor: 'transparent',
-                                    color: '#64748b',
+                                    color: 'var(--text-secondary)',
                                     fontSize: '20px',
                                     cursor: 'pointer',
                                     padding: '4px'
@@ -279,7 +279,7 @@ export default function UserActivityLogTable({ logs, loading }) {
                         {/* Content */}
                         <div style={{ padding: '24px', overflowY: 'auto', display: 'flex', gap: '20px', flex: 1 }}>
                             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                <span style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', color: '#64748b', letterSpacing: '0.5px' }}>
+                                <span style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-secondary)', letterSpacing: '0.5px' }}>
                                     Data Lama (Sebelum Perubahan)
                                 </span>
                                 <pre style={{
@@ -302,7 +302,7 @@ export default function UserActivityLogTable({ logs, loading }) {
                             </div>
 
                             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                <span style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', color: '#64748b', letterSpacing: '0.5px' }}>
+                                <span style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-secondary)', letterSpacing: '0.5px' }}>
                                     Data Baru (Setelah Perubahan)
                                 </span>
                                 <pre style={{

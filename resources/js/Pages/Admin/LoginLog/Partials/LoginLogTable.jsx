@@ -28,7 +28,7 @@ export default function LoginLogTable({ logs, loading }) {
                 return (
                     <div style={{ display: 'flex', flexDirection: 'column' }}>
                         <span style={{ fontWeight: 600, color: '#0f172a' }}>{row.user_name || '-'}</span>
-                        <span style={{ fontSize: '11px', color: '#64748b' }}>{row.user_email || '-'}</span>
+                        <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>{row.user_email || '-'}</span>
                     </div>
                 );
             },
@@ -77,7 +77,7 @@ export default function LoginLogTable({ logs, loading }) {
             header: 'Metode',
             cell: info => {
                 const val = info.getValue();
-                if (!val) return <span style={{ color: '#94a3b8' }}>-</span>;
+                if (!val) return <span style={{ color: 'var(--text-secondary)' }}>-</span>;
                 
                 let bg = '#eff6ff';
                 let fg = '#1d4ed8';
@@ -121,7 +121,7 @@ export default function LoginLogTable({ logs, loading }) {
                         <span style={{ fontSize: '12px', color: '#334155' }}>
                             {row.browser || '-'} on {row.os || '-'}
                         </span>
-                        <span style={{ fontSize: '10px', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 600 }}>
+                        <span style={{ fontSize: '10px', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: 600 }}>
                             {row.device_type || 'desktop'}
                         </span>
                     </div>
@@ -136,7 +136,7 @@ export default function LoginLogTable({ logs, loading }) {
                 const val = info.getValue();
                 return val ? (
                     <span style={{ color: '#ef4444', fontSize: '12px', fontWeight: 500 }}>{val}</span>
-                ) : <span style={{ color: '#94a3b8' }}>-</span>;
+                ) : <span style={{ color: 'var(--text-secondary)' }}>-</span>;
             }
         }
     ], []);
@@ -179,7 +179,7 @@ export default function LoginLogTable({ logs, loading }) {
                 <TableBody>
                     {loading ? (
                         <TableRow>
-                            <TableCell colSpan={columns.length} style={{ textAlign: 'center', padding: '48px', color: '#94a3b8' }}>
+                            <TableCell colSpan={columns.length} style={{ textAlign: 'center', padding: '48px', color: 'var(--text-secondary)' }}>
                                 Memuat data log...
                             </TableCell>
                         </TableRow>
@@ -195,7 +195,7 @@ export default function LoginLogTable({ logs, loading }) {
                         ))
                     ) : (
                         <TableRow>
-                            <TableCell colSpan={columns.length} style={{ textAlign: 'center', padding: '48px', color: '#94a3b8' }}>
+                            <TableCell colSpan={columns.length} style={{ textAlign: 'center', padding: '48px', color: 'var(--text-secondary)' }}>
                                 Tidak ada data log login ditemukan.
                             </TableCell>
                         </TableRow>

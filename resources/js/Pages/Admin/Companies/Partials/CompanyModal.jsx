@@ -92,7 +92,7 @@ export default function CompanyModal({
                             background: "none",
                             border: "none",
                             cursor: "pointer",
-                            color: "#94a3b8",
+                            color: "var(--text-secondary)",
                             display: "flex",
                             alignItems: "center",
                             padding: "4px",

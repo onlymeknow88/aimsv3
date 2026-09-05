@@ -2,7 +2,7 @@ import React from 'react';
 
 export default function LoginLogStats({ stats }) {
     const cardStyle = {
-        backgroundColor: '#fff',
+        backgroundColor: 'var(--card-bg)',
         border: '1px solid #e2e8f0',
         borderRadius: '12px',
         padding: '20px 24px',
@@ -17,7 +17,7 @@ export default function LoginLogStats({ stats }) {
     return (
         <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', marginBottom: '24px' }}>
             <div style={cardStyle}>
-                <span style={{ fontSize: '12px', color: '#64748b', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                <span style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                     Login Berhasil (Hari Ini)
                 </span>
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
@@ -29,19 +29,19 @@ export default function LoginLogStats({ stats }) {
             </div>
 
             <div style={cardStyle}>
-                <span style={{ fontSize: '12px', color: '#64748b', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                <span style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                     Percobaan Gagal (Hari Ini)
                 </span>
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
                     <span style={{ fontSize: '28px', fontWeight: 800, color: stats.failed_today > 0 ? '#ef4444' : '#0f172a' }}>
                         {stats.failed_today}
                     </span>
-                    <span style={{ fontSize: '12px', color: stats.failed_today > 0 ? '#ef4444' : '#64748b', fontWeight: 600 }}>gagal</span>
+                    <span style={{ fontSize: '12px', color: stats.failed_today > 0 ? '#ef4444' : 'var(--text-secondary)', fontWeight: 600 }}>gagal</span>
                 </div>
             </div>
 
             <div style={cardStyle}>
-                <span style={{ fontSize: '12px', color: '#64748b', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                <span style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                     Pengguna Aktif (24 Jam)
                 </span>
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>

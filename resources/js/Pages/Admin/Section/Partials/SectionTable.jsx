@@ -156,7 +156,7 @@ export default function SectionTable({
                                     title={tooltipText}
                                     style={{
                                         fontSize: "10px",
-                                        color: "#64748b",
+                                        color: "var(--text-secondary)",
                                         fontWeight: 700,
                                         cursor: "help",
                                         display: "inline-flex",
@@ -284,7 +284,7 @@ export default function SectionTable({
                                     title={tooltipText}
                                     style={{
                                         fontSize: "10px",
-                                        color: "#64748b",
+                                        color: "var(--text-secondary)",
                                         fontWeight: 700,
                                         cursor: "help",
                                         display: "inline-flex",
@@ -388,7 +388,7 @@ export default function SectionTable({
                             style={{
                                 textAlign: "center",
                                 padding: "48px",
-                                color: "#94a3b8",
+                                color: "var(--text-secondary)",
                             }}
                         >
                             Memuat data section...
@@ -423,7 +423,7 @@ export default function SectionTable({
                             style={{
                                 textAlign: "center",
                                 padding: "48px",
-                                color: "#94a3b8",
+                                color: "var(--text-secondary)",
                                 fontSize: "14px",
                             }}
                         >
@@ -445,7 +445,7 @@ export default function SectionTable({
                                     borderTop: "1px solid #f1f5f9",
                                     backgroundColor: "#fafafa",
                                     fontSize: "13px",
-                                    color: "#64748b",
+                                    color: "var(--text-secondary)",
                                     flexWrap: "wrap",
                                     gap: "12px",
                                 }}
@@ -475,7 +475,7 @@ export default function SectionTable({
                                             <span
                                                 style={{
                                                     fontSize: "12px",
-                                                    color: "#64748b",
+                                                    color: "var(--text-secondary)",
                                                 }}
                                             >
                                                 Baris per halaman:
