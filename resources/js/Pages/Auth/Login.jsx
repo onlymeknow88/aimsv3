@@ -224,7 +224,7 @@ export default function Login({ status, canResetPassword }) {
                                 type="button"
                                 onClick={() => {
                                     if (microsoftRedirectEnabled) {
-                                        window.location.href = route('microsoft.redirect');
+                                        window.location.href = route('azure.redirect');
                                     } else {
                                         window.location.href = microsoftLoginUrl;
                                     }
