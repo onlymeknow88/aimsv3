@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\Office365;
 use App\Models\User;
 use App\Services\LoginLogService;
 use Illuminate\Http\RedirectResponse;
@@ -15,18 +16,20 @@ use Laravel\Socialite\Facades\Socialite;
 class MicrosoftSocialiteController extends Controller
 {
     /**
-     * Inject Azure config from app_settings table into Socialite.
+     * Inject Azure config from office365s table into Socialite.
      * Redirect URI is built dynamically from APP_URL and must match
      * the redirect URI registered in Entra ID:
      * https://aims.amchub.id/auth/azure/callback
      */
     private function injectConfig(): void
     {
+        $o365 = Office365::find((int) env('OFFICE365_CONFIG_ID', 4));
+
         config([
-            'services.azure.client_id'     => setting('microsoft_graph_client_id'),
-            'services.azure.client_secret' => setting('microsoft_graph_client_secret'),
+            'services.azure.client_id'     => $o365?->client_id,
+            'services.azure.client_secret' => $o365?->client_secret,
             'services.azure.redirect'      => rtrim(config('app.url'), '/') . '/auth/azure/callback',
-            'services.azure.tenant'        => setting('microsoft_graph_tenant_id'),
+            'services.azure.tenant'        => $o365?->tenant_id,
         ]);
     }
 
