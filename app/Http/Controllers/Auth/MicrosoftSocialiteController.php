@@ -16,14 +16,16 @@ class MicrosoftSocialiteController extends Controller
 {
     /**
      * Inject Azure config from app_settings table into Socialite.
-     * Redirect URI is built dynamically from APP_URL.
+     * Redirect URI is built dynamically from APP_URL and must match
+     * the redirect URI registered in Entra ID:
+     * https://aims.amchub.id/auth/azure/callback
      */
     private function injectConfig(): void
     {
         config([
             'services.azure.client_id'     => setting('microsoft_graph_client_id'),
             'services.azure.client_secret' => setting('microsoft_graph_client_secret'),
-            'services.azure.redirect'      => rtrim(config('app.url'), '/') . '/auth/microsoft/callback',
+            'services.azure.redirect'      => rtrim(config('app.url'), '/') . '/auth/azure/callback',
             'services.azure.tenant'        => setting('microsoft_graph_tenant_id'),
         ]);
     }

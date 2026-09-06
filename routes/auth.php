@@ -48,10 +48,10 @@ Route::middleware('guest')->group(function () {
         ->name('microsoft.session-restore');
 
     // Microsoft direct Socialite — production environment only
-    Route::get('auth/microsoft/redirect', [MicrosoftSocialiteController::class, 'redirect'])
-        ->name('microsoft.redirect');
-    Route::get('auth/microsoft/callback', [MicrosoftSocialiteController::class, 'callback'])
-        ->name('microsoft.callback');
+    Route::get('auth/azure/redirect', [MicrosoftSocialiteController::class, 'redirect'])
+        ->name('azure.redirect');
+    Route::get('auth/azure/callback', [MicrosoftSocialiteController::class, 'callback'])
+        ->name('azure.callback');
 
     Route::post('otp/send', [OtpAuthController::class, 'sendOtp'])
         ->name('otp.send');
