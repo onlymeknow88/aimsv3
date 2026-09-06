@@ -9,7 +9,6 @@ use App\Services\LoginLogService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Inertia\Inertia;
 use Inertia\Response;
 use Laravel\Socialite\Facades\Socialite;
 
@@ -104,19 +103,8 @@ class MicrosoftSocialiteController extends Controller
             return redirect()->intended(route('dashboard', absolute: false));
         }
 
-        // New user — create inactive, pending admin approval
-        User::create([
-            'name'            => $azureUser->getName() ?? explode('@', $email)[0],
-            'email'           => $email,
-            'microsoft_id'    => $azureUser->getId(),
-            'microsoft_token' => $azureUser->token,
-            'azure_tenant_id' => $raw['tid'] ?? null,
-            'is_active'       => false,
-            'password'        => null,
-        ]);
-
-        return Inertia::render('Auth/PendingApproval', [
-            'message' => 'Akun baru telah dibuat. Menunggu persetujuan administrator sebelum dapat masuk.',
-        ]);
+        // Email belum terdaftar di tabel users — tolak tanpa membuat akun baru
+        return redirect()->route('login')
+            ->withErrors(['email' => 'Email Microsoft Anda belum terdaftar. Hubungi administrator untuk didaftarkan.']);
     }
 }
