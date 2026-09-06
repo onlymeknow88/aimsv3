@@ -18,6 +18,13 @@ import { FileText } from 'lucide-react';
 import SearchableSelect from '@/Components/SearchableSelect';
 import axios from 'axios';
 
+// Hapus awalan kode usang pada nama (mis. "1.1.1 Kebijakan..." -> "Kebijakan...")
+// agar label filter tidak ganda seperti "1.1.13 1.1.1 Kebijakan..."
+const cleanCodeLabel = (index, name) => {
+    const cleanName = String(name || '').replace(/^\d+(\.\d+)*\s+/, '');
+    return `${index || ''} ${cleanName}`.trim();
+};
+
 export default function DocumentTable({
     documents = [],
     selectedIds = [],
@@ -61,14 +68,14 @@ export default function DocumentTable({
             axios.get('/api/document-system/modules', fetchOpts).then(res => {
                 const list = (res.data?.result || []).map(item => ({
                     id: item.id,
-                    name: `${item.index || ''} ${item.name}`.trim(),
+                    name: cleanCodeLabel(item.index, item.name),
                 }));
                 setModulesOpt(list);
             }).catch(e => { if (!axios.isCancel(e)) console.error(e); }),
             axios.get('/api/document-system/categories', fetchOpts).then(res => {
                 const list = (res.data?.result || []).map(item => ({
                     id: item.id,
-                    name: `${item.index || ''} ${item.name}`.trim(),
+                    name: cleanCodeLabel(item.index, item.name),
                     moduleId: item.module_id,
                 }));
                 setCategoriesOpt(list);
@@ -76,7 +83,7 @@ export default function DocumentTable({
             axios.get('/api/document-system/mappings', fetchOpts).then(res => {
                 const list = (res.data?.result || []).map(item => ({
                     id: item.id,
-                    name: `${item.index || ''} ${item.name}`.trim(),
+                    name: cleanCodeLabel(item.index, item.name),
                     categoryId: item.category_id,
                 }));
                 setMappingsOpt(list);
