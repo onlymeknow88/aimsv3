@@ -15,6 +15,7 @@ const emptyForm = {
     pja_id: '',
     pjo_id: '',
     auditor: '',
+    auditors: [],
     non_compliance: '',
     non_compliance_root_cause: '',
     corrective_action: '',
@@ -65,6 +66,7 @@ export default function usePicaForm(docId = null) {
                     pja_id:                    doc.pja_id              ?? '',
                     pjo_id:                    doc.pjo_id              ?? '',
                     auditor:                   doc.auditor             ?? '',
+                    auditors:                  doc.auditors?.map(a=> a.user_id || a.name) ?? (doc.auditor ? [doc.auditor] : []),
                     non_compliance:            doc.non_compliance      ?? '',
                     non_compliance_root_cause: doc.non_compliance_root_cause ?? '',
                     corrective_action:         doc.corrective_action   ?? '',
@@ -110,17 +112,22 @@ export default function usePicaForm(docId = null) {
 
         setSubmitting(true);
         const fd = new FormData();
-        Object.entries(form).forEach(([k, v]) => { if (v !== '' && v !== null) fd.append(k, v); });
+        Object.entries(form).forEach(([k, v]) => {
+            if (k === 'auditors' && Array.isArray(v)) {
+                v.forEach(val => { if (val) fd.append('auditors[]', val); });
+            } else if (v !== '' && v !== null && !Array.isArray(v)) fd.append(k, v);
+        });
         newFiles.forEach(f => fd.append('files[]', f));
 
         try {
             if (docId) {
                 fd.append('_method', 'PUT');
                 await axios.post(`/api/pica/documents/${docId}`, fd, { headers: { 'Content-Type': 'multipart/form-data' } });
+                return true;
             } else {
-                await axios.post('/api/pica/documents', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
+                const res = await axios.post('/api/pica/documents', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
+                return res.data?.result?.id ?? true;
             }
-            return true;
         } catch (err) {
             const serverErrors = err.response?.data?.errors ?? {};
             setErrors(serverErrors);

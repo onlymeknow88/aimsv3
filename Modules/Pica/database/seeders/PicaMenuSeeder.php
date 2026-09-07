@@ -224,17 +224,11 @@ class PicaMenuSeeder extends Seeder
         }
 
         // ----------------------------------------------------------------
-        // 5. Assign semua user existing ke pica_admin role
+        // 5. TIDAK auto-assign role ke user (pola CSMS).
+        //    Assign via backoffice (/admin/role-permissions). Auto-assign massal
+        //    membuat sidebar tampil semua untuk semua orang; assign ke superadmin
+        //    pun membuat akun super_admin ikut ter-scope (isScopedByModuleRoles).
         // ----------------------------------------------------------------
-        if (isset($roleIds['pica_admin'])) {
-            $users = DB::table('users')->pluck('id');
-            foreach ($users as $userId) {
-                DB::table('aims_user_roles')->updateOrInsert(
-                    ['user_id' => $userId, 'role_id' => $roleIds['pica_admin']],
-                    []
-                );
-            }
-        }
 
         \Cache::flush();
         $this->command->info('PICA menu and permissions seeded successfully.');

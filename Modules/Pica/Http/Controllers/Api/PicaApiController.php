@@ -17,15 +17,25 @@ class PicaApiController extends PicaBaseApiController
     // =========================================================================
     public function index(Request $request)
     {
-        $query = PicaDocument::with(['company', 'ccow', 'section', 'areaLocation', 'pja.user', 'pjo'])
+        $query = PicaDocument::with(['company', 'ccow', 'section', 'areaLocation', 'pja.user', 'pjo', 'auditors.user'])
             ->when($request->search, function ($q) use ($request) {
                 $q->where(function ($q) use ($request) {
                     $q->where('identity_id', 'like', '%' . $request->search . '%')
                       ->orWhere('auditor', 'like', '%' . $request->search . '%')
+                      ->orWhereHas('auditors', fn($q) => $q->where('name', 'like', '%' . $request->search . '%'))
                       ->orWhereHas('company', fn($q) => $q->where('company_name', 'like', '%' . $request->search . '%'));
                 });
             })
-            ->when($request->status, fn($q) => $q->where('status', $request->status))
+            ->when($request->status, function ($q) use ($request) {
+                // Frontend kirim multi-status comma-separated
+                // ("Open,On Review PJA,On Review CRS,Overdue,Closed") -> whereIn
+                $statuses = array_values(array_filter(array_map('trim', explode(',', (string) $request->status))));
+                if (count($statuses) > 1) {
+                    $q->whereIn('status', $statuses);
+                } elseif (count($statuses) === 1) {
+                    $q->where('status', $statuses[0]);
+                }
+            })
             ->when($request->source, fn($q) => $q->where('source', $request->source))
             ->when($request->published, fn($q) => $q->where('published', $request->published))
             ->when($request->requested, fn($q) => $q->where('requested', $request->requested))
@@ -54,6 +64,7 @@ class PicaApiController extends PicaBaseApiController
             'picaFiles',
             'activities.user',
             'activities.files',
+            'auditors.user',
         ])->findOrFail($id);
 
         return $this->success($doc);
@@ -69,6 +80,8 @@ class PicaApiController extends PicaBaseApiController
             'non_compliance'         => 'required|string',
             'corrective_action'      => 'required|string',
             'target_settlement_date' => 'required|date',
+            'auditors'               => 'nullable|array',
+            'auditors.*'             => 'nullable|string|distinct',
         ]);
 
         DB::beginTransaction();
@@ -87,7 +100,7 @@ class PicaApiController extends PicaBaseApiController
                 'company_detail'           => $request->company_detail,
                 'pja_id'                   => $request->pja_id,
                 'pjo_id'                   => $request->pjo_id,
-                'auditor'                  => $request->auditor,
+                'auditor'                  => $request->auditor ?? ($request->auditors ? implode(', ', $request->auditors) : null),
                 'non_compliance'           => $request->non_compliance,
                 'non_compliance_root_cause' => $request->non_compliance_root_cause,
                 'corrective_action'        => $request->corrective_action,
@@ -98,6 +111,33 @@ class PicaApiController extends PicaBaseApiController
                 'created_by'               => auth()->id(),
             ]);
 
+            // Multi auditor (aims compatibility)
+            // Dedupe agar tidak ada auditor ganda per dokumen
+            $auditorInputs = array_values(array_unique(array_filter((array) $request->input('auditors', []))));
+            if (!empty($auditorInputs)) {
+                $auditorNames = [];
+                foreach ($auditorInputs as $aud) {
+                    if (!$aud) continue;
+                    $user = \App\Models\User::where('id', $aud)->orWhere('name', $aud)->orWhere('email', $aud)->first();
+                    $name = $user?->name ?? $aud;
+                    $auditorNames[] = $name;
+                    \Modules\Pica\Entities\PicaAuditor::create([
+                        'pica_id' => $doc->id,
+                        'user_id' => $user?->id,
+                        'name'    => $name,
+                    ]);
+                }
+                // Samakan kolom legacy dengan hasil resolve (nama user, bukan id mentah)
+                $doc->update(['auditor' => implode(', ', $auditorNames)]);
+            } elseif ($request->auditor) {
+                $user = \App\Models\User::where('name', $request->auditor)->orWhere('email', $request->auditor)->first();
+                \Modules\Pica\Entities\PicaAuditor::create([
+                    'pica_id' => $doc->id,
+                    'user_id' => $user?->id,
+                    'name'    => $request->auditor,
+                ]);
+            }
+
             // Handle file uploads
             if ($request->hasFile('files')) {
                 foreach ($request->file('files') as $file) {
@@ -106,7 +146,7 @@ class PicaApiController extends PicaBaseApiController
             }
 
             DB::commit();
-            return $this->success($doc->fresh(), 201);
+            return $this->success($doc->load('auditors'), 201);
         } catch (\Throwable $e) {
             DB::rollBack();
             return $this->error($e->getMessage(), 500);
@@ -129,10 +169,32 @@ class PicaApiController extends PicaBaseApiController
             'non_compliance'         => 'required|string',
             'corrective_action'      => 'required|string',
             'target_settlement_date' => 'required|date',
+            'auditors'               => 'nullable|array',
+            'auditors.*'             => 'nullable|string|distinct',
         ]);
 
         DB::beginTransaction();
         try {
+            // Sync multi auditors dulu agar string legacy konsisten dengan hasil resolve
+            $auditorNames = null;
+            if ($request->has('auditors')) {
+                \Modules\Pica\Entities\PicaAuditor::where('pica_id', $doc->id)->delete();
+                $auditorNames = [];
+                if (is_array($request->auditors)) {
+                    foreach (array_values(array_unique(array_filter($request->auditors))) as $aud) {
+                        if (!$aud) continue;
+                        $user = \App\Models\User::where('id', $aud)->orWhere('name', $aud)->orWhere('email', $aud)->first();
+                        $name = $user?->name ?? $aud;
+                        $auditorNames[] = $name;
+                        \Modules\Pica\Entities\PicaAuditor::create([
+                            'pica_id' => $doc->id,
+                            'user_id' => $user?->id,
+                            'name'    => $name,
+                        ]);
+                    }
+                }
+            }
+            $auditorStr = $request->auditor ?? ($auditorNames !== null ? (empty($auditorNames) ? null : implode(', ', $auditorNames)) : $doc->auditor);
             $doc->update([
                 'source'                    => $request->source,
                 'source_id'                 => $request->source_id,
@@ -146,7 +208,7 @@ class PicaApiController extends PicaBaseApiController
                 'company_detail'            => $request->company_detail,
                 'pja_id'                    => $request->pja_id,
                 'pjo_id'                    => $request->pjo_id,
-                'auditor'                   => $request->auditor,
+                'auditor'                   => $auditorStr,
                 'non_compliance'            => $request->non_compliance,
                 'non_compliance_root_cause' => $request->non_compliance_root_cause,
                 'corrective_action'         => $request->corrective_action,
@@ -162,7 +224,7 @@ class PicaApiController extends PicaBaseApiController
             }
 
             DB::commit();
-            return $this->success($doc->fresh());
+            return $this->success($doc->fresh(['auditors.user']));
         } catch (\Throwable $e) {
             DB::rollBack();
             return $this->error($e->getMessage(), 500);
@@ -191,6 +253,8 @@ class PicaApiController extends PicaBaseApiController
                 }
                 $activity->delete();
             }
+            // Hapus auditor eksplisit (jangan hanya andalkan FK cascade)
+            \Modules\Pica\Entities\PicaAuditor::where('pica_id', $doc->id)->delete();
             $doc->delete();
 
             DB::commit();
@@ -223,7 +287,7 @@ class PicaApiController extends PicaBaseApiController
                     // Auto-create New Request activity
                     PicaActivity::create([
                         'pica_id'     => $doc->id,
-                        'description' => self::STATUS_NEW_REQUEST,
+                        'description' => 'Submit for Review',
                         'user_id'     => (string) auth()->id(),
                     ]);
                     break;
@@ -233,12 +297,22 @@ class PicaApiController extends PicaBaseApiController
                         'status'    => self::STATUS_ON_REVIEW_CRS,
                         'requested' => self::REQUESTED_CRS,
                     ]);
+                    PicaActivity::create([
+                        'pica_id'     => $doc->id,
+                        'description' => 'Approved by PJA',
+                        'user_id'     => (string) auth()->id(),
+                    ]);
                     break;
 
                 case 'reject_pja':
                     $doc->update([
                         'status'    => self::STATUS_OPEN,
                         'requested' => self::REQUESTED_RETURN,
+                    ]);
+                    PicaActivity::create([
+                        'pica_id'     => $doc->id,
+                        'description' => 'Rejected by PJA (Return Document)',
+                        'user_id'     => (string) auth()->id(),
                     ]);
                     break;
 
@@ -247,6 +321,11 @@ class PicaApiController extends PicaBaseApiController
                         'status'    => self::STATUS_OPEN,
                         'requested' => self::REQUESTED_APPROVED,
                     ]);
+                    PicaActivity::create([
+                        'pica_id'     => $doc->id,
+                        'description' => 'Approved by CRS',
+                        'user_id'     => (string) auth()->id(),
+                    ]);
                     break;
 
                 case 'reject_crs':
@@ -254,12 +333,22 @@ class PicaApiController extends PicaBaseApiController
                         'status'    => self::STATUS_OPEN,
                         'requested' => self::REQUESTED_RETURN,
                     ]);
+                    PicaActivity::create([
+                        'pica_id'     => $doc->id,
+                        'description' => 'Rejected by CRS (Return Document)',
+                        'user_id'     => (string) auth()->id(),
+                    ]);
                     break;
 
                 case 'close':
                     $doc->update([
                         'status'          => self::STATUS_CLOSED,
                         'settlement_date' => now()->toDateString(),
+                    ]);
+                    PicaActivity::create([
+                        'pica_id'     => $doc->id,
+                        'description' => 'Closed',
+                        'user_id'     => (string) auth()->id(),
                     ]);
                     // Update source document status if applicable
                     $this->closeSourceDocument($doc);
@@ -366,7 +455,8 @@ class PicaApiController extends PicaBaseApiController
         $companies = \App\Models\Company::select('id', 'company_name')->orderBy('company_name')->get();
         $sections  = \App\Models\Section::select('id', 'name')->orderBy('name')->get();
         $locations = \App\Models\AreaLocation::select('id', 'name')->orderBy('name')->get();
-        $users     = \App\Models\User::select('id', 'name')->orderBy('name')->get();
+        // email dibutuhkan frontend Create.jsx: "{u.name} ({u.email})"
+        $users     = \App\Models\User::select('id', 'name', 'email')->orderBy('name')->get();
         $managers  = \App\Models\AreaManager::with('user:id,name')->get();
 
         return $this->success(compact('companies', 'sections', 'locations', 'users', 'managers'));
@@ -448,8 +538,11 @@ class PicaApiController extends PicaBaseApiController
     private function closeSourceDocument(PicaDocument $doc): void
     {
         if ($doc->source === self::SOURCE_FIELD_LEADERSHIP && $doc->source_id) {
-            \Modules\FieldLeadership\Entities\FieldLeadershipRisk::where('id', $doc->source_id)
-                ->update(['status' => 'Close']);
+            // FL module tanpa Eloquent model di aimsv3 -> query-builder.
+            // source_id PICA = field_leadership_risks.id (bukan field_leaderships.id).
+            DB::table('field_leadership_risks')
+                ->where('id', $doc->source_id)
+                ->update(['status' => 'Closed', 'updated_at' => now()]);
         }
     }
 }

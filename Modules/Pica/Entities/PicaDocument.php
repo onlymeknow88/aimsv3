@@ -100,6 +100,11 @@ class PicaDocument extends Model
         return $this->hasMany(PicaFile::class, 'pica_id');
     }
 
+    public function auditors()
+    {
+        return $this->hasMany(PicaAuditor::class, 'pica_id');
+    }
+
     // -------------------------------------------------------------------------
     // Accessors
     // -------------------------------------------------------------------------
@@ -119,6 +124,13 @@ class PicaDocument extends Model
     {
         if ($this->auditor) {
             return $this->auditor;
+        }
+        // Fallback ke relasi multi-auditor jika kolom legacy kosong
+        if ($this->relationLoaded('auditors') && $this->auditors->isNotEmpty()) {
+            return $this->auditors->map(fn($a) => $a->user?->name ?? $a->name)->filter()->implode(', ');
+        }
+        if (!$this->relationLoaded('auditors') && $this->auditors()->exists()) {
+            return $this->auditors()->pluck('name')->filter()->implode(', ');
         }
         return $this->pjo?->name
             ?? $this->pja?->user?->name

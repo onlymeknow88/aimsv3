@@ -1,6 +1,19 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import { Send, Upload } from 'lucide-react';
+import { Clock, Send, Upload } from 'lucide-react';
+
+const card = {
+    backgroundColor: 'var(--card-bg)',
+    border: '1px solid var(--border-color)',
+    borderRadius: '12px',
+    padding: '16px',
+    boxShadow: 'var(--shadow-sm)',
+};
+const sectionTitle = {
+    fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)',
+    borderBottom: '1px solid var(--border-color)', paddingBottom: '8px',
+    marginBottom: '12px', textTransform: 'uppercase',
+};
 
 export default function DetailActivity({ doc, onRefresh }) {
     const [description, setDescription] = useState('');
@@ -33,29 +46,28 @@ export default function DetailActivity({ doc, onRefresh }) {
     };
 
     return (
-        <div style={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '20px', height: 'fit-content' }}>
-            <p style={{ fontSize: '11px', fontWeight: 800, color: 'var(--primary)', margin: '0 0 16px 0', textTransform: 'uppercase' }}>Timeline Aktivitas</p>
+        <div style={card}>
+            <h4 style={sectionTitle}>Timeline Aktivitas</h4>
 
             {/* Activity list */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '20px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '16px' }}>
                 {(!doc.activities || doc.activities.length === 0) ? (
-                    <p style={{ fontSize: '12px', color: 'var(--text-secondary)', textAlign: 'center', padding: '16px 0' }}>Belum ada aktivitas.</p>
+                    <div style={{ textAlign: 'center', padding: '16px 0', color: 'var(--text-muted)', fontSize: '11px' }}>Belum ada aktivitas.</div>
                 ) : (
                     [...doc.activities].reverse().map(act => (
-                        <div key={act.id} style={{ padding: '12px', backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                                <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--primary)' }}>
-                                    {act.user?.name ?? 'User'}
-                                </span>
-                                <span style={{ fontSize: '10px', color: 'var(--text-secondary)' }}>
-                                    {new Date(act.created_at).toLocaleString('id-ID')}
-                                </span>
+                        <div key={act.id} style={{ borderBottom: '1px solid #f8fafc', paddingBottom: '10px', fontSize: '11px' }}>
+                            <div style={{ fontWeight: 700, color: 'var(--text-primary)', marginBottom: '2px' }}>
+                                {act.user?.name ?? 'User'}
                             </div>
-                            <p style={{ fontSize: '12px', color: 'var(--text-primary)', margin: '0 0 8px 0', lineHeight: '1.5' }}>
+                            <div style={{ fontSize: '9px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px', marginTop: '4px' }}>
+                                <Clock size={9} />
+                                {act.created_at ? new Date(act.created_at).toLocaleString('id-ID', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: 'short' }) : ''}
+                            </div>
+                            <p style={{ fontSize: '12px', color: 'var(--text-primary)', margin: '6px 0 0 0', lineHeight: '1.5' }}>
                                 {act.description}
                             </p>
                             {act.files?.length > 0 && (
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                <div style={{ marginTop: '6px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                     {act.files.map(f => (
                                         <a
                                             key={f.id}
@@ -96,12 +108,16 @@ export default function DetailActivity({ doc, onRefresh }) {
                         </div>
                     )}
 
-                    {error && <p style={{ fontSize: '11px', color: '#ef4444', marginBottom: '8px' }}>{error}</p>}
+                    {error && (
+                        <div style={{ fontSize: '11px', color: 'var(--danger)', padding: '6px 8px', backgroundColor: 'rgba(239,68,68,0.08)', borderRadius: '6px', marginBottom: '8px' }}>
+                            {error}
+                        </div>
+                    )}
 
                     <button
                         type="submit"
                         disabled={submitting || !description.trim()}
-                        style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '8px 16px', background: 'linear-gradient(135deg, #1d4ed8, #153B73)', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '12px', fontWeight: 700, cursor: 'pointer', width: '100%', justifyContent: 'center' }}
+                        style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '6px', padding: '9px 14px', backgroundColor: 'var(--primary)', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '11px', fontWeight: 700, cursor: submitting || !description.trim() ? 'not-allowed' : 'pointer', opacity: submitting ? 0.7 : 1, width: '100%' }}
                     >
                         <Send size={12} />
                         {submitting ? 'Menyimpan...' : 'Kirim Aktivitas'}
