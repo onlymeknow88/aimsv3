@@ -2,14 +2,14 @@ import { Doughnut } from 'react-chartjs-2';
 import React from 'react';
 
 const COLORS = ['#dc2626', '#f97316', '#eab308', '#22c55e', '#3b82f6', '#8b5cf6', '#ec4899'];
-const MUTED  = '#94a3b8';
+const MUTED  = 'var(--text-secondary)';
 
 function Skel({ w = '100%', h = '12px', r = '4px' }) {
     return (
         <div style={{
             width: w, height: h, borderRadius: r,
             backgroundColor: '#e2e8f0',
-            animation: 'incident-pulse 1.8s infinite ease-in-out',
+            animation: 'dashboard-pulse 1.8s infinite ease-in-out',
         }} />
     );
 }

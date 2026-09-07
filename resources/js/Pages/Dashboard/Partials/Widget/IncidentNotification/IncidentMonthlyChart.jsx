@@ -3,14 +3,14 @@ import React from 'react';
 
 const P      = '#dc2626';
 const BORDER = '#e2e8f0';
-const MUTED  = '#94a3b8';
+const MUTED  = 'var(--text-secondary)';
 
 function Skel({ h = '12px' }) {
     return (
         <div style={{
             width: '100%', height: h, borderRadius: '4px',
             backgroundColor: '#e2e8f0',
-            animation: 'incident-pulse 1.8s infinite ease-in-out',
+            animation: 'dashboard-pulse 1.8s infinite ease-in-out',
         }} />
     );
 }

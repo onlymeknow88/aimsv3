@@ -6,40 +6,15 @@ import {
     LineElement, LinearScale, PointElement, Tooltip,
 } from 'chart.js';
 import React from 'react';
-import useProductionWidget from './Hooks/useProductionWidget';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, PointElement, LineElement, Filler, Legend, Tooltip);
 
 const COLORS = ['#153B73', '#FF8C24', '#2FBF71', '#2D7FF9', '#F5A623'];
-const MUTED  = '#94a3b8';
+const MUTED  = 'var(--text-secondary)';
 const P      = '#153B73';
 
-const CSS = `
-    @keyframes prod-ytd-pulse {
-        0%, 100% { opacity: 1; }
-        50%       { opacity: 0.4; }
-    }
-    @keyframes prod-ytd-spin {
-        from { transform: rotate(0deg); }
-        to   { transform: rotate(360deg); }
-    }
-    .prod-ytd-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 24px;
-        align-items: start;
-    }
-    .prod-ytd-grid > div {
-        min-width: 0;
-        overflow: hidden;
-    }
-    @media (max-width: 640px) {
-        .prod-ytd-grid { grid-template-columns: 1fr; }
-    }
-`;
-
 function Skel({ h = '12px' }) {
-    return <div style={{ width: '100%', height: h, borderRadius: '4px', backgroundColor: '#e2e8f0', animation: 'prod-ytd-pulse 1.8s infinite ease-in-out' }} />;
+    return <div style={{ width: '100%', height: h, borderRadius: '4px', backgroundColor: '#e2e8f0', animation: 'dashboard-pulse 1.8s infinite ease-in-out' }} />;
 }
 
 function SkeletonHorizontalBar() {
@@ -51,7 +26,7 @@ function SkeletonHorizontalBar() {
                 {bars.map((w, i) => (
                     <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <div style={{ width: '36px', height: '10px', borderRadius: '4px', backgroundColor: '#e2e8f0', flexShrink: 0 }} />
-                        <div style={{ width: `${w}%`, height: '20px', borderRadius: '4px', backgroundColor: '#e2e8f0', animation: `prod-ytd-pulse 1.8s infinite ease-in-out` }} />
+                        <div style={{ width: `${w}%`, height: '20px', borderRadius: '4px', backgroundColor: '#e2e8f0', animation: `dashboard-pulse 1.8s infinite ease-in-out` }} />
                     </div>
                 ))}
             </div>
@@ -77,15 +52,20 @@ function SkeletonLineChart() {
 function YearlyHorizontalBarChart({ yearly = [], loading }) {
     const labels = yearly.map(y => String(y.year));
 
-    const CATEGORY_NAMES = ['Coal Shiping', 'Waste Removal', 'Coal Mining', 'Coal Hauling', 'Coal Barged'];
+    // Derive nama kategori dari data (urutan kemunculan pertama),
+    // agar tidak pecah saat kategori backend bertambah/berubah.
+    const categoryNames = [];
+    yearly.forEach(y => (y.category ?? []).forEach(c => {
+        if (c?.name && !categoryNames.includes(c.name)) categoryNames.push(c.name);
+    }));
 
-    const datasets = CATEGORY_NAMES.map((name, i) => ({
+    const datasets = categoryNames.map((name, i) => ({
         label: name,
         data: yearly.map(y => {
             const cat = (y.category ?? []).find(c => c.name === name);
             return cat ? Number(cat.total) : 0;
         }),
-        backgroundColor: COLORS[i],
+        backgroundColor: COLORS[i % COLORS.length],
         borderRadius: 3,
         borderWidth: 0,
         barPercentage: 0.8,
@@ -224,37 +204,35 @@ function MonthlyLineChart({ monthly = [], loading }) {
     );
 }
 
-export default function ProductionYtdWidget({ filters = {} }) {
-    const { stats, loading, error, refetch } = useProductionWidget(filters);
+export default function ProductionYtdWidget({ production }) {
+    const { stats, loading, error, refetch } = production ?? {};
     const isEmpty = !loading && !error && (stats?.summary?.ytd ?? 0) === 0;
 
     return (
         <div style={{
-            backgroundColor: '#fff',
+            backgroundColor: 'var(--card-bg)',
             border: '1px solid var(--border-color, #e2e8f0)',
             borderRadius: '16px', padding: '24px',
             boxShadow: 'var(--shadow-sm, 0 1px 3px rgba(0,0,0,0.06))',
             marginBottom: '32px', width: '100%', boxSizing: 'border-box',
         }}>
-            <style>{CSS}</style>
-
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', gap: '8px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <BarChart2 size={16} style={{ color: P, flexShrink: 0 }} />
-                    <h4 style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-primary, #1e293b)', margin: 0, textTransform: 'uppercase', letterSpacing: '0.3px' }}>
+                    <h2 style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-primary, #1e293b)', margin: 0, textTransform: 'uppercase', letterSpacing: '0.3px' }}>
                         Production YTD
-                    </h4>
+                    </h2>
                 </div>
-                {loading && <RefreshCw size={14} style={{ color: '#94a3b8', animation: 'prod-ytd-spin 1s linear infinite' }} />}
+                {loading && <RefreshCw size={14} style={{ color: 'var(--text-secondary)', animation: 'dashboard-spin 1s linear infinite' }} />}
             </div>
 
             {error ? (
-                <div style={{ textAlign: 'center', padding: '32px', color: '#94a3b8', fontSize: '13px' }}>
+                <div style={{ textAlign: 'center', padding: '32px', color: 'var(--text-secondary)', fontSize: '13px' }}>
                     Gagal memuat data.{' '}
                     <button onClick={refetch} style={{ color: P, background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600 }}>Coba lagi</button>
                 </div>
             ) : isEmpty ? (
-                <div style={{ textAlign: 'center', padding: '32px', color: '#94a3b8', fontSize: '13px' }}>Belum ada data Production YTD.</div>
+                <div style={{ textAlign: 'center', padding: '32px', color: 'var(--text-secondary)', fontSize: '13px' }}>Belum ada data Production YTD.</div>
             ) : (
                 <div className="prod-ytd-grid">
                     <YearlyHorizontalBarChart yearly={stats?.yearly ?? []} loading={loading} />

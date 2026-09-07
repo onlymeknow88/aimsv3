@@ -21,6 +21,9 @@ export default function useDashboard(initialEvents = [], initialSlideshows = [],
         : (filters.months ?? '');
 
     useEffect(() => {
+        const controller = new AbortController();
+        const { signal } = controller;
+
         setLoading(true);
 
         const params = {};
@@ -29,8 +32,8 @@ export default function useDashboard(initialEvents = [], initialSlideshows = [],
 
         // Fetch dashboard data + COE stats secara paralel
         Promise.all([
-            axios.get('/api/dashboard/data', { params }),
-            axios.get('/api/dashboard/coe/stats', { params }),
+            axios.get('/api/dashboard/data', { params, signal }),
+            axios.get('/api/dashboard/coe/stats', { params, signal }),
         ])
             .then(([dashRes, statsRes]) => {
                 if (dashRes.data?.result) {
@@ -44,11 +47,14 @@ export default function useDashboard(initialEvents = [], initialSlideshows = [],
                 }
             })
             .catch(err => {
+                if (axios.isCancel(err)) return;
                 console.error('Failed to fetch dashboard data:', err);
             })
             .finally(() => {
-                setLoading(false);
+                if (!signal.aborted) setLoading(false);
             });
+
+        return () => controller.abort();
     }, [yearsKey, monthsKey]);
 
     const slides = slidesData.length > 0 ? slidesData : [

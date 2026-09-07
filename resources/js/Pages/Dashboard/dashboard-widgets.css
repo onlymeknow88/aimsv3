@@ -1,0 +1,182 @@
+/* Keyframes bersama untuk seluruh widget main dashboard — single source, prefers-reduced-motion handled globally */
+@keyframes dashboard-pulse {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.4; }
+}
+
+@keyframes dashboard-spin {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .dashboard-pulse,
+    .dashboard-spin,
+    [class*="-pulse"],
+    [class*="-spin"] {
+        animation: none !important;
+    }
+}
+
+/* Focus visible untuk dashboard controls */
+.dashboard-grid-hero button:focus-visible,
+.dashboard-grid-hero a:focus-visible,
+.slideshow-card button:focus-visible {
+    outline: 2px solid #fff;
+    outline-offset: 2px;
+    box-shadow: 0 0 0 4px rgba(255,140,36,0.35);
+}
+
+/* Grid hero area (Slideshow + Calendar) */
+.dashboard-grid-hero {
+    display: grid;
+    grid-template-columns: 1.8fr 1.2fr;
+    gap: 24px;
+    margin-bottom: 32px;
+}
+
+@media (max-width: 768px) {
+    .dashboard-grid-hero {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Grid widget Production MTD / YTD */
+.prod-mtd-grid,
+.prod-ytd-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    align-items: start;
+}
+
+.prod-mtd-grid > div,
+.prod-ytd-grid > div {
+    min-width: 0;
+    overflow: hidden;
+}
+
+@media (max-width: 640px) {
+    .prod-mtd-grid,
+    .prod-ytd-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ——— Dashboard Layout — moved from DashboardLayout.jsx inline <style> ——— */
+@media (max-width: 1024px) {
+    .sidebar-container {
+        position: fixed !important;
+        z-index: 999;
+        height: 100vh !important;
+        /* transform handled via inline style for open/close, fallback hidden */
+    }
+    .sidebar-container[data-open="false"] {
+        transform: translateX(-100%);
+    }
+    .sidebar-container[data-open="true"] {
+        transform: translateX(0);
+    }
+    .main-content-container {
+        margin-left: 0 !important;
+        width: 100% !important;
+    }
+    .mobile-toggle {
+        display: flex !important;
+    }
+    .dashboard-header {
+        padding: 0 16px !important;
+    }
+    .header-title {
+        font-size: 14px !important;
+        white-space: nowrap !important;
+    }
+    .header-subtitle {
+        display: none !important;
+    }
+    .mobile-backdrop {
+        display: block !important;
+    }
+    .dashboard-grid-hero,
+    .dashboard-grid-analytics,
+    .dashboard-grid-footer,
+    .dashboard-grid-info {
+        grid-template-columns: 1fr !important;
+        gap: 16px !important;
+    }
+    .main-container {
+        padding: 16px !important;
+    }
+}
+
+@media (min-width: 1025px) {
+    .sidebar-container {
+        position: sticky !important;
+        top: 0 !important;
+        left: 0 !important;
+        height: 100vh !important;
+        z-index: auto !important;
+        /* Desktop: smooth collapse via width + transform */
+        transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), min-width 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    }
+    .sidebar-container[data-open="false"] {
+        width: 0 !important;
+        min-width: 0 !important;
+        transform: translateX(-100%) !important;
+        overflow: hidden !important;
+        border-right: none !important;
+    }
+    .sidebar-container[data-open="true"] {
+        width: 280px !important;
+        min-width: 280px !important;
+        transform: translateX(0) !important;
+    }
+    .mobile-backdrop {
+        display: none !important;
+    }
+}
+
+/* ——— Shared skeleton — replaces duplicated coe-pulse/news-pulse/docsys-pulse ——— */
+.skeleton-dashboard {
+    animation: dashboard-pulse 1.8s infinite ease-in-out;
+}
+@media (prefers-reduced-motion: reduce) {
+    .skeleton-dashboard {
+        animation: none !important;
+        opacity: 0.7;
+    }
+}
+
+/* ——— Touch target 44px enforcement for slideshow controls ——— */
+.slideshow-control {
+    min-width: 44px;
+    min-height: 44px;
+}
+
+/* ——— Slideshow responsive — moved from SlideShow.jsx inline ——— */
+@media (max-width: 768px) {
+    .slideshow-card {
+        height: auto !important;
+        aspect-ratio: 16/9 !important;
+        padding: 20px !important;
+    }
+    .slideshow-title {
+        font-size: 16px !important;
+    }
+    .slideshow-desc {
+        font-size: 11px !important;
+    }
+    .slideshow-content {
+        max-width: 100% !important;
+    }
+    .slideshow-fallback {
+        width: 100% !important;
+        right: 0 !important;
+        left: 0 !important;
+        top: 20px !important;
+        bottom: 20px !important;
+        opacity: 0.15 !important;
+        background-position: center !important;
+    }
+}
+

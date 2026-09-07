@@ -10,7 +10,7 @@ function LoadingSkeleton() {
     return (
         <>
             <style>{`
-                @keyframes docsys-pulse {
+                @keyframes dashboard-pulse {
                     0%, 100% { opacity: 1; }
                     50% { opacity: 0.4; }
                 }
@@ -94,7 +94,7 @@ function ErrorState({ onRetry }) {
             justifyContent: 'center',
             gap: '12px',
             padding: '40px 20px',
-            color: '#94a3b8',
+            color: 'var(--text-secondary)',
         }}>
             <FileText size={32} style={{ color: '#e2e8f0' }} />
             <span style={{ fontSize: '13px' }}>Gagal memuat data dokumen</span>
@@ -107,7 +107,7 @@ function ErrorState({ onRetry }) {
                     padding: '6px 14px',
                     borderRadius: '8px',
                     border: '1px solid #e2e8f0',
-                    backgroundColor: '#fff',
+                    backgroundColor: 'var(--card-bg)',
                     color: '#475569',
                     fontSize: '12px',
                     fontWeight: 600,
@@ -134,7 +134,7 @@ export default function DocumentSystemWidget({ filters = {} }) {
 
     return (
         <div style={{
-            backgroundColor: '#fff',
+            backgroundColor: 'var(--card-bg)',
             border: '1px solid var(--border-color, #e2e8f0)',
             borderRadius: '16px',
             padding: '24px',
@@ -151,14 +151,14 @@ export default function DocumentSystemWidget({ filters = {} }) {
             }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <FileText size={16} style={{ color: 'var(--primary)' }} />
-                    <h4 style={{
+                    <h2 style={{
                         fontSize: '14.5px',
                         fontWeight: 700,
                         color: 'var(--text-primary, #1e293b)',
                         margin: 0,
                     }}>
                         DOCUMENT SYSTEM
-                    </h4>
+                    </h2>
                 </div>
 
                 {/* Subtle refresh spinner while loading */}
@@ -166,15 +166,15 @@ export default function DocumentSystemWidget({ filters = {} }) {
                     <RefreshCw
                         size={14}
                         style={{
-                            color: '#94a3b8',
-                            animation: 'docsys-spin 1s linear infinite',
+                            color: 'var(--text-secondary)',
+                            animation: 'dashboard-spin 1s linear infinite',
                         }}
                     />
                 )}
             </div>
 
             <style>{`
-                @keyframes docsys-spin {
+                @keyframes dashboard-spin {
                     from { transform: rotate(0deg); }
                     to   { transform: rotate(360deg); }
                 }

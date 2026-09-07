@@ -1,16 +1,14 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { ArrowRight, Calendar, FileText, Newspaper } from 'lucide-react';
-import NewsUpdateDetailModal from './NewsUpdateDetailModal';
 
 // Skeleton loader untuk 1 card
 function SkeletonCard() {
     return (
-        <div style={{
-            backgroundColor: '#fff',
+        <div className="skeleton-dashboard" aria-hidden="true" style={{
+            backgroundColor: 'var(--card-bg)',
             border: '1px solid #e2e8f0',
             borderRadius: '12px',
             overflow: 'hidden',
-            animation: 'news-pulse 1.8s infinite ease-in-out',
         }}>
             <div style={{ height: '140px', backgroundColor: '#f1f5f9' }} />
             <div style={{ padding: '14px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -38,23 +36,9 @@ function ThumbnailPlaceholder() {
 }
 
 export default function NewsUpdate({ newsItems = [], loading }) {
-    const [selectedNewsId, setSelectedNewsId] = useState(null);
-    const [isModalOpen, setIsModalOpen] = useState(false);
-
-    const handleCardClick = (e, id) => {
-        e.preventDefault();
-        setSelectedNewsId(id);
-        setIsModalOpen(true);
-    };
-
-    const handleModalClose = () => {
-        setIsModalOpen(false);
-        setSelectedNewsId(null);
-    };
-
     return (
-        <div style={{
-            backgroundColor: '#fff',
+        <section aria-label="Berita dan pembaruan" style={{
+            backgroundColor: 'var(--card-bg)',
             border: '1px solid var(--border-color)',
             borderRadius: '16px',
             padding: '24px',
@@ -62,30 +46,35 @@ export default function NewsUpdate({ newsItems = [], loading }) {
             marginBottom: '32px',
         }}>
             <style>{`
-                @keyframes news-pulse {
-                    0%, 100% { opacity: 1; }
-                    50% { opacity: 0.5; }
-                }
                 .news-card-link:hover .news-card-inner {
                     transform: translateY(-2px);
                     box-shadow: 0 4px 16px rgba(0,0,0,0.08);
                 }
+                .news-card-link:focus-visible .news-card-inner {
+                    outline: 2px solid var(--primary);
+                    outline-offset: 2px;
+                }
                 .news-card-inner {
                     transition: transform 0.2s ease, box-shadow 0.2s ease;
+                }
+                @media (prefers-reduced-motion: reduce) {
+                    .news-card-inner { transition: none !important; }
+                    .news-card-link:hover .news-card-inner { transform: none !important; }
                 }
             `}</style>
 
             {/* Header */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <Newspaper size={16} style={{ color: 'var(--primary)' }} />
-                    <h4 style={{ fontSize: '14.5px', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>NEWS &amp; UPDATE</h4>
+                    <Newspaper size={16} aria-hidden="true" style={{ color: 'var(--primary)' }} />
+                    <h2 style={{ fontSize: '14.5px', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>NEWS &amp; UPDATE</h2>
                 </div>
                 <a
-                    href="/dashboard-portal/news-and-update"
-                    style={{ fontSize: '12px', color: 'var(--primary)', fontWeight: 600, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                    href="/news"
+                    aria-label="Lihat semua berita"
+                    style={{ fontSize: '12px', color: 'var(--primary)', fontWeight: 600, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px', minHeight: '44px', padding: '6px 8px' }}
                 >
-                    Lihat Semua <ArrowRight size={12} />
+                    Lihat Semua <ArrowRight size={12} aria-hidden="true" />
                 </a>
             </div>
 
@@ -102,15 +91,14 @@ export default function NewsUpdate({ newsItems = [], loading }) {
                     newsItems.map(item => (
                         <a
                             key={item.id}
-                            href={`/dashboard-portal/news-and-update/${item.id}`}
+                            href={`/news/${item.id}`}
                             className="news-card-link"
-                            onClick={(e) => handleCardClick(e, item.id)}
                             style={{ textDecoration: 'none', display: 'block' }}
                         >
                             <div
                                 className="news-card-inner"
                                 style={{
-                                    backgroundColor: '#fff',
+                                    backgroundColor: 'var(--card-bg)',
                                     border: '1px solid #e2e8f0',
                                     borderRadius: '12px',
                                     overflow: 'hidden',
@@ -176,8 +164,8 @@ export default function NewsUpdate({ newsItems = [], loading }) {
                                         {item.title}
                                     </h5>
                                     {item.post_at && (
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#94a3b8' }}>
-                                            <Calendar size={10} />
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--text-secondary)' }}>
+                                            <Calendar size={10} aria-hidden="true" />
                                             <span style={{ fontSize: '11px' }}>{item.post_at}</span>
                                         </div>
                                     )}
@@ -190,20 +178,13 @@ export default function NewsUpdate({ newsItems = [], loading }) {
                         gridColumn: '1 / -1',
                         textAlign: 'center',
                         padding: '40px',
-                        color: '#94a3b8',
+                        color: 'var(--text-secondary)',
                         fontSize: '13px',
                     }}>
                         Belum ada berita atau pengumuman.
                     </div>
                 )}
             </div>
-
-            {/* News Detail Modal */}
-            <NewsUpdateDetailModal
-                newsId={selectedNewsId}
-                isOpen={isModalOpen}
-                onClose={handleModalClose}
-            />
-        </div>
+        </section>
     );
 }

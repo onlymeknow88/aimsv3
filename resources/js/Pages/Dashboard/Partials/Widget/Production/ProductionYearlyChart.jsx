@@ -2,7 +2,7 @@ import { Bar } from 'react-chartjs-2';
 import React from 'react';
 
 const COLORS = ['#3b82f6', '#f97316', '#22c55e', '#a855f7', '#eab308'];
-const MUTED  = '#94a3b8';
+const MUTED  = 'var(--text-secondary)';
 
 function Skel({ h = '12px' }) {
     return (

@@ -9,7 +9,7 @@ function Skel({ w = '100%', h = '12px', r = '4px' }) {
         <div style={{
             width: w, height: h, borderRadius: r,
             backgroundColor: '#e2e8f0',
-            animation: 'incident-pulse 1.8s infinite ease-in-out',
+            animation: 'dashboard-pulse 1.8s infinite ease-in-out',
         }} />
     );
 }
@@ -27,7 +27,7 @@ export default function IncidentSummary({ summary, loading }) {
                 <div style={{
                     background: P, borderRadius: '12px', padding: '16px 20px',
                     display: 'flex', flexDirection: 'column', gap: '10px',
-                    animation: 'incident-pulse 1.5s infinite',
+                    animation: 'dashboard-pulse 1.8s infinite ease-in-out',
                 }}>
                     <Skel w="50%" h="11px" />
                     <Skel w="35%" h="36px" />

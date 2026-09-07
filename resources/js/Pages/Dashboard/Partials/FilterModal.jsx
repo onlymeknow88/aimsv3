@@ -1,5 +1,5 @@
 import { Calendar, RotateCcw, SlidersHorizontal, X } from 'lucide-react';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { AVAILABLE_MONTHS, AVAILABLE_YEARS, useDashboardFilter } from '@/Context/DashboardFilterContext';
 
 const SECTION_STYLE = {
@@ -12,18 +12,21 @@ const SECTION_TITLE_STYLE = {
     marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px',
 };
 
-function CheckItem({ label, checked, onChange, accent = '#153B73' }) {
+function CheckItem({ label, checked, onChange, accent = '#153B73', id }) {
     return (
-        <label style={{
+        <label htmlFor={id} style={{
             display: 'flex', alignItems: 'center', gap: '10px',
-            padding: '7px 0', cursor: 'pointer',
+            padding: '10px 0', cursor: 'pointer',
             borderBottom: '1px solid #f8fafc',
+            minHeight: '44px',
         }}>
             <input
+                id={id}
                 type="checkbox"
                 checked={checked}
                 onChange={onChange}
-                style={{ width: '15px', height: '15px', accentColor: accent, cursor: 'pointer', flexShrink: 0 }}
+                aria-checked={checked}
+                style={{ width: '18px', height: '18px', accentColor: accent, cursor: 'pointer', flexShrink: 0 }}
             />
             <span style={{ fontSize: '13px', color: checked ? '#0f172a' : '#475569', fontWeight: checked ? 600 : 400 }}>
                 {label}
@@ -44,14 +47,54 @@ export default function FilterModal() {
     const [localYears,  setLocalYears]  = useState(selectedYears);
     const [localMonths, setLocalMonths] = useState(selectedMonths);
     const [showAllMonths, setShowAllMonths] = useState(false);
+    const dialogRef = useRef(null);
+    const closeBtnRef = useRef(null);
+    const previousFocusRef = useRef(null);
 
-    // Sync local state saat modal dibuka
+    // Sync local state saat modal dibuka + focus management
     useEffect(() => {
         if (filterModalOpen) {
+            previousFocusRef.current = document.activeElement;
             setLocalYears(selectedYears);
             setLocalMonths(selectedMonths);
+            // focus close button after mount
+            setTimeout(() => closeBtnRef.current?.focus(), 0);
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = '';
+            // restore focus
+            if (previousFocusRef.current && previousFocusRef.current.focus) {
+                previousFocusRef.current.focus();
+            }
         }
-    }, [filterModalOpen]);
+        return () => { document.body.style.overflow = ''; };
+    }, [filterModalOpen, selectedYears, selectedMonths]);
+
+    // ESC + focus trap
+    useEffect(() => {
+        if (!filterModalOpen) return;
+        const handleKey = (e) => {
+            if (e.key === 'Escape') {
+                setFilterModalOpen(false);
+            }
+            if (e.key === 'Tab' && dialogRef.current) {
+                const focusable = dialogRef.current.querySelectorAll(
+                    'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+                );
+                const first = focusable[0];
+                const last = focusable[focusable.length - 1];
+                if (e.shiftKey && document.activeElement === first) {
+                    e.preventDefault();
+                    last.focus();
+                } else if (!e.shiftKey && document.activeElement === last) {
+                    e.preventDefault();
+                    first.focus();
+                }
+            }
+        };
+        document.addEventListener('keydown', handleKey);
+        return () => document.removeEventListener('keydown', handleKey);
+    }, [filterModalOpen, setFilterModalOpen]);
 
     const toggleYear = (year) => {
         setLocalYears(prev =>
@@ -88,6 +131,7 @@ export default function FilterModal() {
 
     return (
         <div
+            role="presentation"
             style={{
                 position: 'fixed', inset: 0,
                 backgroundColor: 'rgba(15,23,42,0.55)',
@@ -98,9 +142,14 @@ export default function FilterModal() {
             onClick={() => setFilterModalOpen(false)}
         >
             <div
+                ref={dialogRef}
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="filter-modal-title"
+                aria-describedby="filter-modal-desc"
                 onClick={e => e.stopPropagation()}
                 style={{
-                    backgroundColor: '#fff',
+                    backgroundColor: 'var(--card-bg)',
                     borderRadius: '16px',
                     width: '100%', maxWidth: '400px',
                     boxShadow: '0 25px 60px rgba(0,0,0,0.25)',
@@ -112,76 +161,87 @@ export default function FilterModal() {
                 {/* Header */}
                 <div style={{
                     padding: '16px 20px',
-                    borderBottom: '1px solid #f1f5f9',
+                    borderBottom: '1px solid var(--border-color)',
                     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                     flexShrink: 0,
                 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <div style={{ width: '32px', height: '32px', borderRadius: '8px', backgroundColor: '#eff6ff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <div aria-hidden="true" style={{ width: '32px', height: '32px', borderRadius: '8px', backgroundColor: '#eff6ff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                             <SlidersHorizontal size={15} color="#153B73" />
                         </div>
-                        <h3 style={{ fontSize: '14px', fontWeight: 800, color: '#0f172a', margin: 0 }}>Filter Dashboard</h3>
+                        <h2 id="filter-modal-title" style={{ fontSize: '14px', fontWeight: 800, color: '#0f172a', margin: 0 }}>Filter Dashboard</h2>
                     </div>
-                    <button onClick={() => setFilterModalOpen(false)}
-                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', padding: '4px', display: 'flex', alignItems: 'center' }}>
-                        <X size={18} />
+                    <button
+                        ref={closeBtnRef}
+                        type="button"
+                        aria-label="Tutup filter"
+                        onClick={() => setFilterModalOpen(false)}
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', padding: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', minWidth: '44px', minHeight: '44px', borderRadius: '8px' }}>
+                        <X size={18} aria-hidden="true" />
                     </button>
                 </div>
 
                 {/* Body — scrollable */}
                 <div style={{ padding: '20px', overflowY: 'auto', flex: 1 }}>
+                    <p id="filter-modal-desc" className="sr-only">Pilih bulan dan tahun untuk memfilter data dashboard. Minimal satu bulan dan satu tahun harus dipilih.</p>
 
                     {/* Section: Bulan */}
-                    <div style={SECTION_STYLE}>
-                        <div style={SECTION_TITLE_STYLE}>
-                            <Calendar size={13} color="#153B73" /> Pilih Bulan
-                        </div>
+                    <fieldset style={{ ...SECTION_STYLE, border: 'none', padding: 0, margin: '0 0 20px 0' }}>
+                        <legend style={{ ...SECTION_TITLE_STYLE, float: 'none', width: '100%' }}>
+                            <Calendar size={13} color="#153B73" aria-hidden="true" /> Pilih Bulan
+                        </legend>
                         {visibleMonths.map(m => (
                             <CheckItem
                                 key={m.value}
+                                id={`filter-month-${m.value}`}
                                 label={m.label}
                                 checked={localMonths.includes(m.value)}
                                 onChange={() => toggleMonth(m.value)}
                             />
                         ))}
                         <button
+                            type="button"
                             onClick={() => setShowAllMonths(v => !v)}
-                            style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#FF8C24', fontSize: '12px', fontWeight: 600, padding: '6px 0', marginTop: '4px' }}
+                            aria-expanded={showAllMonths}
+                            style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#FF8C24', fontSize: '12px', fontWeight: 600, padding: '12px 0', marginTop: '4px', minHeight: '44px' }}
                         >
                             {showAllMonths ? 'Tampilkan Lebih Sedikit' : 'Tampilkan Semua Bulan'}
                         </button>
-                    </div>
+                    </fieldset>
 
                     {/* Section: Tahun */}
-                    <div style={SECTION_STYLE}>
-                        <div style={SECTION_TITLE_STYLE}>
-                            <Calendar size={13} color="#153B73" /> Pilih Tahun
-                        </div>
+                    <fieldset style={{ ...SECTION_STYLE, border: 'none', padding: 0, margin: 0 }}>
+                        <legend style={{ ...SECTION_TITLE_STYLE, float: 'none', width: '100%' }}>
+                            <Calendar size={13} color="#153B73" aria-hidden="true" /> Pilih Tahun
+                        </legend>
                         {AVAILABLE_YEARS.map(year => (
                             <CheckItem
                                 key={year}
+                                id={`filter-year-${year}`}
                                 label={year === currentYear ? `${year} (Berjalan)` : String(year)}
                                 checked={localYears.includes(year)}
                                 onChange={() => toggleYear(year)}
                             />
                         ))}
-                    </div>
+                    </fieldset>
 
                 </div>
 
                 {/* Footer */}
                 <div style={{
                     padding: '14px 20px',
-                    borderTop: '1px solid #f1f5f9',
+                    borderTop: '1px solid var(--border-color)',
                     display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px',
                     flexShrink: 0,
                 }}>
-                    <button onClick={handleReset}
-                        style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 14px', backgroundColor: '#f1f5f9', color: '#475569', border: 'none', borderRadius: '8px', fontSize: '12px', fontWeight: 700, cursor: 'pointer' }}>
-                        <RotateCcw size={13} /> Reset
+                    <button type="button" onClick={handleReset}
+                        aria-label="Reset filter ke tahun dan bulan berjalan"
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '8px 14px', minHeight: '44px', backgroundColor: '#f1f5f9', color: '#475569', border: 'none', borderRadius: '8px', fontSize: '12px', fontWeight: 700, cursor: 'pointer' }}>
+                        <RotateCcw size={13} aria-hidden="true" /> Reset
                     </button>
-                    <button onClick={handleApply}
-                        style={{ padding: '9px 28px', backgroundColor: '#FF8C24', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 700, cursor: 'pointer' }}>
+                    <button type="button" onClick={handleApply}
+                        aria-label="Terapkan filter yang dipilih"
+                        style={{ padding: '10px 28px', minHeight: '44px', backgroundColor: '#FF8C24', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 700, cursor: 'pointer' }}>
                         Terapkan Filter
                     </button>
                 </div>

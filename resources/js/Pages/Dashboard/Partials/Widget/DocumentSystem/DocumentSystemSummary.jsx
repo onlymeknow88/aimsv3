@@ -10,7 +10,7 @@ function SkeletonBlock({ width = '100%', height = '14px', radius = '6px' }) {
             height,
             borderRadius: radius,
             backgroundColor: '#e2e8f0',
-            animation: 'docsummary-pulse 1.8s infinite ease-in-out',
+            animation: 'dashboard-pulse 1.8s infinite ease-in-out',
         }} />
     );
 }
@@ -63,13 +63,13 @@ function ComparisonRow({ label, done, target, percent }) {
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 500 }}>{label}</span>
+                <span style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 500 }}>{label}</span>
                 <span style={{ fontSize: '12px', fontWeight: 700, color: '#1e293b' }}>
-                    {done} <span style={{ fontWeight: 400, color: '#94a3b8' }}>/ {target}</span>
+                    {done} <span style={{ fontWeight: 400, color: 'var(--text-secondary)' }}>/ {target}</span>
                 </span>
             </div>
             <ProgressBar percent={percent} color="#91BA5F" />
-            <span style={{ fontSize: '11px', color: '#94a3b8', textAlign: 'right' }}>{percent}% selesai</span>
+            <span style={{ fontSize: '11px', color: 'var(--text-secondary)', textAlign: 'right' }}>{percent}% selesai</span>
         </div>
     );
 }
@@ -89,7 +89,7 @@ function KpiCard({ label, actual, target, mark, color = '#153B73', loading }) {
                 display: 'flex',
                 flexDirection: 'column',
                 gap: '10px',
-                animation: 'docsummary-pulse 1.5s infinite',
+                animation: 'dashboard-pulse 1.8s infinite ease-in-out',
             }}>
                 <SkeletonBlock width="60%" height="11px" />
                 <SkeletonBlock width="40%" height="28px" />
@@ -109,7 +109,7 @@ function KpiCard({ label, actual, target, mark, color = '#153B73', loading }) {
             flexDirection: 'column',
             gap: '8px',
         }}>
-            <span style={{ fontSize: '11px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+            <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                 {label}
             </span>
 
@@ -117,7 +117,7 @@ function KpiCard({ label, actual, target, mark, color = '#153B73', loading }) {
                 <span style={{ fontSize: '28px', fontWeight: 800, color, lineHeight: 1 }}>
                     {actual.toLocaleString('id-ID')}
                 </span>
-                <span style={{ fontSize: '12px', color: '#94a3b8' }}>
+                <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
                     / {target.toLocaleString('id-ID')} target
                 </span>
             </div>
@@ -125,7 +125,7 @@ function KpiCard({ label, actual, target, mark, color = '#153B73', loading }) {
             <ProgressBar percent={percent} color={color} />
 
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: '11px', color: '#94a3b8' }}>{percent}% selesai</span>
+                <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>{percent}% selesai</span>
                 {mark && (
                     <span style={{
                         display: 'inline-flex',
@@ -154,7 +154,7 @@ export default function DocumentSystemSummary({ stats, loading }) {
     return (
         <>
             <style>{`
-                @keyframes docsummary-pulse {
+                @keyframes dashboard-pulse {
                     0%, 100% { opacity: 1; }
                     50%       { opacity: 0.45; }
                 }
@@ -171,7 +171,7 @@ export default function DocumentSystemSummary({ stats, loading }) {
                         display: 'flex',
                         flexDirection: 'column',
                         gap: '10px',
-                        animation: 'docsummary-pulse 1.5s infinite',
+                        animation: 'dashboard-pulse 1.8s infinite ease-in-out',
                     }}>
                         <SkeletonBlock width="50%" height="11px" />
                         <SkeletonBlock width="35%" height="36px" />

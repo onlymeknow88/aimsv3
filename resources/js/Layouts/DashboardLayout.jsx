@@ -48,7 +48,7 @@ export default function DashboardLayout({ children, onFilterOpen }) {
         { name: 'Compliance Regulation (KPP)', icon: Layers, href: '#', active: false, moduleSlug: 'compliance' },
         { name: 'Medical Check Up (MCU)', icon: HeartPulse, href: '#', active: false, moduleSlug: 'mcu' },
         { name: 'Contractor Safety Management (CSMS)', icon: LandmarkIcon, href: '/csms/dashboard', active: currentPath.startsWith('/csms'), moduleSlug: 'csms' },
-        { name: 'Safety Operation (KO)', icon: HardHat, href: '#', active: false, moduleSlug: 'safety-operation' },
+        { name: 'Keselamatan Operasi (KO)', icon: HardHat, href: '/ko/dashboard', active: currentPath.startsWith('/ko'), moduleSlug: 'ko' },
         { name: 'PICA', icon: CheckSquare, href: '/pica/dashboard', active: currentPath.startsWith('/pica'), moduleSlug: 'pica' },
     ];
 
@@ -74,62 +74,23 @@ export default function DashboardLayout({ children, onFilterOpen }) {
     return (
         <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: 'var(--bg-color)', position: 'relative' }}>
 
-            {/* CSS Styling Override for Responsiveness */}
-            <style dangerouslySetInnerHTML={{
-                __html: `
-                @media (max-width: 1024px) {
-                    .sidebar-container {
-                        transform: translateX(${sidebarOpen ? '0' : '-280px'});
-                        position: fixed !important;
-                        z-index: 999;
-                        height: 100vh !important;
-                    }
-                    .main-content-container {
-                        margin-left: 0 !important;
-                        width: 100% !important;
-                    }
-                    .mobile-toggle {
-                        display: flex !important;
-                    }
-                    .dashboard-header {
-                        padding: 0 16px !important;
-                    }
-                    .header-title {
-                        font-size: 14px !important;
-                        white-space: nowrap !important;
-                    }
-                    .header-subtitle {
-                        display: none !important;
-                    }
-                    .mobile-backdrop {
-                        display: block !important;
-                    }
-                    /* Force dashboard grids to stack on mobile/tablet */
-                    .dashboard-grid-hero,
-                    .dashboard-grid-analytics,
-                    .dashboard-grid-footer,
-                    .dashboard-grid-info {
-                        grid-template-columns: 1fr !important;
-                        gap: 16px !important;
-                    }
-                    /* Reduce padding on mobile */
-                    .main-container {
-                        padding: 16px !important;
-                    }
-                }
-            `}} />
-
-            {/* Mobile Sidebar Backdrop */}
+            {/* Mobile Sidebar Backdrop — accessible */}
             {sidebarOpen && (
-                <div
+                <button
+                    type="button"
+                    aria-label="Tutup navigasi"
                     onClick={() => setSidebarOpen(false)}
+                    onKeyDown={(e) => { if (e.key === 'Escape') setSidebarOpen(false); }}
                     style={{
                         position: 'fixed',
                         inset: 0,
                         backgroundColor: 'rgba(15, 23, 42, 0.4)',
                         backdropFilter: 'blur(2px)',
                         zIndex: 98,
-                        display: 'none'
+                        display: 'none',
+                        border: 'none',
+                        padding: 0,
+                        cursor: 'pointer',
                     }}
                     className="mobile-backdrop"
                 />
@@ -143,7 +104,7 @@ export default function DashboardLayout({ children, onFilterOpen }) {
                 onFilterOpen={onFilterOpen}
             />
 
-            {/* Main Area */}
+            {/* Main Area — no layout-property animation */}
             <div
                 className="main-content-container"
                 style={{
@@ -151,7 +112,6 @@ export default function DashboardLayout({ children, onFilterOpen }) {
                     display: 'flex',
                     flexDirection: 'column',
                     minWidth: 0,
-                    transition: 'margin-left 0.3s ease'
                 }}
             >
                 {/* Header Partial */}
@@ -164,7 +124,7 @@ export default function DashboardLayout({ children, onFilterOpen }) {
                 />
 
                 {/* Dashboard Content Container */}
-                <main className="main-container" style={{ padding: '32px', flex: 1, overflowY: 'auto' }}>
+                <main className="main-container" id="main-content" tabIndex={-1} style={{ padding: '32px', flex: 1, overflowY: 'auto', outline: 'none' }}>
                     {children}
                 </main>
             </div>

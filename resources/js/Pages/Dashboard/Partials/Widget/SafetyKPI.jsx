@@ -38,8 +38,8 @@ const KPI_CONFIG = [
 
 function SkeletonCard() {
     return (
-        <div style={{
-            backgroundColor: '#fff',
+        <div className="skeleton-dashboard" aria-busy="true" style={{
+            backgroundColor: 'var(--card-bg)',
             border: '1px solid var(--border-color)',
             borderRadius: '12px',
             padding: '20px',
@@ -47,7 +47,6 @@ function SkeletonCard() {
             alignItems: 'center',
             gap: '16px',
             boxShadow: 'var(--shadow-sm)',
-            animation: 'kpi-pulse 1.8s infinite ease-in-out',
         }}>
             <div style={{ width: '48px', height: '48px', borderRadius: '50%', backgroundColor: '#f1f5f9', flexShrink: 0 }} />
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -61,19 +60,12 @@ function SkeletonCard() {
 
 export default function SafetyKPI({ generalStats, loading }) {
     return (
-        <>
-            <style>{`
-                @keyframes kpi-pulse {
-                    0%, 100% { opacity: 1; }
-                    50% { opacity: 0.5; }
-                }
-            `}</style>
-            <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-                gap: '20px',
-                marginBottom: '32px',
-            }}>
+        <section aria-label="Indikator Keselamatan Utama" style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+            gap: '20px',
+            marginBottom: '32px',
+        }}>
                 {loading
                     ? KPI_CONFIG.map((_, i) => <SkeletonCard key={i} />)
                     : KPI_CONFIG.map((kpi) => {
@@ -87,7 +79,7 @@ export default function SafetyKPI({ generalStats, loading }) {
                             <div
                                 key={kpi.key}
                                 style={{
-                                    backgroundColor: '#fff',
+                                    backgroundColor: 'var(--card-bg)',
                                     border: '1px solid var(--border-color)',
                                     borderRadius: '12px',
                                     padding: '20px',
@@ -99,7 +91,7 @@ export default function SafetyKPI({ generalStats, loading }) {
                                 }}
                             >
                                 {/* Icon */}
-                                <div style={{
+                                <div aria-hidden="true" style={{
                                     width: '48px',
                                     height: '48px',
                                     borderRadius: '50%',
@@ -127,18 +119,18 @@ export default function SafetyKPI({ generalStats, loading }) {
                                         {kpi.title}
                                     </span>
 
-                                    <h3 style={{
+                                    <p style={{
                                         fontSize: '22px',
                                         fontWeight: 800,
                                         color: 'var(--text-primary)',
                                         margin: '0 0 4px 0',
                                         lineHeight: 1,
-                                    }}>
+                                    }} aria-label={`${kpi.title} ${hasData ? Number(value).toLocaleString('id-ID') + ' ' + kpi.unit : 'belum ada data'}`}>
                                         {hasData
                                             ? `${Number(value).toLocaleString('id-ID')} ${kpi.unit}`
-                                            : <span style={{ fontSize: '14px', color: '#94a3b8', fontWeight: 500 }}>Belum ada data</span>
+                                            : <span style={{ fontSize: '14px', color: 'var(--text-secondary)', fontWeight: 500 }}>Belum ada data</span>
                                         }
-                                    </h3>
+                                    </p>
 
                                     {/* Trend indicator */}
                                     {hasData && mark && (
@@ -151,8 +143,8 @@ export default function SafetyKPI({ generalStats, loading }) {
                                             color: isUp ? 'var(--success, #16a34a)' : 'var(--danger, #dc2626)',
                                         }}>
                                             {isUp
-                                                ? <TrendingUp size={12} />
-                                                : <TrendingDown size={12} />
+                                                ? <TrendingUp size={12} aria-hidden="true" />
+                                                : <TrendingDown size={12} aria-hidden="true" />
                                             }
                                             {isUp ? 'Naik dari periode lalu' : 'Turun dari periode lalu'}
                                         </span>
@@ -162,7 +154,6 @@ export default function SafetyKPI({ generalStats, loading }) {
                         );
                     })
                 }
-            </div>
-        </>
+        </section>
     );
 }

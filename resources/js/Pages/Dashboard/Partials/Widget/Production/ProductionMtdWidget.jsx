@@ -5,40 +5,15 @@ import {
     Chart as ChartJS, Legend, Tooltip,
 } from 'chart.js';
 import React from 'react';
-import useProductionWidget from './Hooks/useProductionWidget';
 
 ChartJS.register(ArcElement, Legend, Tooltip);
 
 const COLORS = ['#153B73', '#FF8C24', '#2FBF71', '#2D7FF9', '#F5A623'];
-const MUTED  = '#94a3b8';
+const MUTED  = 'var(--text-secondary)';
 const P      = '#1d4ed8';
 
-const CSS = `
-    @keyframes prod-mtd-pulse {
-        0%, 100% { opacity: 1; }
-        50%       { opacity: 0.4; }
-    }
-    @keyframes prod-mtd-spin {
-        from { transform: rotate(0deg); }
-        to   { transform: rotate(360deg); }
-    }
-    .prod-mtd-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 24px;
-        align-items: start;
-    }
-    .prod-mtd-grid > div {
-        min-width: 0;
-        overflow: hidden;
-    }
-    @media (max-width: 640px) {
-        .prod-mtd-grid { grid-template-columns: 1fr; }
-    }
-`;
-
 function Skel({ h = '12px', w = '100%' }) {
-    return <div style={{ width: w, height: h, borderRadius: '4px', backgroundColor: '#e2e8f0', animation: 'prod-mtd-pulse 1.8s infinite ease-in-out' }} />;
+    return <div style={{ width: w, height: h, borderRadius: '4px', backgroundColor: '#e2e8f0', animation: 'dashboard-pulse 1.8s infinite ease-in-out' }} />;
 }
 
 function SkeletonDoughnut() {
@@ -46,8 +21,8 @@ function SkeletonDoughnut() {
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
             <div style={{ width: '12px', height: '160px', display: 'none' }} />
             <div style={{ position: 'relative', width: '180px', height: '180px' }}>
-                <div style={{ width: '180px', height: '180px', borderRadius: '50%', backgroundColor: '#e2e8f0', animation: 'prod-mtd-pulse 1.8s infinite ease-in-out' }} />
-                <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: '100px', height: '100px', borderRadius: '50%', backgroundColor: '#fff' }} />
+                <div style={{ width: '180px', height: '180px', borderRadius: '50%', backgroundColor: '#e2e8f0', animation: 'dashboard-pulse 1.8s infinite ease-in-out' }} />
+                <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: '100px', height: '100px', borderRadius: '50%', backgroundColor: 'var(--card-bg)' }} />
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', width: '100%' }}>
                 {Array.from({ length: 5 }).map((_, i) => (
@@ -65,8 +40,8 @@ function SkeletonProgress() {
     return (
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
             <div style={{ position: 'relative', width: '160px', height: '160px' }}>
-                <div style={{ width: '160px', height: '160px', borderRadius: '50%', backgroundColor: '#e2e8f0', animation: 'prod-mtd-pulse 1.8s infinite ease-in-out' }} />
-                <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: '100px', height: '100px', borderRadius: '50%', backgroundColor: '#fff' }} />
+                <div style={{ width: '160px', height: '160px', borderRadius: '50%', backgroundColor: '#e2e8f0', animation: 'dashboard-pulse 1.8s infinite ease-in-out' }} />
+                <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: '100px', height: '100px', borderRadius: '50%', backgroundColor: 'var(--card-bg)' }} />
             </div>
             <div style={{ width: '100%', padding: '10px', backgroundColor: '#f8fafc', borderRadius: '8px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 {Array.from({ length: 2 }).map((_, i) => <Skel key={i} h="14px" />)}
@@ -216,7 +191,7 @@ function ProgressDoughnut({ progress, summary, loading }) {
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', padding: '10px', backgroundColor: '#f8fafc', borderRadius: '8px' }}>
                         {[
                             { label: 'MTD',    value: Number(summary?.mtd ?? 0).toLocaleString('id-ID', { maximumFractionDigits: 2 }), color: P },
-                            { label: `YTD ${summary?.year ?? ''}`, value: Number(summary?.ytd ?? 0).toLocaleString('id-ID', { maximumFractionDigits: 2 }), color: '#64748b' },
+                            { label: `YTD ${summary?.year ?? ''}`, value: Number(summary?.ytd ?? 0).toLocaleString('id-ID', { maximumFractionDigits: 2 }), color: 'var(--text-secondary)' },
                         ].map(item => (
                             <div key={item.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                 <span style={{ fontSize: '11px', color: '#475569' }}>{item.label}</span>
@@ -230,37 +205,35 @@ function ProgressDoughnut({ progress, summary, loading }) {
     );
 }
 
-export default function ProductionMtdWidget({ filters = {} }) {
-    const { stats, loading, error, refetch } = useProductionWidget(filters);
+export default function ProductionMtdWidget({ production }) {
+    const { stats, loading, error, refetch } = production ?? {};
     const isEmpty = !loading && !error && (stats?.summary?.mtd ?? 0) === 0;
 
     return (
         <div style={{
-            backgroundColor: '#fff',
+            backgroundColor: 'var(--card-bg)',
             border: '1px solid var(--border-color, #e2e8f0)',
             borderRadius: '16px', padding: '24px',
             boxShadow: 'var(--shadow-sm, 0 1px 3px rgba(0,0,0,0.06))',
             marginBottom: '32px', width: '100%', boxSizing: 'border-box',
         }}>
-            <style>{CSS}</style>
-
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', gap: '8px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <BarChart2 size={16} style={{ color: P, flexShrink: 0 }} />
-                    <h4 style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-primary, #1e293b)', margin: 0, textTransform: 'uppercase', letterSpacing: '0.3px' }}>
+                    <h2 style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-primary, #1e293b)', margin: 0, textTransform: 'uppercase', letterSpacing: '0.3px' }}>
                         Production MTD
-                    </h4>
+                    </h2>
                 </div>
-                {loading && <RefreshCw size={14} style={{ color: '#94a3b8', animation: 'prod-mtd-spin 1s linear infinite' }} />}
+                {loading && <RefreshCw size={14} style={{ color: 'var(--text-secondary)', animation: 'dashboard-spin 1s linear infinite' }} />}
             </div>
 
             {error ? (
-                <div style={{ textAlign: 'center', padding: '32px', color: '#94a3b8', fontSize: '13px' }}>
+                <div style={{ textAlign: 'center', padding: '32px', color: 'var(--text-secondary)', fontSize: '13px' }}>
                     Gagal memuat data.{' '}
                     <button onClick={refetch} style={{ color: P, background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600 }}>Coba lagi</button>
                 </div>
             ) : isEmpty ? (
-                <div style={{ textAlign: 'center', padding: '32px', color: '#94a3b8', fontSize: '13px' }}>Belum ada data Production MTD.</div>
+                <div style={{ textAlign: 'center', padding: '32px', color: 'var(--text-secondary)', fontSize: '13px' }}>Belum ada data Production MTD.</div>
             ) : (
                 <div className="prod-mtd-grid">
                     <CategoryDoughnut mtdCategory={stats?.mtdCategory ?? []} loading={loading} />

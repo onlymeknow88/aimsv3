@@ -10,11 +10,11 @@ const P      = '#dc2626';
 const BORDER = '#e2e8f0';
 
 const CSS = `
-    @keyframes incident-pulse {
+    @keyframes dashboard-pulse {
         0%, 100% { opacity: 1; }
         50%       { opacity: 0.4; }
     }
-    @keyframes incident-spin {
+    @keyframes dashboard-spin {
         from { transform: rotate(0deg); }
         to   { transform: rotate(360deg); }
     }
@@ -37,7 +37,7 @@ function ErrorState({ onRetry }) {
         <div style={{
             display: 'flex', flexDirection: 'column',
             alignItems: 'center', justifyContent: 'center',
-            gap: '12px', padding: '48px 20px', color: '#94a3b8',
+            gap: '12px', padding: '48px 20px', color: 'var(--text-secondary)',
         }}>
             <AlertTriangle size={32} style={{ color: '#fca5a5' }} />
             <span style={{ fontSize: '13px' }}>Gagal memuat data Incident Notification</span>
@@ -46,7 +46,7 @@ function ErrorState({ onRetry }) {
                 style={{
                     display: 'inline-flex', alignItems: 'center', gap: '6px',
                     padding: '6px 14px', borderRadius: '8px',
-                    border: '1px solid #e2e8f0', backgroundColor: '#fff',
+                    border: '1px solid #e2e8f0', backgroundColor: 'var(--card-bg)',
                     color: '#475569', fontSize: '12px', fontWeight: 600, cursor: 'pointer',
                 }}
             >
@@ -61,7 +61,7 @@ function EmptyState() {
         <div style={{
             display: 'flex', flexDirection: 'column',
             alignItems: 'center', justifyContent: 'center',
-            gap: '8px', padding: '48px 20px', color: '#94a3b8',
+            gap: '8px', padding: '48px 20px', color: 'var(--text-secondary)',
         }}>
             <AlertTriangle size={28} style={{ color: '#fca5a5' }} />
             <span style={{ fontSize: '13px' }}>Belum ada data Incident Notification.</span>
@@ -75,7 +75,7 @@ export default function IncidentNotificationWidget({ filters = {} }) {
 
     return (
         <div style={{
-            backgroundColor: '#fff',
+            backgroundColor: 'var(--card-bg)',
             border: `1px solid var(--border-color, ${BORDER})`,
             borderRadius: '16px', padding: '24px',
             boxShadow: 'var(--shadow-sm, 0 1px 3px rgba(0,0,0,0.06))',
@@ -87,20 +87,20 @@ export default function IncidentNotificationWidget({ filters = {} }) {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', gap: '8px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
                     <AlertTriangle size={16} style={{ color: P, flexShrink: 0 }} />
-                    <h4 style={{
+                    <h2 style={{
                         fontSize: '13px', fontWeight: 700,
                         color: 'var(--text-primary, #1e293b)', margin: 0,
                         textTransform: 'uppercase', letterSpacing: '0.3px',
                         overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                     }}>
                         Incident Notification
-                    </h4>
+                    </h2>
                 </div>
 
                 {loading && (
                     <RefreshCw
                         size={14}
-                        style={{ color: '#94a3b8', animation: 'incident-spin 1s linear infinite', flexShrink: 0 }}
+                        style={{ color: 'var(--text-secondary)', animation: 'incident-spin 1s linear infinite', flexShrink: 0 }}
                     />
                 )}
             </div>
@@ -127,7 +127,7 @@ export default function IncidentNotificationWidget({ filters = {} }) {
                                 <thead>
                                     <tr style={{ backgroundColor: '#f8fafc' }}>
                                         {['No', 'Tanggal', 'Kasus', 'Kategori'].map(h => (
-                                            <th key={h} style={{ padding: '8px 12px', textAlign: 'left', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.4px', fontSize: '11px', borderBottom: '1px solid #e2e8f0', whiteSpace: 'nowrap' }}>
+                                            <th key={h} style={{ padding: '8px 12px', textAlign: 'left', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.4px', fontSize: '11px', borderBottom: '1px solid #e2e8f0', whiteSpace: 'nowrap' }}>
                                                 {h}
                                             </th>
                                         ))}
@@ -146,11 +146,11 @@ export default function IncidentNotificationWidget({ filters = {} }) {
                                         ))
                                     ) : (stats?.recent ?? []).length === 0 ? (
                                         <tr>
-                                            <td colSpan={4} style={{ padding: '16px 12px', textAlign: 'center', color: '#94a3b8' }}>Tidak ada data</td>
+                                            <td colSpan={4} style={{ padding: '16px 12px', textAlign: 'center', color: 'var(--text-secondary)' }}>Tidak ada data</td>
                                         </tr>
                                     ) : (stats?.recent ?? []).map((item, idx) => (
                                         <tr key={item.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                                            <td style={{ padding: '8px 12px', color: '#94a3b8', fontWeight: 600 }}>{idx + 1}</td>
+                                            <td style={{ padding: '8px 12px', color: 'var(--text-secondary)', fontWeight: 600 }}>{idx + 1}</td>
                                             <td style={{ padding: '8px 12px', color: '#475569', whiteSpace: 'nowrap' }}>{item.date}</td>
                                             <td style={{ padding: '8px 12px', color: '#0f172a', maxWidth: '320px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={item.case}>{item.case}</td>
                                             <td style={{ padding: '8px 12px' }}>

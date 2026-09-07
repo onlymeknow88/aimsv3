@@ -12,11 +12,11 @@ const P      = '#1d4ed8';
 const BORDER = '#e2e8f0';
 
 const CSS = `
-    @keyframes prod-pulse {
+    @keyframes dashboard-pulse {
         0%, 100% { opacity: 1; }
         50%       { opacity: 0.4; }
     }
-    @keyframes prod-spin {
+    @keyframes dashboard-spin {
         from { transform: rotate(0deg); }
         to   { transform: rotate(360deg); }
     }
@@ -47,10 +47,10 @@ const CSS = `
 
 function ErrorState({ onRetry }) {
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '12px', padding: '48px 20px', color: '#94a3b8' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '12px', padding: '48px 20px', color: 'var(--text-secondary)' }}>
             <BarChart2 size={32} style={{ color: '#bfdbfe' }} />
             <span style={{ fontSize: '13px' }}>Gagal memuat data Production</span>
-            <button onClick={onRetry} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '6px 14px', borderRadius: '8px', border: '1px solid #e2e8f0', backgroundColor: '#fff', color: '#475569', fontSize: '12px', fontWeight: 600, cursor: 'pointer' }}>
+            <button onClick={onRetry} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '6px 14px', borderRadius: '8px', border: '1px solid #e2e8f0', backgroundColor: 'var(--card-bg)', color: '#475569', fontSize: '12px', fontWeight: 600, cursor: 'pointer' }}>
                 <RefreshCw size={12} /> Coba Lagi
             </button>
         </div>
@@ -59,7 +59,7 @@ function ErrorState({ onRetry }) {
 
 function EmptyState() {
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '48px 20px', color: '#94a3b8' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '48px 20px', color: 'var(--text-secondary)' }}>
             <BarChart2 size={28} style={{ color: '#bfdbfe' }} />
             <span style={{ fontSize: '13px' }}>Belum ada data Production.</span>
         </div>
@@ -72,7 +72,7 @@ export default function ProductionWidget({ filters = {} }) {
 
     return (
         <div style={{
-            backgroundColor: '#fff',
+            backgroundColor: 'var(--card-bg)',
             border: `1px solid var(--border-color, ${BORDER})`,
             borderRadius: '16px', padding: '24px',
             boxShadow: 'var(--shadow-sm, 0 1px 3px rgba(0,0,0,0.06))',
@@ -84,18 +84,18 @@ export default function ProductionWidget({ filters = {} }) {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', gap: '8px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
                     <BarChart2 size={16} style={{ color: P, flexShrink: 0 }} />
-                    <h4 style={{
+                    <h2 style={{
                         fontSize: '13px', fontWeight: 700,
                         color: 'var(--text-primary, #1e293b)', margin: 0,
                         textTransform: 'uppercase', letterSpacing: '0.3px',
                         overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                     }}>
                         Production
-                    </h4>
+                    </h2>
                 </div>
 
                 {loading && (
-                    <RefreshCw size={14} style={{ color: '#94a3b8', animation: 'prod-spin 1s linear infinite', flexShrink: 0 }} />
+                    <RefreshCw size={14} style={{ color: 'var(--text-secondary)', animation: 'prod-spin 1s linear infinite', flexShrink: 0 }} />
                 )}
             </div>
 

@@ -29,7 +29,7 @@ function SkeletonCircle({ size = 120 }) {
             height: size,
             borderRadius: '50%',
             backgroundColor: '#e2e8f0',
-            animation: 'docdoughnut-pulse 1.8s infinite ease-in-out',
+            animation: 'dashboard-pulse 1.8s infinite ease-in-out',
             flexShrink: 0,
         }} />
     );
@@ -42,7 +42,7 @@ function SkeletonBlock({ width = '100%', height = '14px' }) {
             height,
             borderRadius: '6px',
             backgroundColor: '#e2e8f0',
-            animation: 'docdoughnut-pulse 1.8s infinite ease-in-out',
+            animation: 'dashboard-pulse 1.8s infinite ease-in-out',
         }} />
     );
 }
@@ -165,12 +165,12 @@ function MonthlyBarChart({ summaryMonthly, summaryYearly }) {
         scales: {
             x: {
                 grid: { display: false },
-                ticks: { font: { size: 10 }, color: '#94a3b8' },
+                ticks: { font: { size: 10 }, color: 'var(--text-secondary)' },
             },
             y: {
                 beginAtZero: true,
                 grid: { color: '#f1f5f9' },
-                ticks: { font: { size: 10 }, color: '#94a3b8', precision: 0 },
+                ticks: { font: { size: 10 }, color: 'var(--text-secondary)', precision: 0 },
             },
         },
         animation: { duration: 800, easing: 'easeInOutQuart' },
@@ -223,7 +223,7 @@ export default function DocumentSystemDoughnut({ stats, loading }) {
     return (
         <>
             <style>{`
-                @keyframes docdoughnut-pulse {
+                @keyframes dashboard-pulse {
                     0%, 100% { opacity: 1; }
                     50%       { opacity: 0.45; }
                 }

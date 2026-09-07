@@ -1,7 +1,7 @@
 import { Doughnut } from 'react-chartjs-2';
 import React from 'react';
 
-const MUTED = '#94a3b8';
+const MUTED = 'var(--text-secondary)';
 
 function Skel({ h = '12px' }) {
     return (
