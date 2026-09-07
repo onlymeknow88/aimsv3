@@ -122,7 +122,7 @@ export default function EventTable() {
                             </div>
                         );
                     }
-                    return <span style={{ color: "#94a3b8" }}>-</span>;
+                    return <span style={{ color: "#64748b" }}>-</span>;
                 },
             },
             {
@@ -250,29 +250,43 @@ export default function EventTable() {
                         >
                             <button
                                 onClick={() => openEditModal(ev)}
+                                aria-label={`Edit agenda ${ev.title}`}
                                 style={{
                                     background: "none",
                                     border: "none",
                                     cursor: "pointer",
                                     color: "#3b82f6",
-                                    padding: "4px",
+                                    padding: "10px",
+                                    minWidth: "44px",
+                                    minHeight: "44px",
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    borderRadius: "6px",
                                 }}
                                 title="Edit"
                             >
-                                <Edit2 size={14} />
+                                <Edit2 size={14} aria-hidden="true" />
                             </button>
                             <button
                                 onClick={() => openDeleteModal(ev)}
+                                aria-label={`Hapus agenda ${ev.title}`}
                                 style={{
                                     background: "none",
                                     border: "none",
                                     cursor: "pointer",
                                     color: "#ef4444",
-                                    padding: "4px",
+                                    padding: "10px",
+                                    minWidth: "44px",
+                                    minHeight: "44px",
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    borderRadius: "6px",
                                 }}
                                 title="Hapus"
                             >
-                                <Trash2 size={14} />
+                                <Trash2 size={14} aria-hidden="true" />
                             </button>
                         </div>
                     );
@@ -363,7 +377,7 @@ export default function EventTable() {
                                     left: "12px",
                                     top: "50%",
                                     transform: "translateY(-50%)",
-                                    color: "#94a3b8",
+                                    color: "#64748b",
                                 }}
                             />
                             <input
@@ -373,7 +387,8 @@ export default function EventTable() {
                                 style={{
                                     ...inputStyle,
                                     paddingLeft: "34px",
-                                    width: "200px",
+                                    width: "min(200px, 100%)",
+                                    minWidth: "140px",
                                 }}
                             />
                         </div>
@@ -423,6 +438,8 @@ export default function EventTable() {
                 {/* Error Banner */}
                 {error && (
                     <div
+                        role="alert"
+                        aria-live="polite"
                         style={{
                             backgroundColor: "#fef2f2",
                             border: "1px solid #fecaca",
@@ -449,19 +466,21 @@ export default function EventTable() {
                 >
                     <div style={{ overflowX: "auto" }}>
                         <Table>
+                            <caption className="sr-only" style={{ position: 'absolute', width: '1px', height: '1px', overflow: 'hidden', clip: 'rect(0,0,0,0)' }}>Daftar agenda Center of Excellence</caption>
                             <TableHeader>
                                 {table.getHeaderGroups().map((headerGroup) => (
                                     <TableRow
                                         key={headerGroup.id}
-                                        style={{ backgroundColor: "#f8fafc" }}
+                                        style={{ backgroundColor: "var(--bg-subtle, #f8fafc)" }}
                                     >
                                         {headerGroup.headers.map((header) => (
                                             <TableHead
                                                 key={header.id}
+                                                scope="col"
                                                 style={{
                                                     fontWeight: 700,
                                                     fontSize: "11px",
-                                                    color: "#475569",
+                                                    color: "var(--text-secondary, #475569)",
                                                     textTransform: "uppercase",
                                                     padding: "14px 16px",
                                                     width: header.column
@@ -490,7 +509,7 @@ export default function EventTable() {
                                             style={{
                                                 textAlign: "center",
                                                 padding: "48px",
-                                                color: "#94a3b8",
+                                                color: "#64748b",
                                             }}
                                         >
                                             Memuat data agenda...
@@ -531,7 +550,7 @@ export default function EventTable() {
                                             style={{
                                                 textAlign: "center",
                                                 padding: "48px",
-                                                color: "#94a3b8",
+                                                color: "#64748b",
                                             }}
                                         >
                                             Tidak ada data agenda.

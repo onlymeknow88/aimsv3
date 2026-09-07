@@ -70,12 +70,13 @@ export default function CategoryTable() {
                     <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
                         {/* Search */}
                         <div style={{ position: 'relative' }}>
-                            <Search size={14} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+                            <Search size={14} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: "#64748b" }} />
                             <input
                                 value={search}
                                 onChange={e => setSearch(e.target.value)}
                                 placeholder="Cari kategori..."
-                                style={{ ...inputStyle, paddingLeft: '34px', width: '200px' }}
+                                aria-label="Cari kategori"
+                                style={{ ...inputStyle, paddingLeft: '34px', width: 'min(200px, 100%)' }}
                             />
                         </div>
 
@@ -139,17 +140,18 @@ export default function CategoryTable() {
                 >
                 <div style={{ overflowX: 'auto' }}>
                     <Table>
+                        <caption className="sr-only" style={{ position: 'absolute', width: '1px', height: '1px', overflow: 'hidden', clip: 'rect(0,0,0,0)' }}>Daftar kategori Center of Excellence</caption>
                         <TableHeader>
-                            <TableRow style={{ backgroundColor: '#f8fafc' }}>
-                                <TableHead style={{ fontWeight: 700, fontSize: '11px', color: '#475569', textTransform: 'uppercase', padding: '14px 16px', width: '80px' }}>Warna</TableHead>
-                                <TableHead style={{ fontWeight: 700, fontSize: '11px', color: '#475569', textTransform: 'uppercase', padding: '14px 16px' }}>Nama Kategori</TableHead>
-                                <TableHead style={{ fontWeight: 700, fontSize: '11px', color: '#475569', textTransform: 'uppercase', padding: '14px 16px', textAlign: 'center', width: '120px' }}>Aksi</TableHead>
+                            <TableRow style={{ backgroundColor: 'var(--bg-subtle, #f8fafc)' }}>
+                                <TableHead scope="col" style={{ fontWeight: 700, fontSize: '11px', color: 'var(--text-secondary, #475569)', textTransform: 'uppercase', padding: '14px 16px', width: '80px' }}>Warna</TableHead>
+                                <TableHead scope="col" style={{ fontWeight: 700, fontSize: '11px', color: 'var(--text-secondary, #475569)', textTransform: 'uppercase', padding: '14px 16px' }}>Nama Kategori</TableHead>
+                                <TableHead scope="col" style={{ fontWeight: 700, fontSize: '11px', color: 'var(--text-secondary, #475569)', textTransform: 'uppercase', padding: '14px 16px', textAlign: 'center', width: '120px' }}>Aksi</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {loading ? (
                                 <TableRow>
-                                    <TableCell colSpan={3} style={{ textAlign: 'center', padding: '48px', color: '#94a3b8' }}>
+                                    <TableCell colSpan={3} style={{ textAlign: 'center', padding: '48px', color: "#64748b" }}>
                                         Memuat data kategori...
                                     </TableCell>
                                 </TableRow>
@@ -170,17 +172,19 @@ export default function CategoryTable() {
                                             <div style={{ display: 'inline-flex', gap: '8px' }}>
                                                 <button
                                                     onClick={() => openEditModal(cat)}
-                                                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#3b82f6', padding: '4px' }}
+                                                    aria-label={`Edit kategori ${cat.name}`}
+                                                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#3b82f6', padding: '10px', minWidth: '44px', minHeight: '44px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', borderRadius: '6px' }}
                                                     title="Edit"
                                                 >
-                                                    <Edit2 size={14} />
+                                                    <Edit2 size={14} aria-hidden="true" />
                                                 </button>
                                                 <button
                                                     onClick={() => openDeleteModal(cat)}
-                                                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444', padding: '4px' }}
+                                                    aria-label={`Hapus kategori ${cat.name}`}
+                                                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444', padding: '10px', minWidth: '44px', minHeight: '44px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', borderRadius: '6px' }}
                                                     title="Hapus"
                                                 >
-                                                    <Trash2 size={14} />
+                                                    <Trash2 size={14} aria-hidden="true" />
                                                 </button>
                                             </div>
                                         </TableCell>
@@ -188,7 +192,7 @@ export default function CategoryTable() {
                                 ))
                             ) : (
                                 <TableRow>
-                                    <TableCell colSpan={3} style={{ textAlign: 'center', padding: '48px', color: '#94a3b8' }}>
+                                    <TableCell colSpan={3} style={{ textAlign: 'center', padding: '48px', color: "#64748b" }}>
                                         Tidak ada data kategori.
                                     </TableCell>
                                 </TableRow>

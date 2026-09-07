@@ -1,10 +1,10 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { ChevronLeft, ChevronRight, Search, RefreshCw, Calendar as CalendarIcon } from 'lucide-react';
 import useCalendar from '../Hooks/useCalendar';
 import CalendarModal from './CalendarModal';
 import CoeLayout from '../../../Layouts/CoeLayout';
 import { Head } from '@inertiajs/react';
-import FullCalendar from '@fullcalendar/react';
+const FullCalendar = lazy(() => import('@fullcalendar/react'));
 import dayGridPlugin from '@fullcalendar/daygrid';
 
 const cardStyle = {
@@ -107,12 +107,12 @@ export default function CalendarView() {
                     <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
                         {/* Search Input */}
                         <div style={{ position: 'relative' }}>
-                            <Search size={14} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+                            <Search size={14} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#64748b' }} />
                             <input
                                 value={searchQuery}
                                 onChange={e => setSearchQuery(e.target.value)}
                                 placeholder="Cari nama agenda..."
-                                style={{ ...inputStyle, paddingLeft: '34px', width: '220px' }}
+                                style={{ ...inputStyle, paddingLeft: '34px', width: 'min(220px, 100%)' }}
                             />
                         </div>
 
@@ -197,17 +197,19 @@ export default function CalendarView() {
 
             {/* Monthly Calendar View */}
             <div style={{ ...cardStyle, padding: '24px' }}>
-                <FullCalendar
-                    ref={calendarRef}
-                    plugins={[dayGridPlugin]}
-                    initialView="dayGridMonth"
-                    headerToolbar={false}
-                    events={formattedEvents}
-                    height="auto"
-                    eventClick={(info) => {
-                        setSelectedEvent(info.event.extendedProps.originalEvent);
-                    }}
-                />
+                <Suspense fallback={<div style={{ height: '400px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)' }} role="status" aria-live="polite">Memuat kalender...</div>}>
+                    <FullCalendar
+                        ref={calendarRef}
+                        plugins={[dayGridPlugin]}
+                        initialView="dayGridMonth"
+                        headerToolbar={false}
+                        events={formattedEvents}
+                        height="auto"
+                        eventClick={(info) => {
+                            setSelectedEvent(info.event.extendedProps.originalEvent);
+                        }}
+                    />
+                </Suspense>
                 
                 <style>{`
                     .fc {
