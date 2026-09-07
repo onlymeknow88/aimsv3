@@ -69,7 +69,7 @@ class DashboardPortalController extends Controller
     }
 
     /**
-     * Display a listing of the resource.
+     * Display news & update management page.
      */
     public function newsAndUpdateIndex()
     {

@@ -6,6 +6,7 @@ use App\Helpers\ResponseFormatter;
 use App\Http\Controllers\Controller;
 use App\Services\UserActivityLogService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Modules\DashboardPortal\app\Models\SafetyPerformance;
 
 class SafetyPerformanceController extends Controller
@@ -150,23 +151,29 @@ class SafetyPerformanceController extends Controller
     public function stats(Request $request)
     {
         try {
-            $year = $request->query('year', date('Y'));
-            $parsedYears = array_filter(array_map('intval', explode(',', $year)));
-            $primaryYear = !empty($parsedYears) ? $parsedYears[0] : (int) $year;
+            // Terima "years" (kanonik) atau "year" (kompatibilitas lama)
+            $yearParam   = $request->query('years', $request->query('year', date('Y')));
+            $parsedYears = array_filter(array_map('intval', explode(',', (string) $yearParam)));
+            $primaryYear = !empty($parsedYears) ? $parsedYears[0] : (int) date('Y');
 
-            // Filter by the selected year
+            // Terima "months" (kanonik) atau "month" (kompatibilitas lama)
+            $monthParam   = $request->query('months', $request->query('month'));
+            $parsedMonths = array_values(array_filter(array_map('intval', explode(',', (string) $monthParam))));
+
+            // Filter by the selected year (+ months bila dipilih)
             $rows = SafetyPerformance::where('visible', 'true')
                 ->whereYear('month', $primaryYear)
+                ->when(!empty($parsedMonths), fn ($q) => $q->whereIn(DB::raw('MONTH(`month`)'), $parsedMonths))
                 ->orderBy('month', 'ASC')
                 ->get();
 
             // Sumbu X = nama metric
             $labels = collect(self::METRICS)->pluck('label')->values();
 
-            // Setiap dataset = 1 record, label = 'Performance 0', 'Performance 1', dst
+            // Setiap dataset = 1 record, label = bulan (e.g. Jan 2025)
             $colors = ['#153B73', '#FF8C24', '#2FBF71', '#2D7FF9', '#F5A623'];
             $datasets = $rows->values()->map(fn($r, $i) => [
-                'label'           => 'Performance ' . ($i + 1),
+                'label'           => date('M Y', strtotime($r->month)),
                 'data'            => collect(self::METRICS)->map(fn($m) => (float) ($r->{$m['key']} ?? 0))->values(),
                 'borderColor'     => $colors[$i % count($colors)],
                 'backgroundColor' => $colors[$i % count($colors)],

@@ -223,8 +223,9 @@ class IncidentNotificationController extends Controller
     public function stats(Request $request)
     {
         try {
-            $year = $request->query('year');
-            $parsedYears = array_filter(array_map('intval', explode(',', $year)));
+            // Terima "years" (kanonik) atau "year" (kompatibilitas lama)
+            $year = $request->query('years', $request->query('year'));
+            $parsedYears = array_filter(array_map('intval', explode(',', (string) $year)));
             $primaryYear = !empty($parsedYears) ? $parsedYears[0] : null;
             $trendYear = $primaryYear ?: now()->year;
 
