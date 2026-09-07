@@ -10,6 +10,7 @@ use App\Models\Company;
 use Modules\CSMS\Entities\CsmsChecklistAttachment;
 use Modules\CSMS\Entities\CsmsPjoFile;
 use Modules\CSMS\Entities\CsmsMemoKttFile;
+use Modules\CSMS\Entities\CsmsLetterFile;
 
 /**
  * CSMSBaseApiController
@@ -126,6 +127,27 @@ abstract class CSMSBaseApiController extends Controller
             ]);
         } catch (\Throwable $e) {
             \Log::error('CSMS: gagal upload Memo KTT file', ['memo_id' => $memoId, 'error' => $e->getMessage()]);
+        }
+    }
+
+    // ── Shared: upload Letter file ────────────────────────────────────────────
+    protected function uploadLetterFile($file, string $letterId): void
+    {
+        try {
+            $originalName = $file->getClientOriginalName();
+            $size         = $this->formatFileSize($file->getSize());
+            $uploadResult = uploadToBlobStorage($originalName, $file->getRealPath(), 'csms/letter/' . $letterId);
+
+            CsmsLetterFile::create([
+                'letter_id'     => $letterId,
+                'file'          => $uploadResult['fileBlobPathName'] ?? ('csms/letter/' . $letterId . '/' . $originalName),
+                'name'          => $originalName,
+                'size'          => $size,
+                'blob_url'      => $uploadResult['fileBlobUrl'] ?? null,
+                'blob_response' => isset($uploadResult['blobResponse']) ? json_encode($uploadResult['blobResponse']) : null,
+            ]);
+        } catch (\Throwable $e) {
+            \Log::error('CSMS: gagal upload Letter file', ['letter_id' => $letterId, 'error' => $e->getMessage()]);
         }
     }
 

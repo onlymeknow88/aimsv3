@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
-import { FileText } from 'lucide-react';
+import { FileText, Pencil, Trash2 } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import BlobPreviewModal from '@/Components/BlobPreviewModal';
 
 const thStyle = { fontSize: '11px', fontWeight: 700, color: 'var(--text-primary)', padding: '10px 12px', textTransform: 'uppercase', letterSpacing: '0.03em' };
 const tdStyle = { fontSize: '12px', padding: '10px 12px', color: 'var(--text-secondary)' };
+const actionBtn = { background: 'none', border: 'none', cursor: 'pointer', padding: '4px', display: 'inline-flex', alignItems: 'center' };
 
-export default function MemoKttTable({ memos, loading }) {
+export default function MemoKttTable({ memos, loading, onEdit, onDelete }) {
     const [preview, setPreview] = useState(null);
 
     return (
@@ -21,18 +22,19 @@ export default function MemoKttTable({ memos, loading }) {
                         <TableHead style={thStyle}>Status</TableHead>
                         <TableHead style={thStyle}>Tanggal Memo</TableHead>
                         <TableHead style={thStyle}>Lampiran</TableHead>
+                        <TableHead style={{ ...thStyle, textAlign: 'right' }}>Aksi</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
                     {loading ? (
                         <TableRow>
-                            <TableCell colSpan={7} style={{ padding: '40px', textAlign: 'center', color: 'var(--text-secondary)', fontSize: '13px' }}>
+                            <TableCell colSpan={8} style={{ padding: '40px', textAlign: 'center', color: 'var(--text-secondary)', fontSize: '13px' }}>
                                 Memuat data...
                             </TableCell>
                         </TableRow>
                     ) : !memos.length ? (
                         <TableRow>
-                            <TableCell colSpan={7} style={{ padding: '40px', textAlign: 'center', color: 'var(--text-secondary)', fontSize: '13px' }}>
+                            <TableCell colSpan={8} style={{ padding: '40px', textAlign: 'center', color: 'var(--text-secondary)', fontSize: '13px' }}>
                                 Belum ada data Memo KTT.
                             </TableCell>
                         </TableRow>
@@ -68,6 +70,10 @@ export default function MemoKttTable({ memos, loading }) {
                                     ) : (
                                         <span style={{ color: 'var(--text-muted)' }}>-</span>
                                     )}
+                                </TableCell>
+                                <TableCell style={{ ...tdStyle, textAlign: 'right', whiteSpace: 'nowrap' }}>
+                                    <button onClick={() => onEdit && onEdit(m)} title="Edit" style={{ ...actionBtn, color: 'var(--primary)' }}><Pencil size={14} /></button>
+                                    <button onClick={() => onDelete && onDelete(m)} title="Hapus" style={{ ...actionBtn, color: 'var(--danger, #ef4444)' }}><Trash2 size={14} /></button>
                                 </TableCell>
                             </TableRow>
                         ))

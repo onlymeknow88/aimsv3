@@ -113,6 +113,7 @@ export default function RenewalCreate() {
         fd.append('_method', 'PUT');
         fd.append('questionnaire', JSON.stringify(questionnaire));
         if (questionnaireFile) fd.append('questionnaire_file', questionnaireFile);
+        fd.append('_method', 'PUT'); // rute update renewal hanya menerima PUT
         fd.append('published', isDraft ? 'Draft' : 'Publish');
         fd.append('status',    isDraft ? 'Draft' : 'On Review OHS');
 

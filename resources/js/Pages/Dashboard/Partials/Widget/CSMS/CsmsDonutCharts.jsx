@@ -5,7 +5,7 @@ import React from 'react';
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
-const MUTED  = '#64748b';
+const MUTED  = 'var(--text-secondary)';
 const BORDER = '#e2e8f0';
 const BG     = '#f8fafc';
 const COLORS = ['#153B73', '#ef4444', '#91BA5F', '#FF8C24'];
@@ -46,7 +46,7 @@ function DonutItem({ item, idx, loading }) {
                     {item.name}
                 </span>
                 <span style={{ fontSize: '16px', fontWeight: 800, color, lineHeight: 1 }}>{item.actual}%</span>
-                {!loading && <span style={{ fontSize: '10px', color: '#94a3b8' }}>{item.count ?? 0} records</span>}
+                {!loading && <span style={{ fontSize: '10px', color: 'var(--text-secondary)' }}>{item.count ?? 0} records</span>}
             </div>
         </div>
     );
@@ -58,7 +58,7 @@ export default function CsmsDonutCharts({ progress = [], loading }) {
         : progress;
 
     return (
-        <div style={{ backgroundColor: '#fff', border: `1px solid ${BORDER}`, borderRadius: '12px', padding: '16px', boxSizing: 'border-box' }}>
+        <div style={{ backgroundColor: 'var(--card-bg)', border: `1px solid ${BORDER}`, borderRadius: '12px', padding: '16px', boxSizing: 'border-box' }}>
             <p style={{ fontSize: '10px', fontWeight: 700, color: MUTED, textTransform: 'uppercase', letterSpacing: '.5px', margin: '0 0 12px' }}>Status Sertifikat</p>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                 {items.map((item, i) => <DonutItem key={i} item={item} idx={i} loading={loading} />)}

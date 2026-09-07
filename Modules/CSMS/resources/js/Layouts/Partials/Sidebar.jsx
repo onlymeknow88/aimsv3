@@ -14,7 +14,7 @@ const SLUG_URL = {
     'csms.post-bidding.inactive':     '/csms/post-bidding/inactive',
     'csms.post-bidding.ongoing':      '/csms/post-bidding/lists?status=On Going',
     'csms.post-bidding.draft':        '/csms/post-bidding/lists?status=Draft',
-    'csms.post-bidding.obsolate':     '/csms/post-bidding/lists?status=Obsolete',
+    'csms.post-bidding.obsolete':     '/csms/post-bidding/lists?status=Obsolete',
     'csms.renewal':                   '/csms/renewal/lists',
     'csms.pica':                      '/csms/pica/lists',
     'csms.pjo':                       null,

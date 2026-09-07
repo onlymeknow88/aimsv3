@@ -7,7 +7,8 @@ const STATUS_STYLES = {
     'On Review KTT':       { color: '#2D7FF9', backgroundColor: 'rgba(45,127,249,0.08)' },
     'Approved':            { color: '#2FBF71', backgroundColor: 'rgba(47,191,113,0.08)' },
     'Inactive':            { color: '#ef4444', backgroundColor: 'rgba(239,68,68,0.08)' },
-    'Obsolate':            { color: '#ef4444', backgroundColor: 'rgba(239,68,68,0.08)' },
+    'Obsolete':            { color: '#ef4444', backgroundColor: 'rgba(239,68,68,0.08)' },
+    'Obsolate':            { color: '#ef4444', backgroundColor: 'rgba(239,68,68,0.08)' }, // alias typo lama
 };
 
 export default function StatusBadge({ status }) {

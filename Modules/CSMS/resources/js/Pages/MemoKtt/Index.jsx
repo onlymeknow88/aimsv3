@@ -28,6 +28,8 @@ export default function MemoKttIndex() {
     } = useMemoKtt();
 
     const [showCreate, setShowCreate] = useState(false);
+    const [editing, setEditing]       = useState(null);
+    const [deleting, setDeleting]     = useState(null);
     const [companies, setCompanies]   = useState([]);
     const [selectedFiles, setSelectedFiles] = useState([]);
     const [createForm, setCreateForm] = useState({
@@ -41,6 +43,53 @@ export default function MemoKttIndex() {
         status: 'Active'
     });
     const [creating, setCreating]     = useState(false);
+
+    const emptyForm = { memo_number: '', title: '', ccow_id: '', ktt_id: '', ktt_name: '', date: '', description: '', status: 'Active' };
+    const openEdit = (memo) => {
+        setEditing(memo);
+        setCreateForm({
+            memo_number: memo.memo_number ?? '',
+            title: memo.title ?? '',
+            ccow_id: memo.ccow_id ?? '',
+            ktt_id: memo.ktt_id ?? '',
+            ktt_name: memo.ktt_name ?? '',
+            date: memo.date ? String(memo.date).slice(0, 10) : '',
+            description: memo.description ?? '',
+            status: memo.status ?? 'Active'
+        });
+        setSelectedFiles([]);
+        setShowCreate(true);
+    };
+    const closeModal = () => {
+        setShowCreate(false);
+        setEditing(null);
+        setCreateForm(emptyForm);
+        setSelectedFiles([]);
+    };
+    const handleSave = () => {
+        setCreating(true);
+        const fd = new FormData();
+        fd.append('memo_number', createForm.memo_number);
+        fd.append('title', createForm.title);
+        fd.append('ccow_id', createForm.ccow_id);
+        fd.append('ktt_id', createForm.ktt_id);
+        fd.append('date', createForm.date);
+        fd.append('description', createForm.description || '');
+        fd.append('status', createForm.status || 'Active');
+        selectedFiles.forEach(file => {
+            fd.append('files[]', file);
+        });
+        const req = editing
+            ? (() => { fd.append('_method', 'PUT'); return axios.post(`/api/csms/memo-ktts/${editing.id}`, fd); })()
+            : axios.post('/api/csms/memo-ktts', fd);
+        req.then(() => { closeModal(); refresh(); })
+           .finally(() => setCreating(false));
+    };
+    const handleDelete = () => {
+        if (!deleting) return;
+        axios.delete(`/api/csms/memo-ktts/${deleting.id}`)
+            .then(() => { setDeleting(null); refresh(); });
+    };
 
     useEffect(() => {
         axios.get('/api/csms/master-data')
@@ -99,16 +148,16 @@ export default function MemoKttIndex() {
             </div>
 
             <div style={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--border-color)', borderRadius: '12px', overflow: 'hidden', boxShadow: 'var(--shadow-sm)' }}>
-                <MemoKttTable memos={memos} loading={loading} />
+                <MemoKttTable memos={memos} loading={loading} onEdit={openEdit} onDelete={setDeleting} />
                 <TablePagination pagination={pagination} onPageChange={setPage} limit={limit} onLimitChange={v => { setLimit(v); setPage(1); }} />
             </div>
-            {/* Create Modal */}
+            {/* Create/Edit Modal */}
             {showCreate && (
                 <div style={modalOverlay}>
                     <div style={{ ...modalBox, maxWidth: '600px' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '18px 20px', borderBottom: '1px solid var(--border-color)' }}>
-                            <h3 style={{ fontSize: '14px', fontWeight: 700, margin: 0 }}>Tambah Memo KTT</h3>
-                            <button onClick={() => { setShowCreate(false); setSelectedFiles([]); }} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><X size={16} /></button>
+                            <h3 style={{ fontSize: '14px', fontWeight: 700, margin: 0 }}>{editing ? 'Edit Memo KTT' : 'Tambah Memo KTT'}</h3>
+                            <button onClick={closeModal} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><X size={16} /></button>
                         </div>
                         <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '14px', maxHeight: '70vh', overflowY: 'auto' }}>
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
@@ -179,35 +228,31 @@ export default function MemoKttIndex() {
                             </div>
                         </div>
                         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', padding: '12px 20px', borderTop: '1px solid var(--border-color)' }}>
-                            <button onClick={() => { setShowCreate(false); setCreateForm({ memo_number: '', title: '', ccow_id: '', ktt_id: '', ktt_name: '', date: '', description: '', status: 'Active' }); setSelectedFiles([]); }}
+                            <button onClick={closeModal}
                                 style={{ padding: '8px 16px', border: '1px solid var(--border-color)', borderRadius: '6px', fontSize: '12px', cursor: 'pointer', backgroundColor: '#fff' }}>Batal</button>
                             <button disabled={creating || !createForm.memo_number.trim() || !createForm.title.trim() || !createForm.ccow_id || !createForm.date}
-                                onClick={() => {
-                                    setCreating(true);
-                                    const fd = new FormData();
-                                    fd.append('memo_number', createForm.memo_number);
-                                    fd.append('title', createForm.title);
-                                    fd.append('ccow_id', createForm.ccow_id);
-                                    fd.append('ktt_id', createForm.ktt_id);
-                                    fd.append('date', createForm.date);
-                                    fd.append('description', createForm.description || '');
-                                    fd.append('status', createForm.status || 'Active');
-                                    selectedFiles.forEach(file => {
-                                        fd.append('files[]', file);
-                                    });
-
-                                    axios.post('/api/csms/memo-ktts', fd)
-                                    .then(() => {
-                                        setShowCreate(false);
-                                        setCreateForm({ memo_number: '', title: '', ccow_id: '', ktt_id: '', ktt_name: '', date: '', description: '', status: 'Active' });
-                                        setSelectedFiles([]);
-                                        refresh();
-                                    })
-                                    .finally(() => setCreating(false));
-                                }}
+                                onClick={handleSave}
                                 style={{ padding: '8px 16px', border: 'none', borderRadius: '6px', fontSize: '12px', fontWeight: 700, backgroundColor: 'var(--primary)', color: '#fff', cursor: creating ? 'not-allowed' : 'pointer', opacity: creating ? 0.7 : 1 }}>
                                 {creating ? 'Menyimpan...' : 'Simpan'}
                             </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+            {deleting && (
+                <div style={modalOverlay}>
+                    <div style={{ ...modalBox, maxWidth: '400px' }}>
+                        <div style={{ padding: '24px' }}>
+                            <h3 style={{ fontSize: '14px', fontWeight: 700, margin: '0 0 8px 0' }}>Hapus Memo?</h3>
+                            <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: '0 0 20px 0' }}>
+                                "{deleting.memo_number} — {deleting.title}" beserta lampirannya akan dihapus permanen. Lanjutkan?
+                            </p>
+                            <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                                <button onClick={() => setDeleting(null)}
+                                    style={{ padding: '8px 16px', border: '1px solid var(--border-color)', borderRadius: '6px', fontSize: '12px', cursor: 'pointer', backgroundColor: '#fff' }}>Batal</button>
+                                <button onClick={handleDelete}
+                                    style={{ padding: '8px 16px', border: 'none', borderRadius: '6px', fontSize: '12px', fontWeight: 700, backgroundColor: 'var(--danger, #ef4444)', color: '#fff', cursor: 'pointer' }}>Hapus</button>
+                            </div>
                         </div>
                     </div>
                 </div>

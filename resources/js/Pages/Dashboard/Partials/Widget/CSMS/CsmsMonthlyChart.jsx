@@ -13,7 +13,7 @@ import React from 'react';
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend);
 
 const G      = '#91BA5F';
-const MUTED  = '#64748b';
+const MUTED  = 'var(--text-secondary)';
 const BORDER = '#e2e8f0';
 
 const barOpts = {
@@ -49,7 +49,7 @@ export default function CsmsMonthlyChart({ monthly = [], loading }) {
     };
 
     return (
-        <div style={{ backgroundColor: '#fff', border: `1px solid ${BORDER}`, borderRadius: '12px', padding: '16px', boxSizing: 'border-box' }}>
+        <div style={{ backgroundColor: 'var(--card-bg)', border: `1px solid ${BORDER}`, borderRadius: '12px', padding: '16px', boxSizing: 'border-box' }}>
             <p style={{ fontSize: '10px', fontWeight: 700, color: MUTED, textTransform: 'uppercase', letterSpacing: '.5px', margin: '0 0 12px' }}>Monthly</p>
             <div style={{ height: '160px' }}>
                 {loading

@@ -95,18 +95,30 @@ Route::prefix('csms')->group(function () {
         ->middleware('module.permission:csms,can_view,csms.memo');
     Route::post('/memo-ktts', [CSMSSupportApiController::class, 'storeMemoKtt'])
         ->middleware('module.permission:csms,can_create,csms.memo');
+    Route::put('/memo-ktts/{id}', [CSMSSupportApiController::class, 'updateMemoKtt'])
+        ->middleware('module.permission:csms,can_edit,csms.memo');
+    Route::delete('/memo-ktts/{id}', [CSMSSupportApiController::class, 'destroyMemoKtt'])
+        ->middleware('module.permission:csms,can_delete,csms.memo');
 
     // Letters (Surat Edaran)
     Route::get('/letters', [CSMSSupportApiController::class, 'indexLetters'])
         ->middleware('module.permission:csms,can_view,csms.letter');
     Route::post('/letters', [CSMSSupportApiController::class, 'storeLetter'])
         ->middleware('module.permission:csms,can_create,csms.letter');
+    Route::put('/letters/{id}', [CSMSSupportApiController::class, 'updateLetter'])
+        ->middleware('module.permission:csms,can_edit,csms.letter');
+    Route::delete('/letters/{id}', [CSMSSupportApiController::class, 'destroyLetter'])
+        ->middleware('module.permission:csms,can_delete,csms.letter');
 
     // Dictionaries (Kamus CSMS)
     Route::get('/dictionaries', [CSMSSupportApiController::class, 'indexDictionaries'])
         ->middleware('module.permission:csms,can_view,csms.dictionary');
     Route::post('/dictionaries', [CSMSSupportApiController::class, 'storeDictionary'])
         ->middleware('module.permission:csms,can_create,csms.dictionary');
+    Route::put('/dictionaries/{id}', [CSMSSupportApiController::class, 'updateDictionary'])
+        ->middleware('module.permission:csms,can_edit,csms.dictionary');
+    Route::delete('/dictionaries/{id}', [CSMSSupportApiController::class, 'destroyDictionary'])
+        ->middleware('module.permission:csms,can_delete,csms.dictionary');
 
     // PICA
     Route::get('/picas', [CSMSSupportApiController::class, 'indexPicas'])
@@ -117,6 +129,10 @@ Route::prefix('csms')->group(function () {
     // PJO File Preview & Download
     Route::get('/pjo-files/{id}/preview', [CSMSPjoApiController::class, 'previewFile']);
     Route::get('/pjo-files/{id}/download', [CSMSPjoApiController::class, 'downloadFile']);
+
+    // Letter File Preview & Download
+    Route::get('/letter-files/{id}/preview', [CSMSSupportApiController::class, 'previewLetterFile']);
+    Route::get('/letter-files/{id}/download', [CSMSSupportApiController::class, 'downloadLetterFile']);
 
     // Memo KTT File Preview & Download
     Route::get('/memo-ktt-files/{id}/preview', [CSMSSupportApiController::class, 'previewMemoKttFile']);

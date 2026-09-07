@@ -6,7 +6,7 @@ const P      = '#153B73';
 const O      = '#FF8C24';
 const G      = '#91BA5F';
 const BORDER = '#e2e8f0';
-const MUTED  = '#64748b';
+const MUTED  = 'var(--text-secondary)';
 const BG     = '#f8fafc';
 
 const COLORS = [P, O, G];
@@ -27,7 +27,7 @@ export default function CsmsDetail({ detail = [], summary, loading }) {
     const ytd = summary?.ytd ?? 0;
 
     return (
-        <div style={{ backgroundColor: '#fff', border: `1px solid ${BORDER}`, borderRadius: '12px', padding: '16px', boxSizing: 'border-box' }}>
+        <div style={{ backgroundColor: 'var(--card-bg)', border: `1px solid ${BORDER}`, borderRadius: '12px', padding: '16px', boxSizing: 'border-box' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
                 <p style={{ fontSize: '10px', fontWeight: 700, color: MUTED, textTransform: 'uppercase', letterSpacing: '.5px', margin: 0 }}>Detail Kategori</p>
                 <div style={{ textAlign: 'right' }}>
@@ -62,7 +62,7 @@ export default function CsmsDetail({ detail = [], summary, loading }) {
                                     <span style={{ fontSize: '28px', fontWeight: 800, color, lineHeight: 1 }}>
                                         {(row.this_year ?? 0).toLocaleString('id-ID')}
                                     </span>
-                                    <span style={{ fontSize: '12px', color: '#94a3b8', whiteSpace: 'nowrap' }}>
+                                    <span style={{ fontSize: '12px', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
                                         / {(row.last_year ?? 0).toLocaleString('id-ID')} LY
                                     </span>
                                 </div>
@@ -70,7 +70,7 @@ export default function CsmsDetail({ detail = [], summary, loading }) {
                                     <div style={{ width: `${Math.min(100, pct)}%`, height: '100%', backgroundColor: color, borderRadius: '999px', transition: 'width .6s ease' }} />
                                 </div>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
-                                    <span style={{ fontSize: '11px', color: '#94a3b8', whiteSpace: 'nowrap' }}>{pct}% dari YTD</span>
+                                    <span style={{ fontSize: '11px', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>{pct}% dari YTD</span>
                                     <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', fontSize: '10px', fontWeight: 700, color: isUp ? '#065f46' : '#991b1b', flexShrink: 0 }}>
                                         {isUp ? <TrendingUp size={11} /> : <TrendingDown size={11} />}
                                         {isUp ? 'Naik' : 'Turun'} vs LY
