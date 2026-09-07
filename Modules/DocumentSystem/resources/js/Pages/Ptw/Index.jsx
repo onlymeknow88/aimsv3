@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Head } from '@inertiajs/react';
 import DocumentSystemLayout from '@DS/Layouts/DocumentSystemLayout';
-import { RefreshCw } from 'lucide-react';
+import { RefreshCw, Download } from 'lucide-react';
 import usePtw from './Hooks/usePtw';
 import PtwTable from './Partials/PtwTable';
 
@@ -16,7 +16,11 @@ export default function Index() {
         pagination,
         columnFilters,
         setColumnFilters,
-        fetchDocuments
+        fetchDocuments,
+        exportPtw,
+        exporting,
+        bulkDeletePtw,
+        bulkDeleting
     } = usePtw();
 
     const [isMobile, setIsMobile] = useState(false);
@@ -52,6 +56,14 @@ export default function Index() {
                     >
                         <RefreshCw size={14} className={fetching ? 'animate-spin' : ''} /> Refresh
                     </button>
+                    <button
+                        onClick={() => exportPtw()}
+                        disabled={exporting}
+                        style={{ display: 'flex', alignItems: 'center', gap: '6px', backgroundColor: '#fff', border: '1px solid var(--border-color)', borderRadius: '6px', padding: '8px 16px', fontSize: '11px', fontWeight: 700, cursor: exporting ? 'not-allowed' : 'pointer', color: 'var(--text-primary)', width: isMobile ? '100%' : 'auto', justifyContent: 'center', opacity: exporting ? 0.7 : 1 }}
+                        title="Export Excel sesuai filter aktif"
+                    >
+                        <Download size={14} /> {exporting ? 'Mengekspor...' : 'Export'}
+                    </button>
                     <button onClick={() => window.location.href = '/document-system/ptw/create'} style={{ display: 'flex', alignItems: 'center', gap: '6px', backgroundColor: 'var(--primary)', color: '#fff', border: 'none', borderRadius: '6px', padding: '8px 16px', fontSize: '11px', fontWeight: 700, cursor: 'pointer', width: isMobile ? '100%' : 'auto', justifyContent: 'center' }}>
                         + Ajukan PTW
                     </button>
@@ -68,6 +80,10 @@ export default function Index() {
                     onLimitChange={setLimit}
                     columnFilters={columnFilters}
                     onColumnFilterChange={(colId, val) => setColumnFilters(prev => ({ ...prev, [colId]: val }))}
+                    onExport={(ids) => exportPtw(ids)}
+                    exporting={exporting}
+                    onBulkDelete={bulkDeletePtw}
+                    bulkDeleting={bulkDeleting}
                 />
             </div>
         </DocumentSystemLayout>

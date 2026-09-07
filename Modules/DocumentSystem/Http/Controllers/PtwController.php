@@ -30,7 +30,7 @@ class PtwController extends Controller
      */
     public function edit($id)
     {
-        $document = PtwDocument::with(['user', 'attachments', 'peoples'])->findOrFail($id);
+        $document = PtwDocument::with(['user', 'attachments', 'peoples', 'areaManager.user'])->findOrFail($id);
 
         if ((string)$document->status === '5') {
             $newDoc = $document->replicate();
@@ -39,11 +39,11 @@ class PtwController extends Controller
             
             if ($newDoc->save()) {
                 // Replicate people
-                $peoples = \DB::table('ptw_document_peoples')
+                $peoples = \DB::table('ptw_document_people')
                     ->where('ptw_document_id', $document->id)
                     ->get();
                 foreach ($peoples as $person) {
-                    \DB::table('ptw_document_peoples')->insert([
+                    \DB::table('ptw_document_people')->insert([
                         'id' => \Illuminate\Support\Str::uuid()->toString(),
                         'ptw_document_id' => $newDoc->id,
                         'user_id' => $person->user_id,

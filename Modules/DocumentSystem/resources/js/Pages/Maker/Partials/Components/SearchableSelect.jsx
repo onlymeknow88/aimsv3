@@ -165,8 +165,9 @@ export default function SearchableSelect({ options = [], value, onChange, placeh
             {isMulti && Array.isArray(value) && value.length > 0 && (
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '8px' }}>
                     {value.map(id => {
-                        const opt = options.find(o => o.id === id);
-                        if (!opt) return null;
+                        // Fallback: nilai tersimpan (mis. email eksternal dari revisi)
+                        // yang tidak ada di options tetap ditampilkan sebagai badge
+                        const opt = options.find(o => o.id === id) || { id, name: id };
                         return (
                             <span key={id} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', backgroundColor: 'rgba(21, 59, 115, 0.06)', border: '1px solid rgba(21, 59, 115, 0.2)', borderRadius: '100px', padding: '3px 10px', fontSize: '10px', fontWeight: 600, color: 'var(--primary)' }}>
                                 {opt.name}

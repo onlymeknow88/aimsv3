@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Head } from '@inertiajs/react';
 import { ArrowLeft, X, FileText } from 'lucide-react';
 import axios from 'axios';
@@ -31,8 +31,39 @@ export default function Create({ document = null }) {
     } = useMaker(document);
 
     const [documentNumber, setDocumentNumber] = useState(document?.document_number || '');
+    // Gabung PJ tersimpan (revisi) ke opsi agar selalu tampil meski
+    // bukan kepala departemen saat ini
+    const pjOptions = useMemo(() => {
+        const list = [...pjs];
+        const current = document?.areaManager;
+        if (current && !list.some(p => String(p.id) === String(current.id))) {
+            list.push({
+                id: current.id,
+                name: current.user?.name || current.name || 'Penanggung jawab tersimpan',
+                email: current.user?.email || '',
+            });
+        }
+        return list;
+    }, [pjs, document]);
     const [detailLocation, setDetailLocation] = useState(document?.detail_location || '');
     const [employees, setEmployees] = useState([]);
+    const [manualEmail, setManualEmail] = useState('');
+    const [manualEmailError, setManualEmailError] = useState('');
+
+    const handleAddManualEmail = () => {
+        const email = manualEmail.trim().toLowerCase();
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            setManualEmailError('Format email tidak valid.');
+            return;
+        }
+        if (invitedEmails.map(e => String(e).toLowerCase()).includes(email)) {
+            setManualEmailError('Email sudah ada di daftar.');
+            return;
+        }
+        setInvitedEmails(prev => [...prev, email]);
+        setManualEmail('');
+        setManualEmailError('');
+    };
 
     useEffect(() => {
         if (company) {
@@ -157,7 +188,7 @@ export default function Create({ document = null }) {
                             </div>
                             <div>
                                 <label style={{ fontSize: '10.5px', fontWeight: 700, color: 'var(--text-secondary)', display: 'block', marginBottom: '6px' }}>PENANGGUNG JAWAB</label>
-                                <SearchableSelect options={pjs} value={pj} onChange={setPj} placeholder="Pilih Penanggung Jawab..." />
+                                <SearchableSelect options={pjOptions} value={pj} onChange={setPj} placeholder="Pilih Penanggung Jawab..." />
                                 {validationErrors.area_manager_id && (
                                     <span style={{ color: '#EF4444', fontSize: '10px', marginTop: '4px', display: 'block', fontWeight: 600 }}>{validationErrors.area_manager_id[0]}</span>
                                 )}
@@ -237,6 +268,26 @@ export default function Create({ document = null }) {
                             placeholder="Pilih Orang yang Diundang..." 
                             isMulti={true} 
                         />
+                        <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
+                            <input
+                                type="email"
+                                value={manualEmail}
+                                onChange={e => { setManualEmail(e.target.value); setManualEmailError(''); }}
+                                onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleAddManualEmail(); } }}
+                                placeholder="Atau ketik email eksternal manual..."
+                                style={{ flex: 1, height: '40px', border: '1px solid var(--border-color)', borderRadius: '8px', padding: '0 12px', fontSize: '12px', outline: 'none' }}
+                            />
+                            <button
+                                type="button"
+                                onClick={handleAddManualEmail}
+                                style={{ height: '40px', padding: '0 16px', backgroundColor: '#fff', border: '1px solid var(--primary)', borderRadius: '8px', color: 'var(--primary)', fontSize: '12px', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}
+                            >
+                                + Tambah
+                            </button>
+                        </div>
+                        {manualEmailError && (
+                            <span style={{ color: '#EF4444', fontSize: '10px', marginTop: '4px', display: 'block', fontWeight: 600 }}>{manualEmailError}</span>
+                        )}
                     </div>
 
                     {/* Description */}
