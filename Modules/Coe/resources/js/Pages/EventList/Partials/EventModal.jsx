@@ -33,13 +33,28 @@ export default function EventModal({
         setField('invited_emails', form.invited_emails.filter(e => e !== emailToRemove));
     };
 
+    // Focus trap & Esc handling
+    useEffect(() => {
+        if (!isOpen) return;
+        const onKey = (e) => { if (e.key === 'Escape') onClose(); };
+        document.addEventListener('keydown', onKey);
+        const prevOverflow = document.body.style.overflow;
+        document.body.style.overflow = 'hidden';
+        return () => { document.removeEventListener('keydown', onKey); document.body.style.overflow = prevOverflow; };
+    }, [isOpen, onClose]);
+
     return (
         <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="coe-event-modal-title"
+            onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
             style={{
                 position: "fixed",
                 inset: 0,
                 backgroundColor: "rgba(15,23,42,0.65)",
                 backdropFilter: "blur(5px)",
+                WebkitBackdropFilter: "blur(5px)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
@@ -72,6 +87,7 @@ export default function EventModal({
                     }}
                 >
                     <h3
+                        id="coe-event-modal-title"
                         style={{
                             fontSize: "15px",
                             fontWeight: 800,
@@ -83,18 +99,22 @@ export default function EventModal({
                     </h3>
                     <button
                         onClick={onClose}
+                        aria-label="Tutup modal"
                         style={{
                             background: "none",
                             border: "none",
                             cursor: "pointer",
-                            color: "#94a3b8",
+                            color: "#64748b",
                             display: "flex",
                             alignItems: "center",
-                            padding: "4px",
+                            justifyContent: "center",
+                            padding: "8px",
+                            minWidth: "44px",
+                            minHeight: "44px",
                             borderRadius: "6px",
                         }}
                     >
-                        <X size={18} />
+                        <X size={18} aria-hidden="true" />
                     </button>
                 </div>
 
@@ -109,6 +129,8 @@ export default function EventModal({
                 >
                     {formError && (
                         <div
+                            role="alert"
+                            aria-live="polite"
                             style={{
                                 backgroundColor: "#fef2f2",
                                 color: "#b91c1c",
@@ -120,7 +142,7 @@ export default function EventModal({
                                 marginBottom: "16px",
                             }}
                         >
-                            <AlertTriangle size={16} />
+                            <AlertTriangle size={16} aria-hidden="true" />
                             <span style={{ fontSize: '12px' }}>{formError}</span>
                         </div>
                     )}
@@ -133,13 +155,16 @@ export default function EventModal({
                     >
                         {/* Title */}
                         <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-                            <label style={{ fontSize: "13px", fontWeight: 600, color: "#0f172a" }}>Nama Agenda (Title)</label>
+                            <label htmlFor="coe-title" style={{ fontSize: "13px", fontWeight: 600, color: "#0f172a" }}>Nama Agenda (Title) <span aria-hidden="true" style={{ color: '#dc2626' }}>*</span></label>
                             <input
+                                id="coe-title"
                                 type="text"
                                 value={form.title}
                                 onChange={(e) => setField("title", e.target.value)}
                                 placeholder="Contoh: Rapat Koordinasi KPLH"
                                 required
+                                aria-required="true"
+                                aria-invalid={formError && !form.title ? 'true' : undefined}
                                 style={{ padding: "10px 14px", border: "1.5px solid #e2e8f0", borderRadius: "8px", fontSize: "13px", color: "#0f172a", outline: "none" }}
                             />
                         </div>

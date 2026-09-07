@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
-    LayoutDashboard, ArrowLeft, ChevronDown, ChevronUp, Calendar, List, Database, Settings
+    LayoutDashboard, ArrowLeft, ChevronDown, ChevronUp, Calendar, List, Database
 } from 'lucide-react';
 import { usePage } from '@inertiajs/react';
 
@@ -13,11 +13,11 @@ const SLUG_URL = {
 };
 
 const ICON_MAP = {
-    'calender-of-event-coe.calendar': <Calendar size={14} />,
-    'calender-of-event-coe.dashboard': <LayoutDashboard size={14} />,
-    'calender-of-event-coe.list': <List size={14} />,
-    'calender-of-event-coe.master': <Database size={14} />,
-    'calender-of-event-coe.categories': <List size={14} />,
+    'calender-of-event-coe.calendar': Calendar,
+    'calender-of-event-coe.dashboard': LayoutDashboard,
+    'calender-of-event-coe.list': List,
+    'calender-of-event-coe.master': Database,
+    'calender-of-event-coe.categories': List,
 };
 
 function isActivePath(slug, currentPath, currentSearch) {
@@ -28,6 +28,8 @@ function isActivePath(slug, currentPath, currentSearch) {
 
 export default function Sidebar({
     sidebarOpen,
+    setSidebarOpen,
+    isMobile,
     currentPath,
     currentSearch,
     openMaster,
@@ -41,7 +43,6 @@ export default function Sidebar({
         'calender-of-event-coe.master': { open: openMaster, setOpen: setOpenMaster },
     };
 
-    // Filter parent menus (excluding Calendar as it is rendered statically at the top)
     const parentMenus = coeMenus
         .filter(m => !m.parent_id && m.slug !== 'calender-of-event-coe.calendar')
         .sort((a, b) => a.order_by - b.order_by);
@@ -53,69 +54,70 @@ export default function Sidebar({
     const hasChildren = (id) => coeMenus.some(m => String(m.parent_id) === String(id));
 
     return (
-        <div
+        <nav
+            id="coe-sidebar"
+            aria-label="Navigasi CoE"
             style={{
                 width: sidebarOpen ? '250px' : '0px',
+                minWidth: sidebarOpen ? '250px' : '0px',
                 transform: sidebarOpen ? 'translateX(0)' : 'translateX(-250px)',
-                backgroundColor: 'var(--sidebar-bg)',
+                backgroundColor: 'var(--sidebar-bg, #0f172a)',
                 color: '#a9b9d0',
                 display: 'flex',
                 flexDirection: 'column',
                 height: '100vh',
-                position: 'sticky',
+                position: isMobile ? 'fixed' : 'sticky',
                 top: 0,
                 left: 0,
-                transition: 'all 0.3s ease-in-out',
-                borderRight: '1px solid rgba(255,255,255,0.05)',
+                transition: 'width 0.3s cubic-bezier(0.4,0,0.2,1), min-width 0.3s cubic-bezier(0.4,0,0.2,1), transform 0.3s cubic-bezier(0.4,0,0.2,1)',
+                borderRight: sidebarOpen ? '1px solid rgba(255,255,255,0.05)' : 'none',
                 overflowX: 'hidden',
-                overflowY: 'auto',
+                overflowY: sidebarOpen ? 'auto' : 'hidden',
                 zIndex: 100,
                 flexShrink: 0
             }}
         >
-            {/* Logo / Header Modul */}
             <div style={{ padding: '24px 20px', display: 'flex', alignItems: 'center', gap: '12px', borderBottom: '1px solid rgba(255, 255, 255, 0.05)', whiteSpace: 'nowrap' }}>
-                <div style={{ width: '40px', height: '40px', borderRadius: '8px', backgroundColor: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 'bold', fontSize: '16px', flexShrink: 0 }}>
-                    📅
+                <div aria-hidden="true" style={{ width: '40px', height: '40px', borderRadius: '8px', backgroundColor: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', flexShrink: 0 }}>
+                    <Calendar size={18} />
                 </div>
                 <div>
-                    <h1 style={{ color: '#fff', fontSize: '15px', fontWeight: 700, margin: 0 }}>CoE Portal</h1>
-                    <span style={{ fontSize: '11px', color: '#64748b', display: 'block' }}>Center of Excellence</span>
+                    <p style={{ color: '#fff', fontSize: '15px', fontWeight: 700, margin: 0 }}>CoE Portal</p>
+                    <span style={{ fontSize: '11px', color: 'var(--text-secondary)', display: 'block' }}>Center of Excellence</span>
                 </div>
             </div>
 
-            {/* Kembali ke Dashboard Utama */}
             <div style={{ padding: '12px 20px', borderBottom: '1px solid rgba(255, 255, 255, 0.05)' }}>
-                <a href="/" style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#a3b1c6', fontSize: '13px', textDecoration: 'none', fontWeight: 600 }} className="hover-link">
-                    <ArrowLeft size={12} />
+                <a href="/" aria-label="Kembali ke Home AIMS" style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#a3b1c6', fontSize: '13px', textDecoration: 'none', fontWeight: 600, minHeight: '44px' }} className="coe-sidebar-link">
+                    <ArrowLeft size={12} aria-hidden="true" />
                     Home AIMS
                 </a>
             </div>
 
-            {/* Navigasi Modul */}
-            <div style={{ flex: 1, padding: '16px 8px' }}>
-                <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
-                    {/* Statically render Event Calendar at the top */}
+            <div style={{ flex: 1, padding: '16px 8px', overflowY: 'auto' }}>
+                <ul role="list" style={{ listStyle: 'none', margin: 0, padding: 0 }}>
                     <li style={{ marginBottom: '4px' }}>
                         <a
                             href="/coe/calendar"
+                            aria-current={currentPath === '/coe/calendar' ? 'page' : undefined}
                             style={{
                                 display: 'flex',
                                 alignItems: 'center',
                                 gap: '12px',
-                                padding: '10px 16px',
+                                padding: '12px 16px',
+                                minHeight: '44px',
                                 borderRadius: '8px',
                                 fontSize: '13px',
                                 fontWeight: 500,
                                 textDecoration: 'none',
                                 color: currentPath === '/coe/calendar' ? '#fff' : '#a3b1c6',
                                 backgroundColor: currentPath === '/coe/calendar' ? 'var(--primary)' : 'transparent',
-                                transition: 'all 0.2s ease',
+                                transition: 'background-color 0.2s ease, color 0.2s ease',
                                 whiteSpace: 'nowrap'
                             }}
-                            className={currentPath !== '/coe/calendar' ? "hover-link" : ""}
+                            className={currentPath !== '/coe/calendar' ? "coe-sidebar-link" : ""}
                         >
-                            <Calendar size={14} style={{ color: currentPath === '/coe/calendar' ? '#fff' : 'rgba(255,255,255,0.4)', flexShrink: 0 }} />
+                            <Calendar size={14} aria-hidden="true" style={{ color: currentPath === '/coe/calendar' ? '#fff' : 'rgba(255,255,255,0.4)', flexShrink: 0 }} />
                             Event Calendar
                         </a>
                     </li>
@@ -127,16 +129,21 @@ export default function Sidebar({
                         const isDropdown = hasChildren(menu.id) && dd;
 
                         if (isDropdown) {
+                            const Icon = ICON_MAP[menu.slug] || Database;
                             return (
                                 <li key={menu.id} style={{ marginBottom: '4px' }}>
                                     <button
+                                        type="button"
+                                        aria-expanded={dd.open}
+                                        aria-controls={`coe-submenu-${menu.slug}`}
                                         onClick={() => dd.setOpen(!dd.open)}
                                         style={{
                                             display: 'flex',
                                             alignItems: 'center',
                                             justifyContent: 'space-between',
                                             width: '100%',
-                                            padding: '10px 16px',
+                                            padding: '12px 16px',
+                                            minHeight: '44px',
                                             borderRadius: '8px',
                                             fontSize: '13px',
                                             fontWeight: 500,
@@ -144,21 +151,19 @@ export default function Sidebar({
                                             backgroundColor: 'transparent',
                                             border: 'none',
                                             cursor: 'pointer',
-                                            transition: 'all 0.2s ease',
+                                            transition: 'background-color 0.2s ease, color 0.2s ease',
                                             textAlign: 'left'
                                         }}
-                                        className="hover-link"
+                                        className="coe-sidebar-link"
                                     >
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                            <span style={{ display: 'inline-flex', alignItems: 'center', color: 'rgba(255,255,255,0.4)', flexShrink: 0 }}>
-                                                {ICON_MAP[menu.slug] || <Database size={14} />}
-                                            </span>
-                                            <span>{menu.name}</span>
-                                        </div>
-                                        {dd.open ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+                                        <span style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                            <Icon size={14} aria-hidden="true" style={{ color: 'rgba(255,255,255,0.4)' }} />
+                                            {menu.name}
+                                        </span>
+                                        {dd.open ? <ChevronUp size={12} aria-hidden="true" /> : <ChevronDown size={12} aria-hidden="true" />}
                                     </button>
                                     {dd.open && (
-                                        <ul style={{ listStyle: 'none', margin: '4px 0 0 0', paddingLeft: '28px' }}>
+                                        <ul id={`coe-submenu-${menu.slug}`} role="list" style={{ listStyle: 'none', margin: '4px 0 0 0', paddingLeft: '28px' }}>
                                             {childMenus(menu.id).map(child => {
                                                 const childUrl = SLUG_URL[child.slug] ?? '#';
                                                 const childActive = isActivePath(child.slug, currentPath, currentSearch);
@@ -166,14 +171,19 @@ export default function Sidebar({
                                                     <li key={child.id}>
                                                         <a
                                                             href={childUrl}
+                                                            aria-current={childActive ? 'page' : undefined}
                                                             style={{
-                                                                display: 'block',
-                                                                padding: '6px 12px',
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                padding: '10px 12px',
+                                                                minHeight: '44px',
+                                                                lineHeight: '24px',
                                                                 fontSize: '12px',
                                                                 color: childActive ? '#fff' : '#a3b1c6',
-                                                                textDecoration: 'none'
+                                                                textDecoration: 'none',
+                                                                borderRadius: '6px'
                                                             }}
-                                                            className="hover-link"
+                                                            className="coe-sidebar-link"
                                                         >
                                                             {child.name}
                                                         </a>
@@ -186,29 +196,30 @@ export default function Sidebar({
                             );
                         }
 
+                        const Icon = ICON_MAP[menu.slug] || LayoutDashboard;
                         return (
                             <li key={menu.id} style={{ marginBottom: '4px' }}>
                                 <a
                                     href={url || '#'}
+                                    aria-current={active ? 'page' : undefined}
                                     style={{
                                         display: 'flex',
                                         alignItems: 'center',
                                         gap: '12px',
-                                        padding: '10px 16px',
+                                        padding: '12px 16px',
+                                        minHeight: '44px',
                                         borderRadius: '8px',
                                         fontSize: '13px',
                                         fontWeight: 500,
                                         textDecoration: 'none',
                                         color: active ? '#fff' : '#a3b1c6',
                                         backgroundColor: active ? 'var(--primary)' : 'transparent',
-                                        transition: 'all 0.2s ease',
+                                        transition: 'background-color 0.2s ease, color 0.2s ease',
                                         whiteSpace: 'nowrap'
                                     }}
-                                    className={!active ? "hover-link" : ""}
+                                    className={!active ? "coe-sidebar-link" : ""}
                                 >
-                                    <span style={{ display: 'inline-flex', alignItems: 'center', color: active ? '#fff' : 'rgba(255,255,255,0.4)', flexShrink: 0 }}>
-                                        {ICON_MAP[menu.slug] || <LayoutDashboard size={14} />}
-                                    </span>
+                                    <Icon size={14} aria-hidden="true" style={{ color: active ? '#fff' : 'rgba(255,255,255,0.4)', flexShrink: 0 }} />
                                     {menu.name}
                                 </a>
                             </li>
@@ -216,6 +227,6 @@ export default function Sidebar({
                     })}
                 </ul>
             </div>
-        </div>
+        </nav>
     );
 }

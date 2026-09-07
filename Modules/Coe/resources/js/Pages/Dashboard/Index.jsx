@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense, lazy } from 'react';
 import axios from 'axios';
 import CoeLayout from '../../Layouts/CoeLayout';
 import { Head } from '@inertiajs/react';
-import { Bar } from 'react-chartjs-2';
 import { 
     Calendar, CheckCircle, Clock, AlertTriangle, RefreshCw
 } from 'lucide-react';
@@ -24,13 +23,14 @@ ChartJS.register(
     Tooltip,
     Legend
 );
+const Bar = lazy(() => import('react-chartjs-2').then(m => ({ default: m.Bar })) );
 
 const cardStyle = {
-    backgroundColor: '#fff',
-    border: '1px solid #e2e8f0',
+    backgroundColor: 'var(--card-bg, #fff)',
+    border: '1px solid var(--border-color, #e2e8f0)',
     borderRadius: '12px',
     padding: '20px',
-    boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.05)',
+    boxShadow: 'var(--shadow-sm, 0 1px 3px 0 rgba(0, 0, 0, 0.05))',
     display: 'flex',
     alignItems: 'center',
     gap: '16px',
@@ -113,26 +113,28 @@ export default function DashboardIndex() {
                 </div>
                 <button
                     onClick={fetchStats}
+                    aria-label="Refresh statistik"
                     style={{
                         display: "flex",
                         alignItems: "center",
                         gap: "6px",
                         padding: "9px 14px",
-                        border: "1px solid #e2e8f0",
+                        minHeight: "44px",
+                        border: "1px solid var(--border-color, #e2e8f0)",
                         borderRadius: "8px",
-                        backgroundColor: "#fff",
-                        color: "#475569",
+                        backgroundColor: "var(--card-bg, #fff)",
+                        color: "var(--text-secondary, #475569)",
                         fontSize: "13px",
                         fontWeight: 600,
                         cursor: "pointer",
                     }}
                 >
-                    <RefreshCw size={14} /> Refresh
+                    <RefreshCw size={14} aria-hidden="true" /> Refresh
                 </button>
             </div>
 
             {error && (
-                <div style={{ backgroundColor: '#fef2f2', border: '1px solid #fecaca', borderRadius: '8px', padding: '12px', marginBottom: '20px', color: '#dc2626', fontSize: '13px' }}>
+                <div role="alert" aria-live="polite" style={{ backgroundColor: '#fef2f2', border: '1px solid #fecaca', borderRadius: '8px', padding: '12px', marginBottom: '20px', color: '#dc2626', fontSize: '13px' }}>
                     {error}
                 </div>
             )}
@@ -185,24 +187,28 @@ export default function DashboardIndex() {
             </div>
 
             {/* Charts Grid */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '24px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(280px,100%), 1fr))', gap: '24px' }}>
                 {/* Chart 1 */}
-                <div style={{ backgroundColor: '#fff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '24px', boxShadow: '0 1px 3px 0 rgba(0,0,0,0.05)' }}>
-                    <h4 style={{ fontSize: '14.5px', fontWeight: 700, color: '#0f172a', marginBottom: '20px' }}>Event Terlaksana (DONE) per Bulan</h4>
+                <div style={{ backgroundColor: 'var(--card-bg, #fff)', border: '1px solid var(--border-color, #e2e8f0)', borderRadius: '16px', padding: '24px', boxShadow: 'var(--shadow-sm, 0 1px 3px 0 rgba(0,0,0,0.05))' }}>
+                    <h2 style={{ fontSize: '14.5px', fontWeight: 700, color: 'var(--text-primary, #0f172a)', marginBottom: '20px' }}>Event Terlaksana (DONE) per Bulan</h2>
                     {loading ? (
-                        <div style={{ height: '300px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94a3b8' }}>Memuat data grafik...</div>
+                        <div style={{ height: '300px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary, #64748b)' }} role="status" aria-live="polite">Memuat data grafik...</div>
                     ) : (
-                        <Bar data={chart1Data} options={chartOptions} height={180} />
+                        <Suspense fallback={<div style={{ height: '180px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)' }}>Memuat grafik...</div>}>
+                            <Bar data={chart1Data} options={chartOptions} height={180} />
+                        </Suspense>
                     )}
                 </div>
 
                 {/* Chart 3 */}
-                <div style={{ backgroundColor: '#fff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '24px', boxShadow: '0 1px 3px 0 rgba(0,0,0,0.05)' }}>
-                    <h4 style={{ fontSize: '14.5px', fontWeight: 700, color: '#0f172a', marginBottom: '20px' }}>Total Event Berdasarkan Status</h4>
+                <div style={{ backgroundColor: 'var(--card-bg, #fff)', border: '1px solid var(--border-color, #e2e8f0)', borderRadius: '16px', padding: '24px', boxShadow: 'var(--shadow-sm, 0 1px 3px 0 rgba(0,0,0,0.05))' }}>
+                    <h2 style={{ fontSize: '14.5px', fontWeight: 700, color: 'var(--text-primary, #0f172a)', marginBottom: '20px' }}>Total Event Berdasarkan Status</h2>
                     {loading ? (
-                        <div style={{ height: '300px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94a3b8' }}>Memuat data grafik...</div>
+                        <div style={{ height: '300px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary, #64748b)' }} role="status" aria-live="polite">Memuat data grafik...</div>
                     ) : (
-                        <Bar data={chart3Data} options={chartOptions} height={180} />
+                        <Suspense fallback={<div style={{ height: '180px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)' }}>Memuat grafik...</div>}>
+                            <Bar data={chart3Data} options={chartOptions} height={180} />
+                        </Suspense>
                     )}
                 </div>
             </div>
