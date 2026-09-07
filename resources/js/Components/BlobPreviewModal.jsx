@@ -16,6 +16,9 @@ export default function BlobPreviewModal({ attachment, onClose }) {
     const isCsmsChecklist   = attachment?.type === 'csms_checklist';
     const isCsmsPjoFile     = attachment?.type === 'csms_pjo_file';
     const isCsmsMemoKttFile = attachment?.type === 'csms_memo_ktt_file';
+    const isCsmsLetterFile  = attachment?.type === 'csms_letter_file';
+    const isKoIssue         = attachment?.type === 'ko_issue';
+    const isKoProposal      = attachment?.type === 'ko_proposal' || attachment?.type === 'ko_attachment';
 
     const params = [];
     if (isActivity)        params.push('type=activity');
@@ -31,29 +34,45 @@ export default function BlobPreviewModal({ attachment, onClose }) {
     const queryString  = params.length > 0 ? `?${params.join('&')}` : '';
     const attachmentId = attachment?.id || 'none';
 
-    const previewUrl = isFlRisk
-        ? `/api/field-leadership/risk-files/${attachmentId}/preview`
-        : isFlActivity
-            ? `/api/field-leadership/activity-files/${attachmentId}/preview`
-            : isCsmsChecklist
-                ? `/api/csms/checklist-attachments/${attachmentId}/preview`
-                : isCsmsPjoFile
-                    ? `/api/csms/pjo-files/${attachmentId}/preview`
-                    : isCsmsMemoKttFile
-                        ? `/api/csms/memo-ktt-files/${attachmentId}/preview`
-                        : `/api/document-system/attachments/${attachmentId}/preview${queryString}`;
+    const previewUrl = attachment?.previewUrl || attachment?.preview_url || (
+        isFlRisk
+            ? `/api/field-leadership/risk-files/${attachmentId}/preview`
+            : isFlActivity
+                ? `/api/field-leadership/activity-files/${attachmentId}/preview`
+                : isCsmsChecklist
+                    ? `/api/csms/checklist-attachments/${attachmentId}/preview`
+                    : isCsmsPjoFile
+                        ? `/api/csms/pjo-files/${attachmentId}/preview`
+                        : isCsmsMemoKttFile
+                            ? `/api/csms/memo-ktt-files/${attachmentId}/preview`
+                            : isCsmsLetterFile
+                                ? `/api/csms/letter-files/${attachmentId}/preview`
+                                : isKoIssue
+                                    ? `/api/ko/issue-attachments/${attachmentId}/preview`
+                                    : isKoProposal
+                                        ? `/api/ko/proposal-attachments/preview${queryString}`
+                                        : `/api/document-system/attachments/${attachmentId}/preview${queryString}`
+    );
 
-    const downloadUrl = isFlRisk
-        ? `/api/field-leadership/risk-files/${attachmentId}/download`
-        : isFlActivity
-            ? `/api/field-leadership/activity-files/${attachmentId}/download`
-            : isCsmsChecklist
-                ? `/api/csms/checklist-attachments/${attachmentId}/download`
-                : isCsmsPjoFile
-                    ? `/api/csms/pjo-files/${attachmentId}/download`
-                    : isCsmsMemoKttFile
-                        ? `/api/csms/memo-ktt-files/${attachmentId}/download`
-                        : `/api/document-system/attachments/${attachmentId}/download${queryString}`;
+    const downloadUrl = attachment?.downloadUrl || attachment?.download_url || (
+        isFlRisk
+            ? `/api/field-leadership/risk-files/${attachmentId}/download`
+            : isFlActivity
+                ? `/api/field-leadership/activity-files/${attachmentId}/download`
+                : isCsmsChecklist
+                    ? `/api/csms/checklist-attachments/${attachmentId}/download`
+                    : isCsmsPjoFile
+                        ? `/api/csms/pjo-files/${attachmentId}/download`
+                        : isCsmsMemoKttFile
+                            ? `/api/csms/memo-ktt-files/${attachmentId}/download`
+                            : isCsmsLetterFile
+                                ? `/api/csms/letter-files/${attachmentId}/download`
+                                : isKoIssue
+                                    ? `/api/ko/issue-attachments/${attachmentId}/download`
+                                    : isKoProposal
+                                        ? `/api/ko/proposal-attachments/download${queryString}`
+                                        : `/api/document-system/attachments/${attachmentId}/download${queryString}`
+    );
 
     const sasUrl = isFlRisk
         ? null
@@ -65,7 +84,11 @@ export default function BlobPreviewModal({ attachment, onClose }) {
                     ? null
                     : isCsmsMemoKttFile
                         ? null
-                        : `/api/document-system/attachments/${attachmentId}/sas-url${queryString}`;
+                        : isCsmsLetterFile
+                            ? null
+                            : isKoIssue || isKoProposal
+                                ? null
+                                : `/api/document-system/attachments/${attachmentId}/sas-url${queryString}`;
 
     const fileExtension = (() => {
         let raw = (
@@ -130,7 +153,7 @@ export default function BlobPreviewModal({ attachment, onClose }) {
             padding: '20px'
         }}>
             <div style={{
-                backgroundColor: '#fff',
+                backgroundColor: 'var(--card-bg)',
                 borderRadius: '16px',
                 width: '100%',
                 maxWidth: '900px',
@@ -154,7 +177,7 @@ export default function BlobPreviewModal({ attachment, onClose }) {
                             <h3 style={{ fontSize: '14px', fontWeight: 700, color: '#1e293b', margin: 0 }}>
                                 Preview Lampiran
                             </h3>
-                            <p style={{ fontSize: '11px', color: '#64748b', margin: '2px 0 0 0' }}>
+                            <p style={{ fontSize: '11px', color: 'var(--text-secondary)', margin: '2px 0 0 0' }}>
                                 {attachment.file_name || 'Unnamed File'}
                             </p>
                         </div>
@@ -165,7 +188,7 @@ export default function BlobPreviewModal({ attachment, onClose }) {
                             border: 'none',
                             background: 'transparent',
                             cursor: 'pointer',
-                            color: '#64748b',
+                            color: 'var(--text-secondary)',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
@@ -218,8 +241,8 @@ export default function BlobPreviewModal({ attachment, onClose }) {
                         />
                     ) : isOffice ? (
                         officeSasLoading ? (
-                            <div style={{ textAlign: 'center', padding: '40px', color: '#64748b', fontSize: '12px' }}>
-                                <FileText size={32} style={{ color: '#94a3b8', marginBottom: '12px' }} />
+                            <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-secondary)', fontSize: '12px' }}>
+                                <FileText size={32} style={{ color: 'var(--text-secondary)', marginBottom: '12px' }} />
                                 <p>Memuat preview...</p>
                             </div>
                         ) : officeSasUrl && !isLocalUrl ? (
@@ -236,11 +259,11 @@ export default function BlobPreviewModal({ attachment, onClose }) {
                             />
                         ) : (
                             <div style={{ textAlign: 'center', padding: '40px' }}>
-                                <FileText size={48} style={{ color: '#94a3b8', marginBottom: '16px' }} />
+                                <FileText size={48} style={{ color: 'var(--text-secondary)', marginBottom: '16px' }} />
                                 <p style={{ fontSize: '13px', fontWeight: 600, color: '#334155', margin: '0 0 8px 0' }}>
                                     Pratinjau Dokumen Office ({fileExtension.toUpperCase()})
                                 </p>
-                                <p style={{ fontSize: '11px', color: '#64748b', margin: '0 0 20px 0', maxWidth: '420px', lineHeight: '1.5' }}>
+                                <p style={{ fontSize: '11px', color: 'var(--text-secondary)', margin: '0 0 20px 0', maxWidth: '420px', lineHeight: '1.5' }}>
                                     {isLocalUrl 
                                         ? 'Pratinjau online Office memerlukan URL server publik. Silakan unduh berkas untuk membukanya di aplikasi lokal.'
                                         : 'Tidak dapat memuat URL pratinjau. Silakan unduh berkas untuk membukanya.'}
@@ -268,11 +291,11 @@ export default function BlobPreviewModal({ attachment, onClose }) {
                         )
                     ) : (
                         <div style={{ textAlign: 'center', padding: '40px' }}>
-                            <FileText size={48} style={{ color: '#94a3b8', marginBottom: '16px' }} />
+                            <FileText size={48} style={{ color: 'var(--text-secondary)', marginBottom: '16px' }} />
                             <p style={{ fontSize: '13px', fontWeight: 600, color: '#334155', margin: '0 0 8px 0' }}>
                                 Pratinjau Tidak Tersedia
                             </p>
-                            <p style={{ fontSize: '11px', color: '#64748b', margin: '0 0 20px 0' }}>
+                            <p style={{ fontSize: '11px', color: 'var(--text-secondary)', margin: '0 0 20px 0' }}>
                                 Format file ({attachment.file_type || fileExtension || 'unknown'}) tidak mendukung pratinjau langsung. Silakan download untuk membukanya.
                             </p>
                             <a
@@ -305,7 +328,7 @@ export default function BlobPreviewModal({ attachment, onClose }) {
                         justifyContent: 'flex-end',
                         padding: '16px 24px',
                         borderTop: '1px solid #f1f5f9',
-                        backgroundColor: '#fff'
+                        backgroundColor: 'var(--card-bg)'
                     }}>
                         <a
                             href={downloadUrl}

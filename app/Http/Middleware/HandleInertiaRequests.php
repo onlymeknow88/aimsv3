@@ -33,7 +33,10 @@ class HandleInertiaRequests extends Middleware
         $allowedModules = [];
 
         if ($user) {
-            if (isset($user->role) && $user->role === 'super_admin') {
+            $unscopedAdmin = method_exists($user, 'isScopedByModuleRoles')
+                ? ($user->isSystemAdmin() && !$user->isScopedByModuleRoles())
+                : (isset($user->role) && $user->role === 'super_admin');
+            if ($unscopedAdmin) {
                 $allowedModules = ['*'];
             } else {
                 $allowedModules = \DB::table('aims_user_roles')
@@ -48,46 +51,29 @@ class HandleInertiaRequests extends Middleware
             }
         }
 
-        // FLS menus — hanya di-load untuk halaman field-leadership
+        // FLS menus — hanya di-load untuk halaman field-leadership,
+        // difilter sesuai permission can_view (kecuali super_admin/system_admin)
         $flsMenus = [];
         if ($request->is('field-leadership*')) {
-            $moduleId = \DB::table('aims_modules')->where('slug', 'field-leadership')->value('id');
-            if ($moduleId) {
-                $flsMenus = \DB::table('aims_menus')
-                    ->where('module_id', $moduleId)
-                    ->orderBy('parent_id')
-                    ->orderBy('order_by')
-                    ->get()
-                    ->toArray();
-            }
+            $flsMenus = $this->visibleModuleMenus('field-leadership', $user);
         }
 
-        // CSMS menus — hanya di-load untuk halaman csms
+        // CSMS menus — hanya di-load untuk halaman csms, difilter permission
         $csmsMenus = [];
         if ($request->is('csms*')) {
-            $moduleId = \DB::table('aims_modules')->where('slug', 'csms')->value('id');
-            if ($moduleId) {
-                $csmsMenus = \DB::table('aims_menus')
-                    ->where('module_id', $moduleId)
-                    ->orderBy('parent_id')
-                    ->orderBy('order_by')
-                    ->get()
-                    ->toArray();
-            }
+            $csmsMenus = $this->visibleModuleMenus('csms', $user);
         }
 
-        // PICA menus — hanya di-load untuk halaman pica
+        // PICA menus — hanya di-load untuk halaman pica, difilter permission
         $picaMenus = [];
         if ($request->is('pica*')) {
-            $moduleId = \DB::table('aims_modules')->where('slug', 'pica')->value('id');
-            if ($moduleId) {
-                $picaMenus = \DB::table('aims_menus')
-                    ->where('module_id', $moduleId)
-                    ->orderBy('parent_id')
-                    ->orderBy('order_by')
-                    ->get()
-                    ->toArray();
-            }
+            $picaMenus = $this->visibleModuleMenus('pica', $user);
+        }
+
+        // KO menus — hanya di-load untuk halaman ko, difilter permission
+        $koMenus = [];
+        if ($request->is('ko*')) {
+            $koMenus = $this->visibleModuleMenus('ko', $user);
         }
 
         // Document System menus — hanya di-load untuk halaman document-system
@@ -236,11 +222,66 @@ class HandleInertiaRequests extends Middleware
             'flsMenus'          => $flsMenus,
             'csmsMenus'         => $csmsMenus,
             'picaMenus'         => $picaMenus,
+            'koMenus'           => $koMenus ?? [],
             'dsMenus'           => $dsMenus,
             'dpMenus'           => $dpMenus,
             'coeMenus'          => $coeMenus,
             'microsoftLoginUrl'        => env('MICROSOFT_LOGIN_URL'),
             'microsoftRedirectEnabled' => app()->environment('production'),
         ];
+    }
+
+    /**
+     * Menu modul yang boleh dilihat user (filter can_view).
+     * Super admin / system admin melihat semua menu.
+     * Parent menu dari child yang diizinkan ikut disertakan agar dropdown tampil.
+     */
+    private function visibleModuleMenus(string $moduleSlug, $user): array
+    {
+        $moduleId = \DB::table('aims_modules')->where('slug', $moduleSlug)->value('id');
+        if (!$moduleId || !$user) {
+            return [];
+        }
+
+        $unscopedAdmin = method_exists($user, 'isScopedByModuleRoles')
+            ? ($user->isSystemAdmin() && !$user->isScopedByModuleRoles())
+            : in_array($user->role ?? null, ['super_admin', 'system_admin']);
+        if ($unscopedAdmin) {
+            return \DB::table('aims_menus')
+                ->where('module_id', $moduleId)
+                ->orderBy('parent_id')
+                ->orderBy('order_by')
+                ->get()
+                ->toArray();
+        }
+
+        $allowedMenuIds = \DB::table('aims_user_roles')
+            ->join('aims_roles', 'aims_user_roles.role_id', '=', 'aims_roles.id')
+            ->join('aims_permissions', 'aims_roles.id', '=', 'aims_permissions.role_id')
+            ->where('aims_user_roles.user_id', $user->id)
+            ->where('aims_roles.module_id', $moduleId)
+            ->where('aims_permissions.can_view', 1)
+            ->distinct()
+            ->pluck('aims_permissions.menu_id')
+            ->toArray();
+
+        if (empty($allowedMenuIds)) {
+            return [];
+        }
+
+        $parentIds = \DB::table('aims_menus')
+            ->whereIn('id', $allowedMenuIds)
+            ->pluck('parent_id')
+            ->filter()
+            ->unique()
+            ->toArray();
+
+        return \DB::table('aims_menus')
+            ->where('module_id', $moduleId)
+            ->whereIn('id', array_unique(array_merge($allowedMenuIds, $parentIds)))
+            ->orderBy('parent_id')
+            ->orderBy('order_by')
+            ->get()
+            ->toArray();
     }
 }

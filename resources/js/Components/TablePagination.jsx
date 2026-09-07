@@ -48,7 +48,7 @@ export default function TablePagination({
                 borderTop: "1px solid #f1f5f9",
                 backgroundColor: "#fafafa",
                 fontSize: "13px",
-                color: "#64748b",
+                color: "var(--text-secondary)",
                 flexWrap: "wrap",
                 gap: "12px",
             }}
@@ -78,7 +78,7 @@ export default function TablePagination({
                         <span
                             style={{
                                 fontSize: "12px",
-                                color: "#64748b",
+                                color: "var(--text-secondary)",
                             }}
                         >
                             Baris per halaman:

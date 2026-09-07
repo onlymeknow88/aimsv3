@@ -116,7 +116,7 @@ export default function TwoFactorChallenge({ hasTotpEnabled, email }) {
             <Head title="Verifikasi Dua Langkah" />
 
             <div style={{
-                backgroundColor: '#fff',
+                backgroundColor: 'var(--card-bg)',
                 borderRadius: '20px',
                 boxShadow: '0 20px 60px rgba(21,59,115,0.1)',
                 padding: '40px',
@@ -137,7 +137,7 @@ export default function TwoFactorChallenge({ hasTotpEnabled, email }) {
                     <h1 style={{ fontSize: '22px', fontWeight: 800, color: '#0f172a', margin: '0 0 8px' }}>
                         Verifikasi Dua Langkah
                     </h1>
-                    <p style={{ fontSize: '13px', color: '#64748b', margin: 0 }}>
+                    <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: 0 }}>
                         {mode === 'totp'
                             ? 'Masukkan kode 6 digit dari aplikasi autentikator Anda.'
                             : `Kode verifikasi telah dikirim ke ${email}`
@@ -224,7 +224,7 @@ export default function TwoFactorChallenge({ hasTotpEnabled, email }) {
                             background: isLoading || getCode().length < 6
                                 ? '#e2e8f0'
                                 : 'linear-gradient(135deg, #153B73, #1E4E96)',
-                            color: isLoading || getCode().length < 6 ? '#94a3b8' : '#fff',
+                            color: isLoading || getCode().length < 6 ? 'var(--text-secondary)' : '#fff',
                             border: 'none',
                             borderRadius: '12px',
                             fontSize: '14px',
@@ -255,7 +255,7 @@ export default function TwoFactorChallenge({ hasTotpEnabled, email }) {
                             </p>
                         )}
                         {countdown > 0 ? (
-                            <p style={{ fontSize: '12px', color: '#94a3b8' }}>
+                            <p style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
                                 Kirim ulang dalam <strong style={{ color: '#153B73' }}>{countdown}s</strong>
                             </p>
                         ) : (
@@ -284,7 +284,7 @@ export default function TwoFactorChallenge({ hasTotpEnabled, email }) {
                 <div style={{ textAlign: 'center', marginTop: '24px', paddingTop: '20px', borderTop: '1px solid #f1f5f9' }}>
                     <a
                         href={route('login')}
-                        style={{ fontSize: '13px', color: '#64748b', textDecoration: 'none' }}
+                        style={{ fontSize: '13px', color: 'var(--text-secondary)', textDecoration: 'none' }}
                     >
                         ← Kembali ke halaman login
                     </a>

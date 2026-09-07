@@ -151,7 +151,9 @@ Route::middleware(['web', 'auth'])->prefix('api')->group(function () {
 
     // ── Portal public news endpoints (used by dashboard widget) ──────────────
     Route::get('/portal/news',       [\Modules\DashboardPortal\Http\Controllers\Api\DashboardPortalController::class, 'newsIndex']);
+    Route::get('/portal/news/list',  [\Modules\DashboardPortal\Http\Controllers\Api\DashboardPortalController::class, 'newsList']);
     Route::get('/portal/news/{id}',  [\Modules\DashboardPortal\Http\Controllers\Api\DashboardPortalController::class, 'newsShow']);
+    Route::get('/portal/news/{id}/download', [\Modules\DashboardPortal\Http\Controllers\Api\DashboardPortalController::class, 'newsDownload']);
 
     // ── Document System widget stats for the dashboard ────────────────────────
     Route::get('/portal/document-system/stats', [\Modules\DocumentSystem\Http\Controllers\Api\DocumentSystemWidgetController::class, 'stats']);

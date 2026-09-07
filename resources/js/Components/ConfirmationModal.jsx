@@ -41,7 +41,7 @@ export default function ConfirmationModal({
                 }
             `}</style>
             <div style={{
-                backgroundColor: '#fff',
+                backgroundColor: 'var(--card-bg)',
                 border: '1px solid rgba(226, 232, 240, 0.8)',
                 borderRadius: '16px',
                 padding: '32px',
@@ -80,7 +80,7 @@ export default function ConfirmationModal({
                 </h3>
                 <p style={{
                     fontSize: '12px',
-                    color: '#64748b',
+                    color: 'var(--text-secondary)',
                     lineHeight: '1.6',
                     margin: '0 0 28px 0'
                 }}>
@@ -105,7 +105,7 @@ export default function ConfirmationModal({
                             padding: '10px 16px',
                             border: '1px solid #e2e8f0',
                             borderRadius: '8px',
-                            backgroundColor: '#fff',
+                            backgroundColor: 'var(--card-bg)',
                             color: '#475569',
                             fontSize: '12px',
                             fontWeight: 600,
