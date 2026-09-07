@@ -19,7 +19,7 @@ function SkeletonBlock({ width = "100%", height = "14px", radius = "6px" }) {
                 height,
                 borderRadius: radius,
                 backgroundColor: "#e2e8f0",
-                animation: "flssummary-pulse 1.8s infinite ease-in-out",
+                animation: 'dashboard-pulse 1.8s infinite ease-in-out',
             }}
         />
     );
@@ -67,7 +67,7 @@ function KpiCard({ label, done, target, mark, loading }) {
                     display: "flex",
                     flexDirection: "column",
                     gap: "10px",
-                    animation: "flssummary-pulse 1.5s infinite",
+                    animation: 'dashboard-pulse 1.8s infinite ease-in-out',
                 }}
             >
                 <SkeletonBlock width="60%" height="11px" />
@@ -94,7 +94,7 @@ function KpiCard({ label, done, target, mark, loading }) {
                 style={{
                     fontSize: "11px",
                     fontWeight: 600,
-                    color: "#64748b",
+                    color: "var(--text-secondary)",
                     textTransform: "uppercase",
                     letterSpacing: "0.5px",
                 }}
@@ -119,7 +119,7 @@ function KpiCard({ label, done, target, mark, loading }) {
                 >
                     {done.toLocaleString("id-ID")}
                 </span>
-                <span style={{ fontSize: "12px", color: "#94a3b8" }}>
+                <span style={{ fontSize: "12px", color: "var(--text-secondary)" }}>
                     / {target.toLocaleString("id-ID")} target
                 </span>
             </div>
@@ -149,7 +149,7 @@ function KpiCard({ label, done, target, mark, loading }) {
                     alignItems: "center",
                 }}
             >
-                <span style={{ fontSize: "11px", color: "#94a3b8" }}>
+                <span style={{ fontSize: "11px", color: "var(--text-secondary)" }}>
                     {percent}% selesai
                 </span>
                 {mark && (
@@ -187,7 +187,7 @@ export default function FieldLeadershipSummary({ stats, loading }) {
     return (
         <>
             <style>{`
-                @keyframes flssummary-pulse {
+                @keyframes dashboard-pulse {
                     0%, 100% { opacity: 1; }
                     50%       { opacity: 0.45; }
                 }
@@ -222,7 +222,7 @@ export default function FieldLeadershipSummary({ stats, loading }) {
                             display: "flex",
                             flexDirection: "column",
                             gap: "10px",
-                            animation: "flssummary-pulse 1.5s infinite",
+                            animation: 'dashboard-pulse 1.8s infinite ease-in-out',
                         }}
                     >
                         <SkeletonBlock width="50%" height="11px" />

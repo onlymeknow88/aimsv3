@@ -19,6 +19,13 @@ export default function FieldLeadershipLayout({ children }) {
         return () => window.removeEventListener('resize', handleResize);
     }, []);
 
+    useEffect(() => {
+        if (!isMobile || !sidebarOpen) return;
+        const onKey = (e) => { if (e.key === 'Escape') setSidebarOpen(false); };
+        document.addEventListener('keydown', onKey);
+        return () => document.removeEventListener('keydown', onKey);
+    }, [isMobile, sidebarOpen]);
+
     // Dropdown collapse states — diinisialisasi dari currentPath
     const [openObservation, setOpenObservation] = useState(
         currentPath.includes('/pto') || currentPath.includes('/ttt') ||
@@ -31,9 +38,12 @@ export default function FieldLeadershipLayout({ children }) {
 
     return (
         <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: 'var(--bg-color)', position: 'relative' }}>
-            {/* Mobile Sidebar Overlay Backdrop */}
+            <a href="#fls-main-content" className="sr-only" style={{ position: 'absolute', left: '-9999px' }}>Lewati ke konten utama</a>
+            {/* Mobile Sidebar Overlay Backdrop — accessible */}
             {isMobile && sidebarOpen && (
-                <div
+                <button
+                    type="button"
+                    aria-label="Tutup navigasi"
                     onClick={() => setSidebarOpen(false)}
                     style={{
                         position: 'fixed',
@@ -43,8 +53,11 @@ export default function FieldLeadershipLayout({ children }) {
                         height: '100vh',
                         backgroundColor: 'rgba(15, 23, 42, 0.4)',
                         backdropFilter: 'blur(4px)',
+                        WebkitBackdropFilter: 'blur(4px)',
                         zIndex: 99,
-                        animation: 'fadeIn 0.2s ease'
+                        border: 'none',
+                        padding: 0,
+                        cursor: 'pointer',
                     }}
                 />
             )}
@@ -72,7 +85,7 @@ export default function FieldLeadershipLayout({ children }) {
                 />
 
                 {/* Konten Halaman */}
-                <main style={{ flex: 1, padding: isMobile ? '16px' : '24px', overflowY: 'auto' }}>
+                <main id="fls-main-content" tabIndex={-1} style={{ flex: 1, padding: isMobile ? '16px' : '24px', overflowY: 'auto' }}>
                     {children}
                 </main>
             </div>
@@ -81,6 +94,32 @@ export default function FieldLeadershipLayout({ children }) {
                 .hover-link:hover {
                     background-color: rgba(255,255,255,0.03) !important;
                     color: #fff !important;
+                }
+                .fls-sidebar-link:hover {
+                    background-color: rgba(255,255,255,0.03) !important;
+                    color: #fff !important;
+                }
+                *:focus-visible {
+                    outline: 2px solid var(--primary, #1d4ed8);
+                    outline-offset: 2px;
+                }
+                .sr-only {
+                    position: absolute;
+                    width: 1px;
+                    height: 1px;
+                    padding: 0;
+                    margin: -1px;
+                    overflow: hidden;
+                    clip: rect(0,0,0,0);
+                    white-space: nowrap;
+                    border: 0;
+                }
+                @media (prefers-reduced-motion: reduce) {
+                    *, *::before, *::after {
+                        animation-duration: 0.01ms !important;
+                        transition-duration: 0.01ms !important;
+                        backdrop-filter: none !important;
+                    }
                 }
             `}} />
         </div>

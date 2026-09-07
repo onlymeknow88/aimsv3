@@ -14,7 +14,7 @@ function ErrorState({ onRetry }) {
         <div style={{
             display: 'flex', flexDirection: 'column',
             alignItems: 'center', justifyContent: 'center',
-            gap: '12px', padding: '48px 20px', color: '#94a3b8',
+            gap: '12px', padding: '48px 20px', color: 'var(--text-secondary)',
         }}>
             <HardHat size={32} style={{ color: '#e2e8f0' }} />
             <span style={{ fontSize: '13px' }}>Gagal memuat data Field Leadership</span>
@@ -23,7 +23,7 @@ function ErrorState({ onRetry }) {
                 style={{
                     display: 'inline-flex', alignItems: 'center', gap: '6px',
                     padding: '6px 14px', borderRadius: '8px',
-                    border: '1px solid #e2e8f0', backgroundColor: '#fff',
+                    border: '1px solid #e2e8f0', backgroundColor: 'var(--card-bg)',
                     color: '#475569', fontSize: '12px', fontWeight: 600, cursor: 'pointer',
                 }}
             >
@@ -39,7 +39,7 @@ function EmptyState() {
         <div style={{
             display: 'flex', flexDirection: 'column',
             alignItems: 'center', justifyContent: 'center',
-            gap: '8px', padding: '48px 20px', color: '#94a3b8',
+            gap: '8px', padding: '48px 20px', color: 'var(--text-secondary)',
         }}>
             <HardHat size={28} style={{ color: '#e2e8f0' }} />
             <span style={{ fontSize: '13px' }}>
@@ -64,7 +64,7 @@ export default function FieldLeadership({ filters = {} }) {
 
     return (
         <div style={{
-            backgroundColor: '#fff',
+            backgroundColor: 'var(--card-bg)',
             border: '1px solid var(--border-color, #e2e8f0)',
             borderRadius: '16px',
             padding: '24px',
@@ -75,7 +75,7 @@ export default function FieldLeadership({ filters = {} }) {
             overflowX: 'hidden',
         }}>
             <style>{`
-                @keyframes flswidget-spin {
+                @keyframes dashboard-spin {
                     from { transform: rotate(0deg); }
                     to   { transform: rotate(360deg); }
                 }
@@ -118,20 +118,20 @@ export default function FieldLeadership({ filters = {} }) {
             }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
                     <HardHat size={16} style={{ color: 'var(--primary)', flexShrink: 0 }} />
-                    <h4 style={{
+                    <h2 style={{
                         fontSize: '13px', fontWeight: 700,
                         color: 'var(--text-primary, #1e293b)', margin: 0,
                         textTransform: 'uppercase', letterSpacing: '0.3px',
                         overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                     }}>
                         Field Leadership
-                    </h4>
+                    </h2>
                 </div>
 
                 {loading && (
                     <RefreshCw
                         size={14}
-                        style={{ color: '#94a3b8', animation: 'flswidget-spin 1s linear infinite', flexShrink: 0 }}
+                        style={{ color: 'var(--text-secondary)', animation: 'flswidget-spin 1s linear infinite', flexShrink: 0 }}
                     />
                 )}
             </div>

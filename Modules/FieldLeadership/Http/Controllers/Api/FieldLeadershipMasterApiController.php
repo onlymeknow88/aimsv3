@@ -121,7 +121,8 @@ class FieldLeadershipMasterApiController extends Controller
 
     public function getKtaTta(Request $request)
     {
-        $query = DB::table('field_leadership_kta_and_ttas')->orderBy('type')->orderBy('code');
+        // Natural sort: urut KTA/TTA by type lalu code natural (A1, A2, ... A10 bukan A1, A10)
+        $query = DB::table('field_leadership_kta_and_ttas')->orderBy('type')->orderByRaw('LENGTH(code) ASC')->orderBy('code');
         if ($request->filled('type')) $query->where('type', $request->query('type'));
         return ResponseFormatter::success($query->get(), 'KTA & TTA retrieved');
     }
@@ -163,7 +164,11 @@ class FieldLeadershipMasterApiController extends Controller
 
     public function getPotency()
     {
-        $data = DB::table('field_leadership_potency_and_consequnces')->orderBy('code')->get();
+        // Order by tingkat risiko: Rendah(L) → Menengah(M) → Tinggi(H) → Mayor(C) → N/A
+        $data = DB::table('field_leadership_potency_and_consequnces')
+            ->orderByRaw("FIELD(code, 'L','M','H','C','N/A')")
+            ->orderBy('code')
+            ->get();
         return ResponseFormatter::success($data, 'Potency & consequences retrieved');
     }
 

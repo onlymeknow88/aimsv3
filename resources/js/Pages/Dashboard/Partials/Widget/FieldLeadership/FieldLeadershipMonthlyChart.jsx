@@ -21,7 +21,7 @@ function ChartSkeleton() {
         <div style={{
             height: '180px', display: 'flex', alignItems: 'flex-end',
             gap: '6px', padding: '0 8px',
-            animation: 'flschart-pulse 1.8s infinite ease-in-out',
+            animation: 'dashboard-pulse 1.8s infinite ease-in-out',
         }}>
             {[60, 80, 45, 90, 70, 55, 75, 95, 65, 50, 85, 40].map((h, i) => (
                 <div key={i} style={{
@@ -72,12 +72,12 @@ export default function FieldLeadershipMonthlyChart({ stats, loading }) {
         scales: {
             x: {
                 grid: { display: false },
-                ticks: { font: { size: 10 }, color: '#94a3b8' },
+                ticks: { font: { size: 10 }, color: 'var(--text-secondary)' },
             },
             y: {
                 beginAtZero: true,
                 grid: { color: '#f1f5f9' },
-                ticks: { font: { size: 10 }, color: '#94a3b8', precision: 0 },
+                ticks: { font: { size: 10 }, color: 'var(--text-secondary)', precision: 0 },
             },
         },
         animation: { duration: 800, easing: 'easeInOutQuart' },
@@ -86,7 +86,7 @@ export default function FieldLeadershipMonthlyChart({ stats, loading }) {
     return (
         <>
             <style>{`
-                @keyframes flschart-pulse {
+                @keyframes dashboard-pulse {
                     0%, 100% { opacity: 1; }
                     50%       { opacity: 0.45; }
                 }

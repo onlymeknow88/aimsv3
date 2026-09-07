@@ -7,9 +7,11 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Modules\FieldLeadership\App\Traits\AuthorizesFlActions;
 
 class FieldLeadershipRisksApiController extends Controller
 {
+    use AuthorizesFlActions;
     /**
      * GET /api/field-leadership/risks
      */
@@ -110,8 +112,15 @@ class FieldLeadershipRisksApiController extends Controller
             return ResponseFormatter::error('Risk not found', 404);
         }
 
+        // Otorisasi: maker/PJA dokumen induk atau admin modul
+        $parent = $risk->fl_id ? DB::table('field_leaderships')->where('id', $risk->fl_id)->first() : null;
+        if (!$parent || !$this->flCanManage($parent)) {
+            return ResponseFormatter::error('Anda tidak berwenang mengubah risk ini.', 403);
+        }
+
+        // Status dibatasi ke daftar yang dikenal sistem
         $validated = $request->validate([
-            'status'      => 'sometimes|string|max:100',
+            'status'      => 'sometimes|in:' . implode(',', \Modules\FieldLeadership\App\Support\FieldLeadershipStatus::ALL),
             'supervisor'  => 'nullable|string|max:255',
             'type_action' => 'nullable|string|max:255',
             'due_date'    => 'sometimes|date',
