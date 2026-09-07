@@ -28,8 +28,34 @@ export default function DictionaryIndex() {
     } = useDictionary();
 
     const [showCreate, setShowCreate] = useState(false);
+    const [editing, setEditing]       = useState(null);
+    const [deleting, setDeleting]     = useState(null);
     const [createForm, setCreateForm] = useState({ term: '', definition: '' });
     const [creating, setCreating]     = useState(false);
+
+    const openEdit = (item) => {
+        setEditing(item);
+        setCreateForm({ term: item.term ?? '', definition: item.definition ?? '' });
+        setShowCreate(true);
+    };
+    const closeModal = () => {
+        setShowCreate(false);
+        setEditing(null);
+        setCreateForm({ term: '', definition: '' });
+    };
+    const handleSave = () => {
+        setCreating(true);
+        const req = editing
+            ? axios.put(`/api/csms/dictionaries/${editing.id}`, createForm)
+            : axios.post('/api/csms/dictionaries', createForm);
+        req.then(() => { closeModal(); refresh(); })
+           .finally(() => setCreating(false));
+    };
+    const handleDelete = () => {
+        if (!deleting) return;
+        axios.delete(`/api/csms/dictionaries/${deleting.id}`)
+            .then(() => { setDeleting(null); refresh(); });
+    };
 
     return (
         <CSMSLayout>
@@ -58,15 +84,15 @@ export default function DictionaryIndex() {
             </div>
 
             <div style={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--border-color)', borderRadius: '12px', overflow: 'hidden', boxShadow: 'var(--shadow-sm)' }}>
-                <DictionaryTable items={items} loading={loading} />
+                <DictionaryTable items={items} loading={loading} onEdit={openEdit} onDelete={setDeleting} />
                 <TablePagination pagination={pagination} onPageChange={setPage} limit={limit} onLimitChange={v => { setLimit(v); setPage(1); }} />
             </div>
             {showCreate && (
                 <div style={modalOverlay}>
                     <div style={modalBox}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '18px 20px', borderBottom: '1px solid var(--border-color)' }}>
-                            <h3 style={{ fontSize: '14px', fontWeight: 700, margin: 0 }}>Tambah Istilah Kamus CSMS</h3>
-                            <button onClick={() => setShowCreate(false)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><X size={16} /></button>
+                            <h3 style={{ fontSize: '14px', fontWeight: 700, margin: 0 }}>{editing ? 'Edit Istilah Kamus CSMS' : 'Tambah Istilah Kamus CSMS'}</h3>
+                            <button onClick={closeModal} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><X size={16} /></button>
                         </div>
                         <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
                             <div>
@@ -82,18 +108,31 @@ export default function DictionaryIndex() {
                             </div>
                         </div>
                         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', padding: '12px 20px', borderTop: '1px solid var(--border-color)' }}>
-                            <button onClick={() => { setShowCreate(false); setCreateForm({ term: '', definition: '' }); }}
+                            <button onClick={closeModal}
                                 style={{ padding: '8px 16px', border: '1px solid var(--border-color)', borderRadius: '6px', fontSize: '12px', cursor: 'pointer', backgroundColor: '#fff' }}>Batal</button>
                             <button disabled={creating || !createForm.term.trim() || !createForm.definition.trim()}
-                                onClick={() => {
-                                    setCreating(true);
-                                    axios.post('/api/csms/dictionaries', createForm)
-                                    .then(() => { setShowCreate(false); setCreateForm({ term: '', definition: '' }); refresh(); })
-                                    .finally(() => setCreating(false));
-                                }}
+                                onClick={handleSave}
                                 style={{ padding: '8px 16px', border: 'none', borderRadius: '6px', fontSize: '12px', fontWeight: 700, backgroundColor: 'var(--primary)', color: '#fff', cursor: creating ? 'not-allowed' : 'pointer', opacity: creating ? 0.7 : 1 }}>
                                 {creating ? 'Menyimpan...' : 'Simpan'}
                             </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+            {deleting && (
+                <div style={modalOverlay}>
+                    <div style={{ ...modalBox, maxWidth: '400px' }}>
+                        <div style={{ padding: '24px' }}>
+                            <h3 style={{ fontSize: '14px', fontWeight: 700, margin: '0 0 8px 0' }}>Hapus Istilah?</h3>
+                            <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: '0 0 20px 0' }}>
+                                "{deleting.term}" akan dihapus permanen. Lanjutkan?
+                            </p>
+                            <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                                <button onClick={() => setDeleting(null)}
+                                    style={{ padding: '8px 16px', border: '1px solid var(--border-color)', borderRadius: '6px', fontSize: '12px', cursor: 'pointer', backgroundColor: '#fff' }}>Batal</button>
+                                <button onClick={handleDelete}
+                                    style={{ padding: '8px 16px', border: 'none', borderRadius: '6px', fontSize: '12px', fontWeight: 700, backgroundColor: 'var(--danger, #ef4444)', color: '#fff', cursor: 'pointer' }}>Hapus</button>
+                            </div>
                         </div>
                     </div>
                 </div>

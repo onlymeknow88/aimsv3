@@ -10,15 +10,15 @@ import useCsmsWidget from './Hooks/useCsmsWidget';
 
 const P      = '#153B73';
 const BORDER = '#e2e8f0';
-const MUTED  = '#64748b';
+const MUTED  = 'var(--text-secondary)';
 const BG     = '#f8fafc';
 
 const CSS = `
-    @keyframes csms-pulse {
+    @keyframes dashboard-pulse {
         0%, 100% { opacity: 1; }
         50%       { opacity: 0.4; }
     }
-    @keyframes csms-spin {
+    @keyframes dashboard-spin {
         from { transform: rotate(0deg); }
         to   { transform: rotate(360deg); }
     }
@@ -53,7 +53,7 @@ export default function CsmsWidget({ filters = {} }) {
 
     return (
         <div style={{
-            backgroundColor: '#fff',
+            backgroundColor: 'var(--card-bg)',
             border: `1px solid var(--border-color, ${BORDER})`,
             borderRadius: '16px', padding: '24px',
             boxShadow: 'var(--shadow-sm, 0 1px 3px rgba(0,0,0,0.06))',
@@ -65,9 +65,9 @@ export default function CsmsWidget({ filters = {} }) {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', gap: '8px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
                     <HardHat size={16} style={{ color: P, flexShrink: 0 }} />
-                    <h4 style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-primary, #1e293b)', margin: 0, textTransform: 'uppercase', letterSpacing: '.3px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <h2 style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-primary, #1e293b)', margin: 0, textTransform: 'uppercase', letterSpacing: '.3px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         CSMS — Contractor Safety Management
-                    </h4>
+                    </h2>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
                     {loading && <RefreshCw size={13} style={{ color: MUTED, animation: 'csms-spin 1s linear infinite' }} />}
@@ -81,7 +81,7 @@ export default function CsmsWidget({ filters = {} }) {
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', padding: '40px', color: MUTED }}>
                     <HardHat size={28} style={{ color: '#e2e8f0' }} />
                     <span style={{ fontSize: '13px' }}>Gagal memuat data CSMS</span>
-                    <button onClick={refetch} style={{ padding: '6px 14px', borderRadius: '8px', border: `1px solid ${BORDER}`, backgroundColor: '#fff', color: '#475569', fontSize: '12px', fontWeight: 600, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                    <button onClick={refetch} style={{ padding: '6px 14px', borderRadius: '8px', border: `1px solid ${BORDER}`, backgroundColor: 'var(--card-bg)', color: '#475569', fontSize: '12px', fontWeight: 600, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
                         <RefreshCw size={12} /> Coba Lagi
                     </button>
                 </div>

@@ -11,6 +11,7 @@ use Modules\CSMS\Entities\CsmsChecklist;
 use Modules\CSMS\Entities\CsmsChecklistAttachment;
 use Modules\CSMS\Entities\CsmsMasterDataChecklist;
 use Modules\CSMS\Entities\CsmsPica;
+use Modules\CSMS\Enums\ServiceCriteria;
 use Barryvdh\DomPDF\Facade\Pdf;
 
 class CSMSBiddingApiController extends CSMSBaseApiController
@@ -148,7 +149,7 @@ class CSMSBiddingApiController extends CSMSBaseApiController
             'address'            => 'required|string|max:255',
             'company_site'       => 'required|string|max:255',
             'license_number'     => 'required|string|max:255',
-            'service_criteria'   => 'required|string|max:255',
+            'service_criteria'   => 'required|string|max:255|in:'.implode(',', array_column(ServiceCriteria::cases(), 'value')),
             'business_entity_id' => 'required',
             'classification'     => 'nullable|string|max:255',
             'person_in_charge'   => 'nullable|string|max:255',

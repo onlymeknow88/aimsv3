@@ -31,7 +31,7 @@ function CategoryRow({ name, count, value, color, loading }) {
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <span style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: color, display: 'inline-block', flexShrink: 0 }} />
                     <span style={{ fontSize: '11px', fontWeight: 600, color: '#475569' }}>{name}</span>
-                    <span style={{ fontSize: '10px', color: '#94a3b8' }}>({(count ?? 0).toLocaleString('id-ID')})</span>
+                    <span style={{ fontSize: '10px', color: 'var(--text-secondary)' }}>({(count ?? 0).toLocaleString('id-ID')})</span>
                 </div>
                 <span style={{ fontSize: '12px', fontWeight: 700, color: '#1e293b' }}>{pct}%</span>
             </div>
@@ -46,13 +46,13 @@ export default function CsmsCategoryProgress({ category = [], loading }) {
     const total = category.reduce((s, c) => s + (c.count ?? 0), 0);
 
     return (
-        <div style={{ backgroundColor: '#fff', border: `1px solid ${BORDER}`, borderRadius: '12px', padding: '16px', boxSizing: 'border-box' }}>
+        <div style={{ backgroundColor: 'var(--card-bg)', border: `1px solid ${BORDER}`, borderRadius: '12px', padding: '16px', boxSizing: 'border-box' }}>
             <p style={{ fontSize: '11px', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '.5px', margin: '0 0 16px' }}>By Category</p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                 {loading
                     ? [1, 2, 3].map(i => <CategoryRow key={i} loading />)
                     : category.length === 0
-                        ? <p style={{ fontSize: '12px', color: '#94a3b8', textAlign: 'center', padding: '16px 0', margin: 0 }}>Belum ada data</p>
+                        ? <p style={{ fontSize: '12px', color: 'var(--text-secondary)', textAlign: 'center', padding: '16px 0', margin: 0 }}>Belum ada data</p>
                         : category.map((item, i) => (
                             <CategoryRow
                                 key={i}
@@ -67,7 +67,7 @@ export default function CsmsCategoryProgress({ category = [], loading }) {
             </div>
             {!loading && category.length > 0 && (
                 <div style={{ marginTop: '16px', paddingTop: '12px', borderTop: `1px solid ${BORDER}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 500 }}>Total</span>
+                    <span style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 500 }}>Total</span>
                     <span style={{ fontSize: '13px', fontWeight: 700, color: P }}>{total.toLocaleString('id-ID')}</span>
                 </div>
             )}

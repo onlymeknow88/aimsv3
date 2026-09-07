@@ -9,6 +9,7 @@ use Modules\CSMS\Entities\CsmsMasterDataChecklist;
 use Modules\CSMS\Entities\CsmsMemoKtt;
 use Modules\CSMS\Entities\CsmsMemoKttFile;
 use Modules\CSMS\Entities\CsmsLetter;
+use Modules\CSMS\Entities\CsmsLetterFile;
 use Modules\CSMS\Entities\CsmsDictionary;
 use Modules\CSMS\Entities\CsmsPica;
 use Modules\CSMS\Entities\Bidding;
@@ -164,6 +165,66 @@ class CSMSSupportApiController extends CSMSBaseApiController
         return ResponseFormatter::success($memoUpdated, 'Memo KTT berhasil dibuat.', 201);
     }
 
+    // ── MEMO KTT — UPDATE ───────────────────────────────────────────────────
+    public function updateMemoKtt(Request $request, string $id)
+    {
+        $memo = CsmsMemoKtt::find($id);
+        if (!$memo) {
+            return ResponseFormatter::error('Memo KTT tidak ditemukan.', 404);
+        }
+
+        $request->validate([
+            'memo_number' => 'sometimes|required|string|max:100',
+            'title'       => 'sometimes|required|string|max:255',
+            'ccow_id'     => 'sometimes|required|string',
+            'date'        => 'sometimes|required|date',
+            'description' => 'nullable|string',
+            'status'      => 'nullable|string',
+        ]);
+
+        DB::beginTransaction();
+        try {
+            $memo->update($request->only([
+                'memo_number', 'title', 'ccow_id', 'date', 'description', 'status',
+            ]));
+
+            if ($request->ccow_id) {
+                $company = Company::find($request->ccow_id);
+                if ($company?->user_id) {
+                    $memo->update(['ktt_id' => $company->user_id]);
+                }
+            }
+
+            if ($request->hasFile('files')) {
+                foreach ($request->file('files') as $file) {
+                    $this->uploadMemoKttFile($file, $memo->id);
+                }
+            }
+
+            DB::commit();
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            \Log::error('CSMS: gagal update Memo KTT', ['error' => $e->getMessage()]);
+            return ResponseFormatter::error('Gagal mengupdate Memo KTT: ' . $e->getMessage(), 500);
+        }
+
+        return ResponseFormatter::success($memo->fresh(), 'Memo KTT berhasil diupdate.');
+    }
+
+    // ── MEMO KTT — DESTROY ──────────────────────────────────────────────────
+    public function destroyMemoKtt(string $id)
+    {
+        $memo = CsmsMemoKtt::find($id);
+        if (!$memo) {
+            return ResponseFormatter::error('Memo KTT tidak ditemukan.', 404);
+        }
+
+        CsmsMemoKttFile::where('memo_id', $memo->id)->delete();
+        $memo->delete();
+
+        return ResponseFormatter::success(['message' => 'Memo KTT berhasil dihapus.']);
+    }
+
     // ── MEMO KTT FILE PREVIEW & DOWNLOAD ────────────────────────────────────
     public function previewMemoKttFile(string $id)
     {
@@ -212,28 +273,169 @@ class CSMSSupportApiController extends CSMSBaseApiController
     // ── LETTERS — INDEX ───────────────────────────────────────────────────────
     public function indexLetters(Request $request)
     {
-        $q = CsmsLetter::orderBy('created_at', 'desc');
+        $q = CsmsLetter::query()
+            ->from('csms_letters as l')
+            ->leftJoin('companies as c', 'l.ccow_id', '=', 'c.id')
+            ->leftJoin('users as u', 'l.ktt_id', '=', 'u.id')
+            ->select([
+                'l.*',
+                'c.company_name as ccow_name',
+                'u.name as ktt_name',
+                DB::raw('(SELECT COUNT(*) FROM csms_letter_files WHERE csms_letter_files.letter_id = l.id) as files_count'),
+            ])
+            ->orderBy('l.created_at', 'desc');
         if ($s = $request->search) {
-            $q->where('title', 'like', "%{$s}%");
+            $q->where(function ($query) use ($s) {
+                $query->where('l.title', 'like', "%{$s}%")
+                      ->orWhere('l.letter_number', 'like', "%{$s}%");
+            });
         }
-        return ResponseFormatter::success($q->paginate($request->limit ?? 10));
+        $data = $q->paginate($request->limit ?? 10);
+
+        foreach ($data->items() as $item) {
+            $item->files = CsmsLetterFile::where('letter_id', $item->id)
+                ->select(['id', 'letter_id', 'name', 'size', 'file'])
+                ->get();
+        }
+
+        return ResponseFormatter::success($data);
     }
 
     // ── LETTERS — STORE ───────────────────────────────────────────────────────
     public function storeLetter(Request $request)
     {
-        $request->validate(['title' => 'required|string|max:255']);
-
-        $letter = CsmsLetter::create([
-            'title'  => $request->title,
-            'status' => $request->status ?? 'Active',
+        $request->validate([
+            'letter_number' => 'nullable|string|max:100',
+            'title'         => 'required|string|max:255',
+            'ccow_id'       => 'nullable|string',
+            'date'          => 'nullable|date',
+            'date_inactive' => 'nullable|date',
+            'description'   => 'nullable|string',
+            'status'        => 'nullable|string',
         ]);
 
+        $kttId = $request->ktt_id;
+        if ($request->ccow_id) {
+            $company = Company::find($request->ccow_id);
+            $kttId   = $company?->user_id ?? $kttId;
+        }
+
+        DB::beginTransaction();
+        try {
+            $letter = CsmsLetter::create([
+                'letter_number' => $request->letter_number,
+                'title'         => $request->title,
+                'ccow_id'       => $request->ccow_id,
+                'ktt_id'        => $kttId,
+                'date'          => $request->date,
+                'date_inactive' => $request->date_inactive,
+                'description'   => $request->description,
+                'status'        => $request->status ?? 'Active',
+            ]);
+
+            if ($request->hasFile('files')) {
+                foreach ($request->file('files') as $file) {
+                    $this->uploadLetterFile($file, $letter->id);
+                }
+            }
+
+            DB::commit();
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            \Log::error('CSMS: gagal store Letter', ['error' => $e->getMessage()]);
+            return ResponseFormatter::error('Gagal menyimpan Surat Edaran: ' . $e->getMessage(), 500);
+        }
+
         return ResponseFormatter::success(
-            $letter,
+            $letter->fresh(),
             'Surat Edaran berhasil dibuat.',
             201
         );
+    }
+
+    // ── LETTERS — UPDATE ──────────────────────────────────────────────────────
+    public function updateLetter(Request $request, string $id)
+    {
+        $letter = CsmsLetter::find($id);
+        if (!$letter) {
+            return ResponseFormatter::error('Surat Edaran tidak ditemukan.', 404);
+        }
+
+        $request->validate([
+            'letter_number' => 'nullable|string|max:100',
+            'title'         => 'sometimes|required|string|max:255',
+            'ccow_id'       => 'nullable|string',
+            'date'          => 'nullable|date',
+            'date_inactive' => 'nullable|date',
+            'description'   => 'nullable|string',
+            'status'        => 'nullable|string',
+        ]);
+
+        DB::beginTransaction();
+        try {
+            $letter->update($request->only([
+                'letter_number', 'title', 'ccow_id', 'date',
+                'date_inactive', 'description', 'status',
+            ]));
+
+            if ($request->ccow_id) {
+                $company = Company::find($request->ccow_id);
+                if ($company?->user_id) {
+                    $letter->update(['ktt_id' => $company->user_id]);
+                }
+            }
+
+            if ($request->hasFile('files')) {
+                foreach ($request->file('files') as $file) {
+                    $this->uploadLetterFile($file, $letter->id);
+                }
+            }
+
+            DB::commit();
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            \Log::error('CSMS: gagal update Letter', ['error' => $e->getMessage()]);
+            return ResponseFormatter::error('Gagal mengupdate Surat Edaran: ' . $e->getMessage(), 500);
+        }
+
+        return ResponseFormatter::success($letter->fresh(), 'Surat Edaran berhasil diupdate.');
+    }
+
+    // ── LETTERS — DESTROY ─────────────────────────────────────────────────────
+    public function destroyLetter(string $id)
+    {
+        $letter = CsmsLetter::find($id);
+        if (!$letter) {
+            return ResponseFormatter::error('Surat Edaran tidak ditemukan.', 404);
+        }
+
+        CsmsLetterFile::where('letter_id', $letter->id)->delete();
+        $letter->delete();
+
+        return ResponseFormatter::success(['message' => 'Surat Edaran berhasil dihapus.']);
+    }
+
+    // ── LETTER FILE PREVIEW & DOWNLOAD ──────────────────────────────────────
+    public function previewLetterFile(string $id)
+    {
+        $file = CsmsLetterFile::find($id);
+        if (!$file) abort(404, 'File tidak ditemukan.');
+
+        $sas = GetBlobSasUri('aims-cntr', $file->file, 60);
+        $url = is_array($sas) ? ($sas['blobUriSas'] ?? $sas['sasUri'] ?? null) : $sas;
+        if ($url) return redirect($url);
+        abort(404, 'File tidak dapat diakses.');
+    }
+
+    public function downloadLetterFile(string $id)
+    {
+        $file = CsmsLetterFile::find($id);
+        if (!$file) abort(404, 'File tidak ditemukan.');
+
+        $sas = GetBlobSasUri('aims-cntr', $file->file, 60);
+        $url = is_array($sas) ? ($sas['blobUriSas'] ?? $sas['sasUri'] ?? null) : $sas;
+        if ($url) return redirect($url);
+        abort(404, 'File tidak ditemukan.');
     }
 
     // ── DICTIONARIES — INDEX ──────────────────────────────────────────────────
@@ -265,6 +467,37 @@ class CSMSSupportApiController extends CSMSBaseApiController
             'Istilah berhasil ditambahkan.',
             201
         );
+    }
+
+    // ── DICTIONARIES — UPDATE ─────────────────────────────────────────────────
+    public function updateDictionary(Request $request, string $id)
+    {
+        $dict = CsmsDictionary::find($id);
+        if (!$dict) {
+            return ResponseFormatter::error('Istilah tidak ditemukan.', 404);
+        }
+
+        $request->validate([
+            'term'       => 'sometimes|required|string|max:255',
+            'definition' => 'sometimes|required|string',
+        ]);
+
+        $dict->update($request->only(['term', 'definition']));
+
+        return ResponseFormatter::success($dict->fresh(), 'Istilah berhasil diupdate.');
+    }
+
+    // ── DICTIONARIES — DESTROY ────────────────────────────────────────────────
+    public function destroyDictionary(string $id)
+    {
+        $dict = CsmsDictionary::find($id);
+        if (!$dict) {
+            return ResponseFormatter::error('Istilah tidak ditemukan.', 404);
+        }
+
+        $dict->delete();
+
+        return ResponseFormatter::success(['message' => 'Istilah berhasil dihapus.']);
     }
 
     // ── PICA — INDEX ──────────────────────────────────────────────────────────

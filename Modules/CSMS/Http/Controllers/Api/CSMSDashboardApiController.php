@@ -230,11 +230,12 @@ class CSMSDashboardApiController extends CSMSBaseApiController
         $thisYear = (int) date('Y');
         $lastYear = $thisYear - 1;
 
-        $year        = $request->query('year', (string) $thisYear);
+        // Terima "years" (kanonik) atau "year" (kompatibilitas lama)
+        $year        = $request->query('years', $request->query('year', (string) $thisYear));
         $year        = preg_replace('/[^0-9,]/', '', (string) $year);
         if (empty($year)) $year = (string) $thisYear;
 
-        $month       = $request->query('month', null);
+        $month       = $request->query('months', $request->query('month'));
         $arrayYear   = array_map('intval', explode(',', $year));
         $safeYears   = implode(',', $arrayYear);
         $monthFilter = $month ? explode(',', $month) : [];

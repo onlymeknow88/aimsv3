@@ -88,7 +88,7 @@ class CsmsMenuSeeder extends Seeder
         ]);
         $menuIds[] = DB::table('aims_menus')->insertGetId([
             'module_id'  => $moduleId, 'parent_id' => $postBiddingParentId, 'order_by' => 5,
-            'name' => 'Obsolate', 'slug' => 'csms.post-bidding.obsolate',
+            'name' => 'Obsolete', 'slug' => 'csms.post-bidding.obsolete',
             'created_at' => $now, 'updated_at' => $now,
         ]);
 
