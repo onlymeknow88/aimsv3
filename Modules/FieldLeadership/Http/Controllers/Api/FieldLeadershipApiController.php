@@ -9,17 +9,21 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
 use App\Traits\SendsEmail;
+use Modules\FieldLeadership\App\Support\FieldLeadershipStatus;
+use Modules\FieldLeadership\App\Traits\AuthorizesFlActions;
 
 class FieldLeadershipApiController extends Controller
 {
     use SendsEmail;
-    // ── Status constants ──────────────────────────────────────────────────────
-    const STATUS_OPEN              = 'Open';
-    const STATUS_ON_REVIEW_PICA   = 'On Review PICA';
-    const STATUS_ON_REVIEW_PJA    = 'On Review PJA';
-    const STATUS_ON_REVIEW_APPROVAL = 'On Review Approval';
-    const STATUS_OVERDUE          = 'Overdue';
-    const STATUS_CLOSED           = 'Closed';
+    use AuthorizesFlActions;
+
+    // ── Status constants (sumber tunggal: FieldLeadershipStatus) ─────────────
+    const STATUS_OPEN              = FieldLeadershipStatus::OPEN;
+    const STATUS_ON_REVIEW_PICA   = FieldLeadershipStatus::ON_REVIEW_PICA;
+    const STATUS_ON_REVIEW_PJA    = FieldLeadershipStatus::ON_REVIEW_PJA;
+    const STATUS_ON_REVIEW_APPROVAL = FieldLeadershipStatus::ON_REVIEW_APPROVAL;
+    const STATUS_OVERDUE          = FieldLeadershipStatus::OVERDUE;
+    const STATUS_CLOSED           = FieldLeadershipStatus::CLOSED;
 
     const TYPES = [
         'Planned Task Observation',
@@ -331,82 +335,8 @@ class FieldLeadershipApiController extends Controller
                 'updated_at'              => now(),
             ]);
 
-            // Questions (PTO only)
-            if ($request->type === 'Planned Task Observation' && $request->filled('questions')) {
-                foreach ($request->questions as $q) {
-                    DB::table('field_leadership_question_ptos')->insert([
-                        'id'          => (string) Str::uuid(),
-                        'fl_id'       => $id,
-                        'question'    => $q['question'],
-                        'answer'      => $q['answer'] ?? '-',
-                        'description' => $q['description'] ?? null,
-                        'created_at'  => now(),
-                        'updated_at'  => now(),
-                    ]);
-                }
-            }
-
-            // Members
-            if ($request->filled('members')) {
-                foreach ($request->members as $m) {
-                    if (!empty($m['employee_id']) && !empty($m['type'])) {
-                        DB::table('field_leadership_members')->insert([
-                            'id'          => (string) Str::uuid(),
-                            'fl_id'       => $id,
-                            'type'        => $m['type'],
-                            'employee_id' => $m['employee_id'],
-                            'created_at'  => now(),
-                            'updated_at'  => now(),
-                        ]);
-                    }
-                }
-            }
-
-            // Positive conditions (not for Hazard Report)
-            if ($request->type !== 'Hazard Report' && $request->filled('positives')) {
-                foreach ($request->positives as $p) {
-                    if (!empty($p['description'])) {
-                        DB::table('field_leadership_positives')->insert([
-                            'id'          => (string) Str::uuid(),
-                            'fl_id'       => $id,
-                            'description' => $p['description'],
-                            'created_at'  => now(),
-                            'updated_at'  => now(),
-                        ]);
-                    }
-                }
-            }
-
-            // Risk conditions
-            if ($request->filled('risks')) {
-                foreach ($request->risks as $idx => $r) {
-                    if (empty($r['description'])) continue;
-                    $riskId = (string) Str::uuid();
-                    DB::table('field_leadership_risks')->insert([
-                        'id'            => $riskId,
-                        'fl_id'         => $id,
-                        'risk_condition'=> $r['description'],
-                        'category_id'   => $r['category_id'] ?? null,
-                        'type_id'       => $r['type_id'] ?? null,
-                        'potency_id'    => $r['potency_id'] ?? null,
-                        'repair_action' => !empty($r['repaired']) ? ($r['repair_action'] ?? '') : '',
-                        'due_date'      => $r['due_date'],
-                        'type_action'   => !empty($r['repaired']) ? ($r['type_action'] ?? null) : null,
-                        'supervisor'    => !empty($r['repaired']) ? ($r['supervisor'] ?? null) : null,
-                        'status'        => $status,
-                        'created_at'    => now(),
-                        'updated_at'    => now(),
-                    ]);
-
-                    // Upload lampiran temuan risiko
-                    $this->uploadRiskFiles($request, $idx, $riskId, 'files', 'Temuan Risiko');
-
-                    // Upload lampiran tindakan perbaikan (only when repaired)
-                    if (!empty($r['repaired'])) {
-                        $this->uploadRiskFiles($request, $idx, $riskId, 'filesCA', 'Tindakan Perbaikan');
-                    }
-                }
-            }
+            // Data anak: questions, members, positives, risks + lampiran
+            $this->replaceChildren($id, $request, $status);
 
             // Activity log
             DB::table('field_leadership_activities')->insert([
@@ -420,25 +350,7 @@ class FieldLeadershipApiController extends Controller
 
             // Send email to PJA if published
             if ($request->input('publish') === 'Publish') {
-                $pja = DB::table('users')->where('id', $request->pja_id)->first();
-                if ($pja && !empty($pja->email)) {
-                    $creatorName = auth()->user()->name ?? 'User AIMS';
-                    $subject = '[AIMS] Penugasan Review Observasi Field Leadership - Baru';
-                    $body = "Halo,\n\n" .
-                            "Sebuah observasi Field Leadership baru telah dikirimkan dan membutuhkan review Anda sebagai Penanggung Jawab Area (PJA).\n\n" .
-                            "Detail Observasi:\n" .
-                            "- Jenis: {$request->type}\n" .
-                            "- Tanggal: {$request->date}\n" .
-                            "- Detail Perusahaan: {$request->detail_company}\n" .
-                            "- Dilaporkan oleh: {$creatorName}\n\n" .
-                            "Silakan masuk ke sistem AIMS untuk melakukan review.";
-
-                    try {
-                        $this->sendSimpleEmail($pja->email, $subject, $body);
-                    } catch (\Throwable $mailError) {
-                        \Log::error('FieldLeadership Mail Error: ' . $mailError->getMessage());
-                    }
-                }
+                $this->notifyPjaOnPublish($request->pja_id, $request);
             }
 
             DB::commit();
@@ -453,12 +365,19 @@ class FieldLeadershipApiController extends Controller
     // ── UPDATE observation ───────────────────────────────────────────────────
     /**
      * PUT /api/field-leadership/observations/{id}
+     * Catatan: `status` TIDAK dapat diubah dari sini — hanya melalui endpoint
+     * workflow (submit/pja-review/crs-action/crs-verify/return).
      */
     public function update(Request $request, string $id)
     {
         $fl = DB::table('field_leaderships')->where('id', $id)->first();
         if (!$fl) {
             return ResponseFormatter::error('Observation not found', 404);
+        }
+
+        // Otorisasi: maker, PJA yang ditugaskan, atau admin modul
+        if (!$this->flCanManage($fl)) {
+            return ResponseFormatter::error('Anda tidak berwenang mengubah dokumen ini.', 403);
         }
 
         // Convert empty strings to null for UUID fields
@@ -468,7 +387,6 @@ class FieldLeadershipApiController extends Controller
             'department_id'    => $request->department_id    ?: null,
             'section_id'       => $request->section_id       ?: null,
             'area_location_id' => $request->area_location_id ?: null,
-            'pja_id'           => $request->pja_id           ?: null,
             'pjo_id'           => $request->pjo_id           ?: null,
         ]);
 
@@ -489,7 +407,7 @@ class FieldLeadershipApiController extends Controller
             'is_area_suitable' => 'boolean',
             'personil_on_review'      => 'nullable|integer',
             'personil_on_review_name' => 'nullable|string|max:255',
-            'status'           => 'sometimes|in:Open,On Review PICA,On Review PJA,On Review Approval,Overdue,Closed',
+            // 'status' sengaja dihapus — perubahan status hanya via endpoint workflow
         ]);
 
         // Handle boolean and nullable fields explicitly
@@ -499,41 +417,40 @@ class FieldLeadershipApiController extends Controller
             'updated_at'       => now(),
         ]);
 
+        // pja_id hanya boleh berubah bila dikirim terisi (jangan sampai ter-wipe)
+        if (!$request->filled('pja_id')) {
+            unset($updateData['pja_id']);
+        }
+
         // Force status to Draft if publish is Draft. Otherwise, if transitioning to Publish, set to Open.
         if ($request->input('publish') === 'Draft') {
-            $updateData['status'] = 'Draft';
+            $updateData['status'] = FieldLeadershipStatus::DRAFT;
         } elseif (($fl->published ?? 'Draft') === 'Draft' && $request->input('publish') === 'Publish') {
-            $updateData['status'] = self::STATUS_OPEN;
+            $updateData['status'] = FieldLeadershipStatus::OPEN;
         }
 
-        // Send email to PJA if transition from Draft to Publish
+        DB::beginTransaction();
+        try {
+            DB::table('field_leaderships')->where('id', $id)->update($updateData);
+
+            // Sinkronkan data anak (members/positives/questions/risks + lampiran)
+            // bila dikirim dari form edit.
+            if ($request->hasAny(['members', 'positives', 'questions', 'risks'])) {
+                $this->replaceChildren($id, $request, $updateData['status'] ?? $fl->status);
+            }
+
+            DB::commit();
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            \Log::error('FieldLeadership update failed: ' . $e->getMessage(), ['id' => $id]);
+            return ResponseFormatter::error('Gagal memperbarui: ' . $e->getMessage(), 500);
+        }
+
+        // Send email to PJA on transition from Draft to Publish
         if (($fl->published ?? 'Draft') === 'Draft' && $request->input('publish') === 'Publish') {
             $pjaId = $updateData['pja_id'] ?? $fl->pja_id;
-            $pja = DB::table('users')->where('id', $pjaId)->first();
-            if ($pja && !empty($pja->email)) {
-                $creatorName = auth()->user()->name ?? 'User AIMS';
-                $type = $updateData['type'] ?? $fl->type;
-                $date = $updateData['date'] ?? $fl->date;
-                $detailCompany = $updateData['detail_company'] ?? $fl->detail_company;
-                $subject = '[AIMS] Penugasan Review Observasi Field Leadership - Baru';
-                $body = "Halo,\n\n" .
-                        "Sebuah observasi Field Leadership baru telah dikirimkan dan membutuhkan review Anda sebagai Penanggung Jawab Area (PJA).\n\n" .
-                        "Detail Observasi:\n" .
-                        "- Jenis: {$type}\n" .
-                        "- Tanggal: {$date}\n" .
-                        "- Detail Perusahaan: {$detailCompany}\n" .
-                        "- Dilaporkan oleh: {$creatorName}\n\n" .
-                        "Silakan masuk ke sistem AIMS untuk melakukan review.";
-
-                try {
-                    $this->sendSimpleEmail($pja->email, $subject, $body);
-                } catch (\Throwable $mailError) {
-                    \Log::error('FieldLeadership Mail Error: ' . $mailError->getMessage());
-                }
-            }
+            $this->notifyPjaOnPublish($pjaId, $request, $fl);
         }
-
-        DB::table('field_leaderships')->where('id', $id)->update($updateData);
 
         return ResponseFormatter::success(['id' => $id], 'Observation updated successfully');
     }
@@ -542,15 +459,62 @@ class FieldLeadershipApiController extends Controller
     /**
      * DELETE /api/field-leadership/observations
      * Body: { ids: [uuid, ...] }
+     *
+     * Aturan:
+     * - Hanya maker dokumen atau admin modul yang boleh menghapus.
+     * - Dokumen berstatus final (Closed / Not Followed Up) tidak dapat dihapus.
+     * - PICA turunan yang belum closed ikut dibersihkan.
      */
     public function destroy(Request $request)
     {
-        $ids = $request->input('ids', []);
+        $ids = array_values(array_filter((array) $request->input('ids', [])));
         if (empty($ids)) {
             return ResponseFormatter::error('No IDs provided', 422);
         }
 
-        DB::table('field_leaderships')->whereIn('id', $ids)->delete();
+        $docs = DB::table('field_leaderships')->whereIn('id', $ids)->get();
+        if ($docs->isEmpty()) {
+            return ResponseFormatter::error('Observation not found', 404);
+        }
+
+        foreach ($docs as $doc) {
+            if (!$this->flUserIsCreator($doc) && !$this->flUserIsModuleAdmin()) {
+                return ResponseFormatter::error(
+                    "Anda tidak berwenang menghapus dokumen '{$doc->id}'.", 403
+                );
+            }
+            if (in_array($doc->status, FieldLeadershipStatus::FINAL, true)) {
+                return ResponseFormatter::error(
+                    "Dokumen dengan status '{$doc->status}' tidak dapat dihapus.", 422
+                );
+            }
+        }
+
+        // PICA turunan dari risks dokumen ini yang belum closed
+        $riskIds = DB::table('field_leadership_risks')->whereIn('fl_id', $ids)->pluck('id');
+
+        DB::beginTransaction();
+        try {
+            if ($riskIds->isNotEmpty()) {
+                DB::table('pica_documents')
+                    ->where('source', 'Field Leadership')
+                    ->whereIn('source_id', $riskIds)
+                    ->where('status', '!=', FieldLeadershipStatus::CLOSED)
+                    ->delete();
+            }
+
+            // Anak-anaknya terhapus otomatis via FK cascadeOnDelete
+            DB::table('field_leaderships')->whereIn('id', $ids)->delete();
+
+            DB::commit();
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            \Log::error('FieldLeadership delete failed: ' . $e->getMessage(), ['ids' => $ids]);
+            return ResponseFormatter::error('Gagal menghapus: ' . $e->getMessage(), 500);
+        }
+
+        // Catatan: file di blob storage tidak dapat dihapus saat ini karena
+        // belum ada helper delete pada blob API eksternal.
 
         return ResponseFormatter::success(null, 'Observations deleted successfully');
     }
@@ -632,10 +596,10 @@ class FieldLeadershipApiController extends Controller
             ->orderBy('e.name')
             ->get();
 
-        // KTA & TTA
+        // KTA & TTA — natural sort code
         $ktaTta = DB::table('field_leadership_kta_and_ttas')
             ->select('id', 'code', 'name', 'type')
-            ->orderBy('type')->orderBy('code')
+            ->orderBy('type')->orderByRaw('LENGTH(code) ASC')->orderBy('code')
             ->get();
 
         // Categories
@@ -644,9 +608,10 @@ class FieldLeadershipApiController extends Controller
             ->select('id', 'name')
             ->get();
 
-        // Potency
+        // Potency — order by tingkat risiko L→M→H→C→N/A
         $potencies = DB::table('field_leadership_potency_and_consequnces')
             ->select('id', 'code', 'name')
+            ->orderByRaw("FIELD(code, 'L','M','H','C','N/A')")
             ->orderBy('code')
             ->get();
 
@@ -687,6 +652,13 @@ class FieldLeadershipApiController extends Controller
     {
         $file = DB::table('field_leadership_activity_files')->where('id', $id)->first();
         if (!$file) abort(404, 'File tidak ditemukan.');
+
+        // IDOR guard: only maker/PJA/CRS can view
+        $activity = DB::table('field_leadership_activities')->where('id', $file->fl_activity_id)->first();
+        if ($activity) {
+            $fl = DB::table('field_leaderships')->where('id', $activity->fl_id)->first();
+            if ($fl && !$this->flCanManage($fl)) abort(403, 'Anda tidak berhak mengakses file ini.');
+        }
 
         $filePath = $file->file;
         $fileName = basename($filePath);
@@ -730,6 +702,12 @@ class FieldLeadershipApiController extends Controller
         $file = DB::table('field_leadership_activity_files')->where('id', $id)->first();
         if (!$file) abort(404, 'File tidak ditemukan.');
 
+        $activity = DB::table('field_leadership_activities')->where('id', $file->fl_activity_id)->first();
+        if ($activity) {
+            $fl = DB::table('field_leaderships')->where('id', $activity->fl_id)->first();
+            if ($fl && !$this->flCanManage($fl)) abort(403, 'Anda tidak berhak mengakses file ini.');
+        }
+
         $filePath = $file->file;
         $fileName = basename($filePath);
 
@@ -751,6 +729,12 @@ class FieldLeadershipApiController extends Controller
     {
         $file = DB::table('field_leadership_risk_files')->where('id', $id)->first();
         if (!$file) abort(404, 'File tidak ditemukan.');
+
+        $risk = DB::table('field_leadership_risks')->where('id', $file->fl_risk_id)->first();
+        if ($risk) {
+            $fl = DB::table('field_leaderships')->where('id', $risk->fl_id)->first();
+            if ($fl && !$this->flCanManage($fl)) abort(403, 'Anda tidak berhak mengakses file ini.');
+        }
 
         $filePath = $file->file;
         $fileName = basename($filePath);
@@ -797,6 +781,12 @@ class FieldLeadershipApiController extends Controller
         $file = DB::table('field_leadership_risk_files')->where('id', $id)->first();
         if (!$file) abort(404, 'File tidak ditemukan.');
 
+        $risk = DB::table('field_leadership_risks')->where('id', $file->fl_risk_id)->first();
+        if ($risk) {
+            $fl = DB::table('field_leaderships')->where('id', $risk->fl_id)->first();
+            if ($fl && !$this->flCanManage($fl)) abort(403, 'Anda tidak berhak mengakses file ini.');
+        }
+
         $filePath = $file->file;
         $fileName = basename($filePath);
 
@@ -813,6 +803,137 @@ class FieldLeadershipApiController extends Controller
         abort(404, 'File tidak ditemukan.');
     }
 
+    // ── Sinkronisasi data anak (dipakai store & update) ──────────────────────
+    /**
+     * Ganti seluruh data anak dokumen (questions/members/positives/risks)
+     * dengan payload dari request. Dipanggil di dalam transaksi.
+     */
+    private function replaceChildren(string $flId, Request $request, string $status): void
+    {
+        // Questions (PTO only)
+        DB::table('field_leadership_question_ptos')->where('fl_id', $flId)->delete();
+        if ($request->type === 'Planned Task Observation' && $request->filled('questions')) {
+            foreach ($request->questions as $q) {
+                if (empty($q['question'])) continue;
+                DB::table('field_leadership_question_ptos')->insert([
+                    'id'          => (string) Str::uuid(),
+                    'fl_id'       => $flId,
+                    'question'    => $q['question'],
+                    'answer'      => $q['answer'] ?? '-',
+                    'description' => $q['description'] ?? null,
+                    'created_at'  => now(),
+                    'updated_at'  => now(),
+                ]);
+            }
+        }
+
+        // Members
+        DB::table('field_leadership_members')->where('fl_id', $flId)->delete();
+        if ($request->filled('members')) {
+            foreach ($request->members as $m) {
+                if (!empty($m['employee_id']) && !empty($m['type'])) {
+                    DB::table('field_leadership_members')->insert([
+                        'id'          => (string) Str::uuid(),
+                        'fl_id'       => $flId,
+                        'type'        => $m['type'],
+                        'employee_id' => $m['employee_id'],
+                        'created_at'  => now(),
+                        'updated_at'  => now(),
+                    ]);
+                }
+            }
+        }
+
+        // Positive conditions (not for Hazard Report)
+        DB::table('field_leadership_positives')->where('fl_id', $flId)->delete();
+        if ($request->type !== 'Hazard Report' && $request->filled('positives')) {
+            foreach ($request->positives as $p) {
+                if (!empty($p['description'])) {
+                    DB::table('field_leadership_positives')->insert([
+                        'id'          => (string) Str::uuid(),
+                        'fl_id'       => $flId,
+                        'description' => $p['description'],
+                        'created_at'  => now(),
+                        'updated_at'  => now(),
+                    ]);
+                }
+            }
+        }
+
+        // Risks — replace penuh; PICA turunan dari risk lama yang belum closed ikut dibersihkan
+        $oldRiskIds = DB::table('field_leadership_risks')->where('fl_id', $flId)->pluck('id');
+        if ($oldRiskIds->isNotEmpty()) {
+            DB::table('field_leadership_risk_files')->whereIn('fl_risk_id', $oldRiskIds)->delete();
+            DB::table('field_leadership_risks')->where('fl_id', $flId)->delete();
+            DB::table('pica_documents')
+                ->where('source', 'Field Leadership')
+                ->whereIn('source_id', $oldRiskIds)
+                ->where('status', '!=', FieldLeadershipStatus::CLOSED)
+                ->delete();
+        }
+
+        if ($request->filled('risks')) {
+            foreach ($request->risks as $idx => $r) {
+                if (empty($r['description'])) continue;
+                $riskId = (string) Str::uuid();
+                DB::table('field_leadership_risks')->insert([
+                    'id'            => $riskId,
+                    'fl_id'         => $flId,
+                    'risk_condition'=> $r['description'],
+                    'category_id'   => $r['category_id'] ?? null,
+                    'type_id'       => $r['type_id'] ?? null,
+                    'potency_id'    => $r['potency_id'] ?? null,
+                    'repair_action' => !empty($r['repaired']) ? ($r['repair_action'] ?? '') : '',
+                    'due_date'      => $r['due_date'],
+                    'type_action'   => !empty($r['repaired']) ? ($r['type_action'] ?? null) : null,
+                    'supervisor'    => !empty($r['repaired']) ? ($r['supervisor'] ?? null) : null,
+                    'status'        => $status,
+                    'created_at'    => now(),
+                    'updated_at'    => now(),
+                ]);
+
+                // Upload lampiran temuan risiko
+                $this->uploadRiskFiles($request, $idx, $riskId, 'files', 'Temuan Risiko');
+
+                // Upload lampiran tindakan perbaikan (only when repaired)
+                if (!empty($r['repaired'])) {
+                    $this->uploadRiskFiles($request, $idx, $riskId, 'filesCA', 'Tindakan Perbaikan');
+                }
+            }
+        }
+    }
+
+    /**
+     * Email penugasan review ke PJA saat dokumen dipublikasikan.
+     * fl.pja_id merujuk ke area_managers — resolve user via trait helper.
+     */
+    private function notifyPjaOnPublish(?string $pjaId, Request $request, ?object $previous = null): void
+    {
+        $pja = $this->flPjaUser($pjaId);
+        if (!$pja || empty($pja->email)) return;
+
+        $creatorName  = auth()->user()->name ?? 'User AIMS';
+        $type         = ($previous?->type !== null ? ($request->input('type') ?? $previous->type) : $request->input('type')) ?? '-';
+        $date         = ($previous?->date !== null ? ($request->input('date') ?? $previous->date) : $request->input('date')) ?? '-';
+        $detailCompany= ($previous?->detail_company !== null ? ($request->input('detail_company') ?? $previous->detail_company) : $request->input('detail_company')) ?? '-';
+
+        $subject = '[AIMS] Penugasan Review Observasi Field Leadership - Baru';
+        $body = "Halo,\n\n" .
+                "Sebuah observasi Field Leadership baru telah dikirimkan dan membutuhkan review Anda sebagai Penanggung Jawab Area (PJA).\n\n" .
+                "Detail Observasi:\n" .
+                "- Jenis: {$type}\n" .
+                "- Tanggal: {$date}\n" .
+                "- Detail Perusahaan: {$detailCompany}\n" .
+                "- Dilaporkan oleh: {$creatorName}\n\n" .
+                "Silakan masuk ke sistem AIMS untuk melakukan review.";
+
+        try {
+            $this->sendSimpleEmail($pja->email, $subject, $body);
+        } catch (\Throwable $mailError) {
+            \Log::error('FieldLeadership Mail Error: ' . $mailError->getMessage());
+        }
+    }
+
     // ── Upload risk files to blob storage ────────────────────────────────────
     /**
      * @param  \Illuminate\Http\Request $request
@@ -823,12 +944,32 @@ class FieldLeadershipApiController extends Controller
      */
     private function uploadRiskFiles($request, int $riskIdx, string $riskId, string $fileKey, string $type): void
     {
+        // Whitelist tipe & batas ukuran (10 MB)
+        $allowedExt = ['pdf', 'png', 'jpg', 'jpeg'];
+        $maxBytes   = 10 * 1024 * 1024;
+
         $inputKey = "risks.{$riskIdx}.{$fileKey}";
         $files    = $request->file($inputKey) ?? [];
 
         foreach ($files as $file) {
             try {
                 $originalName = $file->getClientOriginalName();
+                $ext          = strtolower($file->getClientOriginalExtension());
+
+                if (!in_array($ext, $allowedExt, true)) {
+                    \Log::warning('FieldLeadership: rejected risk file (extension)', [
+                        'risk_id' => $riskId, 'file' => $originalName, 'ext' => $ext,
+                    ]);
+                    continue;
+                }
+
+                if ($file->getSize() > $maxBytes) {
+                    \Log::warning('FieldLeadership: rejected risk file (size)', [
+                        'risk_id' => $riskId, 'file' => $originalName, 'size' => $file->getSize(),
+                    ]);
+                    continue;
+                }
+
                 $size         = $this->formatFileSize($file->getSize());
                 $tmpPath      = $file->getRealPath();
                 $directPath   = 'field-leadership/risks';

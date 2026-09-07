@@ -21,7 +21,7 @@ function SkeletonBlock({ width = '100%', height = '12px', radius = '6px' }) {
         <div style={{
             width, height, borderRadius: radius,
             backgroundColor: '#e2e8f0',
-            animation: 'flsprogress-pulse 1.8s infinite ease-in-out',
+            animation: 'dashboard-pulse 1.8s infinite ease-in-out',
         }} />
     );
 }
@@ -55,7 +55,7 @@ function CategoryRow({ name, count, value, color, loading }) {
                     <span style={{ fontSize: '11px', fontWeight: 600, color: '#475569' }}>
                         {shortLabel}
                     </span>
-                    <span style={{ fontSize: '10px', color: '#94a3b8' }}>
+                    <span style={{ fontSize: '10px', color: 'var(--text-secondary)' }}>
                         ({count?.toLocaleString('id-ID') ?? 0})
                     </span>
                 </div>
@@ -89,7 +89,7 @@ export default function FieldLeadershipCategoryProgress({ stats, loading }) {
     return (
         <>
             <style>{`
-                @keyframes flsprogress-pulse {
+                @keyframes dashboard-pulse {
                     0%, 100% { opacity: 1; }
                     50%       { opacity: 0.45; }
                 }
@@ -129,7 +129,7 @@ export default function FieldLeadershipCategoryProgress({ stats, loading }) {
                         borderTop: '1px solid #e2e8f0',
                         display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                     }}>
-                        <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 500 }}>
+                        <span style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 500 }}>
                             Total
                         </span>
                         <span style={{ fontSize: '13px', fontWeight: 700, color: FLS_PRIMARY }}>

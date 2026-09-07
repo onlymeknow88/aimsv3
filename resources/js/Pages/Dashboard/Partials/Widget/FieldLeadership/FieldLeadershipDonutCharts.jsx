@@ -14,7 +14,7 @@ function SkeletonCircle({ size = 130 }) {
         <div style={{
             width: size, height: size, borderRadius: '50%',
             backgroundColor: '#e2e8f0',
-            animation: 'flsdonut-pulse 1.8s infinite ease-in-out',
+            animation: 'dashboard-pulse 1.8s infinite ease-in-out',
             flexShrink: 0,
         }} />
     );
@@ -25,7 +25,7 @@ function SkeletonBlock({ width = '100%', height = '12px' }) {
         <div style={{
             width, height, borderRadius: '6px',
             backgroundColor: '#e2e8f0',
-            animation: 'flsdonut-pulse 1.8s infinite ease-in-out',
+            animation: 'dashboard-pulse 1.8s infinite ease-in-out',
         }} />
     );
 }
@@ -84,7 +84,7 @@ function DonutGauge({ label, completePercent, loading }) {
                     <span style={{ fontSize: '22px', fontWeight: 800, color: FLS_PRIMARY, lineHeight: 1 }}>
                         {completePercent}%
                     </span>
-                    <span style={{ fontSize: '9px', color: '#94a3b8', fontWeight: 600, marginTop: '2px' }}>
+                    <span style={{ fontSize: '9px', color: 'var(--text-secondary)', fontWeight: 600, marginTop: '2px' }}>
                         COMPLETE
                     </span>
                 </div>
@@ -93,7 +93,7 @@ function DonutGauge({ label, completePercent, loading }) {
                 {label}
             </span>
             {/* Legend */}
-            <div style={{ display: 'flex', gap: '10px', fontSize: '10px', color: '#64748b' }}>
+            <div style={{ display: 'flex', gap: '10px', fontSize: '10px', color: 'var(--text-secondary)' }}>
                 <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                     <span style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: FLS_PRIMARY, display: 'inline-block' }} />
                     Complete {completePercent}%
@@ -117,7 +117,7 @@ export default function FieldLeadershipDonutCharts({ stats, loading }) {
     return (
         <>
             <style>{`
-                @keyframes flsdonut-pulse {
+                @keyframes dashboard-pulse {
                     0%, 100% { opacity: 1; }
                     50%       { opacity: 0.45; }
                 }

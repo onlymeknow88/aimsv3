@@ -10,7 +10,7 @@ function SkeletonBlock({ width = '100%', height = '14px', radius = '6px' }) {
         <div style={{
             width, height, borderRadius: radius,
             backgroundColor: '#e2e8f0',
-            animation: 'flsdetail-pulse 1.8s infinite ease-in-out',
+            animation: 'dashboard-pulse 1.8s infinite ease-in-out',
         }} />
     );
 }
@@ -51,7 +51,7 @@ function ComparisonRow({ label, done, percent, mark, isHeader = false, loading }
             <td style={{
                 padding: '8px 12px', fontSize: '12px',
                 fontWeight: isHeader ? 600 : 400,
-                color: isHeader ? '#1e293b' : '#64748b',
+                color: isHeader ? '#1e293b' : 'var(--text-secondary)',
             }}>
                 {label}
             </td>
@@ -67,7 +67,7 @@ function ComparisonRow({ label, done, percent, mark, isHeader = false, loading }
             </td>
             <td style={{
                 padding: '8px 12px', fontSize: '12px',
-                fontWeight: 600, color: '#94a3b8', textAlign: 'right',
+                fontWeight: 600, color: 'var(--text-secondary)', textAlign: 'right',
             }}>
                 {percent ?? 0}%
             </td>
@@ -99,7 +99,7 @@ export default function FieldLeadershipDetail({ stats, loading }) {
     return (
         <>
             <style>{`
-                @keyframes flsdetail-pulse {
+                @keyframes dashboard-pulse {
                     0%, 100% { opacity: 1; }
                     50%       { opacity: 0.45; }
                 }
@@ -119,22 +119,22 @@ export default function FieldLeadershipDetail({ stats, loading }) {
                         <tr style={{ backgroundColor: '#f1f5f9' }}>
                             <th style={{
                                 padding: '8px 12px', fontSize: '10px', fontWeight: 700,
-                                color: '#94a3b8', textAlign: 'left',
+                                color: 'var(--text-secondary)', textAlign: 'left',
                                 textTransform: 'uppercase', letterSpacing: '0.5px',
                             }}>Periode</th>
                             <th style={{
                                 padding: '8px 12px', fontSize: '10px', fontWeight: 700,
-                                color: '#94a3b8', textAlign: 'right',
+                                color: 'var(--text-secondary)', textAlign: 'right',
                                 textTransform: 'uppercase', letterSpacing: '0.5px',
                             }}>Aktual</th>
                             <th style={{
                                 padding: '8px 12px', fontSize: '10px', fontWeight: 700,
-                                color: '#94a3b8', textAlign: 'center',
+                                color: 'var(--text-secondary)', textAlign: 'center',
                                 textTransform: 'uppercase', letterSpacing: '0.5px',
                             }}>Tren</th>
                             <th style={{
                                 padding: '8px 12px', fontSize: '10px', fontWeight: 700,
-                                color: '#94a3b8', textAlign: 'right',
+                                color: 'var(--text-secondary)', textAlign: 'right',
                                 textTransform: 'uppercase', letterSpacing: '0.5px',
                             }}>%</th>
                         </tr>

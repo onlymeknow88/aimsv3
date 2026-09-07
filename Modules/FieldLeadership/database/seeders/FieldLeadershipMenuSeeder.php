@@ -193,16 +193,10 @@ class FieldLeadershipMenuSeeder extends Seeder
             }
         }
 
-        // 4. Assign User Roles
-        $users = DB::table('users')->pluck('id');
-        foreach ($users as $userId) {
-            foreach ($roleIds as $roleId) {
-                DB::table('aims_user_roles')->updateOrInsert(
-                    ['user_id' => $userId, 'role_id' => $roleId],
-                    []
-                );
-            }
-        }
+        // 4. TIDAK auto-assign role ke user (pola CSMS).
+        //    Assign via backoffice (/admin/role-permissions). Auto-assign massal
+        //    membuat sidebar tampil semua untuk semua orang; assign ke superadmin
+        //    pun membuat akun super_admin ikut ter-scope (isScopedByModuleRoles).
 
         // Clear permission cache
         \Cache::flush();
