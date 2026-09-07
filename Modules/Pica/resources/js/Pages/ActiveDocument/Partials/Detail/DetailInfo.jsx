@@ -1,61 +1,79 @@
+import { AlertTriangle, CheckCircle2, FileText, MessageSquare, Paperclip } from 'lucide-react';
 import React from 'react';
 
-const S = {
-    sectionTitle: { fontSize: '11px', fontWeight: 800, color: 'var(--primary)', margin: '0 0 10px 0', textTransform: 'uppercase' },
-    fieldLabel: { fontSize: '10px', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: '4px' },
-    fieldValue: { fontSize: '13px', color: 'var(--text-primary)', lineHeight: '1.6' },
-    divider: { borderBottom: '1px solid var(--border-color)', marginBottom: '16px', paddingBottom: '16px' },
+const cardStyle = {
+    backgroundColor: 'var(--card-bg)',
+    border: '1px solid var(--border-color)',
+    borderRadius: '12px',
+    padding: '24px',
+    boxShadow: 'var(--shadow-sm)',
 };
+
+function SectionCard({ icon: Icon, iconColor, title, children }) {
+    return (
+        <div style={cardStyle}>
+            <h4 style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Icon size={15} style={{ color: iconColor || 'var(--primary)' }} />
+                {title}
+            </h4>
+            {children}
+        </div>
+    );
+}
 
 export default function DetailInfo({ doc, onPreviewFile }) {
     if (!doc) return null;
     return (
-        <div style={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '24px', height: 'fit-content' }}>
-            <div style={S.divider}>
-                <p style={S.sectionTitle}>Non-Compliance</p>
-                <span style={S.fieldLabel}>Deskripsi</span>
-                <p style={{ ...S.fieldValue, marginTop: 0 }}>{doc.non_compliance || '-'}</p>
-            </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            <SectionCard icon={AlertTriangle} iconColor="var(--danger)" title="Non-Compliance">
+                <p style={{ fontSize: '13px', color: 'var(--text-primary)', lineHeight: '1.6', margin: 0 }}>{doc.non_compliance || '-'}</p>
+            </SectionCard>
 
             {doc.non_compliance_root_cause && (
-                <div style={S.divider}>
-                    <p style={S.sectionTitle}>Root Cause</p>
-                    <p style={{ ...S.fieldValue, marginTop: 0 }}>{doc.non_compliance_root_cause}</p>
-                </div>
+                <SectionCard icon={FileText} title="Root Cause">
+                    <p style={{ fontSize: '13px', color: 'var(--text-primary)', lineHeight: '1.6', margin: 0 }}>{doc.non_compliance_root_cause}</p>
+                </SectionCard>
             )}
 
-            <div style={S.divider}>
-                <p style={S.sectionTitle}>Corrective Action</p>
-                <p style={{ ...S.fieldValue, marginTop: 0 }}>{doc.corrective_action || '-'}</p>
-            </div>
+            <SectionCard icon={CheckCircle2} iconColor="var(--success)" title="Corrective Action">
+                <p style={{ fontSize: '13px', color: 'var(--text-primary)', lineHeight: '1.6', margin: 0 }}>{doc.corrective_action || '-'}</p>
+            </SectionCard>
 
             {doc.remarks && (
-                <div style={S.divider}>
-                    <p style={S.sectionTitle}>Remarks</p>
-                    <p style={{ ...S.fieldValue, marginTop: 0 }}>{doc.remarks}</p>
-                </div>
+                <SectionCard icon={MessageSquare} title="Remarks">
+                    <p style={{ fontSize: '13px', color: 'var(--text-primary)', lineHeight: '1.6', margin: 0 }}>{doc.remarks}</p>
+                </SectionCard>
             )}
 
             {/* File Lampiran */}
             {doc.pica_files?.length > 0 && (
-                <div>
-                    <p style={S.sectionTitle}>File Lampiran</p>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <SectionCard icon={Paperclip} title={`File Lampiran (${doc.pica_files.length})`}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                         {doc.pica_files.map(f => (
-                            <div key={f.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', backgroundColor: '#f8fafc', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
-                                <span style={{ fontSize: '12px', color: 'var(--text-primary)' }}>
-                                    {f.file ? f.file.split('/').pop() : f.id}
-                                </span>
+                            <div key={f.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '5px 10px', backgroundColor: '#f8fafc', border: '1px solid var(--border-color)', borderRadius: '6px' }}>
                                 <button
+                                    type="button"
                                     onClick={() => onPreviewFile && onPreviewFile(f)}
-                                    style={{ fontSize: '11px', fontWeight: 600, color: 'var(--primary)', background: 'none', border: 'none', cursor: 'pointer', padding: '2px 8px' }}
+                                    style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--primary)', fontSize: '11px', fontWeight: 600, textDecoration: 'underline', padding: 0 }}
                                 >
-                                    Preview
+                                    <Paperclip size={11} />
+                                    {f.file ? f.file.split('/').pop() : f.id}
                                 </button>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    {f.size && <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>{f.size}</span>}
+                                    <a
+                                        href={`/api/pica/files/${f.id}/download`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        style={{ fontSize: '10px', fontWeight: 700, color: 'var(--primary)', textDecoration: 'none' }}
+                                    >
+                                        Download
+                                    </a>
+                                </div>
                             </div>
                         ))}
                     </div>
-                </div>
+                </SectionCard>
             )}
         </div>
     );

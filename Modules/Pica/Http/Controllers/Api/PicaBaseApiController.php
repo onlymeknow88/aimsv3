@@ -2,6 +2,7 @@
 
 namespace Modules\Pica\Http\Controllers\Api;
 
+use App\Helpers\ResponseFormatter;
 use App\Http\Controllers\Controller;
 use Modules\Pica\Entities\PicaDocument;
 
@@ -97,11 +98,11 @@ class PicaBaseApiController extends Controller
     // -------------------------------------------------------------------------
     protected function success($data, int $code = 200)
     {
-        return response()->json(['result' => $data], $code);
+        return ResponseFormatter::success($data, null, $code);
     }
 
     protected function error(string $message, int $code = 400)
     {
-        return response()->json(['message' => $message], $code);
+        return ResponseFormatter::error($message, $code);
     }
 }

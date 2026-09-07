@@ -1,15 +1,18 @@
 import React, { useState } from 'react';
 import { Head, usePage } from '@inertiajs/react';
-import { AlertTriangle, ArrowLeft, Upload } from 'lucide-react';
+import { AlertTriangle, ArrowLeft, Save, Upload, X } from 'lucide-react';
 import usePicaForm from './Hooks/usePicaForm';
 
+// Style disamakan dengan FieldLeadership Create.jsx:
+// satu card besar (1100px) berisi section-section flat.
 const S = {
     label: { fontSize: '10.5px', fontWeight: 700, color: 'var(--text-secondary)', marginBottom: '6px', display: 'block' },
     input: { width: '100%', padding: '8px 12px', border: '1px solid var(--border-color)', borderRadius: '6px', fontSize: '12px', outline: 'none', backgroundColor: '#fff', boxSizing: 'border-box' },
     textarea: { width: '100%', padding: '8px 12px', border: '1px solid var(--border-color)', borderRadius: '6px', fontSize: '12px', outline: 'none', backgroundColor: '#fff', boxSizing: 'border-box', minHeight: '80px', resize: 'vertical' },
-    title: { fontSize: '13px', fontWeight: 700, color: 'var(--primary)', marginBottom: '16px', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px', marginTop: 0 },
-    error: { fontSize: '11px', color: '#ef4444', marginTop: '4px' },
-    card: { backgroundColor: '#fff', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '24px', marginBottom: '20px' },
+    title: { fontSize: '14px', fontWeight: 700, color: 'var(--primary)', marginBottom: '16px', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px', marginTop: 0 },
+    error: { fontSize: '11px', color: 'var(--danger)', marginTop: '4px' },
+    card: { marginBottom: '32px' },
+    dateInput: { width: '100%', maxWidth: '280px', padding: '8px 12px', border: '1px solid var(--border-color)', borderRadius: '6px', fontSize: '12px', outline: 'none', backgroundColor: '#fff', boxSizing: 'border-box' },
 };
 const row2 = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' };
 
@@ -57,29 +60,35 @@ export default function EditPica() {
         <>
             <Head title="Edit PICA" />
 
-            {/* Top Bar */}
-            <div style={{ backgroundColor: 'var(--card-bg)', borderBottom: '1px solid var(--border-color)', padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 90 }}>
-                <a href={`/pica/detail/${id}`} style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-secondary)', fontSize: '13px', textDecoration: 'none', fontWeight: 600 }}>
-                    <ArrowLeft size={14} /> Kembali ke Detail
-                </a>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <AlertTriangle size={16} style={{ color: 'var(--primary)' }} />
-                    <div>
-                        <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--primary)' }}>Edit PICA</div>
-                        <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Perbarui data temuan</div>
-                    </div>
+            <div style={{ backgroundColor: 'var(--bg-color)', minHeight: '100vh', padding: '40px 20px', boxSizing: 'border-box' }}>
+                {/* Back navigation — gaya FieldLeadership CreateHeader */}
+                <div style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    marginBottom: '24px', borderBottom: '1px solid var(--border-color)',
+                    paddingBottom: '12px', maxWidth: '1100px', margin: '0 auto 24px auto',
+                }}>
+                    <a
+                        href={`/pica/detail/${id}`}
+                        style={{
+                            display: 'inline-flex', alignItems: 'center', gap: '8px',
+                            color: 'var(--primary)', fontWeight: 700, textDecoration: 'none', fontSize: '12px',
+                        }}
+                    >
+                        <ArrowLeft size={16} /> Kembali ke Detail
+                    </a>
+                    <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                        Siklus Pembaharuan PICA
+                    </span>
                 </div>
-                <div style={{ width: '120px' }} />
-            </div>
 
-            {/* Form — same structure as Create */}
-            <div style={{ maxWidth: '900px', margin: '24px auto', padding: '0 24px' }}>
+                <div style={{ display: 'flex', justifyContent: 'center' }}>
+                <div style={{ width: '100%', maxWidth: '1100px', backgroundColor: 'var(--card-bg)', border: '1px solid var(--border-color)', borderRadius: '16px', padding: '32px', boxShadow: 'var(--shadow-premium)' }}>
 
                 <div style={S.card}>
                     <p style={S.title}>Informasi Dasar</p>
                     <div style={{ ...row2, marginBottom: '16px' }}>
                         <div>
-                            <label style={S.label}>Source <span style={{ color: '#ef4444' }}>*</span></label>
+                            <label style={S.label}>Source <span style={{ color: 'var(--danger)' }}>*</span></label>
                             <select value={form.source} onChange={e => setField('source', e.target.value)} style={{ ...S.input, cursor: 'pointer' }}>
                                 <option value="">Pilih source</option>
                                 {SOURCES.map(s => <option key={s} value={s}>{s}</option>)}
@@ -96,7 +105,7 @@ export default function EditPica() {
                     </div>
                     <div>
                         <label style={S.label}>Tanggal Temuan</label>
-                        <input type="date" value={form.date} onChange={e => setField('date', e.target.value)} style={S.input} />
+                        <input type="date" value={form.date} onChange={e => setField('date', e.target.value)} style={S.dateInput} />
                     </div>
                 </div>
 
@@ -134,22 +143,62 @@ export default function EditPica() {
                             </select>
                         </div>
                     </div>
-                    <div style={row2}>
+                    <div style={{ marginBottom: '16px' }}>
                         <div>
                             <label style={S.label}>Detail Lokasi</label>
                             <input type="text" value={form.location_detail} onChange={e => setField('location_detail', e.target.value)} style={S.input} />
                         </div>
-                        <div>
-                            <label style={S.label}>Auditor / Inisiator</label>
-                            <input type="text" value={form.auditor} onChange={e => setField('auditor', e.target.value)} style={S.input} />
+                    </div>
+                    <div style={{ marginBottom: '16px' }}>
+                        <label style={S.label}>Auditor / Inisiator (Multi)</label>
+                        <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
+                            <select
+                                value=""
+                                onChange={e => {
+                                    const val = e.target.value;
+                                    if (val && !form.auditors.includes(val)) setField('auditors', [...form.auditors, val]);
+                                    e.target.value = '';
+                                }}
+                                style={{ ...S.input, flex: 1, cursor: 'pointer' }}
+                            >
+                                <option value="">Pilih auditor...</option>
+                                {masterData.users?.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
+                            </select>
+                            <input
+                                type="text"
+                                placeholder="Ketik manual + Enter"
+                                onKeyDown={e => {
+                                    if (e.key === 'Enter') {
+                                        e.preventDefault();
+                                        const val = e.target.value.trim();
+                                        if (val && !form.auditors.includes(val)) setField('auditors', [...form.auditors, val]);
+                                        e.target.value = '';
+                                    }
+                                }}
+                                style={{ ...S.input, flex: 1 }}
+                            />
                         </div>
+                        {form.auditors.length > 0 && (
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                                {form.auditors.map((aud, idx) => {
+                                    const user = masterData.users?.find(u => u.id === aud);
+                                    const label = user ? user.name : aud;
+                                    return (
+                                        <span key={idx} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', backgroundColor: '#eff6ff', border: '1px solid #bfdbfe', color: '#1e40af', padding: '4px 10px', borderRadius: '16px', fontSize: '11px', fontWeight: 600 }}>
+                                            {label}
+                                            <button type="button" onClick={() => setField('auditors', form.auditors.filter((_, i) => i !== idx))} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#1e40af', display: 'flex', padding: 0 }}>✕</button>
+                                        </span>
+                                    );
+                                })}
+                            </div>
+                        )}
                     </div>
                 </div>
 
                 <div style={S.card}>
                     <p style={S.title}>Detail Temuan</p>
                     <div style={{ marginBottom: '16px' }}>
-                        <label style={S.label}>Deskripsi Non-Compliance <span style={{ color: '#ef4444' }}>*</span></label>
+                        <label style={S.label}>Deskripsi Non-Compliance <span style={{ color: 'var(--danger)' }}>*</span></label>
                         <textarea value={form.non_compliance} onChange={e => setField('non_compliance', e.target.value)} style={S.textarea} />
                         {errors.non_compliance && <p style={S.error}>{errors.non_compliance}</p>}
                     </div>
@@ -158,7 +207,7 @@ export default function EditPica() {
                         <textarea value={form.non_compliance_root_cause} onChange={e => setField('non_compliance_root_cause', e.target.value)} style={S.textarea} />
                     </div>
                     <div>
-                        <label style={S.label}>Corrective Action <span style={{ color: '#ef4444' }}>*</span></label>
+                        <label style={S.label}>Corrective Action <span style={{ color: 'var(--danger)' }}>*</span></label>
                         <textarea value={form.corrective_action} onChange={e => setField('corrective_action', e.target.value)} style={S.textarea} />
                         {errors.corrective_action && <p style={S.error}>{errors.corrective_action}</p>}
                     </div>
@@ -168,8 +217,8 @@ export default function EditPica() {
                     <p style={S.title}>Target & Penanggung Jawab</p>
                     <div style={{ ...row2, marginBottom: '16px' }}>
                         <div>
-                            <label style={S.label}>Target Tanggal Selesai <span style={{ color: '#ef4444' }}>*</span></label>
-                            <input type="date" value={form.target_settlement_date} onChange={e => setField('target_settlement_date', e.target.value)} style={S.input} />
+                            <label style={S.label}>Target Tanggal Selesai <span style={{ color: 'var(--danger)' }}>*</span></label>
+                            <input type="date" value={form.target_settlement_date} onChange={e => setField('target_settlement_date', e.target.value)} style={S.dateInput} />
                             {errors.target_settlement_date && <p style={S.error}>{errors.target_settlement_date}</p>}
                         </div>
                         <div>
@@ -227,12 +276,45 @@ export default function EditPica() {
                     )}
                 </div>
 
-                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', paddingBottom: '32px' }}>
-                    <a href={`/pica/detail/${id}`} style={{ padding: '10px 20px', border: '1px solid var(--border-color)', borderRadius: '8px', fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)', textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}>Batal</a>
-                    <button type="button" onClick={() => setShowConfirm(true)} disabled={submitting}
-                        style={{ padding: '10px 24px', background: 'linear-gradient(135deg, #1d4ed8, #153B73)', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 700, cursor: 'pointer' }}>
-                        Simpan Perubahan
+                {/* Footer — gaya FieldLeadership CreateFooter */}
+                <div style={{
+                    borderTop: '1px solid var(--border-color)',
+                    paddingTop: '24px',
+                    display: 'flex', justifyContent: 'flex-end',
+                    alignItems: 'center', gap: '12px',
+                    flexWrap: 'wrap',
+                }}>
+                    <a
+                        href={`/pica/detail/${id}`}
+                        style={{
+                            display: 'inline-flex', alignItems: 'center',
+                            height: '40px', padding: '0 20px',
+                            border: '1px solid var(--border-color)', borderRadius: '8px',
+                            textDecoration: 'none', color: 'var(--text-secondary)',
+                            fontSize: '12px', fontWeight: 600,
+                        }}
+                    >
+                        Batal
+                    </a>
+                    <button
+                        type="button"
+                        onClick={() => setShowConfirm(true)}
+                        disabled={submitting}
+                        style={{
+                            height: '40px', padding: '0 20px',
+                            backgroundColor: '#e2e8f0', border: 'none', borderRadius: '8px',
+                            color: 'var(--text-primary)', fontSize: '12px', fontWeight: 600,
+                            cursor: submitting ? 'not-allowed' : 'pointer',
+                            opacity: submitting ? 0.7 : 1,
+                            display: 'inline-flex', alignItems: 'center', gap: '6px',
+                        }}
+                    >
+                        <Save size={13} />
+                        {submitting ? 'Menyimpan...' : 'Simpan Draft'}
                     </button>
+                </div>
+
+                </div>
                 </div>
             </div>
 
@@ -240,7 +322,7 @@ export default function EditPica() {
                 <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(15,23,42,0.6)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
                     <div style={{ backgroundColor: '#fff', borderRadius: '16px', padding: '28px', maxWidth: '400px', width: '90%' }}>
                         <h3 style={{ fontSize: '15px', fontWeight: 800, margin: '0 0 8px 0' }}>Konfirmasi Perubahan</h3>
-                        <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: '0 0 20px 0' }}>Perubahan data akan disimpan. Lanjutkan?</p>
+                        <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: '0 0 20px 0' }}>Perubahan akan disimpan sebagai Draft. Lanjutkan?</p>
                         <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
                             <button onClick={() => setShowConfirm(false)} style={{ padding: '8px 16px', border: '1px solid var(--border-color)', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', backgroundColor: '#fff' }}>Batal</button>
                             <button onClick={onSubmit} disabled={submitting} style={{ padding: '8px 20px', background: 'linear-gradient(135deg, #1d4ed8, #153B73)', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 700, cursor: 'pointer' }}>

@@ -1,8 +1,9 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { Head, usePage } from '@inertiajs/react';
-import { AlertTriangle, ArrowLeft } from 'lucide-react';
+import { AlertCircle, ArrowLeft } from 'lucide-react';
 import axios from 'axios';
 import StatusBadge from './Partials/StatusBadge';
+import ApprovalTimeline from './Partials/Detail/ApprovalTimeline';
 import DetailSidebar from './Partials/Detail/DetailSidebar';
 import DetailInfo from './Partials/Detail/DetailInfo';
 import DetailActivity from './Partials/Detail/DetailActivity';
@@ -14,6 +15,14 @@ export default function DetailPica() {
     const [actionLoading, setActionLoading] = useState(null);
     const [previewFile, setPreviewFile]     = useState(null);
     const [previewUrl, setPreviewUrl]       = useState(null);
+    const [isMobile, setIsMobile]   = useState(false);
+
+    useEffect(() => {
+        const check = () => setIsMobile(window.innerWidth <= 768);
+        check();
+        window.addEventListener('resize', check);
+        return () => window.removeEventListener('resize', check);
+    }, []);
 
     const fetchDoc = useCallback(() => {
         setLoading(true);
@@ -44,7 +53,7 @@ export default function DetailPica() {
 
     const actionButtons = () => {
         if (!doc) return null;
-        const btn = (label, action, color = '#1d4ed8', bg = 'rgba(29,78,216,0.1)') => (
+        const btn = (label, action, color = 'var(--primary)', bg = 'rgba(21,59,115,0.08)') => (
             <button
                 key={action}
                 onClick={() => handleApproval(action)}
@@ -55,51 +64,84 @@ export default function DetailPica() {
             </button>
         );
         switch (doc.status) {
-            case 'Draft':         return [<a key="edit" href={`/pica/edit/${id}`} style={{ padding: '7px 14px', borderRadius: '6px', border: '1px solid var(--border-color)', fontSize: '12px', fontWeight: 700, textDecoration: 'none', color: 'var(--text-primary)' }}>Edit</a>, btn('Submit', 'submit', '#2FBF71', 'rgba(47,191,113,0.1)')];
-            case 'On Review PJA': return [btn('Approve PJA', 'approve_pja', '#2FBF71', 'rgba(47,191,113,0.1)'), btn('Reject PJA', 'reject_pja', '#ef4444', 'rgba(239,68,68,0.08)')];
-            case 'On Review CRS': return [btn('Approve CRS', 'approve_crs', '#2FBF71', 'rgba(47,191,113,0.1)'), btn('Reject CRS', 'reject_crs', '#ef4444', 'rgba(239,68,68,0.08)')];
+            case 'Draft':         return [<a key="edit" href={`/pica/edit/${id}`} style={{ padding: '7px 14px', borderRadius: '6px', border: '1px solid var(--border-color)', fontSize: '12px', fontWeight: 700, textDecoration: 'none', color: 'var(--text-primary)' }}>Edit</a>, btn('Submit', 'submit', 'var(--success)', 'rgba(34,197,94,0.1)')];
+            case 'On Review PJA': return [btn('Approve PJA', 'approve_pja', 'var(--success)', 'rgba(34,197,94,0.1)'), btn('Reject PJA', 'reject_pja', 'var(--danger)', 'rgba(239,68,68,0.08)')];
+            case 'On Review CRS': return [btn('Approve CRS', 'approve_crs', 'var(--success)', 'rgba(34,197,94,0.1)'), btn('Reject CRS', 'reject_crs', 'var(--danger)', 'rgba(239,68,68,0.08)')];
             case 'Open':
-            case 'Overdue':       return [btn('Close', 'close', '#2FBF71', 'rgba(47,191,113,0.1)')];
+            case 'Overdue':       return [btn('Close', 'close', 'var(--success)', 'rgba(34,197,94,0.1)')];
             default:              return null;
         }
     };
 
     if (loading) return (
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
-            <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>Memuat data...</span>
+        <div style={{ backgroundColor: 'var(--bg-color)', minHeight: '100vh', padding: '40px 20px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Head title="Detail PICA" />
+            <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Memuat detail PICA...</span>
         </div>
     );
 
     if (!doc) return (
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
-            <span style={{ fontSize: '13px', color: '#ef4444' }}>Dokumen tidak ditemukan.</span>
+        <div style={{ backgroundColor: 'var(--bg-color)', minHeight: '100vh', padding: '40px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '12px' }}>
+            <Head title="Detail PICA" />
+            <AlertCircle size={32} style={{ color: 'var(--danger)' }} />
+            <p style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>Dokumen PICA tidak ditemukan.</p>
+            <a href="/pica/active-document" style={{ color: 'var(--primary)', fontSize: '13px' }}>← Kembali ke daftar</a>
         </div>
     );
 
     return (
-        <>
+        <div style={{ backgroundColor: 'var(--bg-color)', minHeight: '100vh', padding: '40px 20px' }}>
             <Head title={`PICA — ${doc.identity_id ?? 'Detail'}`} />
 
-            {/* Top Bar */}
-            <div style={{ backgroundColor: 'var(--card-bg)', borderBottom: '1px solid var(--border-color)', padding: '14px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 90, flexWrap: 'wrap', gap: '10px' }}>
-                <a href="/pica/active-document" style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-secondary)', fontSize: '13px', textDecoration: 'none', fontWeight: 600 }}>
-                    <ArrowLeft size={14} /> Kembali ke PICA
+            {/* Top Bar Header — gaya FieldLeadership Detail */}
+            <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                marginBottom: '24px',
+                borderBottom: '1px solid var(--border-color)',
+                paddingBottom: '12px',
+                flexWrap: 'wrap',
+                gap: '10px',
+            }}>
+                <a href="/pica/active-document" style={{
+                    display: 'inline-flex', alignItems: 'center', gap: '8px',
+                    color: 'var(--primary)', fontWeight: 700, textDecoration: 'none', fontSize: '12px',
+                }}>
+                    <ArrowLeft size={16} /> Kembali ke PICA
                 </a>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <AlertTriangle size={15} style={{ color: 'var(--primary)' }} />
-                    <span style={{ fontSize: '14px', fontWeight: 700, color: 'var(--primary)' }}>{doc.identity_id}</span>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                    <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--primary)' }}>{doc.identity_id}</span>
                     <StatusBadge status={doc.status} />
-                </div>
-                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                     {actionButtons()}
                 </div>
             </div>
 
-            {/* 3-Column Grid */}
-            <div style={{ padding: '24px', display: 'grid', gridTemplateColumns: '240px 1fr 260px', gap: '16px', alignItems: 'start' }}>
-                <DetailSidebar doc={doc} />
-                <DetailInfo doc={doc} onPreviewFile={handlePreviewFile} />
-                <DetailActivity doc={doc} onRefresh={fetchDoc} />
+            {/* 3-Column Grid Layout */}
+            <div style={{
+                display: 'grid',
+                gridTemplateColumns: isMobile ? '1fr' : '260px 1fr 280px',
+                gap: isMobile ? '16px' : '24px',
+                alignItems: 'start',
+            }}>
+                {/* LEFT SIDEBAR */}
+                <aside style={{ order: isMobile ? 2 : 1 }}>
+                    <DetailSidebar doc={doc} />
+                </aside>
+
+                {/* CENTER */}
+                <main style={{ order: isMobile ? 1 : 2 }}>
+                    <DetailInfo doc={doc} onPreviewFile={handlePreviewFile} />
+                </main>
+
+                {/* RIGHT SIDEBAR */}
+                <aside style={{ order: isMobile ? 3 : 3 }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                        <ApprovalTimeline doc={doc} />
+                        <DetailActivity doc={doc} onRefresh={fetchDoc} />
+                    </div>
+                </aside>
             </div>
 
             {/* File Preview Modal */}
@@ -122,6 +164,6 @@ export default function DetailPica() {
                     </div>
                 </div>
             )}
-        </>
+        </div>
     );
 }
