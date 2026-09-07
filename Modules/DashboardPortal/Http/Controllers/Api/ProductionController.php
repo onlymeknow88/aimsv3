@@ -219,20 +219,17 @@ class ProductionController extends Controller
     public function stats(Request $request)
     {
         try {
-            $thisYear  = date('Y');
-            $year      = $request->query('year', $thisYear);
-            $thisMonth = date('m');
-            
-            $month = $request->query('month');
-            if (!$month && $request->has('months')) {
-                $months = explode(',', $request->query('months'));
-                $month = $months[0] ?? null;
-            }
-            $month = $month ? (int) $month : (int) $thisMonth;
-            
-            // ── Parse year safely in case it is comma-separated list
-            $parsedYears = array_filter(array_map('intval', explode(',', $year)));
-            $primaryYear = !empty($parsedYears) ? $parsedYears[0] : (int) $year;
+            $thisYear = date('Y');
+
+            // ── Terima "years" (kanonik) atau "year" (kompatibilitas lama)
+            $yearParam   = $request->query('years', $request->query('year', $thisYear));
+            $parsedYears = array_filter(array_map('intval', explode(',', (string) $yearParam)));
+            $primaryYear = !empty($parsedYears) ? $parsedYears[0] : (int) $thisYear;
+
+            // ── Terima "months" (kanonik) atau "month" (kompatibilitas lama)
+            $monthParam   = $request->query('months', $request->query('month'));
+            $parsedMonths = array_values(array_filter(array_map('intval', explode(',', (string) $monthParam))));
+            $month        = !empty($parsedMonths) ? $parsedMonths[0] : (int) date('n');
 
             // ── Summary ───────────────────────────────────────────────────────
             $ytdData = Production::where('visible', 'true')
