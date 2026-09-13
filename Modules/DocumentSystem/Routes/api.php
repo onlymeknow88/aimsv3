@@ -132,6 +132,7 @@ Route::middleware(['web', 'auth'])->prefix('document-system')->group(function ()
     // ==========================================
     Route::middleware('module.permission:document-system,can_view,doc.ptw')->group(function () {
         Route::get('/ptw', [\Modules\DocumentSystem\Http\Controllers\Api\PtwController::class, 'index']);
+        Route::get('/ptw/export', [\Modules\DocumentSystem\Http\Controllers\Api\PtwController::class, 'export']);
         Route::get('/ptw/{id}', [\Modules\DocumentSystem\Http\Controllers\Api\PtwController::class, 'show']);
     });
 
@@ -140,10 +141,19 @@ Route::middleware(['web', 'auth'])->prefix('document-system')->group(function ()
         Route::post('/ptw/{id}/submit-review', [\Modules\DocumentSystem\Http\Controllers\Api\PtwController::class, 'submitForReview']);
     });
 
+    // Bulk destroy didaftarkan SEBELUM POST /ptw/{id} (grup edit) agar path
+    // statis /ptw/destroy tidak tertangkap sebagai {id}=destroy oleh route update.
+    Route::middleware('module.permission:document-system,can_delete,doc.ptw')->group(function () {
+        Route::delete('/ptw', [\Modules\DocumentSystem\Http\Controllers\Api\PtwController::class, 'bulkDestroy']);
+        Route::post('/ptw/destroy', [\Modules\DocumentSystem\Http\Controllers\Api\PtwController::class, 'bulkDestroy']); // _method:DELETE spoofing untuk IIS
+    });
+
     Route::middleware('module.permission:document-system,can_edit,doc.ptw')->group(function () {
-        Route::post('/ptw/{id}', [\Modules\DocumentSystem\Http\Controllers\Api\PtwController::class, 'update']);
+        Route::post('/ptw/{id}/deactivate', [\Modules\DocumentSystem\Http\Controllers\Api\PtwController::class, 'deactivate']);
+        Route::post('/ptw/{id}/reactivate', [\Modules\DocumentSystem\Http\Controllers\Api\PtwController::class, 'reactivate']);
         Route::delete('/ptw/attachments/{id}', [\Modules\DocumentSystem\Http\Controllers\Api\PtwController::class, 'deleteAttachment']);
         Route::post('/ptw/attachments/{id}', [\Modules\DocumentSystem\Http\Controllers\Api\PtwController::class, 'deleteAttachment']); // _method:DELETE spoofing untuk IIS
+        Route::post('/ptw/{id}', [\Modules\DocumentSystem\Http\Controllers\Api\PtwController::class, 'update']);
     });
 
     Route::middleware('module.permission:document-system,can_delete,doc.ptw')->group(function () {

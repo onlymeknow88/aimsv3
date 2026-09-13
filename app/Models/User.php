@@ -78,4 +78,25 @@ class User extends Authenticatable
     {
         return $this->hasOne(Employee::class, 'user_id');
     }
+
+    public function isSystemAdmin(): bool
+    {
+        return in_array($this->role, ['super_admin', 'system_admin']);
+    }
+
+    /**
+     * True bila admin sistem TAPI memegang role modul eksplisit.
+     * Artinya akses portal mengikuti role modul (scoped), bukan bypass penuh.
+     * Admin tanpa role modul tetap bypass seperti dulu. Backoffice /admin
+     * tidak terpengaruh (tetap gate super_admin di AdminMiddleware).
+     */
+    public function isScopedByModuleRoles(): bool
+    {
+        if (!$this->isSystemAdmin()) {
+            return false;
+        }
+        return \Cache::remember("user.{$this->id}.has_module_roles", 60, function () {
+            return $this->documentRoles()->exists();
+        });
+    }
 }

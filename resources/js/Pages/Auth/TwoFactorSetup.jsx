@@ -128,7 +128,7 @@ function TwoFactorSetup({ qrCodeUrl, secret, isEnabled, recoveryCodes }) {
 
                 {/* Info card */}
                 <div style={{
-                    backgroundColor: '#fff', border: '1px solid var(--border-color)',
+                    backgroundColor: 'var(--card-bg)', border: '1px solid var(--border-color)',
                     borderRadius: '16px', padding: '20px', boxShadow: 'var(--shadow-sm)',
                 }}>
                     <p style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px', margin: '0 0 14px' }}>
@@ -154,7 +154,7 @@ function TwoFactorSetup({ qrCodeUrl, secret, isEnabled, recoveryCodes }) {
 
             {/* Kolom kanan: form */}
             <div style={{
-                backgroundColor: '#fff',
+                backgroundColor: 'var(--card-bg)',
                 border: '1px solid var(--border-color)',
                 borderRadius: '16px',
                 padding: '28px',
@@ -194,7 +194,7 @@ function TwoFactorSetup({ qrCodeUrl, secret, isEnabled, recoveryCodes }) {
                             backgroundColor: '#f8fafc', border: '1px solid #e2e8f0',
                             borderRadius: '16px', padding: '24px', marginBottom: '24px', textAlign: 'center',
                         }}>
-                            <p style={{ fontSize: '12px', fontWeight: 600, color: '#64748b', marginBottom: '16px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                            <p style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '16px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                                 Langkah 1 — Scan QR Code
                             </p>
                             <img
@@ -202,12 +202,12 @@ function TwoFactorSetup({ qrCodeUrl, secret, isEnabled, recoveryCodes }) {
                                 alt="QR Code 2FA"
                                 style={{ width: '180px', height: '180px', margin: '0 auto 16px', display: 'block', borderRadius: '8px' }}
                             />
-                            <p style={{ fontSize: '12px', color: '#94a3b8', margin: '0 0 12px' }}>
+                            <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: '0 0 12px' }}>
                                 Atau masukkan kode manual:
                             </p>
                             <div style={{
                                 display: 'flex', alignItems: 'center', gap: '8px',
-                                backgroundColor: '#fff', border: '1px solid #e2e8f0',
+                                backgroundColor: 'var(--card-bg)', border: '1px solid #e2e8f0',
                                 borderRadius: '8px', padding: '10px 14px',
                                 justifyContent: 'space-between',
                             }}>
@@ -222,11 +222,11 @@ function TwoFactorSetup({ qrCodeUrl, secret, isEnabled, recoveryCodes }) {
                                 </code>
                                 <div style={{ display: 'flex', gap: '6px' }}>
                                     <button type="button" onClick={() => setShowSecret(!showSecret)}
-                                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', padding: '2px' }}>
+                                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', padding: '2px' }}>
                                         {showSecret ? <EyeOff size={15} /> : <Eye size={15} />}
                                     </button>
                                     <button type="button" onClick={copySecret}
-                                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: copied ? '#2FBF71' : '#94a3b8', padding: '2px' }}>
+                                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: copied ? '#2FBF71' : 'var(--text-secondary)', padding: '2px' }}>
                                         {copied ? <CheckCircle size={15} /> : <Copy size={15} />}
                                     </button>
                                 </div>
@@ -238,7 +238,7 @@ function TwoFactorSetup({ qrCodeUrl, secret, isEnabled, recoveryCodes }) {
                             backgroundColor: '#f8fafc', border: '1px solid #e2e8f0',
                             borderRadius: '16px', padding: '24px',
                         }}>
-                            <p style={{ fontSize: '12px', fontWeight: 600, color: '#64748b', marginBottom: '16px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                            <p style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '16px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                                 Langkah 2 — Verifikasi Kode
                             </p>
                             <form onSubmit={handleEnable}>
@@ -277,7 +277,7 @@ function TwoFactorSetup({ qrCodeUrl, secret, isEnabled, recoveryCodes }) {
                                     style={{
                                         width: '100%', padding: '12px',
                                         background: getCode().length < 6 ? '#e2e8f0' : 'linear-gradient(135deg, #153B73, #1E4E96)',
-                                        color: getCode().length < 6 ? '#94a3b8' : '#fff',
+                                        color: getCode().length < 6 ? 'var(--text-secondary)' : '#fff',
                                         border: 'none', borderRadius: '10px',
                                         fontSize: '14px', fontWeight: 700,
                                         cursor: getCode().length < 6 ? 'not-allowed' : 'pointer',
@@ -304,7 +304,7 @@ function TwoFactorSetup({ qrCodeUrl, secret, isEnabled, recoveryCodes }) {
                                     {sessionRecoveryCodes.map((code, i) => (
                                         <code key={i} style={{
                                             fontSize: '12px', padding: '6px 10px',
-                                            backgroundColor: '#fff', borderRadius: '6px',
+                                            backgroundColor: 'var(--card-bg)', borderRadius: '6px',
                                             border: '1px solid #fde68a', fontFamily: 'monospace',
                                             color: '#92400e', letterSpacing: '1px',
                                         }}>
@@ -341,7 +341,7 @@ function TwoFactorSetup({ qrCodeUrl, secret, isEnabled, recoveryCodes }) {
                                 onClick={() => setShowDisable(true)}
                                 style={{
                                     width: '100%', padding: '12px',
-                                    backgroundColor: '#fff', color: '#ef4444',
+                                    backgroundColor: 'var(--card-bg)', color: '#ef4444',
                                     border: '1.5px solid #fca5a5',
                                     borderRadius: '10px', fontSize: '13px', fontWeight: 600,
                                     cursor: 'pointer',
@@ -379,9 +379,9 @@ function TwoFactorSetup({ qrCodeUrl, secret, isEnabled, recoveryCodes }) {
                                         onClick={() => setShowDisable(false)}
                                         style={{
                                             flex: 1, padding: '10px',
-                                            backgroundColor: '#fff', border: '1px solid #e2e8f0',
+                                            backgroundColor: 'var(--card-bg)', border: '1px solid #e2e8f0',
                                             borderRadius: '8px', fontSize: '13px', fontWeight: 600,
-                                            cursor: 'pointer', color: '#64748b',
+                                            cursor: 'pointer', color: 'var(--text-secondary)',
                                         }}
                                     >
                                         Batal

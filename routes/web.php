@@ -15,6 +15,12 @@ Route::get('/', function () {
     ]);
 })->middleware(['auth', '2fa'])->name('dashboard');
 
+// ── News & Update pages (main dashboard widget) ──────────────────────────────
+Route::get('/news', [\App\Http\Controllers\NewsController::class, 'index'])
+    ->middleware(['auth', '2fa'])->name('news.index');
+Route::get('/news/{id}', [\App\Http\Controllers\NewsController::class, 'show'])
+    ->middleware(['auth', '2fa'])->name('news.show');
+
 Route::middleware('admin.session')->group(function () {
     Route::get('/admin/login', [\App\Http\Controllers\Admin\AdminLoginController::class, 'showLoginForm'])->name('admin.login');
     Route::post('/admin/login', [\App\Http\Controllers\Admin\AdminLoginController::class, 'login']);

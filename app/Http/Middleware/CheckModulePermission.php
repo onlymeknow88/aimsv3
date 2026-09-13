@@ -26,8 +26,13 @@ class CheckModulePermission
             return redirect()->route('login');
         }
 
-        // 2. Super admin & system admin get bypass access
-        if (in_array($user->role, ['super_admin', 'system_admin'])) {
+        // 2. Super admin & system admin TANPA role modul dapat bypass access.
+        //    Admin yang memegang role modul eksplisit dinilai dari grant-nya
+        //    (scoped), agar sidebar & guard konsisten.
+        $unscopedAdmin = method_exists($user, 'isScopedByModuleRoles')
+            ? ($user->isSystemAdmin() && !$user->isScopedByModuleRoles())
+            : in_array($user->role ?? null, ['super_admin', 'system_admin']);
+        if ($unscopedAdmin) {
             return $next($request);
         }
 

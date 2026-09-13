@@ -99,7 +99,7 @@ export default function SearchableSelect({ options = [], value, onChange, placeh
                     border: '1px solid var(--border-color)',
                     borderRadius: '6px',
                     fontSize: '11px',
-                    backgroundColor: '#fff',
+                    backgroundColor: 'var(--card-bg)',
                     cursor: 'pointer',
                     userSelect: 'none',
                     minHeight: '42px'
@@ -122,7 +122,7 @@ export default function SearchableSelect({ options = [], value, onChange, placeh
                             top: portal ? `${coords.top}px` : 'calc(100% + 4px)',
                             left: portal ? `${coords.left}px` : 0,
                             width: portal ? `${coords.width}px` : '100%',
-                            backgroundColor: '#fff',
+                            backgroundColor: 'var(--card-bg)',
                             border: '1px solid var(--border-color)',
                             borderRadius: '8px',
                             boxShadow: 'var(--shadow-md)',

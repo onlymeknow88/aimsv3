@@ -82,6 +82,38 @@ export default function usePtwDetail(id) {
         }
     }, [id, fetchPtwDetails]);
 
+    const deactivateDocument = useCallback(async (notes = '') => {
+        setActionLoading(true);
+        setActionError(null);
+        try {
+            await axios.post(`/api/document-system/ptw/${id}/deactivate`, { notes });
+            fetchPtwDetails();
+            return true;
+        } catch (err) {
+            const msg = err.response?.data?.message || 'Gagal menonaktifkan PTW.';
+            setActionError(msg);
+            return false;
+        } finally {
+            setActionLoading(false);
+        }
+    }, [id, fetchPtwDetails]);
+
+    const reactivateDocument = useCallback(async () => {
+        setActionLoading(true);
+        setActionError(null);
+        try {
+            await axios.post(`/api/document-system/ptw/${id}/reactivate`, {});
+            fetchPtwDetails();
+            return true;
+        } catch (err) {
+            const msg = err.response?.data?.message || 'Gagal mengaktifkan ulang PTW.';
+            setActionError(msg);
+            return false;
+        } finally {
+            setActionLoading(false);
+        }
+    }, [id, fetchPtwDetails]);
+
     return {
         document,
         canApprove,
@@ -91,6 +123,8 @@ export default function usePtwDetail(id) {
         submitForReview,
         approveDocument,
         rejectDocument,
+        deactivateDocument,
+        reactivateDocument,
         refresh: fetchPtwDetails,
     };
 }

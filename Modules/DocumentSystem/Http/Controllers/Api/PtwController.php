@@ -6,11 +6,13 @@ use App\Helpers\ResponseFormatter;
 use App\Http\Controllers\Controller;
 use App\Services\UserActivityLogService;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Modules\DocumentSystem\Entities\PtwDocument;
 use Modules\DocumentSystem\Entities\PtwDocumentActivity;
 use Modules\DocumentSystem\Entities\PtwDocumentPeople;
 use Modules\DocumentSystem\Entities\PtwDocumentAttachment;
 use Modules\DocumentSystem\Services\DocumentSystemService;
+use Modules\DocumentSystem\Services\PtwService;
 
 class PtwController extends Controller
 {
@@ -25,63 +27,7 @@ class PtwController extends Controller
 
             $query = PtwDocument::with(['company', 'department', 'user', 'attachments']);
 
-            if ($search) {
-                $query->where(function ($q) use ($search) {
-                    $q->where('title', 'like', "%{$search}%")
-                      ->orWhere('document_number', 'like', "%{$search}%");
-                });
-            }
-
-            // Column-wise searches
-            if ($request->filled('filter_company')) {
-                $comp = $request->query('filter_company');
-                $query->whereHas('company', function ($q) use ($comp) {
-                    $q->where('company_name', 'like', "%{$comp}%")
-                      ->orWhere('document_code', 'like', "%{$comp}%");
-                });
-            }
-
-            if ($request->filled('filter_department')) {
-                $dept = $request->query('filter_department');
-                $query->whereHas('department', function ($q) use ($dept) {
-                    $q->where('name', 'like', "%{$dept}%")
-                      ->orWhere('code', 'like', "%{$dept}%")
-                      ->orWhere('document_code', 'like', "%{$dept}%");
-                });
-            }
-
-            if ($request->filled('filter_pic')) {
-                $pic = $request->query('filter_pic');
-                $query->whereHas('user', function ($q) use ($pic) {
-                    $q->where('name', 'like', "%{$pic}%");
-                });
-            }
-
-            if ($request->filled('filter_title')) {
-                $query->where('title', 'like', '%' . $request->query('filter_title') . '%');
-            }
-
-            if ($request->filled('filter_document_number')) {
-                $query->where('document_number', 'like', '%' . $request->query('filter_document_number') . '%');
-            }
-
-            if ($request->filled('filter_detail_location')) {
-                $query->where('detail_location', 'like', '%' . $request->query('filter_detail_location') . '%');
-            }
-
-            if ($request->filled('filter_status')) {
-                $statusVal = $request->query('filter_status');
-                $STATUS_MAP = [
-                    'draft' => '1',
-                    'active' => '5',
-                ];
-                $mappedStatus = $STATUS_MAP[strtolower($statusVal)] ?? null;
-                if ($mappedStatus) {
-                    $query->where('status', $mappedStatus);
-                } else {
-                    $query->where('status', 'like', '%' . $statusVal . '%');
-                }
-            }
+            $this->applyListingFilters($query, $request);
 
             $query->latest();
 
@@ -98,15 +44,109 @@ class PtwController extends Controller
     }
 
     /**
+     * Apply shared listing filters (search, column filters, date ranges).
+     * Used by index() and export() so both stay in sync.
+     */
+    private function applyListingFilters($query, Request $request): void
+    {
+        $search = $request->query('search', '');
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%")
+                  ->orWhere('document_number', 'like', "%{$search}%");
+            });
+        }
+
+        // Column-wise searches (mendukung UUID dari dropdown maupun ketikan bebas)
+        if ($request->filled('filter_company')) {
+            $comp = $request->query('filter_company');
+            $query->whereHas('company', function ($q) use ($comp) {
+                $q->where('id', $comp)
+                  ->orWhere('company_name', 'like', "%{$comp}%")
+                  ->orWhere('document_code', 'like', "%{$comp}%");
+            });
+        }
+
+        if ($request->filled('filter_department')) {
+            $dept = $request->query('filter_department');
+            $query->whereHas('department', function ($q) use ($dept) {
+                $q->where('id', $dept)
+                  ->orWhere('name', 'like', "%{$dept}%")
+                  ->orWhere('code', 'like', "%{$dept}%")
+                  ->orWhere('document_code', 'like', "%{$dept}%");
+            });
+        }
+
+        if ($request->filled('filter_pic')) {
+            $pic = $request->query('filter_pic');
+            $query->whereHas('user', function ($q) use ($pic) {
+                $q->where('name', 'like', "%{$pic}%");
+            });
+        }
+
+        if ($request->filled('filter_title')) {
+            $query->where('title', 'like', '%' . $request->query('filter_title') . '%');
+        }
+
+        if ($request->filled('filter_document_number')) {
+            $query->where('document_number', 'like', '%' . $request->query('filter_document_number') . '%');
+        }
+
+        if ($request->filled('filter_detail_location')) {
+            $query->where('detail_location', 'like', '%' . $request->query('filter_detail_location') . '%');
+        }
+
+        if ($request->filled('filter_status')) {
+            $statusVal = $request->query('filter_status');
+            $STATUS_MAP = [
+                'draft' => '1',
+                'pending' => '2',
+                'pending review' => '2',
+                'rejected' => '3',
+                'active' => '5',
+            ];
+            $mappedStatus = $STATUS_MAP[strtolower($statusVal)] ?? null;
+            if ($mappedStatus) {
+                $query->where('status', $mappedStatus);
+            } else {
+                $query->where('status', 'like', '%' . $statusVal . '%');
+            }
+        }
+
+        // Date range filters (ported from v2 Active listing: Active At / Inactive At)
+        if ($request->filled('filter_start_date')) {
+            $query->whereDate('doc_created', '>=', $request->query('filter_start_date'));
+        }
+
+        if ($request->filled('filter_end_date')) {
+            $query->whereDate('doc_created', '<=', $request->query('filter_end_date'));
+        }
+
+        if ($request->filled('filter_inactive_start')) {
+            $query->whereDate('inactive_at', '>=', $request->query('filter_inactive_start'));
+        }
+
+        if ($request->filled('filter_inactive_end')) {
+            $query->whereDate('inactive_at', '<=', $request->query('filter_inactive_end'));
+        }
+    }
+
+    /**
      * Store a newly created PTW.
      */
     public function store(Request $request)
     {
         $validator = \Validator::make($request->all(), [
-            'title'       => 'required|string|max:255',
+            'title'           => 'required|string|max:255|unique:ptw_documents,title',
+            'document_number' => 'nullable|string|max:255|unique:ptw_documents,document_number',
             'location'    => 'nullable|string',
             'company_id'  => 'required',
             'department_id' => 'required',
+            'area_manager_id' => 'nullable',
+        ], [
+            'title.unique'           => 'Judul PTW sudah digunakan, gunakan judul lain.',
+            'document_number.unique' => 'Nomor dokumen sudah digunakan, gunakan nomor lain.',
         ]);
 
         if ($validator->fails()) {
@@ -118,34 +158,17 @@ class PtwController extends Controller
 
         $documentNumber = $request->document_number;
         if (empty($documentNumber)) {
-            $companyCode = 'MAC';
-            if ($request->company_id) {
-                $comp = \App\Models\Company::find($request->company_id);
-                if ($comp) {
-                    $companyCode = $comp->document_code ?: substr(strtoupper($comp->company_name), 0, 3);
-                }
-            }
-
-            $deptCode = 'MIS';
-            if ($request->department_id) {
-                $dept = \App\Models\Department::find($request->department_id);
-                if ($dept) {
-                    $deptCode = $dept->document_code ?: $dept->code ?: substr(strtoupper($dept->name), 0, 3);
-                }
-            }
-
-            $prefix = "PTW-{$companyCode}-{$deptCode}-";
-            $count = PtwDocument::where('document_number', 'like', "{$prefix}%")->count();
-            $nextNum = str_pad($count + 1, 3, '0', STR_PAD_LEFT);
-            $documentNumber = "{$prefix}{$nextNum}";
+            $documentNumber = app(PtwService::class)->buildDocumentNumber($request->company_id, $request->department_id);
         }
 
         $doc = PtwDocument::create([
             'title'           => $request->title,
             'description'     => $request->description,
             'doc_created'     => $request->doc_created ? date('Y-m-d H:i:s', strtotime($request->doc_created)) : now(),
+            'inactive_at'     => null,
             'company_id'      => $request->company_id,
             'department_id'   => $request->department_id,
+            'area_manager_id' => $request->area_manager_id ?: null,
             'status'          => $request->status ?? '1', // 1 = Draft
             'detail_location' => $request->location,
             'document_number' => $documentNumber,
@@ -202,7 +225,7 @@ class PtwController extends Controller
      */
     public function show(string $id)
     {
-        $document = PtwDocument::with(['company', 'department', 'user', 'areaManager', 'attachments', 'peoples.user', 'activities.user'])
+        $document = PtwDocument::with(['company', 'department', 'user', 'areaManager.user', 'attachments', 'peoples.user', 'activities.user'])
             ->findOrFail($id);
 
         $user = auth()->user() ?? auth('admin')->user() ?? auth('web')->user();
@@ -227,6 +250,28 @@ class PtwController extends Controller
     public function update(Request $request, string $id)
     {
         $doc = PtwDocument::findOrFail($id);
+
+        // Unique hanya dicek bila nilainya DIUBAH. Hasil revisi (replicate)
+        // sengaja berbagi title/number dengan dokumen asalnya.
+        $rules = [];
+        if ($request->has('title')) {
+            $rules['title'] = ['string', 'max:255'];
+            if ($request->title !== $doc->title) {
+                $rules['title'][] = Rule::unique('ptw_documents', 'title')->ignore($id);
+            }
+        }
+        if ($request->has('document_number') && $request->document_number !== $doc->document_number) {
+            $rules['document_number'] = ['nullable', 'string', 'max:255', Rule::unique('ptw_documents', 'document_number')->ignore($id)];
+        }
+
+        $validator = \Validator::make($request->all(), $rules, [
+            'title.unique'           => 'Judul PTW sudah digunakan, gunakan judul lain.',
+            'document_number.unique' => 'Nomor dokumen sudah digunakan, gunakan nomor lain.',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
 
         $user = $request->user() ?? auth()->user() ?? auth('admin')->user() ?? auth('web')->user();
         $userId = $user ? $user->id : null;
@@ -495,6 +540,148 @@ class PtwController extends Controller
         );
 
         return ResponseFormatter::success($doc, 'Dokumen dikembalikan ke draft.');
+    }
+
+    /**
+     * Export PTW documents to Excel (ported from v2 PtwService::export).
+     * Supports ?ids=a,b,c or the same filters as index().
+     */
+    public function export(Request $request)
+    {
+        try {
+            $idsStr = $request->query('ids');
+            $ids = $idsStr ? explode(',', $idsStr) : [];
+
+            $query = PtwDocument::with(['company', 'department', 'user']);
+            if (!empty($ids)) {
+                $query->whereIn('id', $ids);
+            } else {
+                $this->applyListingFilters($query, $request);
+            }
+
+            $docs = $query->latest()->get();
+            $rows = app(PtwService::class)->toExportRows($docs);
+
+            return \Maatwebsite\Excel\Facades\Excel::download(
+                new \Modules\DocumentSystem\Exports\PtwDocumentExport($rows),
+                'PTW_Export_' . date('Y-m-d') . '.xlsx'
+            );
+        } catch (\Exception $e) {
+            return ResponseFormatter::error('Terjadi kesalahan: ' . $e->getMessage(), 500);
+        }
+    }
+
+    /**
+     * Bulk delete PTW documents (ported from v2 Active::submitDelete).
+     */
+    public function bulkDestroy(Request $request)
+    {
+        $validator = \Validator::make($request->all(), [
+            'ids' => 'required|array|min:1',
+            'ids.*' => 'string',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $ids = array_values($request->input('ids'));
+        $deleted = 0;
+        foreach ($ids as $id) {
+            $doc = PtwDocument::find($id);
+            if (!$doc) {
+                continue;
+            }
+            PtwDocumentAttachment::where('ptw_document_id', $doc->id)->delete();
+            $doc->delete();
+            $deleted++;
+        }
+
+        UserActivityLogService::log(
+            module: 'document_system',
+            action: 'delete',
+            resource: 'PtwDocument',
+            resourceId: implode(',', $ids),
+            description: "Menghapus {$deleted} PTW terpilih",
+            request: $request,
+        );
+
+        return ResponseFormatter::success(['deleted' => $deleted], "{$deleted} PTW berhasil dihapus.");
+    }
+
+    /**
+     * Mark an ACTIVE PTW as inactive (sets inactive_at, keeps status).
+     * Ported from v2 PtwService::changeStatus inactive branch.
+     */
+    public function deactivate(Request $request, string $id)
+    {
+        $doc = PtwDocument::findOrFail($id);
+
+        if ((string) $doc->status !== PtwService::STATUS_ACTIVE) {
+            return ResponseFormatter::error('Hanya PTW berstatus Active yang bisa dinonaktifkan.', 422);
+        }
+
+        $user = auth()->user() ?? auth('admin')->user() ?? auth('web')->user();
+        $oldData = $doc->toArray();
+
+        $doc->update(['inactive_at' => now()]);
+
+        PtwDocumentActivity::create([
+            'ptw_document_id' => $doc->id,
+            'user_id'         => $user?->id,
+            'activity'        => 'Document Deactivated',
+            'notes'           => $request->input('notes', 'PTW dinonaktifkan.'),
+        ]);
+
+        UserActivityLogService::log(
+            module: 'document_system',
+            action: 'update',
+            resource: 'PtwDocument',
+            resourceId: $doc->id,
+            description: "Menonaktifkan PTW '{$doc->document_number}'",
+            oldData: $oldData,
+            newData: $doc->fresh()->toArray(),
+            request: $request,
+        );
+
+        return ResponseFormatter::success($doc->fresh(), 'PTW berhasil dinonaktifkan.');
+    }
+
+    /**
+     * Clear inactive_at on an ACTIVE PTW (reactivate).
+     */
+    public function reactivate(Request $request, string $id)
+    {
+        $doc = PtwDocument::findOrFail($id);
+
+        if ((string) $doc->status !== PtwService::STATUS_ACTIVE) {
+            return ResponseFormatter::error('Hanya PTW berstatus Active yang bisa diaktifkan ulang.', 422);
+        }
+
+        $user = auth()->user() ?? auth('admin')->user() ?? auth('web')->user();
+        $oldData = $doc->toArray();
+
+        $doc->update(['inactive_at' => null]);
+
+        PtwDocumentActivity::create([
+            'ptw_document_id' => $doc->id,
+            'user_id'         => $user?->id,
+            'activity'        => 'Document Reactivated',
+            'notes'           => $request->input('notes', 'PTW diaktifkan ulang.'),
+        ]);
+
+        UserActivityLogService::log(
+            module: 'document_system',
+            action: 'update',
+            resource: 'PtwDocument',
+            resourceId: $doc->id,
+            description: "Mengaktifkan ulang PTW '{$doc->document_number}'",
+            oldData: $oldData,
+            newData: $doc->fresh()->toArray(),
+            request: $request,
+        );
+
+        return ResponseFormatter::success($doc->fresh(), 'PTW berhasil diaktifkan ulang.');
     }
 
     /**

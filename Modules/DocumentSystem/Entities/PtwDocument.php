@@ -47,7 +47,7 @@ class PtwDocument extends Model
 
     public function areaManager()
     {
-        return $this->belongsTo(\App\Models\User::class, 'area_manager_id');
+        return $this->belongsTo(\App\Models\AreaManager::class, 'area_manager_id');
     }
 
     public function activities()
