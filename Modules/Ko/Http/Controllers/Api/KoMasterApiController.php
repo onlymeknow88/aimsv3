@@ -183,6 +183,12 @@ class KoMasterApiController extends KoBaseApiController
                 ->orWhereHas('koSpipUnit', fn($u) => $u->where('name', 'like', "%{$s}%")));
         }
         if ($request->filled('is_revoked')) $q->where('is_revoked', (bool) $request->is_revoked);
+        // Antrean demob (parity newaims RevokeRequest Admin/Coordinator):
+        // default hanya yang masih Requested agar yang sudah Revoked/Rejected keluar antrean.
+        if ($request->boolean('revoke_pending')) {
+            $q->whereNotNull('revoke_requested_date')->where('is_revoked', 0);
+            $q->where('revoke_status', $request->revoke_status ?: 'Requested');
+        }
         return $this->success($q->paginate($request->limit ?? 10));
     }
 

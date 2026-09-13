@@ -5,7 +5,9 @@ namespace Modules\Ko\Http\Controllers\Api;
 use Illuminate\Http\Request;
 use Modules\Ko\Entities\KoIssueReport;
 use Modules\Ko\Entities\KoIssueReportAttachment;
+use Modules\Ko\Entities\KoProposal;
 use Modules\Ko\Enums\IssueReportStatus;
+use Modules\Ko\Enums\KoStatus;
 
 /**
  * Issue Report + verifikasi admin/koordinator + solve/return.
@@ -71,6 +73,22 @@ class KoIssueApiController extends KoBaseApiController
             'status'           => $map[$request->action],
             'returned_message' => $request->action === 'return' ? $request->message : $issue->returned_message,
         ]);
+
+        // Parity newaims CoordinatorVerification: issue Solved mengembalikan
+        // proposal ke antrean verifikasi komisioning commissioner.
+        if ($request->action === 'solve' && $issue->ko_proposal_id) {
+            $proposal = KoProposal::find($issue->ko_proposal_id);
+            if ($proposal && $proposal->status === KoStatus::Issue->value
+                && !KoIssueReport::where('ko_proposal_id', $proposal->id)
+                    ->whereIn('status', [
+                        IssueReportStatus::Open->value,
+                        IssueReportStatus::AdminVerification->value,
+                        IssueReportStatus::CoordinatorVerification->value,
+                    ])->exists()
+            ) {
+                $proposal->update(['status' => KoStatus::CommissionerCommissioningVerification->value]);
+            }
+        }
 
         if ($request->hasFile('files')) {
             foreach ((array) $request->file('files') as $file) {

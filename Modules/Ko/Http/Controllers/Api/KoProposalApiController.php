@@ -31,6 +31,11 @@ class KoProposalApiController extends KoBaseApiController
             $statuses = array_values(array_filter(array_map('trim', explode(',', (string) $st))));
             count($statuses) > 1 ? $q->whereIn('status', $statuses) : $q->where('status', $statuses[0] ?? $st);
         }
+        // Filter antrean QR sementara (parity newaims RequestQR/CoordinatorVerification/ApprovedQR).
+        if ($qr = $request->temporary_qr_status) {
+            $qrStatuses = array_values(array_filter(array_map('trim', explode(',', (string) $qr))));
+            count($qrStatuses) > 1 ? $q->whereIn('temporary_qr_status', $qrStatuses) : $q->where('temporary_qr_status', $qrStatuses[0] ?? $qr);
+        }
         return $this->success($q->paginate($request->limit ?? 10));
     }
 
@@ -62,7 +67,7 @@ class KoProposalApiController extends KoBaseApiController
             'commissioning_period' => 'nullable|integer|min:0',
         ]);
 
-        $validated['number'] = $this->generateNumber();
+        $validated['number'] = $this->generateNumber($validated['area'] ?? null);
         $validated['status'] = KoStatus::Draft->value;
 
         DB::beginTransaction();
@@ -119,7 +124,9 @@ class KoProposalApiController extends KoBaseApiController
             return $this->error('Hanya Draft yang dapat disubmit.', 422);
         }
         $proposal->update(['status' => KoStatus::AdminProposalVerification->value]);
-        return $this->success($proposal->fresh());
+        $fresh = $proposal->fresh()->loadMissing('pjo');
+        $this->notifyPjo($fresh, 'Proposal Anda telah disubmit dan menunggu verifikasi admin.');
+        return $this->success($fresh);
     }
 
     /**
@@ -146,11 +153,13 @@ class KoProposalApiController extends KoBaseApiController
                     'internal_komisioning_schedule' => $request->internal_komisioning_schedule ?? $proposal->internal_komisioning_schedule,
                     'admin_proposal_verified' => true,
                 ]);
+                $message = 'Proposal lolos verifikasi admin dan diteruskan ke verifikasi koordinator.';
             } else {
                 $proposal->update([
                     'status' => KoStatus::Returned->value,
                     'proposal_reject_note' => $request->note,
                 ]);
+                $message = 'Proposal dikembalikan admin: ' . ($request->note ?: 'periksa kembali kelengkapan data.');
             }
         } else {
             if ($proposal->status !== KoStatus::CoordinatorProposalVerification->value) {
@@ -158,15 +167,19 @@ class KoProposalApiController extends KoBaseApiController
             }
             if ($request->action === 'approve') {
                 $proposal->update(['status' => KoStatus::Commissioning->value]);
+                $message = 'Proposal lolos verifikasi koordinator, silakan lanjut ke tahap komisioning.';
             } else {
                 $proposal->update([
                     'status' => KoStatus::Returned->value,
                     'proposal_reject_note' => $request->note,
                 ]);
+                $message = 'Proposal dikembalikan koordinator: ' . ($request->note ?: 'periksa kembali kelengkapan data.');
             }
         }
 
-        return $this->success($proposal->fresh());
+        $fresh = $proposal->fresh()->loadMissing('pjo');
+        $this->notifyPjo($fresh, $message);
+        return $this->success($fresh);
     }
 
     /**
@@ -177,6 +190,17 @@ class KoProposalApiController extends KoBaseApiController
     {
         $proposal = KoProposal::findOrFail($id);
         $request->validate(['temporary_validity_period' => 'required|date']);
+
+        // Parity newaims RequestQR: QR sementara hanya untuk proposal yang
+        // sedang dalam tahap komisioning / temuan.
+        if (!in_array($proposal->status, [
+            KoStatus::Issue->value,
+            KoStatus::CommissionerCommissioningVerification->value,
+            KoStatus::CoordinatorCommissioningVerification->value,
+            KoStatus::CommissioningReturned->value,
+        ])) {
+            return $this->error('QR sementara hanya dapat diminta untuk proposal tahap Issue / verifikasi komisioning / Commissioning Returned.', 422);
+        }
 
         DB::beginTransaction();
         try {
@@ -398,14 +422,48 @@ class KoProposalApiController extends KoBaseApiController
         abort(404, 'File tidak ditemukan.');
     }
 
-    private function generateNumber(): string
+    private function generateNumber(?string $area = null): string
     {
-        $prefix = 'KO/'.now()->format('Y').'/';
-        $count = KoProposal::where('number', 'like', $prefix.'%')->count();
+        // Parity newaims CreateProposal: prefix per area (LMP/HJU/THP);
+        // default KO/TAHUN/NNNN (format lama dipertahankan).
+        $areaPrefix = match ($area) {
+            'Lampunut' => 'LMP',
+            'Haju'     => 'HJU',
+            'Tuhup'    => 'THP',
+            default    => null,
+        };
+        if ($areaPrefix) {
+            $count = KoProposal::where('number', 'like', $areaPrefix . '-%')->count();
+            do {
+                $count++;
+                $number = $areaPrefix . '-' . str_pad((string) $count, 3, '0', STR_PAD_LEFT);
+            } while (KoProposal::where('number', $number)->exists());
+            return $number;
+        }
+
+        $prefix = 'KO/' . now()->format('Y') . '/';
+        $count = KoProposal::where('number', 'like', $prefix . '%')->count();
         do {
             $count++;
-            $number = $prefix.str_pad((string) $count, 4, '0', STR_PAD_LEFT);
+            $number = $prefix . str_pad((string) $count, 4, '0', STR_PAD_LEFT);
         } while (KoProposal::where('number', $number)->exists());
         return $number;
+    }
+
+    /**
+     * Payload + QR SVG (base64) untuk stiker/sertifikat unit.
+     * Parity newaims KoProposal::getQrCode (isi teks identik).
+     */
+    public function qrCode(string $id)
+    {
+        $proposal = KoProposal::with([
+            'koUnit.koSpipUnit.koSpipType.koSpipCategory', 'koUnit.koBrand',
+            'company', 'koCommissioning',
+        ])->findOrFail($id);
+
+        return $this->success([
+            'text'       => $proposal->getQrPayload(),
+            'svg_base64' => $proposal->getQrCodeSvgBase64(),
+        ]);
     }
 }

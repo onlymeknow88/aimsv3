@@ -24,6 +24,7 @@ export default function DashboardIndex() {
 
     const statuses = Object.entries(stats.by_status ?? {});
     const monthly = stats.monthly ?? [];
+    const byCategory = stats.by_category ?? { completed: [], issue: [] };
     const chartData = {
         labels: monthly.map(m => `Bln ${m.month}`),
         datasets: [
@@ -31,6 +32,11 @@ export default function DashboardIndex() {
             { label: 'Completed', data: monthly.map(m => m.actual), backgroundColor: '#2FBF71' },
         ],
     };
+    // Parity newaims doughnut Completed & Issue per kategori SPIP.
+    const categoryChart = (rows, color) => ({
+        labels: (rows ?? []).map(r => r.name),
+        datasets: [{ data: (rows ?? []).map(r => r.total), backgroundColor: color }],
+    });
 
     return (
         <KoLayout>
@@ -65,10 +71,25 @@ export default function DashboardIndex() {
                 ))}
             </div>
 
-            <div style={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '20px 24px' }}>
+            <div style={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '20px 24px', marginBottom: '24px' }}>
                 <h3 style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-primary)', margin: '0 0 16px 0' }}>Proposal per Bulan ({year})</h3>
                 <div style={{ height: '300px' }}>
                     {loading ? 'Memuat...' : <Bar data={chartData} options={barOpts} />}
+                </div>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '24px' }}>
+                <div style={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '20px 24px' }}>
+                    <h3 style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-primary)', margin: '0 0 16px 0' }}>Completed per Kategori SPIP</h3>
+                    <div style={{ height: '260px' }}>
+                        {loading ? 'Memuat...' : <Bar data={categoryChart(byCategory.completed, '#2FBF71')} options={barOpts} />}
+                    </div>
+                </div>
+                <div style={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '20px 24px' }}>
+                    <h3 style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-primary)', margin: '0 0 16px 0' }}>Issue per Kategori SPIP</h3>
+                    <div style={{ height: '260px' }}>
+                        {loading ? 'Memuat...' : <Bar data={categoryChart(byCategory.issue, '#FF8C24')} options={barOpts} />}
+                    </div>
                 </div>
             </div>
         </KoLayout>

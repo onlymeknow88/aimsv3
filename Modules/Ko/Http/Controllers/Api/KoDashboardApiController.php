@@ -35,10 +35,30 @@ class KoDashboardApiController extends KoBaseApiController
             ];
         }
 
+        // Parity newaims Dashboard doughnut: Completed & Issue per kategori SPIP.
+        $byCategory = ['completed' => [], 'issue' => []];
+        $rows = (clone $base)->with('koUnit.koSpipUnit.koSpipType.koSpipCategory:id,name')
+            ->whereIn('status', [
+                \Modules\Ko\Enums\KoStatus::Completed->value,
+                \Modules\Ko\Enums\KoStatus::Issue->value,
+            ])->get(['id', 'status', 'ko_unit_id']);
+        foreach ($rows->groupBy('status') as $status => $group) {
+            $key = $status === \Modules\Ko\Enums\KoStatus::Completed->value ? 'completed' : 'issue';
+            foreach ($group as $proposal) {
+                $name = $proposal->koUnit?->koSpipUnit?->koSpipType?->koSpipCategory?->name ?? 'Tanpa Kategori';
+                $byCategory[$key][$name] = ($byCategory[$key][$name] ?? 0) + 1;
+            }
+        }
+        $byCategory = array_map(
+            fn($map) => collect($map)->map(fn($total, $name) => ['name' => $name, 'total' => $total])->values()->all(),
+            $byCategory
+        );
+
         return $this->success([
             'total'     => (clone $base)->count(),
             'by_status' => $byStatus,
             'monthly'   => $monthly,
+            'by_category' => $byCategory,
         ]);
     }
 }

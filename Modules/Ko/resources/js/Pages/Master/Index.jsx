@@ -38,7 +38,14 @@ const TABS = [
 ];
 
 export default function MasterIndex() {
-    const [tab, setTab] = useState('categories');
+    const [tab, setTab] = useState(() => {
+        const q = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('tab') : null;
+        return ['categories', 'types', 'spip-units', 'brands'].includes(q) ? q : 'categories';
+    });
+    const pickTab = (t) => {
+        setTab(t); setSearch('');
+        if (typeof window !== 'undefined') window.history.replaceState(null, '', `/ko/master?tab=${t}`);
+    };
     const [items, setItems] = useState([]);
     const [loading, setLoading] = useState(false);
     const [search, setSearch] = useState('');
@@ -122,7 +129,7 @@ export default function MasterIndex() {
 
             <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', flexWrap: 'wrap' }}>
                 {TABS.map(t => (
-                    <button key={t.key} onClick={() => { setTab(t.key); setSearch(''); }}
+                    <button key={t.key} onClick={() => pickTab(t.key)}
                         style={{ padding: '8px 16px', borderRadius: '8px', fontSize: '12px', fontWeight: 700, cursor: 'pointer', border: tab === t.key ? 'none' : '1px solid var(--border-color)', backgroundColor: tab === t.key ? 'var(--primary)' : '#fff', color: tab === t.key ? '#fff' : 'var(--text-secondary)' }}>
                         {t.label}
                     </button>

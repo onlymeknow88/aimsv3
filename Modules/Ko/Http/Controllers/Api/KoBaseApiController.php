@@ -4,8 +4,12 @@ namespace Modules\Ko\Http\Controllers\Api;
 
 use App\Helpers\ResponseFormatter;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Modules\Ko\Entities\KoIssueReportAttachment;
+use Modules\Ko\Entities\KoProposal;
 use Modules\Ko\Entities\KoQrRequestFile;
+use Modules\Ko\Mail\KoProposalStatusMail;
 
 class KoBaseApiController extends Controller
 {
@@ -24,6 +28,29 @@ class KoBaseApiController extends Controller
         if ($bytes >= 1048576) return round($bytes / 1048576, 2) . ' MB';
         if ($bytes >= 1024)    return round($bytes / 1024, 2)    . ' KB';
         return $bytes . ' B';
+    }
+
+    /**
+     * Parity newaims (Mail ProposalUpdated tiap transisi): antrekan notifikasi
+     * ke PJO/pemohon. Tidak pernah melempar — email kosong / mailer gagal
+     * hanya dicatat agar request API tetap sukses.
+     */
+    protected function notifyPjo(KoProposal $proposal, string $message): void
+    {
+        try {
+            $email = $proposal->pjo?->email ?? $proposal->applicant_email ?? null;
+            if (!$email) return;
+            Mail::to($email)->queue(new KoProposalStatusMail(
+                proposalNumber: (string) $proposal->number,
+                status: (string) $proposal->status,
+                message: $message,
+            ));
+        } catch (\Throwable $e) {
+            Log::warning('KO: gagal mengantrekan notifikasi proposal', [
+                'proposal_id' => $proposal->id ?? null,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 
     /**

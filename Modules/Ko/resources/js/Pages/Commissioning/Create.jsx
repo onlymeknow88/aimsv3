@@ -20,23 +20,35 @@ export default function CommissioningCreate() {
     const [items, setItems] = useState({});
     const [form, setForm] = useState({ date: '', commissioning_completion_date: '', smu_odo_meter: '', engine_status: '', expired_date: '', status: '' });
     const [submitting, setSubmitting] = useState(false);
+    const [loadingProposals, setLoadingProposals] = useState(true);
+    const [loadingHeaders, setLoadingHeaders] = useState(false);
+    const [headersError, setHeadersError] = useState('');
 
     useEffect(() => {
-        axios.get('/api/ko/proposals', { params: { status: 'Commissioning in Progress', limit: 100 } })
+        setLoadingProposals(true);
+        // Parity newaims + guard API store: hanya proposal tahap pengerjaan
+        // yang bisa dikomisioning (API mendukung multi-status comma-separated).
+        axios.get('/api/ko/proposals', { params: { status: 'Commissioning in Progress,Issue,Commissioning Returned', limit: 100 } })
             .then(res => setProposals(res.data?.result?.data ?? []))
-            .catch(() => {});
+            .catch(() => { setProposals([]); })
+            .finally(() => setLoadingProposals(false));
     }, []);
 
     useEffect(() => {
-        if (!proposalId) { setHeaders([]); setItems({}); return; }
+        if (!proposalId) { setHeaders([]); setItems({}); setHeadersError(''); return; }
+        setLoadingHeaders(true);
+        setHeadersError('');
         axios.get(`/api/ko/proposals/${proposalId}`)
             .then(res => {
-                const spipId = res.data?.result?.ko_unit?.ko_spip_unit_id;
-                if (!spipId) { setHeaders([]); return; }
+                const result = res.data?.result ?? {};
+                const unit = result.ko_unit ?? result.koUnit ?? {};
+                const spipId = unit.ko_spip_unit_id ?? unit.koSpipUnit?.id;
+                if (!spipId) { setHeaders([]); setHeadersError('Proposal ini belum punya unit / SPIP unit, checklist tidak bisa dimuat.'); return null; }
                 return axios.get('/api/ko/commissioning-headers', { params: { spip_unit_id: spipId, limit: 100 } });
             })
             .then(res => { if (res) setHeaders(res.data?.result?.data ?? []); })
-            .catch(() => {});
+            .catch(() => { setHeaders([]); setHeadersError('Gagal memuat checklist.'); })
+            .finally(() => setLoadingHeaders(false));
     }, [proposalId]);
 
     const setItem = (fieldId, patch) => {
@@ -83,11 +95,14 @@ export default function CommissioningCreate() {
                                 <div>
                                     <label style={S.label}>Proposal <span style={{ color: 'var(--danger)' }}>*</span></label>
                                     <SearchableSelect
-                                        options={proposals.map(p => ({ id: p.id, name: `${p.number} — ${p.ko_unit?.call_sign ?? ''}` }))}
+                                        options={proposals.map(p => ({ id: p.id, name: `${p.number} — ${p.ko_unit?.call_sign ?? p.koUnit?.call_sign ?? ''} (${p.status ?? '-'})` }))}
                                         value={proposalId}
                                         onChange={setProposalId}
-                                        placeholder="— Pilih Proposal (Commissioning) —"
+                                        placeholder={loadingProposals ? 'Memuat proposal...' : '— Pilih Proposal —'}
                                     />
+                                    {!loadingProposals && !proposals.length && (
+                                        <p style={S.error}>Belum ada proposal. Buat proposal dulu di menu Proposal.</p>
+                                    )}
                                 </div>
                                 <div>
                                     <label style={S.label}>Tanggal Komisioning</label>
@@ -110,8 +125,12 @@ export default function CommissioningCreate() {
                             <p style={S.title}>Item Pemeriksaan ({Object.keys(items).filter(k => items[k].condition || items[k].note).length} terisi)</p>
                             {!proposalId ? (
                                 <p style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Pilih proposal terlebih dahulu untuk memuat checklist.</p>
+                            ) : loadingHeaders ? (
+                                <p style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Memuat checklist...</p>
+                            ) : headersError ? (
+                                <p style={{ fontSize: '12px', color: 'var(--danger)' }}>{headersError}</p>
                             ) : !headers.length ? (
-                                <p style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Tidak ada checklist untuk unit ini.</p>
+                                <p style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Tidak ada checklist untuk unit ini (master header kosong untuk SPIP unit tersebut).</p>
                             ) : (
                                 headers.map(h => (
                                     <div key={h.id} style={{ marginBottom: '20px', border: '1px solid var(--border-color)', borderRadius: '8px', overflow: 'hidden' }}>
