@@ -3,9 +3,11 @@ import { Head } from '@inertiajs/react';
 import axios from 'axios';
 import React, { useEffect, useState } from 'react';
 import ProposalForm, { emptyProposalForm } from './Partials/ProposalForm';
+import { buildAttachmentFormData } from './Partials/AttachmentInputs';
 
 export default function ProposalCreate() {
     const [form, setForm] = useState(emptyProposalForm);
+    const [attachFiles, setAttachFiles] = useState({});
     const [master, setMaster] = useState({ companies: [], departments: [], users: [], units: [] });
     const [errors, setErrors] = useState({});
     const [submitting, setSubmitting] = useState(false);
@@ -24,6 +26,12 @@ export default function ProposalCreate() {
         try {
             const res = await axios.post('/api/ko/proposals', form);
             const newId = res.data?.result?.id;
+            // Lampiran langsung ikut tersimpan saat buat (tanpa mampir ke Detail).
+            if (newId && Object.keys(attachFiles).length) {
+                await axios.post(`/api/ko/proposals/${newId}/attachments`, buildAttachmentFormData(attachFiles), {
+                    headers: { 'Content-Type': 'multipart/form-data' },
+                });
+            }
             if (action === 'submit' && newId) {
                 await axios.post(`/api/ko/proposals/${newId}/submit`);
                 window.location.href = `/ko/proposals/${newId}`;
@@ -52,7 +60,8 @@ export default function ProposalCreate() {
                 <div style={{ display: 'flex', justifyContent: 'center' }}>
                     <div style={{ width: '100%', maxWidth: '1100px', backgroundColor: 'var(--card-bg)', border: '1px solid var(--border-color)', borderRadius: '16px', padding: '32px', boxShadow: 'var(--shadow-premium)' }}>
 
-                        <ProposalForm form={form} setField={setField} errors={errors} master={master} />
+                        <ProposalForm form={form} setField={setField} errors={errors} master={master}
+                            attachFiles={attachFiles} onAttachPick={(k, f) => setAttachFiles(prev => ({ ...prev, [k]: f }))} />
 
                         <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '24px', display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
                             <a href="/ko/proposals" style={{ display: 'inline-flex', alignItems: 'center', height: '40px', padding: '0 20px', border: '1px solid var(--border-color)', borderRadius: '8px', textDecoration: 'none', color: 'var(--text-secondary)', fontSize: '12px', fontWeight: 600 }}>Batal</a>
