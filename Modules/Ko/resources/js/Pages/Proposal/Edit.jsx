@@ -3,10 +3,13 @@ import { Head, usePage } from '@inertiajs/react';
 import axios from 'axios';
 import React, { useEffect, useState } from 'react';
 import ProposalForm, { emptyProposalForm } from './Partials/ProposalForm';
+import { buildAttachmentFormData } from './Partials/AttachmentInputs';
 
 export default function ProposalEdit() {
     const { id } = usePage().props;
     const [form, setForm] = useState(emptyProposalForm);
+    const [attachFiles, setAttachFiles] = useState({});
+    const [existingAttach, setExistingAttach] = useState({});
     const [master, setMaster] = useState({ companies: [], departments: [], users: [], units: [] });
     const [errors, setErrors] = useState({});
     const [submitting, setSubmitting] = useState(false);
@@ -37,6 +40,7 @@ export default function ProposalEdit() {
                     temporary_validity_period: doc.temporary_validity_period ? String(doc.temporary_validity_period).slice(0, 10) : '',
                     commissioning_period: doc.commissioning_period ?? '',
                 });
+                setExistingAttach(doc.ko_attachment ? { ...doc.ko_attachment } : {});
             })
             .catch(() => {})
             .finally(() => setLoading(false));
@@ -51,6 +55,11 @@ export default function ProposalEdit() {
         setSubmitting(true);
         try {
             await axios.put(`/api/ko/proposals/${id}`, form);
+            if (Object.keys(attachFiles).length) {
+                await axios.post(`/api/ko/proposals/${id}/attachments`, buildAttachmentFormData(attachFiles, existingAttach), {
+                    headers: { 'Content-Type': 'multipart/form-data' },
+                });
+            }
             if (action === 'submit') {
                 await axios.post(`/api/ko/proposals/${id}/submit`);
             }
@@ -93,7 +102,8 @@ export default function ProposalEdit() {
                 <div style={{ display: 'flex', justifyContent: 'center' }}>
                     <div style={{ width: '100%', maxWidth: '1100px', backgroundColor: 'var(--card-bg)', border: '1px solid var(--border-color)', borderRadius: '16px', padding: '32px', boxShadow: 'var(--shadow-premium)' }}>
 
-                        <ProposalForm form={form} setField={setField} errors={errors} master={master} />
+                        <ProposalForm form={form} setField={setField} errors={errors} master={master}
+                            attachFiles={attachFiles} onAttachPick={(k, f) => setAttachFiles(prev => ({ ...prev, [k]: f }))} existingAttach={existingAttach} />
 
                         <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '24px', display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
                             <a href={`/ko/proposals/${id}`} style={{ display: 'inline-flex', alignItems: 'center', height: '40px', padding: '0 20px', border: '1px solid var(--border-color)', borderRadius: '8px', textDecoration: 'none', color: 'var(--text-secondary)', fontSize: '12px', fontWeight: 600 }}>Batal</a>

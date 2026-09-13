@@ -222,7 +222,7 @@ class HandleInertiaRequests extends Middleware
             'flsMenus'          => $flsMenus,
             'csmsMenus'         => $csmsMenus,
             'picaMenus'         => $picaMenus,
-            'koMenus'           => $koMenus ?? [],
+            'koMenus'           => $koMenus,
             'dsMenus'           => $dsMenus,
             'dpMenus'           => $dpMenus,
             'coeMenus'          => $coeMenus,

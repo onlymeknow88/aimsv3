@@ -54,15 +54,20 @@ export default function Sidebar({ sidebarOpen, isMobile, currentPath }) {
     const childrenOf = (parentId) => koMenus.filter(m => m.parent_id === parentId).sort((a, b) => a.order_by - b.order_by);
     // Parity DocumentSystem + newaims: submenu deep-link via query (?tab= / ?status=),
     // grup collapse (buka otomatis mengikuti halaman aktif).
-    const currentQuery = typeof window !== 'undefined' ? window.location.search : '';
+    // window.location.search meng-encode spasi (%20/+) sedangkan SLUG_URL
+    // memakai spasi literal — normalkan agar submenu ber-spasi
+    // (mis. ?status=Commissioning in Progress) tetap ter-highlight.
+    const normQuery = (s) => { try { return decodeURIComponent(String(s).replace(/\+/g, ' ')); } catch { return s; } };
+    const currentQuery = typeof window !== 'undefined' ? normQuery(window.location.search) : '';
     const currentFull = `${currentPath}${currentQuery}`;
     const kidsOf = (menu) => childrenOf(menu.id).filter(k => SLUG_URL[k.slug]);
     const isKidActive = (menu) => kidsOf(menu).some(k => (SLUG_URL[k.slug] ?? '#') === currentFull);
 
     const [expanded, setExpanded] = useState(() => {
         const init = {};
+        const full = `${currentPath}${typeof window !== 'undefined' ? normQuery(window.location.search) : ''}`;
         menus.forEach(menu => {
-            init[menu.slug] = isActivePath(menu.slug, currentPath) || kidsOf(menu).some(k => (SLUG_URL[k.slug] ?? '#') === `${currentPath}${typeof window !== 'undefined' ? window.location.search : ''}`);
+            init[menu.slug] = isActivePath(menu.slug, currentPath) || kidsOf(menu).some(k => (SLUG_URL[k.slug] ?? '#') === full);
         });
         return init;
     });

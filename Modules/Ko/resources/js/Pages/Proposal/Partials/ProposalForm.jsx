@@ -1,5 +1,6 @@
 import React from 'react';
 import SearchableSelect from '@/Components/SearchableSelect';
+import AttachmentInputs from './AttachmentInputs';
 
 const S = {
     label: { fontSize: '10.5px', fontWeight: 700, color: 'var(--text-secondary)', marginBottom: '6px', display: 'block' },
@@ -15,7 +16,8 @@ export const emptyProposalForm = { area: '', ko_unit_id: '', spip_category_id: '
 
 // Form section proposal gaya FieldLeadership + cascade SPIP ala aims
 // (Kategori -> Klasifikasi -> Deskripsi SPIP -> Call Sign). Dipakai Create & Edit.
-export default function ProposalForm({ form, setField, errors, master }) {
+// Props lampiran (opsional): attachFiles, onAttachPick, existingAttach.
+export default function ProposalForm({ form, setField, errors, master, attachFiles, onAttachPick, existingAttach }) {
     const categories = master.categories ?? [];
     const types = (master.types ?? []).filter(t => !form.spip_category_id || String(t.ko_spip_category_id) === String(form.spip_category_id));
     const spipUnits = (master.spipUnits ?? master.spip_units ?? []).filter(u => !form.spip_type_id || String(u.ko_spip_type_id) === String(form.spip_type_id));
@@ -177,6 +179,13 @@ export default function ProposalForm({ form, setField, errors, master }) {
                     </div>
                 </div>
             </div>
+
+            {onAttachPick && (
+            <div style={S.card}>
+                <p style={S.title}>Lampiran Dokumen</p>
+                <AttachmentInputs files={attachFiles} onPick={onAttachPick} existing={existingAttach} />
+            </div>
+            )}
         </>
     );
 }
