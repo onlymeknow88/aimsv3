@@ -37,6 +37,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'api/coe/*',
             'api/field-leadership/*',
             'api/dashboard-portal/*',
+            'api/ko/*',
             'two-factor-challenge/*',
         ]);
 

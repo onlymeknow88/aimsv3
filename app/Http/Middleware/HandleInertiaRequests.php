@@ -90,6 +90,20 @@ class HandleInertiaRequests extends Middleware
             }
         }
 
+        // KO menus — hanya di-load untuk halaman ko
+        $koMenus = [];
+        if ($request->is('ko*')) {
+            $moduleId = \DB::table('aims_modules')->where('slug', 'ko')->value('id');
+            if ($moduleId) {
+                $koMenus = \DB::table('aims_menus')
+                    ->where('module_id', $moduleId)
+                    ->orderBy('parent_id')
+                    ->orderBy('order_by')
+                    ->get()
+                    ->toArray();
+            }
+        }
+
         // Document System menus — hanya di-load untuk halaman document-system
         $dsMenus = [];
         if ($request->is('document-system*') && $user) {
@@ -236,6 +250,7 @@ class HandleInertiaRequests extends Middleware
             'flsMenus'          => $flsMenus,
             'csmsMenus'         => $csmsMenus,
             'picaMenus'         => $picaMenus,
+            'koMenus'           => $koMenus,
             'dsMenus'           => $dsMenus,
             'dpMenus'           => $dpMenus,
             'coeMenus'          => $coeMenus,
