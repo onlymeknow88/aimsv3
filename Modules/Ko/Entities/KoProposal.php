@@ -69,4 +69,57 @@ class KoProposal extends Model
     {
         return $this->hasMany(KoQrRequestFile::class, 'ko_proposal_id');
     }
+
+    /**
+     * Teks payload QR stiker/sertifikat unit.
+     * Parity newaims Modules\KO\Entities\KoProposal::getQrCode (isi identik,
+     * tanpa dependensi simplesoftwareio/simple-qrcode).
+     */
+    public function getQrPayload(): string
+    {
+        $unit = $this->koUnit;
+        $category = $unit?->koSpipUnit?->koSpipType?->koSpipCategory;
+        $intervalMonths = (int) (($category?->internal_interval_year ?? 0) * 12 / 2);
+
+        try {
+            $internalDue = $this->next_commissioning
+                ? \Carbon\Carbon::parse($this->next_commissioning)->subMonths($intervalMonths)->format('Y-m-d')
+                : '-';
+        } catch (\Throwable) {
+            $internalDue = '-';
+        }
+
+        return implode("\n", [
+            'PERUSAHAAN: ' . ($this->company?->company_name ?? '-'),
+            'NO POLISI: ' . ($unit?->identity_number ?? '-'),
+            'CALL SIGN: ' . ($unit?->call_sign ?? '-'),
+            'KATEGORI SPIP: ' . ($category?->name ?? '-'),
+            'KLASIFIKASI SPIP: ' . ($unit?->koSpipUnit?->name ?? '-'),
+            'BRAND: ' . ($unit?->koBrand?->name ?? '-'),
+            'COMMISIONER: ' . ($this->koCommissioning?->created_by ?? '-'),
+            'TAHUN PEMBUATAN: ' . ($unit?->production_year ?? '-'),
+            'KOMISIONING INTERNAL SELAMBATNYA PADA: ' . $internalDue,
+            'MASA BERLAKU: ' . ($this->status === 'Completed' ? ($this->next_commissioning ?? '-') : '-'),
+            'MASA BERLAKU SEMENTARA: ' . ($this->status === 'Completed' ? '-' : ($this->temporary_validity_period ?? '-')),
+            'PERIODE KOMISIONING KE-: ' . ($this->commissioning_period ?? '-'),
+        ]);
+    }
+
+    /**
+     * QR SVG dalam bentuk base64 (data URI) memakai bacon/bacon-qr-code,
+     * mengikuti pola CSMSBiddingApiController.
+     */
+    public function getQrCodeSvgBase64(): ?string
+    {
+        try {
+            $renderer = new \BaconQrCode\Renderer\ImageRenderer(
+                new \BaconQrCode\Renderer\RendererStyle\RendererStyle(326),
+                new \BaconQrCode\Renderer\Image\SvgImageBackEnd()
+            );
+            $svg = (new \BaconQrCode\Writer($renderer))->writeString($this->getQrPayload());
+            return 'data:image/svg+xml;base64,' . base64_encode($svg);
+        } catch (\Throwable) {
+            return null;
+        }
+    }
 }

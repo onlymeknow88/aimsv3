@@ -30,7 +30,7 @@ export default function ProposalIndex() {
                         <input value={search} onChange={e => { setSearch(e.target.value); setPage(1); }} placeholder="Cari nomor / email..."
                             style={{ width: '260px', padding: '8px 12px 8px 34px', border: '1px solid var(--border-color)', borderRadius: '6px', fontSize: '12px', outline: 'none', boxSizing: 'border-box' }} />
                     </div>
-                    <select value={status} onChange={e => { setStatus(e.target.value); setPage(1); }} style={{ padding: '8px 12px', border: '1px solid var(--border-color)', borderRadius: '6px', fontSize: '12px' }}>
+                    <select value={status} onChange={e => { setStatus(e.target.value); setPage(1); if (typeof window !== 'undefined') window.history.replaceState(null, '', e.target.value ? `/ko/proposals?status=${encodeURIComponent(e.target.value)}` : '/ko/proposals'); }} style={{ padding: '8px 12px', border: '1px solid var(--border-color)', borderRadius: '6px', fontSize: '12px' }}>
                         <option value="">Semua Status</option>
                         {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
                     </select>

@@ -79,7 +79,12 @@ const emptyForm = {
 };
 
 export default function UnitIndex() {
-    const { units, pagination, loading, search, setSearch, limit, setLimit, page, setPage, refresh, master } = useUnit();
+    const [tab, setTab] = useState(() => (typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('tab') === 'demob' ? 'demob' : 'units'));
+    const pickTab = (t) => {
+        setTab(t); setPage(1);
+        if (typeof window !== 'undefined') window.history.replaceState(null, '', t === 'demob' ? '/ko/units?tab=demob' : '/ko/units');
+    };
+    const { units, pagination, loading, search, setSearch, limit, setLimit, page, setPage, refresh, master } = useUnit(tab === 'demob' ? { revoke_pending: 1 } : {});
     const [showModal, setShowModal] = useState(false);
     const [editing, setEditing] = useState(null);
     const [form, setForm] = useState(emptyForm);
@@ -229,6 +234,15 @@ export default function UnitIndex() {
         });
     };
 
+    // Parity newaims RevokeRequest Admin/Coordinator: approve/reject antrean demob.
+    const handleVerifyRevoke = (u, action) => {
+        const label = action === 'approve' ? 'setujui demob' : 'tolak demob';
+        if (!confirm(`${action === 'approve' ? 'Setujui' : 'Tolak'} demob unit ${u.call_sign}?`)) return;
+        axios.post(`/api/ko/units/${u.id}/verify-revoke`, { action })
+            .then(() => refresh())
+            .catch(() => alert(`Gagal ${label} unit ${u.call_sign}.`));
+    };
+
     const renderStatusBadge = (u) => {
         if (u.is_revoked) {
             return (
@@ -263,6 +277,15 @@ export default function UnitIndex() {
                 <p style={{ color: 'var(--text-secondary)', fontSize: '11px', margin: 0 }}>Master Unit Operasi & Demobilisasi (Revoke)</p>
             </div>
 
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+                {[{ key: 'units', label: 'Daftar Unit' }, { key: 'demob', label: `Demob Request${tab === 'demob' && pagination.total ? ` (${pagination.total})` : ''}` }].map(t => (
+                    <button key={t.key} onClick={() => pickTab(t.key)}
+                        style={{ padding: '8px 16px', borderRadius: '8px', fontSize: '12px', fontWeight: 700, cursor: 'pointer', border: tab === t.key ? 'none' : '1px solid var(--border-color)', backgroundColor: tab === t.key ? 'var(--primary)' : '#fff', color: tab === t.key ? '#fff' : 'var(--text-secondary)' }}>
+                        {t.label}
+                    </button>
+                ))}
+            </div>
+
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px', gap: '12px', flexWrap: 'wrap' }}>
                 <div style={{ position: 'relative' }}>
                     <Search size={14} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
@@ -279,9 +302,11 @@ export default function UnitIndex() {
                             <RefreshCw size={14} />
                         </button>
                     </ActionTooltip>
+                    {tab === 'units' && (
                     <button onClick={openCreate} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', backgroundColor: 'var(--primary)', border: 'none', borderRadius: '6px', padding: '8px 12px', fontSize: '11px', fontWeight: 600, color: '#fff', cursor: 'pointer' }}>
                         <Plus size={14} /> Tambah Unit
                     </button>
+                    )}
                 </div>
             </div>
 
@@ -298,6 +323,7 @@ export default function UnitIndex() {
                             <TableHead style={thStyle}>Production Year</TableHead>
                             <TableHead style={thStyle}>Total Komisioning</TableHead>
                             <TableHead style={thStyle}>Status</TableHead>
+                            {tab === 'demob' && <TableHead style={thStyle}>Demob Note</TableHead>}
                             <TableHead style={{ ...thStyle, textAlign: 'right' }}>Action</TableHead>
                         </TableRow>
                     </TableHeader>
@@ -340,7 +366,25 @@ export default function UnitIndex() {
                                     <TableCell style={tdStyle}>{u.production_year}</TableCell>
                                     <TableCell style={tdStyle}>{u.commissioning_count ?? 0}</TableCell>
                                     <TableCell style={tdStyle}>{renderStatusBadge(u)}</TableCell>
+                                    {tab === 'demob' && (
+                                        <TableCell style={tdStyle}>
+                                            <div style={{ fontWeight: 600 }}>{u.revoke_request_note ?? '—'}</div>
+                                            <div style={{ fontSize: '11px' }}>{u.revoke_requested_date ? new Date(u.revoke_requested_date).toLocaleDateString('id-ID') : ''} • {u.revoke_status ?? ''}</div>
+                                        </TableCell>
+                                    )}
                                     <TableCell style={{ ...tdStyle, textAlign: 'right', whiteSpace: 'nowrap' }}>
+                                        {tab === 'demob' ? (
+                                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                                            <button onClick={() => handleVerifyRevoke(u, 'approve')} title="Approve demob"
+                                                style={{ padding: '5px 10px', border: 'none', borderRadius: '6px', fontSize: '11px', fontWeight: 700, backgroundColor: '#16a34a', color: '#fff', cursor: 'pointer' }}>
+                                                Approve
+                                            </button>
+                                            <button onClick={() => handleVerifyRevoke(u, 'reject')} title="Tolak demob"
+                                                style={{ padding: '5px 10px', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '6px', fontSize: '11px', fontWeight: 700, backgroundColor: '#fff', color: '#ef4444', cursor: 'pointer' }}>
+                                                Reject
+                                            </button>
+                                        </div>
+                                        ) : (
                                         <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
                                             <ActionTooltip text="Edit Unit">
                                                 <button onClick={() => openEdit(u)} style={{ ...actionBtn, color: 'var(--primary)' }}>
@@ -360,6 +404,7 @@ export default function UnitIndex() {
                                                 </button>
                                             </ActionTooltip>
                                         </div>
+                                        )}
                                     </TableCell>
                                 </TableRow>
                             ))

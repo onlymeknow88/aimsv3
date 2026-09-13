@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import axios from 'axios';
 
-export default function useUnit() {
+export default function useUnit(extraParams = {}) {
     const [units, setUnits] = useState([]);
     const [pagination, setPagination] = useState({ current_page: 1, last_page: 1, total: 0 });
     const [loading, setLoading] = useState(false);
@@ -10,9 +10,10 @@ export default function useUnit() {
     const [page, setPage] = useState(1);
     const [master, setMaster] = useState({ categories: [], types: [], spipUnits: [], brands: [] });
 
+    const extraKey = JSON.stringify(extraParams);
     const doFetch = useCallback(() => {
         setLoading(true);
-        axios.get('/api/ko/units', { params: { search: search || undefined, limit, page } })
+        axios.get('/api/ko/units', { params: { search: search || undefined, limit, page, ...JSON.parse(extraKey) } })
             .then(res => {
                 const result = res.data?.result ?? {};
                 setUnits(result?.data ?? []);
@@ -20,7 +21,7 @@ export default function useUnit() {
             })
             .catch(() => {})
             .finally(() => setLoading(false));
-    }, [search, limit, page]);
+    }, [search, limit, page, extraKey]);
 
     useEffect(() => { doFetch(); }, [doFetch]);
     useEffect(() => {

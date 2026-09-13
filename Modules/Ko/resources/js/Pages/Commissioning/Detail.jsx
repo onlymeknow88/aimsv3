@@ -57,13 +57,20 @@ export default function CommissioningDetail() {
 
     useEffect(() => { fetchDoc(); }, [fetchDoc]);
 
-    const verify = async (stage, action) => {
+    const verify = async (stage, action, note) => {
         setActing(true);
         try {
-            await axios.post(`/api/ko/commissionings/${id}/verify`, { stage, action });
+            await axios.post(`/api/ko/commissionings/${id}/verify`, { stage, action, note });
             fetchDoc();
         } catch {}
         finally { setActing(false); }
+    };
+
+    // Parity newaims EditCommissioning/verification-detail: return butuh catatan.
+    const verifyReturn = (stage) => {
+        const note = window.prompt('Catatan pengembalian komisioning:') ?? '';
+        if (!String(note).trim()) return;
+        verify(stage, 'return', note);
     };
 
     if (loading) return <div style={{ backgroundColor: 'var(--bg-color)', minHeight: '100vh', padding: '40px 20px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Memuat detail komisioning...</span></div>;
@@ -96,7 +103,9 @@ export default function CommissioningDetail() {
                         <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--primary)' }}>{doc.number}</span>
                         <span style={{ fontSize: '11px', fontWeight: 700, padding: '3px 10px', borderRadius: '20px', backgroundColor: 'rgba(255,140,36,0.1)', color: '#FF8C24' }}>{doc.status}</span>
                         {vbtn('Approve Admin', () => verify('admin', 'approve'))}
+                        {vbtn('Return Admin', () => verifyReturn('admin'), false)}
                         {vbtn('Approve Koordinator', () => verify('coordinator', 'approve'))}
+                        {vbtn('Return Koordinator', () => verifyReturn('coordinator'), false)}
                     </div>
                 </div>
 

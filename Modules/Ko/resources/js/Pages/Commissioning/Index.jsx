@@ -9,8 +9,15 @@ import useCommissioning from './Hooks/useCommissioning';
 const thStyle = { fontSize: '11px', fontWeight: 700, color: 'var(--text-primary)', padding: '10px 12px', textTransform: 'uppercase', letterSpacing: '0.03em' };
 const tdStyle = { fontSize: '12px', padding: '10px 12px', color: 'var(--text-secondary)' };
 
+// Parity newaims submenu Komisioning: In Progress / Returned / Daftar.
+const STATUSES = ['Commissioning in Progress', 'Issue', 'Commissioner Commissioning Verification', 'Coordinator Commissioning Verification', 'Commissioning Returned', 'Completed'];
+
 export default function CommissioningIndex() {
-    const { items, pagination, loading, search, setSearch, limit, setLimit, page, setPage, refresh } = useCommissioning();
+    const { items, pagination, loading, search, setSearch, status, setStatus, limit, setLimit, page, setPage, refresh } = useCommissioning();
+    const pickStatus = (v) => {
+        setStatus(v); setPage(1);
+        if (typeof window !== 'undefined') window.history.replaceState(null, '', v ? `/ko/commissionings?status=${encodeURIComponent(v)}` : '/ko/commissionings');
+    };
 
     return (
         <KoLayout>
@@ -25,10 +32,16 @@ export default function CommissioningIndex() {
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px', gap: '12px', flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                 <div style={{ position: 'relative' }}>
                     <Search size={14} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
                     <input value={search} onChange={e => { setSearch(e.target.value); setPage(1); }} placeholder="Cari..."
                         style={{ width: '260px', padding: '8px 12px 8px 34px', border: '1px solid var(--border-color)', borderRadius: '6px', fontSize: '12px', outline: 'none', boxSizing: 'border-box' }} />
+                </div>
+                <select value={status} onChange={e => pickStatus(e.target.value)} style={{ padding: '8px 12px', border: '1px solid var(--border-color)', borderRadius: '6px', fontSize: '12px' }}>
+                    <option value="">Semua Status</option>
+                    {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
+                </select>
                 </div>
                 <button onClick={refresh} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', backgroundColor: '#fff', border: '1px solid var(--border-color)', borderRadius: '6px', padding: '8px 12px', fontSize: '11px', fontWeight: 600, color: 'var(--text-primary)', cursor: 'pointer' }}><RefreshCw size={14} /></button>
                 <a href="/ko/commissionings/create" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', backgroundColor: 'var(--primary)', borderRadius: '6px', padding: '8px 12px', fontSize: '11px', fontWeight: 600, color: '#fff', textDecoration: 'none' }}>

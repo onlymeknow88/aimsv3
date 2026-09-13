@@ -51,6 +51,7 @@ Route::prefix('ko')->middleware(['web', 'auth'])->group(function () {
     Route::get('/proposals',          [KoProposalApiController::class, 'index'])->middleware('module.permission:ko,can_view');
     Route::post('/proposals',         [KoProposalApiController::class, 'store'])->middleware('module.permission:ko,can_create');
     Route::get('/proposals/{id}',     [KoProposalApiController::class, 'show'])->middleware('module.permission:ko,can_view');
+    Route::get('/proposals/{id}/qr-code', [KoProposalApiController::class, 'qrCode'])->middleware('module.permission:ko,can_view');
     Route::put('/proposals/{id}',     [KoProposalApiController::class, 'update'])->middleware('module.permission:ko,can_edit');
     Route::delete('/proposals/{id}',  [KoProposalApiController::class, 'destroy'])->middleware('module.permission:ko,can_delete');
     Route::post('/proposals/{id}/submit',        [KoProposalApiController::class, 'submit'])->middleware('module.permission:ko,can_create');

@@ -1,15 +1,35 @@
-import { AlertTriangle, ArrowLeft, BookOpen, ClipboardList, HardHat, LayoutDashboard, QrCode, Truck, Wrench } from 'lucide-react';
-import React from 'react';
+import { AlertTriangle, ArrowLeft, BookOpen, ChevronDown, ChevronUp, ClipboardList, HardHat, LayoutDashboard, QrCode, Truck, Wrench } from 'lucide-react';
+import React, { useState } from 'react';
 import { usePage } from '@inertiajs/react';
 
 const SLUG_URL = {
     'ko.dashboard':      '/ko/dashboard',
     'ko.proposals':      '/ko/proposals',
+    'ko.proposals.list':     '/ko/proposals',
+    'ko.proposals.returned': '/ko/proposals?status=Returned',
+    'ko.proposals.completed':'/ko/proposals?status=Completed',
     'ko.commissionings': '/ko/commissionings',
+    'ko.commissionings.progress': '/ko/commissionings?status=Commissioning in Progress',
+    'ko.commissionings.returned': '/ko/commissionings?status=Commissioning Returned',
+    'ko.commissionings.list':     '/ko/commissionings',
     'ko.issues':         '/ko/issues',
+    'ko.issues.open':        '/ko/issues?status=Open',
+    'ko.issues.admin':       '/ko/issues?status=Under Admin Verification',
+    'ko.issues.coordinator': '/ko/issues?status=Under Coordinator Verification',
+    'ko.issues.solved':      '/ko/issues?status=Solved',
+    'ko.issues.returned':    '/ko/issues?status=Returned',
     'ko.units':          '/ko/units',
+    'ko.units.list':     '/ko/units',
+    'ko.units.demob':    '/ko/units?tab=demob',
     'ko.qr-requests':    '/ko/qr-requests',
+    'ko.qr-requests.request':  '/ko/qr-requests?tab=request',
+    'ko.qr-requests.verify':   '/ko/qr-requests?tab=verify',
+    'ko.qr-requests.approved': '/ko/qr-requests?tab=approved',
     'ko.master':         '/ko/master',
+    'ko.master.categories': '/ko/master?tab=categories',
+    'ko.master.types':      '/ko/master?tab=types',
+    'ko.master.spip-units': '/ko/master?tab=spip-units',
+    'ko.master.brands':     '/ko/master?tab=brands',
 };
 
 const SLUG_ICON = {
@@ -31,6 +51,54 @@ function isActivePath(slug, currentPath) {
 export default function Sidebar({ sidebarOpen, isMobile, currentPath }) {
     const { koMenus = [] } = usePage().props;
     const menus = koMenus.filter(m => !m.parent_id).sort((a, b) => a.order_by - b.order_by);
+    const childrenOf = (parentId) => koMenus.filter(m => m.parent_id === parentId).sort((a, b) => a.order_by - b.order_by);
+    // Parity DocumentSystem + newaims: submenu deep-link via query (?tab= / ?status=),
+    // grup collapse (buka otomatis mengikuti halaman aktif).
+    const currentQuery = typeof window !== 'undefined' ? window.location.search : '';
+    const currentFull = `${currentPath}${currentQuery}`;
+    const kidsOf = (menu) => childrenOf(menu.id).filter(k => SLUG_URL[k.slug]);
+    const isKidActive = (menu) => kidsOf(menu).some(k => (SLUG_URL[k.slug] ?? '#') === currentFull);
+
+    const [expanded, setExpanded] = useState(() => {
+        const init = {};
+        menus.forEach(menu => {
+            init[menu.slug] = isActivePath(menu.slug, currentPath) || kidsOf(menu).some(k => (SLUG_URL[k.slug] ?? '#') === `${currentPath}${typeof window !== 'undefined' ? window.location.search : ''}`);
+        });
+        return init;
+    });
+    const toggleExpand = (slug) => setExpanded(prev => ({ ...prev, [slug]: !prev[slug] }));
+
+    const parentLinkStyle = (on) => ({
+        display: 'flex',
+        alignItems: 'center',
+        gap: '12px',
+        padding: '10px 16px',
+        borderRadius: '8px',
+        fontSize: '13px',
+        fontWeight: 500,
+        textDecoration: 'none',
+        color: on ? '#fff' : '#a3b1c6',
+        backgroundColor: on ? 'var(--primary)' : 'transparent',
+        transition: 'all 0.2s ease',
+        whiteSpace: 'nowrap',
+    });
+    const parentBtnStyle = {
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        width: '100%',
+        padding: '10px 16px',
+        borderRadius: '8px',
+        fontSize: '13px',
+        fontWeight: 500,
+        color: '#a3b1c6',
+        backgroundColor: 'transparent',
+        border: 'none',
+        cursor: 'pointer',
+        transition: 'all 0.2s ease',
+        textAlign: 'left',
+        whiteSpace: 'nowrap',
+    };
 
     return (
         <div style={{
@@ -76,29 +144,56 @@ export default function Sidebar({ sidebarOpen, isMobile, currentPath }) {
                         const url    = SLUG_URL[menu.slug] ?? '#';
                         const active = isActivePath(menu.slug, currentPath);
                         const Icon   = SLUG_ICON[menu.slug] ?? null;
+                        const kids   = kidsOf(menu);
+                        const kidOn  = isKidActive(menu);
+                        const open   = !!expanded[menu.slug];
+
+                        // Parent tanpa anak (Dashboard): link biasa ala DocumentSystem.
+                        if (kids.length === 0) {
+                            return (
+                                <li key={menu.id} style={{ marginBottom: '4px' }}>
+                                    <a href={url} aria-current={active ? 'page' : undefined} style={parentLinkStyle(active)} className={!active ? 'hover-link' : ''}>
+                                        {Icon && <Icon size={14} style={{ color: active ? '#fff' : 'rgba(255,255,255,0.4)', flexShrink: 0 }} />}
+                                        {menu.name}
+                                    </a>
+                                </li>
+                            );
+                        }
+
+                        // Parent beranak: tombol collapse ala DocumentSystem.
                         return (
                             <li key={menu.id} style={{ marginBottom: '4px' }}>
-                                <a
-                                    href={url}
-                                    style={{
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: '12px',
-                                        padding: '10px 16px',
-                                        borderRadius: '8px',
-                                        fontSize: '13px',
-                                        fontWeight: 500,
-                                        textDecoration: 'none',
-                                        color: active ? '#fff' : '#a3b1c6',
-                                        backgroundColor: active ? 'var(--primary)' : 'transparent',
-                                        transition: 'all 0.2s ease',
-                                        whiteSpace: 'nowrap',
-                                    }}
-                                    className={!active ? 'hover-link' : ''}
+                                <button
+                                    type="button"
+                                    aria-expanded={open}
+                                    aria-controls={`ko-submenu-${menu.slug}`}
+                                    onClick={() => toggleExpand(menu.slug)}
+                                    style={{ ...parentBtnStyle, color: (active || kidOn) ? '#fff' : '#a3b1c6' }}
+                                    className={!(active || kidOn) ? 'hover-link' : ''}
                                 >
-                                    {Icon && <Icon size={14} style={{ color: active ? '#fff' : 'rgba(255,255,255,0.4)', flexShrink: 0 }} />}
-                                    {menu.name}
-                                </a>
+                                    <span style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                        {Icon && <Icon size={14} aria-hidden="true" style={{ color: 'rgba(255,255,255,0.4)', flexShrink: 0 }} />}
+                                        {menu.name}
+                                    </span>
+                                    {open ? <ChevronUp size={12} aria-hidden="true" /> : <ChevronDown size={12} aria-hidden="true" />}
+                                </button>
+                                {open && (
+                                <ul id={`ko-submenu-${menu.slug}`} role="list" style={{ listStyle: 'none', margin: '4px 0 0 0', paddingLeft: '28px' }}>
+                                    {kids.map(k => {
+                                        const kUrl = SLUG_URL[k.slug];
+                                        const kOn  = kUrl === currentFull;
+                                        return (
+                                            <li key={k.id} style={{ marginBottom: '2px' }}>
+                                                <a href={kUrl} aria-current={kOn ? 'page' : undefined}
+                                                    style={{ display: 'block', padding: '10px 12px', fontSize: '12px', color: kOn ? '#fff' : '#a3b1c6', backgroundColor: kOn ? 'rgba(255,255,255,0.12)' : 'transparent', borderRadius: '6px', textDecoration: 'none', lineHeight: '20px', whiteSpace: 'nowrap' }}
+                                                    className={!kOn ? 'hover-link' : ''}>
+                                                    {k.name}
+                                                </a>
+                                            </li>
+                                        );
+                                    })}
+                                </ul>
+                                )}
                             </li>
                         );
                     })}

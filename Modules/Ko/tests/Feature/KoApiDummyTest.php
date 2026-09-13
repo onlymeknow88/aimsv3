@@ -175,6 +175,25 @@ class KoApiDummyTest extends TestCase
         // approve langsung tanpa request harus ditolak
         $this->postJson("/api/ko/proposals/{$id}/temporary-qr", ['action' => 'approve'])->assertStatus(422);
 
+        // request tanpa tahap komisioning harus ditolak (parity newaims RequestQR)
+        $this->postJson("/api/ko/proposals/{$id}/temporary-qr-request", [
+            'temporary_validity_period' => now()->addDays(30)->toDateString(),
+        ])->assertStatus(422);
+
+        // Bawa ke tahap verifikasi komisioning via komisioning lulus
+        $this->postJson("/api/ko/proposals/{$id}/submit")->assertOk();
+        $this->postJson("/api/ko/proposals/{$id}/verify", ['stage' => 'admin', 'action' => 'approve'])->assertOk();
+        $this->postJson("/api/ko/proposals/{$id}/verify", ['stage' => 'coordinator', 'action' => 'approve'])->assertOk();
+        $this->postJson('/api/ko/commissionings', [
+            'ko_proposal_id' => $id,
+            'date'           => now()->toDateString(),
+            'engine_status'  => 'Baik',
+        ])->assertStatus(201);
+        $this->assertEquals(
+            KoStatus::CommissionerCommissioningVerification->value,
+            KoProposal::find($id)->status
+        );
+
         $this->postJson("/api/ko/proposals/{$id}/temporary-qr-request", [
             'temporary_validity_period' => now()->addDays(30)->toDateString(),
         ])->assertOk();
@@ -182,6 +201,71 @@ class KoApiDummyTest extends TestCase
 
         $this->postJson("/api/ko/proposals/{$id}/temporary-qr", ['action' => 'approve'])->assertOk();
         $this->assertEquals('Approved', KoProposal::find($id)->temporary_qr_status);
+    }
+
+    public function test_proposal_nomor_per_area_parity_newaims(): void
+    {
+        $admin = $this->admin();
+        $id = $this->createProposal($admin, ['area' => 'Lampunut']);
+        $this->assertMatchesRegularExpression('/^LMP-\d{3}$/', KoProposal::find($id)->number);
+
+        $id2 = $this->createProposal($admin, ['area' => 'Pit TDD']);
+        $this->assertMatchesRegularExpression('/^KO\/\d{4}\/\d{4}$/', KoProposal::find($id2)->number);
+    }
+
+    public function test_qr_code_endpoint_parity_newaims(): void
+    {
+        $admin = $this->admin();
+        $id = $this->createProposal($admin);
+
+        $res = $this->getJson("/api/ko/proposals/{$id}/qr-code");
+        $res->assertOk();
+        $this->assertStringContainsString('PERUSAHAAN:', $res->json('result.text'));
+        $this->assertStringContainsString('CALL SIGN:', $res->json('result.text'));
+        $this->assertStringStartsWith('data:image/svg+xml;base64,', $res->json('result.svg_base64'));
+    }
+
+    public function test_commissioning_gagal_otomatis_buka_pica_dan_kembali(): void
+    {
+        $admin = $this->admin();
+        $id = $this->createProposal($admin);
+        $this->postJson("/api/ko/proposals/{$id}/submit")->assertOk();
+        $this->postJson("/api/ko/proposals/{$id}/verify", ['stage' => 'admin', 'action' => 'approve'])->assertOk();
+        $this->postJson("/api/ko/proposals/{$id}/verify", ['stage' => 'coordinator', 'action' => 'approve'])->assertOk();
+
+        $field = \Modules\Ko\Entities\KoCommissioningField::create([
+            'number' => 'TDD-1', 'question' => 'Pertanyaan TDD', 'hazard_code' => 'HZ-TDD',
+        ]);
+
+        $store = $this->postJson('/api/ko/commissionings', [
+            'ko_proposal_id' => $id,
+            'date'           => now()->toDateString(),
+            'engine_status'  => 'Baik',
+            'temporary_validity_period' => now()->addDays(14)->toDateString(),
+            'items' => [
+                ['ko_commissioning_field_id' => $field->id, 'condition' => 'Gagal', 'note' => 'Rem blong TDD'],
+            ],
+        ]);
+        $store->assertStatus(201);
+
+        // Parity newaims: proposal -> Issue + IssueReport Open + next_commissioning terisi
+        $proposal = KoProposal::find($id);
+        $this->assertEquals(KoStatus::Issue->value, $proposal->status);
+        $this->assertNotNull($proposal->next_commissioning);
+        $this->assertEquals(1, $proposal->commissioning_period);
+        $issueId = DB::table('ko_issue_reports')->where('ko_proposal_id', $id)->value('id');
+        $this->assertNotNull($issueId);
+        $this->assertEquals('Open', DB::table('ko_issue_reports')->where('id', $issueId)->value('status'));
+        $this->assertEquals('HZ-TDD', DB::table('ko_issue_reports')->where('id', $issueId)->value('hazard_code'));
+
+        // Selesaikan PICA -> proposal kembali ke verifikasi commissioner (parity newaims)
+        $this->postJson("/api/ko/issues/{$issueId}/verify", ['action' => 'submit'])->assertOk();
+        $this->postJson("/api/ko/issues/{$issueId}/verify", ['action' => 'approve'])->assertOk();
+        $this->postJson("/api/ko/issues/{$issueId}/verify", ['action' => 'solve'])->assertOk();
+        $this->assertEquals(
+            KoStatus::CommissionerCommissioningVerification->value,
+            KoProposal::find($id)->status
+        );
     }
 
     public function test_proposal_attachments_tersimpan(): void
@@ -303,6 +387,63 @@ class KoApiDummyTest extends TestCase
         $ok->assertJsonStructure(['result' => ['total', 'by_status', 'monthly']]);
     }
 
+    public function test_dashboard_stats_memuat_by_category(): void
+    {
+        $this->admin();
+        $ok = $this->getJson('/api/ko/dashboard-stats?year=' . now()->year);
+        $ok->assertOk();
+        $ok->assertJsonStructure(['result' => ['total', 'by_status', 'monthly', 'by_category' => ['completed', 'issue']]]);
+    }
+
+    public function test_unit_revoke_reject(): void
+    {
+        $this->admin();
+        [, , $unit] = $this->masterChain();
+        $created = $this->postJson('/api/ko/units', [
+            'ko_spip_unit_id' => $unit['id'], 'call_sign' => 'TDD-RVJ',
+            'serial_number' => 'SN-RVJ', 'production_year' => 2022,
+        ])->json('result');
+
+        $this->postJson("/api/ko/units/{$created['id']}/request-revoke", ['revoke_request_note' => 'Batal TDD'])
+            ->assertOk();
+        $this->postJson("/api/ko/units/{$created['id']}/verify-revoke", ['action' => 'reject'])
+            ->assertOk();
+        $row = DB::table('ko_units')->where('id', $created['id'])->first();
+        $this->assertEquals('Rejected', $row->revoke_status);
+        $this->assertEquals(0, (int) $row->is_revoked);
+
+        // antrean demob kosong setelah reject (status bukan Requested)
+        $list = $this->getJson('/api/ko/units?revoke_pending=1&limit=100')->json('result.data');
+        $ids = array_column($list, 'id');
+        $this->assertNotContains($created['id'], $ids);
+    }
+
+    public function test_temporary_qr_return_dan_filter(): void
+    {
+        $admin = $this->admin();
+        $id = $this->createProposal($admin);
+        $this->postJson("/api/ko/proposals/{$id}/submit")->assertOk();
+        $this->postJson("/api/ko/proposals/{$id}/verify", ['stage' => 'admin', 'action' => 'approve'])->assertOk();
+        $this->postJson("/api/ko/proposals/{$id}/verify", ['stage' => 'coordinator', 'action' => 'approve'])->assertOk();
+        $this->postJson('/api/ko/commissionings', ['ko_proposal_id' => $id, 'engine_status' => 'Baik'])
+            ->assertStatus(201);
+
+        $this->postJson("/api/ko/proposals/{$id}/temporary-qr-request", [
+            'temporary_validity_period' => now()->addDays(30)->toDateString(),
+        ])->assertOk();
+
+        // filter antrean verifikasi QR menemukan proposal ini
+        $list = $this->getJson('/api/ko/proposals?temporary_qr_status=Coordinator Verification&limit=100')
+            ->json('result.data');
+        $this->assertContains($id, array_column($list, 'id'));
+
+        $this->postJson("/api/ko/proposals/{$id}/temporary-qr", ['action' => 'return', 'note' => 'Berkas kurang TDD'])
+            ->assertOk();
+        $proposal = KoProposal::find($id);
+        $this->assertEquals('Rejected', $proposal->temporary_qr_status);
+        $this->assertEquals('Berkas kurang TDD', $proposal->temporary_qr_reject_note);
+    }
+
     public function test_preview_dan_download_attachment_tersedia(): void
     {
         $admin = $this->admin();
@@ -323,5 +464,53 @@ class KoApiDummyTest extends TestCase
 
         $resDownload = $this->get("/api/ko/issue-attachments/{$att->id}/download");
         $this->assertContains($resDownload->status(), [200, 302, 404]);
+    }
+
+    public function test_menu_submenu_ko_lengkap_parity_newaims(): void
+    {
+        $this->admin();
+        $moduleId = DB::table('aims_modules')->where('slug', 'ko')->value('id');
+        $this->assertNotNull($moduleId);
+
+        // Submenu cermin sidebar newaims wajib ada dan berparent.
+        // (ko.proposals.draft sengaja ditiadakan: filter Draft cukup via dropdown halaman.)
+        $expectedChildren = [
+            'ko.proposals.returned', 'ko.proposals.completed',
+            'ko.commissionings.progress', 'ko.commissionings.returned',
+            'ko.issues.open', 'ko.issues.solved',
+            'ko.units.demob',
+            'ko.qr-requests.verify', 'ko.qr-requests.approved',
+            'ko.master.brands',
+        ];
+        foreach ($expectedChildren as $slug) {
+            $row = DB::table('aims_menus')->where('module_id', $moduleId)->where('slug', $slug)->first();
+            $this->assertNotNull($row, "menu {$slug} hilang");
+            $this->assertNotNull($row->parent_id, "menu {$slug} tanpa parent");
+        }
+        $this->assertFalse(
+            DB::table('aims_menus')->where('module_id', $moduleId)->where('slug', 'ko.proposals.draft')->exists(),
+            'menu ko.proposals.draft seharusnya sudah dihapus'
+        );
+
+        // 7 parent tetap top-level.
+        $this->assertEquals(7, DB::table('aims_menus')->where('module_id', $moduleId)->whereNull('parent_id')->count());
+    }
+
+    public function test_commissioning_filter_proposal_status(): void
+    {
+        $admin = $this->admin();
+        $id = $this->createProposal($admin);
+        $this->postJson("/api/ko/proposals/{$id}/submit")->assertOk();
+        $this->postJson("/api/ko/proposals/{$id}/verify", ['stage' => 'admin', 'action' => 'approve'])->assertOk();
+        $this->postJson("/api/ko/proposals/{$id}/verify", ['stage' => 'coordinator', 'action' => 'approve'])->assertOk();
+        $this->postJson('/api/ko/commissionings', ['ko_proposal_id' => $id, 'engine_status' => 'Baik'])
+            ->assertStatus(201);
+
+        $found = $this->getJson('/api/ko/commissionings?proposal_status=Commissioner Commissioning Verification&limit=100')
+            ->json('result.data');
+        $this->assertContains($id, array_column(array_column($found, 'ko_proposal'), 'id'));
+
+        $empty = $this->getJson('/api/ko/commissionings?proposal_status=Draft&limit=100')->json('result.data');
+        $this->assertNotContains($id, array_column(array_column($empty, 'ko_proposal'), 'id'));
     }
 }
